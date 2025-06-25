@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ----------------------
+   Travel App Design System Additions
+   ---------------------- */
+
+@layer components {
+  /* Glass effect utilities */
+  .glass-effect {
+    @apply bg-white/70 backdrop-blur-xl backdrop-saturate-150 border border-white/20;
+  }
+  .glass-effect-dark {
+    @apply bg-gray-900/70 backdrop-blur-xl backdrop-saturate-150 border border-white/10;
+  }
+
+  /* Button system */
+  .btn {
+    @apply relative inline-flex items-center justify-center font-system text-[17px] font-normal tracking-[-0.408px] transition-all duration-100 ease-out select-none touch-manipulation active:scale-[0.96] active:opacity-60;
+  }
+  .btn-primary {
+    @apply btn bg-coral-500 text-white px-5 py-3 rounded-lg shadow-elevation-2 hover:shadow-elevation-3 active:bg-coral-600;
+  }
+  .btn-secondary {
+    @apply btn bg-system-secondary-background text-system-label px-5 py-3 rounded-lg hover:bg-gray-100;
+  }
+  .btn-text {
+    @apply btn text-coral-500 px-2 py-1 hover:opacity-70;
+  }
+
+  /* Modal background */
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/40 backdrop-blur-sm z-[999];
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-white rounded-xl shadow-elevation-2 overflow-hidden;
+  }
+  .card-interactive {
+    @apply card cursor-pointer transition-all duration-200 ease-out hover:shadow-elevation-3 hover:scale-[1.01] active:scale-[0.99] active:shadow-elevation-1;
+  }
+} 

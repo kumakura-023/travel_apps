@@ -1,0 +1,80 @@
+付箋表示 & 地点詳細機能 ドキュメント
+技術スタック
+React 18 + TypeScript
+Vite
+Tailwind CSS（PostCSS, autoprefixer）
+Zustand（状態管理）
+Google Maps JavaScript API
+@react-google-maps/api
+その他ユーティリティ
+classnames, date-fns, react-icons など（必要に応じて）
+機能の概要
+付箋（ラベル）機能
+地図右上のトグルで「ラベル追加モード」を ON
+クリックした位置に空ラベルを生成し、ドラッグで移動／リサイズ可能
+ダイアログからテキスト・色・フォント・サイズ・幅高さを編集
+ズーム倍率に応じた自動スケーリング（基準ズーム 14、ズーム 12 未満で非表示）
+地点詳細パネル
+既存 POI をクリックすると Places API で詳細を取得し、右パネルに表示
+カテゴリ分類に応じたアイコン／円ハイライトを追加
+ホテル POI の場合は Booking.com / 楽天 / Expedia の予約リンクを生成して表示
+背景・目的
+旅行計画時に「地図上でメモを書き込む／情報を即確認する」ニーズが高い。
+付箋・地点詳細を一体化することで、直感的な情報整理 と 即時アクション（予約） を実現し、プランニングの効率と楽しさを向上させることを目的とする。
+コンポーネント設計
+コンポーネント	役割	主な Props / Store
+AddLabelToggle	付箋追加モードの ON/OFF 切替	-
+LabelOverlay	付箋本体。地図上に貼り付くオーバーレイ	labelId
+LabelEditDialog	付箋の編集モーダル	open, label, onSave, onClose
+PlaceDetailsPanel	右サイドの詳細パネル	placeId（Zustand で管理）
+CustomMarker	カテゴリ別マーカー表示	place, isHovered
+Map	Map ラッパー。付箋／マーカー／円ハイライトを合成	-
+Stores	labelsStore, placesStore, placeStore	付箋・候補地・選択中地点の状態
+できること
+複数付箋の追加・編集・削除・移動・リサイズ
+ズームレベルに応じた付箋サイズ調整・自動非表示
+POI 詳細の取得・表示（写真／住所／営業時間／評価など）
+ホテル POI に対する外部予約リンク生成
+地点の候補地リスト登録・削除（❤️ ボタン）
+キーボードショートカットで UI 操作（例: Esc でダイアログ閉じる）
+制限事項
+Google Maps 描画制限により、付箋はマップサイズの極端な縮小でレイアウト崩れの可能性
+Places API の無料枠を超えると詳細取得が失敗する
+ラベルはオフラインでは編集内容が保存されない（今後 LocalStorage 連携予定）
+付箋はモバイル Safari の iframe 内でドラッグが滑らかでない場合がある
+コンポーネント使用時のオプション
+LabelOverlay
+Prop	型	説明
+labelId	string	対象ラベルのストア ID
+editable?	boolean	編集アイコンを常時表示（デフォルト false）
+scale?	number	外部から強制スケール指定（未指定なら自動）
+LabelEditDialog
+Prop	型	説明
+open	boolean	モーダルの開閉フラグ
+label	MapLabel	編集対象ラベル
+onSave	(label: MapLabel) => void	保存ハンドラ
+onClose	() => void	閉じるハンドラ
+PlaceDetailsPanel
+Prop	型	説明
+placeId	string	対象 POI の PlaceID（内部で fetch）
+initialTab?	'info' \| 'booking'	デフォルトタブ
+関連ファイル・ディレクトリ構造
+Apply to design_rule....
+注意点
+Zustand の immutable 更新
+immer を使わず set((state) => …) で都度スプレッドする
+ラベル大量追加時の再レンダリングに注意（shallow で selector 最適化）
+Google Maps API キー
+.env に VITE_GOOGLE_MAPS_API_KEY を設定
+react-google-maps/api の Libraries に places,drawing を指定
+付箋のスケーリングロジック
+label.scale = 2^(zoom - 14) を基準とし、編集ダイアログでは実サイズで表示
+Map re-center 時に onIdle で再計算
+API エラー・レート制限
+Places 詳細取得失敗時はパネルにトーストで通知し、status === ZERO_RESULTS などをハンドリング
+アクセシビリティ
+付箋テキストは aria-label を付与
+キーボード操作時にドラッグ不可のため、後日矩形選択 or 数値入力移動を検討
+テスト
+@testing-library/react でダイアログ / ストアの単体テストを作成予定
+Google Maps 連携部分は jest.mock('@react-google-maps/api', ...) でスタブ化
