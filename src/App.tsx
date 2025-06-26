@@ -7,8 +7,10 @@ import PlaceDetailPanel from './components/PlaceDetailPanel';
 import MapTypeSwitcher from './components/MapTypeSwitcher';
 import TabNavigation, { TabKey } from './components/TabNavigation';
 import TravelTimeControls from './components/TravelTimeControls';
-import TravelTimeOverlay from './components/TravelTimeOverlay';
-import RouteDisplay from './components/RouteDisplay';
+import SelectionBanner from './components/SelectionBanner';
+import TestPlacesButton from './components/TestPlacesButton';
+import RouteSearchPanel from './components/RouteSearchPanel';
+import { useRouteSearchStore } from './store/routeSearchStore';
 import { useDeviceDetect } from './hooks/useDeviceDetect';
 import { useGoogleMaps } from './hooks/useGoogleMaps';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -17,6 +19,24 @@ import { useTravelTimeStore } from './store/travelTimeStore';
 
 function App() {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
+  
+  console.log('App loaded, API Key:', apiKey ? 'Set' : 'Not set');
+  
+  if (!apiKey) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">
+          <h1 className="text-xl font-bold text-red-600 mb-4">設定エラー</h1>
+          <p className="text-gray-700 mb-4">
+            Google Maps API キーが設定されていません。
+          </p>
+          <p className="text-sm text-gray-600">
+            .env ファイルに VITE_GOOGLE_MAPS_API_KEY を設定してください。
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const { isDesktop } = useDeviceDetect();
   const { panTo, zoomIn, zoomOut } = useGoogleMaps();
@@ -51,6 +71,14 @@ function App() {
 
   // Tab navigation state
   const [activeTab, setActiveTab] = React.useState<TabKey>('map');
+  
+  // Route search store
+  const { 
+    isRouteSearchOpen, 
+    selectedOrigin, 
+    selectedDestination,
+    closeRouteSearch 
+  } = useRouteSearchStore();
 
   // Enable/disable travel-time store based on active tab
   React.useEffect(() => {
@@ -76,14 +104,22 @@ function App() {
       />
       <PlaceDetailPanel />
       <MapTypeSwitcher />
-      <Map>
-        {activeTab === 'travelTime' && (
-          <>
-            <TravelTimeOverlay />
-            <RouteDisplay />
-          </>
-        )}
-      </Map>
+      
+      {/* 地点選択中のバナー */}
+      <SelectionBanner />
+      
+      <Map />
+      
+      {/* テスト用候補地追加ボタン（開発時のみ表示） */}
+      {import.meta.env.DEV && <TestPlacesButton />}
+      
+      {/* ルート検索パネル */}
+      <RouteSearchPanel 
+        isOpen={isRouteSearchOpen} 
+        onClose={closeRouteSearch}
+        selectedOrigin={selectedOrigin || undefined}
+        selectedDestination={selectedDestination || undefined}
+      />
 
       {activeTab === 'travelTime' && <TravelTimeControls />}
     </LoadScript>

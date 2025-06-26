@@ -56,4 +56,38 @@ export interface MapLabel {
   color: string;
   width: number; // px
   height: number; // px
-} 
+}
+
+// 2地点間移動時間表示のための型定義
+export interface RouteConnection {
+  id: string;
+  originId: string; // 出発地点のID（PlaceのIDまたはTravelCircleのID）
+  destinationId: string; // 到着地点のID
+  originCoordinates: {
+    lat: number;
+    lng: number;
+  };
+  destinationCoordinates: {
+    lat: number;
+    lng: number;
+  };
+  travelMode: google.maps.TravelMode;
+  duration: number; // seconds
+  distance: number; // meters
+  durationText: string;
+  distanceText: string;
+  route: google.maps.DirectionsResult;
+  createdAt: Date;
+}
+
+// 地点選択状態の管理
+export interface PlaceSelectionState {
+  isSelecting: boolean;
+  selectedPlaceId: string | null;
+  selectionMode: 'ctrl-click' | 'long-press' | null;
+}
+
+// モバイル/デスクトップでの操作方法
+export type SelectionMethod = 'ctrl-click' | 'long-press';
+
+export type { RouteConnection as Route }; 

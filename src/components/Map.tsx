@@ -9,10 +9,15 @@ import { getCategoryColor } from '../utils/categoryIcons';
 import PlaceLabel from './PlaceLabel';
 import AddLabelToggle from './AddLabelToggle';
 import { useLabelsStore } from '../store/labelsStore';
+import { MapLabel } from '../types';
 import LabelOverlay from './LabelOverlay';
 import LabelEditDialog from './LabelEditDialog';
-import { MapLabel } from '../types';
 import useMediaQuery from '../hooks/useMediaQuery';
+import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
+import TravelTimeCircle from './TravelTimeCircle';
+import PlaceCircle from './PlaceCircle';
+import RouteDisplay from './RouteDisplay';
+import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
 
 interface Props {
   children?: React.ReactNode;
@@ -21,11 +26,21 @@ interface Props {
 export default function Map({ children }: Props) {
   const { isDesktop } = useDeviceDetect();
   const { map, setMap, panTo } = useGoogleMaps();
+  const {
+    selectingOrigin,
+    addCircle,
+    circles,
+  } = useTravelTimeMode((s) => ({
+    selectingOrigin: s.selectingOrigin,
+    addCircle: s.addCircle,
+    circles: s.circles,
+  }));
   const { place, setPlace } = useSelectedPlaceStore((s) => ({ place: s.place, setPlace: s.setPlace }));
   const savedPlaces = usePlacesStore((s) => s.places);
   const labels = useLabelsStore((s) => s.labels);
   const addLabel = useLabelsStore((s) => s.addLabel);
   const updateLabel = useLabelsStore((s) => s.updateLabel);
+  const { routes } = useRouteConnectionsStore();
   const [zoom, setZoom] = useState(14);
   const [labelMode, setLabelMode] = useState(false);
   const labelModeRef = useRef(false);
@@ -43,8 +58,11 @@ export default function Map({ children }: Props) {
       height: '100vh',
       marginLeft: place && isDesktopViewport ? 540 : 0,
       transition: 'margin 0.3s ease',
+      cursor: selectingOrigin
+        ? 'url("https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png") 12 32, crosshair'
+        : 'default',
     }),
-    [place, isDesktopViewport],
+    [place, isDesktopViewport, selectingOrigin],
   );
 
   const center = useMemo<google.maps.LatLngLiteral>(
@@ -121,6 +139,14 @@ export default function Map({ children }: Props) {
         },
       );
     });
+
+    // 起点選択モードでのクリック（最新の store 状態を参照）
+    map.addListener('click', (e: google.maps.MapMouseEvent) => {
+      const state = useTravelTimeMode.getState();
+      if (state.selectingOrigin && e.latLng) {
+        state.addCircle({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+      }
+    });
   };
 
   return (
@@ -131,26 +157,12 @@ export default function Map({ children }: Props) {
       options={mapOptions}
       onLoad={onLoad}
     >
-      {/* ピン型アイコンを削除し、円だけ表示 */}
+      {/* 候補地の円 - 詳細情報オーバーレイ付き */}
       {savedPlaces.map((p) => (
-        <Circle
-          key={p.id + '_circle'}
-          center={{ lat: p.coordinates.lat, lng: p.coordinates.lng }}
-          radius={120}
-          options={{
-            strokeColor: getCategoryColor(p.category),
-            strokeOpacity: 0.6,
-            strokeWeight: 2,
-            fillColor: getCategoryColor(p.category),
-            fillOpacity: 0.15,
-            clickable: false,
-            zIndex: 50,
-          }}
-        />
+        <PlaceCircle key={`place-circle-${p.id}`} place={p} zoom={zoom} />
       ))}
-      {savedPlaces.map((p) => (
-        <PlaceLabel key={p.id + '_label'} place={p} zoom={zoom} map={map} />
-      ))}
+      
+      {/* 選択中の地点のマーカー */}
       {place && place.geometry?.location && (
         <Marker
           position={{
@@ -164,6 +176,8 @@ export default function Map({ children }: Props) {
           }}
         />
       )}
+      
+      {/* 付箋ラベル */}
       {labels.map((l) => (
         <LabelOverlay
           key={l.id}
@@ -174,6 +188,8 @@ export default function Map({ children }: Props) {
           onResize={(size: { width: number; height: number }) => updateLabel(l.id, size)}
         />
       ))}
+      
+      {/* 付箋編集ダイアログ */}
       {editing && (
         <LabelEditDialog
           label={editing}
@@ -181,8 +197,29 @@ export default function Map({ children }: Props) {
           onClose={() => setEditing(null)}
         />
       )}
+      
+      {/* 付箋追加トグル */}
       <AddLabelToggle onToggle={setLabelMode} />
+      
       {children}
+
+      {/* 移動時間の円 - 新しいコンポーネントを使用 */}
+      {circles.map((c) => (
+        <TravelTimeCircle 
+          key={`travel-circle-${c.id}`} 
+          circle={c} 
+          zoom={zoom}
+        />
+      ))}
+      
+      {/* 2地点間のルート表示 */}
+      {routes.map((route) => (
+        <RouteDisplay
+          key={`route-${route.id}`}
+          route={route}
+          zoom={zoom}
+        />
+      ))}
     </GoogleMap>
   );
 } 
