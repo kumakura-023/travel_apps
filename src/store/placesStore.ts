@@ -9,7 +9,7 @@ interface PlacesState {
   deletePlace: (id: string) => void;
 }
 
-export const usePlacesStore = create<PlacesState>((set) => ({
+export const usePlacesStore = create<PlacesState>((set, get) => ({
   places: [],
   addPlace: (partial) =>
     set((state) => ({
@@ -31,8 +31,14 @@ export const usePlacesStore = create<PlacesState>((set) => ({
     set((state) => ({
       places: state.places.map((p) => (p.id === id ? { ...p, ...update, updatedAt: new Date() } : p)),
     })),
-  deletePlace: (id) =>
-    set((state) => ({
-      places: state.places.filter((p) => p.id !== id),
-    })),
+  deletePlace: (id) => {
+    console.log(`deletePlace called: ${id}`);
+    set((state) => {
+      const filteredPlaces = state.places.filter((p) => p.id !== id);
+      console.log(`Places: ${state.places.length} -> ${filteredPlaces.length}`);
+      return {
+        places: filteredPlaces,
+      };
+    });
+  },
 })); 

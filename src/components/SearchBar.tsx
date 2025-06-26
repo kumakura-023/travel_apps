@@ -1,7 +1,9 @@
 import { Autocomplete } from '@react-google-maps/api';
 import { useRef, useState } from 'react';
 import { FiSearch } from 'react-icons/fi';
+import { MdNavigation } from 'react-icons/md';
 import { useSelectedPlaceStore } from '../store/placeStore';
+import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 
 interface Props {
@@ -21,6 +23,7 @@ export default function SearchBar({
   const localRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const setPlace = useSelectedPlaceStore((s) => s.setPlace);
+  const { openRouteSearch } = useRouteSearchStore();
   const placesServiceRef = useRef<google.maps.places.PlacesService>();
   const { map } = useGoogleMaps();
 
@@ -112,45 +115,66 @@ export default function SearchBar({
 
   return (
     <div
-      className={`fixed top-4 z-50 flex items-center rounded-full shadow-md bg-white ${
+      className={`fixed top-4 z-50 flex items-center justify-between rounded-full shadow-md bg-white ${
         isDesktop ? 'left-4 w-[480px]' : 'mx-4 left-0 right-0'
       }`}
     >
-      <FiSearch className="ml-3 text-gray-500" />
-      <Autocomplete
-        onLoad={onLoad}
-        onPlaceChanged={onPlaceChanged}
-        options={{
-          fields: [
-            'place_id',
-            'name',
-            'geometry',
-            'formatted_address',
-            'rating',
-            'photos',
-            'website',
-            'types',
-          ],
-        }}
-      >
-        <input
-          ref={combinedRef}
-          type="text"
-          placeholder="場所を検索"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="flex-1 bg-transparent py-3 px-4 text-lg focus:outline-none rounded-full"
-        />
-      </Autocomplete>
-      {inputValue && (
-        <button
-          onClick={clear}
-          className="mr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+      <div className="flex-1">
+        <Autocomplete
+          onLoad={onLoad}
+          onPlaceChanged={onPlaceChanged}
+          options={{
+            fields: [
+              'place_id',
+              'name',
+              'geometry',
+              'formatted_address',
+              'rating',
+              'photos',
+              'website',
+              'types',
+            ],
+          }}
         >
-          ✕
+          <input
+            ref={combinedRef}
+            type="text"
+            placeholder="Google マップを検索する"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="w-full bg-transparent py-3 pl-4 pr-2 text-lg focus:outline-none"
+          />
+        </Autocomplete>
+      </div>
+      <div className="flex items-center space-x-1">
+        {/* クリアボタン */}
+        {inputValue && (
+          <button
+            onClick={clear}
+            className="p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+          >
+            ✕
+          </button>
+        )}
+        
+        {/* 検索アイコン（虫眼鏡）*/}
+        <button
+          className="p-2 text-gray-500 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors focus:outline-none"
+          title="検索"
+        >
+          <FiSearch size={18} />
         </button>
-      )}
+        
+        {/* ナビゲーション（ルート検索）ボタン */}
+        <button
+          onClick={openRouteSearch}
+          className="p-2 mr-1 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors focus:outline-none"
+          title="ルート検索"
+        >
+          <MdNavigation size={18} />
+        </button>
+      </div>
     </div>
   );
 } 
