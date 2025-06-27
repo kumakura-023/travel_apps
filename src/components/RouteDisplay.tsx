@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { DirectionsRenderer } from '@react-google-maps/api';
+import { DirectionsRenderer, Marker } from '@react-google-maps/api';
 import { RouteConnection } from '../types';
 import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
@@ -12,8 +12,9 @@ interface Props {
 
 export default function RouteDisplay({ route, zoom = 14 }: Props) {
   const { map } = useGoogleMaps();
-  const { removeRoute } = useRouteConnectionsStore((s) => ({ removeRoute: s.removeRoute }));
+  const { removeRoute } = useRouteConnectionsStore();
   const overlayRef = useRef<google.maps.OverlayView | null>(null);
+  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
   // ズーム比率に応じたスケール計算
   const scale = Math.max(0.17, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
@@ -23,6 +24,7 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
   useEffect(() => {
     if (!map || !shouldShowOverlay) {
       if (overlayRef.current) {
+        console.log(`Removing overlay for route ${route.id} (not showing overlay)`);
         overlayRef.current.setMap(null);
         overlayRef.current = null;
       }
@@ -31,6 +33,7 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
 
     // 既存のオーバーレイがあれば削除
     if (overlayRef.current) {
+      console.log(`Removing existing overlay for route ${route.id}`);
       overlayRef.current.setMap(null);
     }
 
@@ -60,22 +63,22 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
             border: 1px solid rgba(0, 0, 0, 0.1);
             overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            min-width: 180px;
+            min-width: 360px;
           ">
             <div style="
               display: flex;
               align-items: center;
               justify-content: space-between;
-              padding: 8px 12px;
+              padding: 16px 24px;
               background: linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05));
             ">
-              <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
-                <span style="font-size: 14px; color: rgb(37, 99, 235);">${getTravelModeIcon()}</span>
-                <div style="display: flex; flex-direction: column; gap: 2px;">
-                  <span style="font-size: 24px; font-weight: 700; color: rgb(31, 41, 55);">
+              <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                <span style="font-size: 28px; color: rgb(37, 99, 235);">${getTravelModeIcon()}</span>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <span style="font-size: 48px; font-weight: 700; color: rgb(31, 41, 55);">
                     ${route.durationText}
                   </span>
-                  <span style="font-size: 14px; color: rgb(107, 114, 128); font-weight: 500;">
+                  <span style="font-size: 28px; color: rgb(107, 114, 128); font-weight: 500;">
                     ${route.distanceText}
                   </span>
                 </div>
@@ -83,8 +86,8 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
               <button 
                 id="delete-route-btn-${route.id}"
                 style="
-                  width: 20px;
-                  height: 20px;
+                  width: 40px;
+                  height: 40px;
                   background: rgb(239, 68, 68);
                   color: white;
                   border: none;
@@ -101,7 +104,7 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
                 onmouseover="this.style.background='rgb(220, 38, 38)'"
                 onmouseout="this.style.background='rgb(239, 68, 68)'"
               >
-                <span style="font-size: 10px;">✕</span>
+                <span style="font-size: 20px;">✕</span>
               </button>
             </div>
           </div>
@@ -134,8 +137,8 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
         );
 
         if (position) {
-          this.div.style.left = position.x - 70 + 'px'; // 中央揃え
-          this.div.style.top = position.y - 20 + 'px'; // 中央揃え
+          this.div.style.left = position.x - 140 + 'px'; // 中央揃え（2倍サイズ対応）
+          this.div.style.top = position.y - 40 + 'px'; // 中央揃え（2倍サイズ対応）
         }
       }
 
@@ -153,19 +156,27 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
     overlayRef.current = overlay;
 
     return () => {
+      console.log(`Cleanup overlay for route ${route.id}`);
       if (overlayRef.current) {
         overlayRef.current.setMap(null);
         overlayRef.current = null;
       }
     };
-  }, [map, shouldShowOverlay, route, scale]);
+  }, [map, shouldShowOverlay, route.id, route.durationText, route.distanceText, scale]);
 
   // コンポーネントがアンマウントされるときのクリーンアップ
   useEffect(() => {
     return () => {
+      console.log(`RouteDisplay unmount cleanup for route ${route.id}`);
       if (overlayRef.current) {
         overlayRef.current.setMap(null);
         overlayRef.current = null;
+        console.log(`Overlay cleaned up for route ${route.id}`);
+      }
+      if (directionsRendererRef.current) {
+        directionsRendererRef.current.setMap(null);
+        directionsRendererRef.current = null;
+        console.log(`DirectionsRenderer cleaned up for route ${route.id}`);
       }
     };
   }, [route.id]);
@@ -177,8 +188,16 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
     try {
       // オーバーレイを削除
       if (overlayRef.current) {
+        console.log(`Removing overlay for route ${route.id}`);
         overlayRef.current.setMap(null);
         overlayRef.current = null;
+      }
+      
+      // DirectionsRendererを削除
+      if (directionsRendererRef.current) {
+        console.log(`Removing DirectionsRenderer for route ${route.id}`);
+        directionsRendererRef.current.setMap(null);
+        directionsRendererRef.current = null;
       }
       
       // ストアから削除
@@ -223,19 +242,42 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
     suppressInfoWindows: true, // デフォルトのInfoWindowを非表示
     preserveViewport: true, // ビューポートを変更しない
     polylineOptions: {
-      strokeColor: '#3B82F6', // ブルー
-      strokeWeight: 4,
-      strokeOpacity: 0.8,
+      strokeColor: '#EC4899', // マゼンタピンク（高視認性で自然環境でも見やすい）
+      strokeWeight: 6,
+      strokeOpacity: 0.9,
       zIndex: 100,
     },
   };
 
-  return (
-    <DirectionsRenderer
-      directions={route.route}
-      options={directionsOptions}
-    />
-  );
+  // DirectionsRendererを手動で作成・管理
+  useEffect(() => {
+    if (!map) return;
+
+    console.log(`Creating DirectionsRenderer for route ${route.id}`);
+    
+    // 既存のDirectionsRendererがあれば削除
+    if (directionsRendererRef.current) {
+      directionsRendererRef.current.setMap(null);
+    }
+
+    // 新しいDirectionsRendererを作成
+    const directionsRenderer = new google.maps.DirectionsRenderer(directionsOptions);
+    directionsRenderer.setMap(map);
+    directionsRenderer.setDirections(route.route);
+    directionsRendererRef.current = directionsRenderer;
+
+    // クリーンアップ関数
+    return () => {
+      console.log(`Cleaning up DirectionsRenderer for route ${route.id}`);
+      if (directionsRendererRef.current) {
+        directionsRendererRef.current.setMap(null);
+        directionsRendererRef.current = null;
+      }
+         };
+   }, [map, route.id]);
+
+  // ルートのラインのみを表示（マーカーは RouteMarkers コンポーネントで表示）
+  return null;
 }
 
 // 2地点間のルートを計算・表示するユーティリティ関数

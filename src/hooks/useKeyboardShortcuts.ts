@@ -19,6 +19,20 @@ export const useKeyboardShortcuts = ({
     if (!isDesktop) return;
 
     const handler = (e: KeyboardEvent) => {
+      // input、textarea、contenteditable要素がフォーカスされている時はショートカットを無効化
+      const target = e.target as HTMLElement;
+      if (target && (
+        target.tagName === 'INPUT' || 
+        target.tagName === 'TEXTAREA' || 
+        target.contentEditable === 'true'
+      )) {
+        // Escapeキーだけは許可（input要素をクリアするため）
+        if (e.key === 'Escape') {
+          clearSearch();
+        }
+        return;
+      }
+
       // Ctrl/Cmd + F
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
         e.preventDefault();

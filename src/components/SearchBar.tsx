@@ -147,7 +147,7 @@ export default function SearchBar({
           />
         </Autocomplete>
       </div>
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center space-x-1 pr-4">
         {/* クリアボタン */}
         {inputValue && (
           <button
@@ -169,7 +169,7 @@ export default function SearchBar({
         {/* ナビゲーション（ルート検索）ボタン */}
         <button
           onClick={openRouteSearch}
-          className="p-2 mr-1 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors focus:outline-none"
+          className="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors focus:outline-none"
           title="ルート検索"
         >
           <MdNavigation size={18} />

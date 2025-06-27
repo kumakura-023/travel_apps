@@ -17,6 +17,9 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useSelectedPlaceStore } from './store/placeStore';
 import { useTravelTimeStore } from './store/travelTimeStore';
 
+// LoadScript用のライブラリを定数として定義
+const LIBRARIES: ('places')[] = ['places'];
+
 function App() {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
   
@@ -92,16 +95,19 @@ function App() {
   }, [activeTab]);
 
   return (
-    <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={['places']}>
+    <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>
       {/* Navigation */}
       <TabNavigation active={activeTab} onChange={setActiveTab} />
 
-      <SearchBar
-        onPlaceSelected={handlePlaceSelected}
-        isDesktop={isDesktop}
-        inputRef={searchRef}
-        onClearExternal={() => {}}
-      />
+      {/* ルート検索画面が開いている時は検索バーを非表示 */}
+      {!isRouteSearchOpen && (
+        <SearchBar
+          onPlaceSelected={handlePlaceSelected}
+          isDesktop={isDesktop}
+          inputRef={searchRef}
+          onClearExternal={() => {}}
+        />
+      )}
       <PlaceDetailPanel />
       <MapTypeSwitcher />
       
