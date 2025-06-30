@@ -60,13 +60,46 @@ export const useRouteConnectionsStore = create<RouteConnectionsState>((set, get)
   },
 
   removeRoute: (routeId) => {
-    set((state) => ({
-      routes: state.routes.filter((route) => route.id !== routeId),
-    }));
+    console.log(`RouteConnectionsStore: removeRoute called for ${routeId}`);
+    const currentState = get();
+    const beforeCount = currentState.routes.length;
+    const routeToRemove = currentState.routes.find(r => r.id === routeId);
+    
+    if (routeToRemove) {
+      console.log(`Found route to remove:`, routeToRemove);
+    } else {
+      console.log(`Route ${routeId} not found in store`);
+      return;
+    }
+    
+    set((state) => {
+      const filteredRoutes = state.routes.filter((route) => route.id !== routeId);
+      console.log(`Routes: ${state.routes.length} -> ${filteredRoutes.length}`);
+      return { routes: filteredRoutes };
+    });
+    
+    // 削除後の状態を確認
+    setTimeout(() => {
+      const newState = get();
+      console.log(`After removal - total routes: ${newState.routes.length}`);
+    }, 100);
   },
 
   clearAllRoutes: () => {
+    console.log('RouteConnectionsStore: clearAllRoutes called');
+    const currentState = get();
+    const currentRoutes = currentState.routes;
+    console.log('現在のルート数:', currentRoutes.length);
+    console.log('削除対象のルート:', currentRoutes.map(r => ({ id: r.id, origin: r.originId, dest: r.destinationId })));
+    
     set({ routes: [] });
+    console.log('RouteConnectionsStore: routes cleared');
+    
+    // クリア後の確認
+    setTimeout(() => {
+      const newState = get();
+      console.log(`After clearAll - routes: ${newState.routes.length}`);
+    }, 100);
   },
 
   createRouteBetweenPlaces: async (originId, destinationId, travelMode = google.maps.TravelMode.DRIVING) => {

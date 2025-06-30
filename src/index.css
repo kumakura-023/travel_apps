@@ -41,4 +41,13 @@
   .card-interactive {
     @apply card cursor-pointer transition-all duration-200 ease-out hover:shadow-elevation-3 hover:scale-[1.01] active:scale-[0.99] active:shadow-elevation-1;
   }
+
+  /* スクロールバーを隠すユーティリティ */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+  }
 } 

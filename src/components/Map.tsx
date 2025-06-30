@@ -4,7 +4,6 @@ import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { useSelectedPlaceStore } from '../store/placeStore';
 import { usePlacesStore } from '../store/placesStore';
-import CustomMarker from './CustomMarker';
 import { getCategoryColor } from '../utils/categoryIcons';
 import PlaceLabel from './PlaceLabel';
 import AddLabelToggle from './AddLabelToggle';
@@ -17,7 +16,9 @@ import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import TravelTimeCircle from './TravelTimeCircle';
 import PlaceCircle from './PlaceCircle';
 import RouteDisplay from './RouteDisplay';
+import RouteMarkers from './RouteMarkers';
 import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
+import { useRouteSearchStore } from '../store/routeSearchStore';
 
 interface Props {
   children?: React.ReactNode;
@@ -41,6 +42,7 @@ export default function Map({ children }: Props) {
   const addLabel = useLabelsStore((s) => s.addLabel);
   const updateLabel = useLabelsStore((s) => s.updateLabel);
   const { routes } = useRouteConnectionsStore();
+  const { selectionMode, selectPointFromMap, isRouteSearchOpen } = useRouteSearchStore();
   const [zoom, setZoom] = useState(14);
   const [labelMode, setLabelMode] = useState(false);
   const labelModeRef = useRef(false);
@@ -53,16 +55,35 @@ export default function Map({ children }: Props) {
   }, [labelMode]);
 
   const containerStyle = useMemo(
-    () => ({
-      width: '100%',
-      height: '100vh',
-      marginLeft: place && isDesktopViewport ? 540 : 0,
-      transition: 'margin 0.3s ease',
-      cursor: selectingOrigin
-        ? 'url("https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png") 12 32, crosshair'
-        : 'default',
-    }),
-    [place, isDesktopViewport, selectingOrigin],
+    () => {
+      let marginLeft = 0;
+      
+      if (isDesktopViewport) {
+        // 詳細情報パネルが開いている場合
+        if (place) {
+          marginLeft = 540;
+          // ルート検索パネルも開いている場合は追加で480px
+          if (isRouteSearchOpen) {
+            marginLeft += 480;
+          }
+        } 
+        // 詳細情報パネルが閉じているが、ルート検索パネルが開いている場合
+        else if (isRouteSearchOpen) {
+          marginLeft = 480;
+        }
+      }
+      
+      return {
+        width: '100%',
+        height: '100vh',
+        marginLeft,
+        transition: 'margin 0.3s ease',
+        cursor: selectingOrigin || selectionMode
+          ? 'url("https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png") 12 32, crosshair'
+          : 'default',
+      };
+    },
+    [place, isDesktopViewport, selectingOrigin, selectionMode, isRouteSearchOpen],
   );
 
   const center = useMemo<google.maps.LatLngLiteral>(
@@ -129,12 +150,47 @@ export default function Map({ children }: Props) {
         },
         (detail, status) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && detail) {
+            // 最新のルート検索ストアの状態を取得
+            const routeState = useRouteSearchStore.getState();
+            console.log('=== POI CLICKED DEBUG ===');
+            console.log('Current selectionMode from hook:', selectionMode);
+            console.log('Latest selectionMode from store:', routeState.selectionMode);
+            console.log('detail.name:', detail.name);
+            console.log('detail.geometry?.location:', detail.geometry?.location);
+            console.log('isRouteSearchOpen:', isRouteSearchOpen);
+            
+            // 最新のストア状態を使用
+            const currentSelectionMode = routeState.selectionMode;
+            
+            // ルート検索の選択モード中の場合は、選択した地点を始点または終点として設定
+            console.log('Checking condition with latest state: currentSelectionMode && detail.geometry?.location');
+            console.log('currentSelectionMode truthy:', !!currentSelectionMode);
+            console.log('detail.geometry?.location truthy:', !!detail.geometry?.location);
+            
+            if (currentSelectionMode && detail.geometry?.location) {
+              console.log('✅ ROUTE SELECTION MODE - Creating point');
+              const point = {
+                lat: detail.geometry.location.lat(),
+                lng: detail.geometry.location.lng(),
+                name: detail.name || detail.formatted_address || '選択した地点'
+              };
+              console.log('Calling selectPointFromMap with:', point);
+              selectPointFromMap(point);
+              console.log('✅ selectPointFromMap called, returning early');
+              return; // 詳細パネルは開かない
+            }
+            
+            console.log('❌ NOT in route selection mode - Opening detail panel');
+            console.log('About to call setPlace(detail)');
             setPlace(detail);
+            console.log('setPlace(detail) called');
             if (detail.geometry?.location) {
               const currentZoom = map.getZoom() ?? 14;
               const zoomArg = currentZoom < 17 ? 17 : undefined;
               panTo(detail.geometry.location.lat(), detail.geometry.location.lng(), zoomArg);
             }
+          } else {
+            console.log('Places service failed:', status);
           }
         },
       );
@@ -212,14 +268,20 @@ export default function Map({ children }: Props) {
         />
       ))}
       
+      {/* ルート検索の出発地・目的地マーカー */}
+      <RouteMarkers />
+
       {/* 2地点間のルート表示 */}
-      {routes.map((route) => (
-        <RouteDisplay
-          key={`route-${route.id}`}
-          route={route}
-          zoom={zoom}
-        />
-      ))}
+      {routes.map((route) => {
+        console.log(`Rendering route: ${route.id}`, route);
+        return (
+          <RouteDisplay
+            key={`route-${route.id}`}
+            route={route}
+            zoom={zoom}
+          />
+        );
+      })}
     </GoogleMap>
   );
 } 

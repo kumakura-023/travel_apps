@@ -125,13 +125,26 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
             ">
               <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
                 <div style="
+                  width: 24px;
+                  height: 24px;
+                  background: ${color};
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: white;
+                  font-size: 12px;
+                  flex-shrink: 0;
+                ">
+                  ${getCategoryEmoji()}
+                </div>
+                <div style="
                   display: flex; 
                   align-items: center; 
                   gap: 6px; 
                   color: ${color};
                   font-weight: 500;
                 ">
-                  <span style="font-size: 16px;">${getCategoryEmoji()}</span>
                   <span style="font-size: 14px;">${getCategoryLabel()}</span>
                 </div>
               </div>
@@ -183,10 +196,67 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                   font-size: 12px;
                   color: rgb(59, 130, 246);
                   font-weight: 500;
+                  margin: 0 0 8px 0;
                 ">
                   予想費用: ¥${place.estimatedCost.toLocaleString()}
                 </div>
               ` : ''}
+              
+              <!-- ルート検索ボタン -->
+              <div style="
+                display: flex;
+                gap: 6px;
+                margin-top: 8px;
+              ">
+                <button 
+                  id="set-origin-btn-${place.id}"
+                  style="
+                    flex: 1;
+                    padding: 6px 8px;
+                    background: rgb(34, 197, 94);
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 11px;
+                    font-weight: 500;
+                    transition: background-color 0.15s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 4px;
+                  "
+                  onmouseover="this.style.background='rgb(22, 163, 74)'"
+                  onmouseout="this.style.background='rgb(34, 197, 94)'"
+                >
+                  <span style="font-size: 10px;">🚀</span>
+                  出発地
+                </button>
+                <button 
+                  id="set-destination-btn-${place.id}"
+                  style="
+                    flex: 1;
+                    padding: 6px 8px;
+                    background: rgb(239, 68, 68);
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 11px;
+                    font-weight: 500;
+                    transition: background-color 0.15s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 4px;
+                  "
+                  onmouseover="this.style.background='rgb(220, 38, 38)'"
+                  onmouseout="this.style.background='rgb(239, 68, 68)'"
+                >
+                  <span style="font-size: 10px;">🎯</span>
+                  目的地
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -197,6 +267,24 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
           deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             handleDelete();
+          });
+        }
+
+        // 出発地設定ボタンのクリックイベントを追加
+        const setOriginBtn = this.div.querySelector(`#set-origin-btn-${place.id}`);
+        if (setOriginBtn) {
+          setOriginBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleSetOrigin();
+          });
+        }
+
+        // 目的地設定ボタンのクリックイベントを追加
+        const setDestinationBtn = this.div.querySelector(`#set-destination-btn-${place.id}`);
+        if (setDestinationBtn) {
+          setDestinationBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleSetDestination();
           });
         }
 
@@ -260,8 +348,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
   }, [place.id]);
 
   const handleDelete = () => {
-    console.log(`=== PLACE DELETE BUTTON CLICKED ===`);
-    console.log(`Target place ID: ${place.id}`);
+    console.log(`handleDelete called for place ${place.id}`);
     
     try {
       // オーバーレイを削除
@@ -287,6 +374,28 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
     } catch (error) {
       console.error(`Error in place handleDelete:`, error);
     }
+  };
+
+  // 出発地として設定
+  const handleSetOrigin = () => {
+    console.log(`Setting origin: ${place.name}`);
+    setSelectedOrigin({
+      lat: place.coordinates.lat,
+      lng: place.coordinates.lng,
+      name: place.name
+    });
+    openRouteSearch();
+  };
+
+  // 目的地として設定
+  const handleSetDestination = () => {
+    console.log(`Setting destination: ${place.name}`);
+    setSelectedDestination({
+      lat: place.coordinates.lat,
+      lng: place.coordinates.lng,
+      name: place.name
+    });
+    openRouteSearch();
   };
 
   // カテゴリの絵文字を取得
@@ -341,8 +450,6 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
 
   const handleClick = (e: google.maps.MapMouseEvent) => {
     console.log(`Place marker clicked for ${place.id}`);
-    console.log('Event:', e);
-    console.log('DomEvent:', e.domEvent);
     
     // Google MapsのデフォルトInfoWindowを防ぐ
     if (e) {
@@ -352,51 +459,24 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
         domEvent.stopPropagation();
         domEvent.preventDefault();
         
-        console.log('ctrlKey:', 'ctrlKey' in domEvent ? domEvent.ctrlKey : 'not available');
-        console.log('shiftKey:', 'shiftKey' in domEvent ? (domEvent as any).shiftKey : 'not available');
-        
-        // Ctrl+Shift+クリック：ルート検索パネルを開く
-        const isCtrlShiftClick = !isTouchDevice && 'ctrlKey' in domEvent && 'shiftKey' in domEvent && 
-                                (domEvent as any).ctrlKey && (domEvent as any).shiftKey;
-        
-        if (isCtrlShiftClick) {
-          console.log(`🗺️ Opening route search with origin: ${place.name}`);
-          setSelectedOrigin({
-            lat: place.coordinates.lat,
-            lng: place.coordinates.lng,
-            name: place.name
-          });
-          openRouteSearch();
+        // 2地点間移動時間表示機能の地点選択
+        if (isInSelectionMode) {
+          console.log('Completing selection...');
+          completeSelection(place.id);
           return;
         }
         
-        // 地点選択処理
-        const isCtrlClick = !isTouchDevice && 'ctrlKey' in domEvent && (domEvent as any).ctrlKey && !(domEvent as any).shiftKey;
-        const isSelectionTap = isTouchDevice && isInSelectionMode;
-        const isNormalClick = !('ctrlKey' in domEvent) || !(domEvent as any).ctrlKey;
-        
-        // 選択モード中のタップ、またはCtrl+クリック、または通常クリック（選択開始用）
-        if (isSelectionTap || isCtrlClick || (!isInSelectionMode && isNormalClick)) {
-          console.log(`🎯 Selection trigger detected on place ${place.id}`, { 
-            isCtrlClick, 
-            isSelectionTap, 
-            isNormalClick, 
-            isInSelectionMode 
-          });
-          
-          if (isInSelectionMode) {
-            console.log('Completing selection...');
-            completeSelection(place.id);
-          } else {
-            console.log('Starting selection...');
-            startSelection(place.id, isCtrlClick ? 'ctrl-click' : 'long-press');
-          }
+        // Ctrl+クリックで地点選択を開始
+        const isCtrlClick = !isTouchDevice && 'ctrlKey' in domEvent && (domEvent as any).ctrlKey;
+        if (isCtrlClick) {
+          console.log('Starting selection...');
+          startSelection(place.id, 'ctrl-click');
           return;
         }
       }
     }
     
-    console.log('Normal click - no action taken');
+    console.log('Normal click - no special action');
   };
 
   // 選択状態に応じてマーカーの外観を変更
@@ -404,35 +484,15 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
     // カテゴリ色を取得
     const categoryColor = getCategoryColor(place.category);
     
-    // SVGマーカーアイコンを作成
-    const markerSvg = `
-      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="16" cy="16" r="12" fill="${categoryColor}" stroke="white" stroke-width="3"/>
-        <text x="16" y="21" text-anchor="middle" fill="white" font-size="16" font-family="Arial">${getCategoryEmoji()}</text>
-      </svg>
-    `;
-    
+    // シンプルなサークルマーカーに変更
     const baseIcon = {
-      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(markerSvg)}`,
-      scaledSize: new google.maps.Size(32, 32),
-      anchor: new google.maps.Point(16, 32),
+      path: google.maps.SymbolPath.CIRCLE,
+      fillColor: categoryColor,
+      fillOpacity: isSelected ? 0.9 : 0.7,
+      strokeWeight: isSelected ? 3 : 2,
+      strokeColor: isSelected ? '#FFD700' : '#ffffff',
+      scale: isSelected ? 10 : 8,
     };
-
-    if (isSelected) {
-      // 選択中の場合、サイズを大きく
-      const selectedSvg = `
-        <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="20" cy="20" r="16" fill="${categoryColor}" stroke="yellow" stroke-width="4"/>
-          <text x="20" y="26" text-anchor="middle" fill="white" font-size="20" font-family="Arial">${getCategoryEmoji()}</text>
-        </svg>
-      `;
-      
-      return {
-        url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(selectedSvg)}`,
-        scaledSize: new google.maps.Size(40, 40),
-        anchor: new google.maps.Point(20, 40),
-      };
-    }
 
     return baseIcon;
   };
