@@ -1,4 +1,4 @@
-import { MdDirectionsWalk, MdDirectionsCar, MdTrain, MdDelete } from 'react-icons/md';
+import { MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit, MdDelete } from 'react-icons/md';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 
@@ -33,7 +33,7 @@ export default function TravelTimeControls() {
   const travelModes = [
     { key: 'walking', icon: <MdDirectionsWalk className="w-5 h-5" />, aria: '徒歩' },
     { key: 'driving', icon: <MdDirectionsCar className="w-5 h-5" />, aria: '車' },
-    { key: 'transit', icon: <MdTrain className="w-5 h-5" />, aria: '電車' },
+    { key: 'transit', icon: <MdDirectionsTransit className="w-5 h-5" />, aria: '公共交通機関' },
   ] as const;
 
   return (

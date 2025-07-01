@@ -42,6 +42,9 @@ export interface TravelPlan {
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
+  labels: MapLabel[]; // 付箋データ
+  endDate: Date | null;
+  startDate: Date | null;
 }
 
 export interface MapLabel {

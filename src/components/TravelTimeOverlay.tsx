@@ -3,7 +3,7 @@ import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { useTravelTimeStore } from '../store/travelTimeStore';
 import { usePlacesStore } from '../store/placesStore';
 import { useEffect, useRef } from 'react';
-import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdTrain, MdAccessTime } from 'react-icons/md';
+import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit, MdAccessTime } from 'react-icons/md';
 
 export default function TravelTimeOverlay() {
   const { map } = useGoogleMaps();
@@ -89,7 +89,7 @@ export default function TravelTimeOverlay() {
     switch (mode) {
       case 'WALKING': return <MdDirectionsWalk className="w-4 h-4" />;
       case 'DRIVING': return <MdDirectionsCar className="w-4 h-4" />;
-      case 'TRANSIT': return <MdTrain className="w-4 h-4" />;
+      case 'TRANSIT': return <MdDirectionsTransit className="w-4 h-4" />;
       default: return <MdDirectionsWalk className="w-4 h-4" />;
     }
   };
@@ -98,7 +98,7 @@ export default function TravelTimeOverlay() {
     switch (mode) {
       case 'WALKING': return '徒歩';
       case 'DRIVING': return '車';
-      case 'TRANSIT': return '電車';
+      case 'TRANSIT': return '公共交通機関';
       default: return '徒歩';
     }
   };

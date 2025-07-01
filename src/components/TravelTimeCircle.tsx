@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Marker } from '@react-google-maps/api';
 import { TravelCircle } from '../types/travelTime';
 import { minutesToRadius, getTravelModeColor } from '../utils/travelTimeCalculator';
-import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdTrain, MdAccessTime } from 'react-icons/md';
+import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit, MdAccessTime } from 'react-icons/md';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 
@@ -286,7 +286,7 @@ export default function TravelTimeCircle({ circle, zoom = 14 }: Props) {
       case 'driving':
         return '車';
       case 'transit':
-        return '電車';
+        return '公共交通機関';
       default:
         return '徒歩';
     }

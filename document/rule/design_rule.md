@@ -687,3 +687,255 @@ boxShadow: {
    - [ ] モーション設定の尊重
 
 この統合デザインシステムにより、Apple の洗練されたUIと旅行アプリの楽しさを両立させた、高品質なユーザー体験を実現できます。
+
+---
+
+## 🆕 デザインルール追記（2024年追加）
+
+### プラン名・日程選択UIパターン
+
+今回のプラン名ボタンとモーダル実装で確立した新しいデザインパターンを記録します。
+
+#### 分離された操作UI
+```css
+/* 複数の操作を含むコンポーネントの設計原則 */
+.multi-action-container {
+  /* メインコンテナは操作不可、子要素のみ操作可能 */
+  @apply pointer-events-none;
+}
+
+.multi-action-container > .action-element {
+  /* 個別の操作要素のみポインターイベントを有効化 */
+  @apply pointer-events-auto;
+}
+
+/* プラン名部分：テキストボタンスタイル */
+.text-action-button {
+  @apply hover:text-coral-500 transition-colors duration-150;
+  @apply focus:outline-none focus:text-coral-500;
+  @apply cursor-pointer select-none;
+}
+
+/* アイコンボタン：マイクロインタラクション */
+.icon-action-button {
+  @apply hover:scale-110 hover:text-coral-600;
+  @apply transition-all duration-150 ease-ios-default;
+  @apply focus:outline-none focus:scale-110;
+  @apply cursor-pointer;
+}
+```
+
+#### 日付バッジデザイン
+```css
+/* 階層的な情報表示バッジ */
+.date-badge {
+  @apply bg-coral-500/10 text-coral-600 px-3 py-1 rounded-full;
+  @apply text-[14px] font-medium tracking-[-0.24px];
+  @apply border border-coral-500/20;
+}
+
+.date-badge .year {
+  @apply text-system-secondary-label text-[12px] mr-1;
+}
+
+.date-badge .date-range {
+  @apply text-coral-600 font-semibold;
+}
+```
+
+#### モーダルヘッダーパターン
+```css
+/* アイコン付きモーダルヘッダー */
+.modal-header {
+  @apply flex items-center space-x-3;
+}
+
+.modal-header-icon {
+  @apply w-8 h-8 bg-coral-500/10 rounded-full flex items-center justify-center;
+}
+
+.modal-header-icon svg {
+  @apply w-4 h-4 text-coral-500;
+}
+
+.modal-header-title {
+  @apply headline text-system-label;
+}
+```
+
+#### カレンダーUIパターン
+```css
+/* 日本語対応カレンダー */
+.calendar-grid {
+  @apply grid grid-cols-7 gap-1;
+}
+
+.calendar-day-header {
+  @apply text-center py-2;
+  @apply caption-1 text-system-secondary-label font-medium;
+}
+
+.calendar-day-button {
+  @apply w-full aspect-square flex items-center justify-center rounded-lg;
+  @apply text-[15px] font-medium transition-all duration-150;
+}
+
+/* 日付の状態別スタイル */
+.calendar-day-selected {
+  @apply bg-coral-500 text-white shadow-elevation-2;
+}
+
+.calendar-day-in-range {
+  @apply bg-coral-500/20 text-coral-600;
+}
+
+.calendar-day-available {
+  @apply hover:bg-gray-100 text-system-label;
+}
+
+.calendar-day-disabled {
+  @apply opacity-40 cursor-not-allowed;
+}
+```
+
+#### 範囲選択フィードバック
+```css
+/* 選択状況表示パネル */
+.selection-feedback {
+  @apply bg-coral-500/10 rounded-lg p-3 border border-coral-500/20;
+}
+
+.selection-feedback-item {
+  @apply flex items-center justify-between text-sm;
+}
+
+.selection-feedback-label {
+  @apply text-system-secondary-label;
+}
+
+.selection-feedback-value {
+  @apply text-coral-600 font-semibold;
+}
+```
+
+#### リアルタイム検証UI
+```css
+/* 入力検証とフィードバック */
+.input-with-validation {
+  @apply space-y-3;
+}
+
+.input-counter {
+  @apply text-right;
+  @apply caption-1 text-system-tertiary-label;
+}
+
+.validation-button {
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply transition-opacity duration-150;
+}
+```
+
+#### モーダルアニメーション（追加）
+```css
+/* カスタムモーダルアニメーション */
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-zoom-in {
+  from { 
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-fade-in {
+  animation: modal-fade-in 0.2s cubic-bezier(0.19, 0.91, 0.38, 1);
+}
+
+.animate-modal-zoom-in {
+  animation: modal-zoom-in 0.3s cubic-bezier(0.19, 0.91, 0.38, 1);
+}
+```
+
+### 実装例
+
+#### 分離操作UI実装例
+```tsx
+// プラン名と日程の分離された操作
+<div className="glass-effect rounded-xl px-6 py-3 pointer-events-none">
+  <div className="flex flex-col items-center space-y-1">
+    {/* プラン名 - 個別クリック */}
+    <button 
+      className="text-action-button pointer-events-auto"
+      onClick={handleNameEdit}
+    >
+      {planName}
+    </button>
+    
+    {/* 日程 - 個別操作 */}
+    <div className="flex items-center space-x-2 pointer-events-auto">
+      <button 
+        className="icon-action-button"
+        onClick={handleDateEdit}
+      >
+        <CalendarIcon />
+      </button>
+      <div className="date-badge pointer-events-none">
+        <span className="year">{year}</span>
+        <span className="date-range">{dateRange}</span>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+#### カレンダーモーダル実装例
+```tsx
+// 範囲選択カレンダー
+<div className="calendar-grid">
+  {days.map((date) => (
+    <button
+      className={`calendar-day-button ${getDateState(date)}`}
+      onClick={() => handleDateSelect(date)}
+      disabled={isPastDate(date)}
+    >
+      {date.getDate()}
+    </button>
+  ))}
+</div>
+
+{/* 選択フィードバック */}
+<div className="selection-feedback">
+  <div className="selection-feedback-item">
+    <span className="selection-feedback-label">出発日:</span>
+    <span className="selection-feedback-value">{startDate}</span>
+  </div>
+</div>
+```
+
+### デザイン原則（追加）
+
+1. **操作の分離**
+   - 単一のコンポーネント内でも操作を明確に分離
+   - 各操作に適切な視覚的フィードバックを提供
+
+2. **階層的な情報表示**
+   - 主要情報と補助情報を視覚的に区別
+   - フォントサイズ、色、配置で情報の重要度を表現
+
+3. **マイクロインタラクション**
+   - ホバー、フォーカス、アクティブ状態に適切なフィードバック
+   - Apple風のスムーズなアニメーション
+
+4. **直感的な操作性**
+   - アイコンと機能の関連性を明確に
+   - 操作可能な要素であることを視覚的に示す
+
+これらのパターンは今後のUI開発において標準として使用し、一貫性のあるユーザー体験を提供します。

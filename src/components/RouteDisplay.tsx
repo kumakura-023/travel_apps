@@ -3,7 +3,7 @@ import { DirectionsRenderer, Marker } from '@react-google-maps/api';
 import { RouteConnection } from '../types';
 import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
-import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdTrain } from 'react-icons/md';
+import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit } from 'react-icons/md';
 
 interface Props {
   route: RouteConnection;
@@ -236,11 +236,20 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
     };
   };
 
+  // 検索結果のルートかどうかを判定（search_origin_/search_destination_で始まる）
+  const isSearchRoute = route.originId.startsWith('search_origin_') || route.destinationId.startsWith('search_destination_');
+  
+  // 座標が日本以外（海外）かどうかを判定
+  const isInternationalRoute = route.originCoordinates.lat < 20 || route.originCoordinates.lat > 50 || 
+                              route.originCoordinates.lng < 120 || route.originCoordinates.lng > 150 ||
+                              route.destinationCoordinates.lat < 20 || route.destinationCoordinates.lat > 50 || 
+                              route.destinationCoordinates.lng < 120 || route.destinationCoordinates.lng > 150;
+  
   // DirectionsRendererのオプション
   const directionsOptions = {
     suppressMarkers: true, // デフォルトのマーカーを非表示
     suppressInfoWindows: true, // デフォルトのInfoWindowを非表示
-    preserveViewport: true, // ビューポートを変更しない
+    preserveViewport: !(isSearchRoute && isInternationalRoute), // 検索結果かつ海外の場合のみ地図を移動させる
     polylineOptions: {
       strokeColor: '#EC4899', // マゼンタピンク（高視認性で自然環境でも見やすい）
       strokeWeight: 6,
@@ -254,27 +263,55 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
     if (!map) return;
 
     console.log(`Creating DirectionsRenderer for route ${route.id}`);
+    console.log(`Route type: ${isSearchRoute ? 'Search Route' : 'Candidate Route'}`);
+    console.log(`International route: ${isInternationalRoute}`);
+    console.log(`preserveViewport: ${directionsOptions.preserveViewport}`);
     
     // 既存のDirectionsRendererがあれば削除
     if (directionsRendererRef.current) {
+      console.log(`Removing existing DirectionsRenderer for route ${route.id}`);
       directionsRendererRef.current.setMap(null);
     }
 
-    // 新しいDirectionsRendererを作成
-    const directionsRenderer = new google.maps.DirectionsRenderer(directionsOptions);
-    directionsRenderer.setMap(map);
-    directionsRenderer.setDirections(route.route);
-    directionsRendererRef.current = directionsRenderer;
+    try {
+      // 新しいDirectionsRendererを作成
+      const directionsRenderer = new google.maps.DirectionsRenderer(directionsOptions);
+      
+      console.log(`Setting map for DirectionsRenderer (route ${route.id})`);
+      directionsRenderer.setMap(map);
+      
+      console.log(`Setting directions for route ${route.id}`, {
+        hasRoutes: route.route?.routes?.length > 0,
+        routesCount: route.route?.routes?.length || 0,
+        originCoords: route.originCoordinates,
+        destCoords: route.destinationCoordinates
+      });
+      
+      directionsRenderer.setDirections(route.route);
+      directionsRendererRef.current = directionsRenderer;
+      
+      console.log(`✅ DirectionsRenderer successfully created for route ${route.id}`);
+      
+    } catch (error) {
+      console.error(`❌ Error creating DirectionsRenderer for route ${route.id}:`, error);
+      console.error('Route data:', route);
+      console.error('Directions options:', directionsOptions);
+    }
 
     // クリーンアップ関数
     return () => {
-      console.log(`Cleaning up DirectionsRenderer for route ${route.id}`);
+      console.log(`Cleanup DirectionsRenderer for route ${route.id}`);
       if (directionsRendererRef.current) {
-        directionsRendererRef.current.setMap(null);
-        directionsRendererRef.current = null;
+        try {
+          directionsRendererRef.current.setMap(null);
+          directionsRendererRef.current = null;
+          console.log(`✅ DirectionsRenderer cleaned up for route ${route.id}`);
+        } catch (error) {
+          console.error(`❌ Error cleaning up DirectionsRenderer for route ${route.id}:`, error);
+        }
       }
-         };
-   }, [map, route.id]);
+    };
+  }, [map, route.id, isSearchRoute, isInternationalRoute]);
 
   // ルートのラインのみを表示（マーカーは RouteMarkers コンポーネントで表示）
   return null;

@@ -17,6 +17,7 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
         ...state.places,
         {
           ...partial,
+          labelHidden: true,
           labelPosition: {
             lat: partial.coordinates.lat,
             lng: partial.coordinates.lng,

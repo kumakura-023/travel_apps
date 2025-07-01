@@ -51,18 +51,35 @@ export const useRouteSearchStore = create<RouteSearchState>((set, get) => ({
     const state = get();
     console.log('🎯 selectPointFromMap called', { 
       selectionMode: state.selectionMode, 
-      point 
+      point,
+      currentState: state
     });
     if (state.selectionMode === 'origin') {
       console.log('✅ Setting origin point and clearing selection mode');
       set({ selectedOrigin: point, selectionMode: null });
       console.log('✅ Origin point set:', point);
+      
+      // 確認のため更新後の状態もログ出力
+      const newState = get();
+      console.log('Updated state after setting origin:', {
+        selectedOrigin: newState.selectedOrigin,
+        selectionMode: newState.selectionMode
+      });
     } else if (state.selectionMode === 'destination') {
       console.log('✅ Setting destination point and clearing selection mode');
       set({ selectedDestination: point, selectionMode: null });
       console.log('✅ Destination point set:', point);
+      
+      // 確認のため更新後の状態もログ出力
+      const newState = get();
+      console.log('Updated state after setting destination:', {
+        selectedDestination: newState.selectedDestination,
+        selectionMode: newState.selectionMode
+      });
     } else {
       console.log('❌ No valid selection mode, ignoring');
+      console.log('Current selection mode:', state.selectionMode);
+      console.log('Expected: "origin" or "destination"');
     }
   }
 })); 

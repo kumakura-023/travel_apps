@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { MdClose, MdDirectionsCar, MdTrain, MdDirectionsWalk, MdDirectionsBike, MdFlight, MdSwapVert, MdSearch, MdNavigation } from 'react-icons/md';
+import { MdClose, MdDirectionsCar, MdDirectionsTransit, MdDirectionsWalk, MdDirectionsBike, MdFlight, MdSwapVert, MdSearch, MdNavigation } from 'react-icons/md';
 import { Autocomplete } from '@react-google-maps/api';
 import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
@@ -121,7 +121,7 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
 
   const travelModes = [
     { mode: 'DRIVING' as TravelMode, icon: MdDirectionsCar, label: '車' },
-    { mode: 'TRANSIT' as TravelMode, icon: MdTrain, label: '電車' },
+    { mode: 'TRANSIT' as TravelMode, icon: MdDirectionsTransit, label: '公共交通機関' },
     { mode: 'WALKING' as TravelMode, icon: MdDirectionsWalk, label: '徒歩' },
     { mode: 'BICYCLING' as TravelMode, icon: MdDirectionsBike, label: '自転車' },
   ];
@@ -160,9 +160,17 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
       let destinationCoords: { lat: number; lng: number };
 
       // 選択された地点の座標があればそれを使用、なければGeocoding APIを使用
+      console.log('=== ORIGIN COORDINATES PROCESSING ===');
+      console.log('storeOrigin:', storeOrigin);
+      console.log('currentOriginText:', currentOriginText);
+      console.log('Text match check:', currentOriginText === storeOrigin?.name || currentOriginText.includes(storeOrigin?.name || ''));
+      
       if (storeOrigin && (currentOriginText === storeOrigin.name || currentOriginText.includes(storeOrigin.name))) {
+        console.log('✅ Using stored origin coordinates');
         originCoords = storeOrigin;
+        console.log('Origin coords from store:', originCoords);
       } else {
+        console.log('🔍 Using Geocoding API for origin');
         const geocoder = new google.maps.Geocoder();
         const originResult = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
           geocoder.geocode({ address: currentOriginText }, (results, status) => {
@@ -180,11 +188,20 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
           lat: originResult.geometry.location.lat(),
           lng: originResult.geometry.location.lng()
         };
+        console.log('Origin coords from Geocoding:', originCoords);
       }
 
+      console.log('=== DESTINATION COORDINATES PROCESSING ===');
+      console.log('storeDestination:', storeDestination);
+      console.log('currentDestinationText:', currentDestinationText);
+      console.log('Text match check:', currentDestinationText === storeDestination?.name || currentDestinationText.includes(storeDestination?.name || ''));
+      
       if (storeDestination && (currentDestinationText === storeDestination.name || currentDestinationText.includes(storeDestination.name))) {
+        console.log('✅ Using stored destination coordinates');
         destinationCoords = storeDestination;
+        console.log('Destination coords from store:', destinationCoords);
       } else {
+        console.log('🔍 Using Geocoding API for destination');
         const geocoder = new google.maps.Geocoder();
         const destinationResult = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
           geocoder.geocode({ address: currentDestinationText }, (results, status) => {
@@ -202,33 +219,107 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
           lat: destinationResult.geometry.location.lat(),
           lng: destinationResult.geometry.location.lng()
         };
+        console.log('Destination coords from Geocoding:', destinationCoords);
       }
 
       // Directions APIで経路検索
-      console.log('Calling directionsService.getRoute with:', {
+      console.log('=== CALLING DIRECTIONS API ===');
+      console.log('Final originCoords:', originCoords);
+      console.log('Final destinationCoords:', destinationCoords);
+      console.log('Selected mode:', selectedMode);
+      console.log('Travel mode enum:', google.maps.TravelMode[selectedMode]);
+      console.log('Full request to directionsService.getRoute:', {
         originCoords,
         destinationCoords,
         travelMode: google.maps.TravelMode[selectedMode]
       });
       
-      const routeResult = await directionsService.getRoute(
-        originCoords,
-        destinationCoords,
-        google.maps.TravelMode[selectedMode]
-      );
+      // TRANSITモードが失敗した場合はWALKINGにフォールバック
+      let routeResult;
+      let actualTravelMode = google.maps.TravelMode[selectedMode];
+      
+      try {
+        routeResult = await directionsService.getRoute(
+          originCoords,
+          destinationCoords,
+          google.maps.TravelMode[selectedMode]
+        );
+      } catch (transitError) {
+        if (selectedMode === 'TRANSIT') {
+          console.log('❌ TRANSIT mode failed, trying WALKING as fallback');
+          console.log('TRANSIT error:', transitError);
+          
+          // WALKINGモードでリトライ（徒歩+公共交通機関の代替として）
+          try {
+            routeResult = await directionsService.getRoute(
+              originCoords,
+              destinationCoords,
+              google.maps.TravelMode.WALKING
+            );
+            actualTravelMode = google.maps.TravelMode.WALKING;
+            console.log('✅ WALKING fallback successful');
+            
+            // ユーザーに通知（時刻考慮版）
+            const now = new Date();
+            const currentHour = now.getHours();
+            let timeMessage = '';
+            
+            if (currentHour >= 1 && currentHour < 5) {
+              timeMessage = '• 現在は深夜時間帯（運行停止中）のため、朝の運行時間で検索しましたが、ルートが見つかりませんでした\n';
+            } else if (currentHour >= 0 && currentHour < 1) {
+              timeMessage = '• 現在は深夜時間帯（運行停止中）のため、日中の運行時間で検索しましたが、ルートが見つかりませんでした\n';
+            }
+            
+            alert('🚇 公共交通機関のルート検索結果:\n' +
+                  timeMessage +
+                  '• この地域・経路では詳細な時刻表データが利用できませんでした\n' +
+                  '• 徒歩での直線距離を表示しています\n' +
+                  '• 実際の移動では「最寄り駅→電車→最寄り駅→徒歩」をご検討ください\n' +
+                  '• Google Mapsアプリで詳細な公共交通機関ルートを確認できます');
+          } catch (walkingError) {
+            console.log('❌ WALKING fallback also failed:', walkingError);
+            
+            // 最後の手段としてDRIVINGを試行
+            try {
+              routeResult = await directionsService.getRoute(
+                originCoords,
+                destinationCoords,
+                google.maps.TravelMode.DRIVING
+              );
+              actualTravelMode = google.maps.TravelMode.DRIVING;
+              console.log('✅ DRIVING fallback successful');
+              
+              alert('公共交通機関・徒歩両方でルートが見つかりませんでした。\n参考として車でのルートを表示します。');
+            } catch (drivingError) {
+              console.log('❌ All fallback modes failed:', drivingError);
+              throw new Error('申し訳ございません。この地点間のルートを見つけることができませんでした。\n地点を変更してお試しください。');
+            }
+          }
+        } else {
+          throw transitError;
+        }
+      }
 
       console.log('Route result received:', routeResult);
+
+      // 実際の移動手段をTravelMode文字列に変換
+      const actualModeString = actualTravelMode === google.maps.TravelMode.WALKING ? 'WALKING' :
+                              actualTravelMode === google.maps.TravelMode.DRIVING ? 'DRIVING' :
+                              actualTravelMode === google.maps.TravelMode.TRANSIT ? 'TRANSIT' :
+                              actualTravelMode === google.maps.TravelMode.BICYCLING ? 'BICYCLING' : 'DRIVING';
 
       setSearchResult({
         duration: routeResult.durationText,
         distance: routeResult.distanceText,
-        mode: selectedMode
+        mode: actualModeString as TravelMode
       });
       
       console.log('Search result set:', {
         duration: routeResult.durationText,
         distance: routeResult.distanceText,
-        mode: selectedMode
+        mode: actualModeString,
+        originalSelectedMode: selectedMode,
+        actualTravelMode
       });
 
       // RouteConnectionsStoreにルートを追加して地図上に表示
@@ -237,7 +328,7 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
         destinationId: `search_destination_${Date.now()}`, // 検索用の一意ID
         originCoordinates: originCoords,
         destinationCoordinates: destinationCoords,
-        travelMode: google.maps.TravelMode[selectedMode],
+        travelMode: actualTravelMode, // フォールバック処理後の実際の移動手段
         duration: routeResult.duration,
         distance: routeResult.distance,
         durationText: routeResult.durationText,
@@ -245,9 +336,30 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
         route: routeResult.route
       };
       
-      // 既存の検索結果ルートを削除（最新の検索結果のみ表示）
-      console.log('Adding route to map display:', routeConnection);
-      addRoute(routeConnection);
+      console.log('=== ADDING ROUTE TO MAP ===');
+      console.log('Route connection:', {
+        id: routeConnection.originId,
+        travelMode: actualTravelMode,
+        originalMode: selectedMode,
+        hasRoute: !!routeResult.route,
+        routesCount: routeResult.route?.routes?.length || 0,
+        fallbackUsed: actualTravelMode !== google.maps.TravelMode[selectedMode],
+        coords: {
+          origin: originCoords,
+          destination: destinationCoords
+        }
+      });
+      
+      try {
+        // 既存の検索結果ルートを削除（最新の検索結果のみ表示）
+        console.log('Adding route to map display...');
+        addRoute(routeConnection);
+        console.log('✅ Route successfully added to map');
+      } catch (error) {
+        console.error('❌ Error adding route to map:', error);
+        console.error('Route data:', routeConnection);
+        throw error;
+      }
 
     } catch (error) {
       console.error('経路検索エラー:', error);
@@ -364,7 +476,7 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
 
 
           {/* 説明テキスト */}
-          <div className="text-center">
+          <div className="text-center space-y-2">
             {selectionMode === 'origin' && (
               <p className="text-sm text-green-600 bg-green-50 py-2 px-3 rounded-lg">
                 🟢 出発地を入力中：地図上の地点をタップするか、下のフィールドに直接入力
@@ -375,25 +487,54 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
                 🔴 目的地を入力中：地図上の地点をタップするか、下のフィールドに直接入力
               </p>
             )}
+            
+            {/* デバッグ情報表示 */}
+            <div className="text-xs text-gray-500 bg-gray-50 py-2 px-3 rounded-lg">
+              <div>選択モード: {selectionMode || 'なし'}</div>
+              <div>出発地設定済み: {storeOrigin ? '✅' : '❌'}</div>
+              <div>目的地設定済み: {storeDestination ? '✅' : '❌'}</div>
+            </div>
           </div>
 
           {/* 移動手段選択 */}
           <div className="flex justify-center space-x-2">
             {travelModes.map(({ mode, icon: Icon, label }) => (
-              <button
-                key={mode}
-                onClick={() => setSelectedMode(mode)}
-                className={`flex flex-col items-center p-3 rounded-lg transition-all ${
-                  selectedMode === mode
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <Icon size={24} />
-                <span className="text-xs mt-1">{label}</span>
-              </button>
+              <div key={mode} className="relative">
+                <button
+                  onClick={() => setSelectedMode(mode)}
+                  className={`flex flex-col items-center p-3 rounded-lg transition-all ${
+                    selectedMode === mode
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  } ${mode === 'TRANSIT' ? 'relative' : ''}`}
+                  title={mode === 'TRANSIT' ? '⚠️ 日本では詳細な公共交通機関データが提供されていません' : ''}
+                >
+                  <Icon size={24} />
+                  <span className="text-xs mt-1">{label}</span>
+                  {mode === 'TRANSIT' && (
+                    <span className="absolute -top-1 -right-1 text-xs">⚠️</span>
+                  )}
+                </button>
+              </div>
             ))}
           </div>
+
+          {/* 公共交通機関の制限に関する注意書き */}
+          {selectedMode === 'TRANSIT' && (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-start space-x-2">
+                <span className="text-amber-500 mt-0.5">⚠️</span>
+                <div className="text-sm text-amber-700">
+                  <div className="font-medium mb-1">日本の公共交通機関について</div>
+                  <div className="text-xs space-y-1">
+                    <div>• Google Directions APIでは日本の詳細な電車・地下鉄データが提供されていません</div>
+                    <div>• 検索失敗時は自動的に徒歩ルートで代替表示します</div>
+                    <div>• 詳細な乗換案内は Google Maps アプリをご利用ください</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
                     {/* 出発地入力 */}
           <div className="space-y-2">
@@ -411,7 +552,15 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
               <button
                 onClick={() => {
                   console.log('📍 Origin button clicked, setting selectionMode to origin');
+                  console.log('Current store state before setting origin mode:', { storeOrigin, storeDestination, selectionMode });
                   setSelectionMode('origin');
+                  console.log('Origin selection mode set');
+                  
+                  // 状態変更を確認
+                  setTimeout(() => {
+                    const currentState = useRouteSearchStore.getState();
+                    console.log('Store state after setting origin mode:', currentState);
+                  }, 100);
                 }}
                 className={`px-3 py-3 rounded-lg border transition-all ${
                   selectionMode === 'origin' 
@@ -454,7 +603,15 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
               <button
                 onClick={() => {
                   console.log('📍 Destination button clicked, setting selectionMode to destination');
+                  console.log('Current store state before setting destination mode:', { storeOrigin, storeDestination, selectionMode });
                   setSelectionMode('destination');
+                  console.log('Destination selection mode set');
+                  
+                  // 状態変更を確認
+                  setTimeout(() => {
+                    const currentState = useRouteSearchStore.getState();
+                    console.log('Store state after setting destination mode:', currentState);
+                  }, 100);
                 }}
                 className={`px-3 py-3 rounded-lg border transition-all ${
                   selectionMode === 'destination' 
