@@ -16,6 +16,13 @@ import { useGoogleMaps } from './hooks/useGoogleMaps';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useSelectedPlaceStore } from './store/placeStore';
 import { useTravelTimeStore } from './store/travelTimeStore';
+import PlaceList from './components/PlaceList';
+import { loadPlanFromUrl } from './utils/shareUtils';
+import { usePlacesStore } from './store/placesStore';
+import { useLabelsStore } from './store/labelsStore';
+import PlanNameDisplay from './components/PlanNameDisplay';
+import { usePlanStore } from './store/planStore';
+import { getActivePlan, createEmptyPlan, setActivePlan } from './services/storageService';
 
 // LoadScript用のライブラリを定数として定義
 const LIBRARIES: ('places')[] = ['places'];
@@ -94,13 +101,32 @@ function App() {
     }
   }, [activeTab]);
 
+  // URL共有からの読み込み
+  React.useEffect(() => {
+    const plan = loadPlanFromUrl();
+    if (plan) {
+      usePlacesStore.setState({ places: plan.places });
+      useLabelsStore.setState({ labels: plan.labels });
+      usePlanStore.getState().setPlan(plan);
+      return;
+    }
+
+    // URL にプランが無い場合はローカルストレージから取得、なければ新規生成
+    const current = usePlanStore.getState().plan;
+    if (!current) {
+      const stored = getActivePlan() || createEmptyPlan();
+      usePlanStore.getState().setPlan(stored);
+      setActivePlan(stored.id);
+    }
+  }, []);
+
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>
       {/* Navigation */}
       <TabNavigation active={activeTab} onChange={setActiveTab} />
 
-      {/* ルート検索画面が開いている時は検索バーを非表示 */}
-      {!isRouteSearchOpen && (
+      {/* ルート検索画面またはリストタブでは検索バーを非表示 */}
+      {!isRouteSearchOpen && activeTab !== 'list' && (
         <SearchBar
           onPlaceSelected={handlePlaceSelected}
           isDesktop={isDesktop}
@@ -109,12 +135,15 @@ function App() {
         />
       )}
       <PlaceDetailPanel />
-      <MapTypeSwitcher />
+      {activeTab !== 'list' && <MapTypeSwitcher />}
       
       {/* 地点選択中のバナー */}
       <SelectionBanner />
       
-      <Map />
+      <Map showLabelToggle={activeTab !== 'list'} />
+      
+      {/* リスト表示タブ */}
+      {activeTab === 'list' && <PlaceList />}
       
       {/* テスト用候補地追加ボタン（開発時のみ表示） */}
       {import.meta.env.DEV && <TestPlacesButton />}
@@ -128,6 +157,9 @@ function App() {
       />
 
       {activeTab === 'travelTime' && <TravelTimeControls />}
+
+      {/* プラン名表示 */}
+      <PlanNameDisplay />
     </LoadScript>
   );
 }

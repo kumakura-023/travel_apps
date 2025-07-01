@@ -7,6 +7,41 @@
    ---------------------- */
 
 @layer components {
+  /* Apple風タイポグラフィシステム */
+  .title-large { 
+    @apply text-[34px] leading-[41px] tracking-[0.374px] font-normal font-system;
+  }
+  .title-1 { 
+    @apply text-[28px] leading-[34px] tracking-[0.364px] font-normal font-system;
+  }
+  .title-2 { 
+    @apply text-[22px] leading-[28px] tracking-[0.352px] font-normal font-system;
+  }
+  .title-3 { 
+    @apply text-[20px] leading-[25px] tracking-[0.38px] font-normal font-system;
+  }
+  .headline { 
+    @apply text-[17px] leading-[22px] tracking-[-0.408px] font-semibold font-system;
+  }
+  .body { 
+    @apply text-[17px] leading-[22px] tracking-[-0.408px] font-normal font-system;
+  }
+  .callout { 
+    @apply text-[16px] leading-[21px] tracking-[-0.32px] font-normal font-system;
+  }
+  .subheadline { 
+    @apply text-[15px] leading-[20px] tracking-[-0.24px] font-normal font-system;
+  }
+  .footnote { 
+    @apply text-[13px] leading-[18px] tracking-[-0.078px] font-normal font-system;
+  }
+  .caption-1 { 
+    @apply text-[12px] leading-[16px] tracking-[0px] font-normal font-system;
+  }
+  .caption-2 { 
+    @apply text-[11px] leading-[13px] tracking-[0.066px] font-normal font-system;
+  }
+
   /* Glass effect utilities */
   .glass-effect {
     @apply bg-white/70 backdrop-blur-xl backdrop-saturate-150 border border-white/20;
@@ -40,6 +75,85 @@
   }
   .card-interactive {
     @apply card cursor-pointer transition-all duration-200 ease-out hover:shadow-elevation-3 hover:scale-[1.01] active:scale-[0.99] active:shadow-elevation-1;
+  }
+
+  /* Apple風アニメーション */
+  .ease-ios-default { 
+    transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .ease-ios-in-out { 
+    transition-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  }
+  .ease-ios-out { 
+    transition-timing-function: cubic-bezier(0.19, 0.91, 0.38, 1);
+  }
+
+  .duration-ios-fast { transition-duration: 150ms; }
+  .duration-ios-base { transition-duration: 250ms; }
+  .duration-ios-slow { transition-duration: 350ms; }
+
+  @keyframes spring-scale {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.05); }
+    60% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+  }
+
+  .animate-spring {
+    animation: spring-scale 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* モーダル用アニメーション */
+  @keyframes modal-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes modal-zoom-in {
+    from { 
+      opacity: 0;
+      transform: scale(0.95) translateY(8px);
+    }
+    to { 
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .animate-modal-fade-in {
+    animation: modal-fade-in 0.2s cubic-bezier(0.19, 0.91, 0.38, 1);
+  }
+
+  .animate-modal-zoom-in {
+    animation: modal-zoom-in 0.3s cubic-bezier(0.19, 0.91, 0.38, 1);
+  }
+
+  /* iOS風入力フィールド */
+  .input {
+    @apply w-full px-4 py-3 bg-system-secondary-background rounded-lg border-0;
+    @apply text-[17px] tracking-[-0.408px] font-system;
+    @apply placeholder-system-tertiary-label transition-all duration-150;
+    @apply focus:outline-none focus:ring-2 focus:ring-coral-500/30 focus:bg-white;
+  }
+
+  /* iOS風リストアイテム */
+  .list-item {
+    @apply px-4 py-3 flex items-center justify-between;
+    @apply hover:bg-gray-50 transition-colors duration-150;
+    @apply bg-white border-b border-system-separator last:border-b-0;
+  }
+
+  /* iOS風アラート */
+  .alert {
+    @apply glass-effect rounded-xl p-5 max-w-[270px] mx-auto text-center;
+  }
+
+  .alert-title {
+    @apply headline mb-1 text-system-label;
+  }
+
+  .alert-message {
+    @apply footnote text-system-secondary-label mb-4;
   }
 
   /* スクロールバーを隠すユーティリティ */

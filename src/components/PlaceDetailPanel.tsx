@@ -11,6 +11,7 @@ import { usePlacesStore } from '../store/placesStore';
 import { formatCurrency } from '../utils/formatCurrency';
 import { classifyCategory } from '../utils/categoryClassifier';
 import { getCategoryPath, getCategoryColor, getCategoryDisplayName } from '../utils/categoryIcons';
+import { estimateCost } from '../utils/estimateCost';
 
 export default function PlaceDetailPanel() {
   const { place, setPlace } = useSelectedPlaceStore();
@@ -37,35 +38,45 @@ export default function PlaceDetailPanel() {
   // 登録済みか判定
   const saved = savedPlaces.some((p) => p.name === place.name && p.address === place.formatted_address);
 
-  // アクションハンドラー
+  const getLatLng = () => {
+    const coords = (place as any).coordinates as { lat: number; lng: number } | undefined;
+    const lat = place.geometry?.location?.lat() ?? coords?.lat;
+    const lng = place.geometry?.location?.lng() ?? coords?.lng;
+    if (lat === undefined || lng === undefined) return null;
+    return { lat, lng } as { lat: number; lng: number };
+  };
+
   const handleRouteFromHere = () => {
-    if (!place.geometry?.location) return;
-    
+    const pos = getLatLng();
+    if (!pos) return;
+
     setSelectedOrigin({
-      lat: place.geometry.location.lat(),
-      lng: place.geometry.location.lng(),
-      name: place.name || '選択した地点'
+      ...pos,
+      name: place.name || '選択した地点',
     });
     openRouteSearch();
   };
 
   const handleRouteToHere = () => {
-    if (!place.geometry?.location) return;
-    
+    const pos = getLatLng();
+    if (!pos) return;
+
     setSelectedDestination({
-      lat: place.geometry.location.lat(),
-      lng: place.geometry.location.lng(),
-      name: place.name || '選択した地点'
+      ...pos,
+      name: place.name || '選択した地点',
     });
     openRouteSearch();
   };
 
   const handleSavePlace = () => {
-    if (!place.geometry?.location) return;
-    
+    const pos = getLatLng();
+    if (!pos) return;
+
     if (saved) {
       // 既に保存済みの場合は削除
-      const target = savedPlaces.find((p) => p.name === place.name && p.address === place.formatted_address);
+      const target = savedPlaces.find(
+        (p) => p.name === place.name && p.address === place.formatted_address,
+      );
       if (target) {
         deletePlace(target.id);
       }
@@ -75,34 +86,32 @@ export default function PlaceDetailPanel() {
       addPlace({
         name: place.name || '名称未設定',
         address: place.formatted_address || '',
-        coordinates: {
-          lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng(),
-        },
+        coordinates: pos,
         category,
         memo: '',
-        estimatedCost: 0,
+        estimatedCost: estimateCost((place as any).price_level, category),
         photos: [],
       });
     }
   };
 
   const handleNearbySearch = () => {
-    if (!place.geometry?.location || !map) return;
-    
+    const pos = getLatLng();
+    if (!pos || !map) return;
+
+    const location = new google.maps.LatLng(pos.lat, pos.lng);
     // Places APIで周辺検索を実行
     const service = new google.maps.places.PlacesService(map);
     const request: google.maps.places.PlaceSearchRequest = {
-      location: place.geometry.location,
+      location,
       radius: 1000, // 1km圏内
       type: 'point_of_interest',
     };
-    
+
     service.nearbySearch(request, (results, status) => {
       if (status === google.maps.places.PlacesServiceStatus.OK && results) {
         console.log('付近の施設:', results);
         // 検索結果をマップ上に表示する処理を実装
-        // 今後、検索結果パネルを作成して表示する予定
       } else {
         console.error('付近検索に失敗しました:', status);
       }
@@ -157,7 +166,7 @@ export default function PlaceDetailPanel() {
         <div className="relative">
           {photos.length > 0 && (
             <img
-              src={photos[0].getUrl({ maxWidth: 1080, maxHeight: 540 })}
+              src={typeof photos[0] === 'string' ? photos[0] : photos[0].getUrl({ maxWidth: 1080, maxHeight: 540 })}
               alt={place.name || ''}
               className="w-full h-60 object-cover"
             />
@@ -210,7 +219,9 @@ export default function PlaceDetailPanel() {
           )}
           {/* 費用例 (ダミー) */}
           {saved && (
-            <p className="headline font-medium pt-2">予想費用: {formatCurrency(15000)}</p>
+            <p className="headline font-medium pt-2">
+              予想費用: {formatCurrency(savedPlaces.find(p => p.name === place.name && p.address === place.formatted_address)?.estimatedCost ?? 0)}
+            </p>
           )}
           {place.website && (
             <a
@@ -251,22 +262,27 @@ export default function PlaceDetailPanel() {
            </div>
            
            <div className="flex items-center justify-center space-x-6">
-             {/* 保存 */}
+             {/* 候補地追加／保存済みトグル */}
              <button
                onClick={handleSavePlace}
                className="flex flex-col items-center justify-center p-2 group"
-               title="保存"
+               title={saved ? '保存済み' : '保存'}
              >
-               <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 transition-all duration-200 ${
-                 saved 
-                   ? 'border-coral-500 bg-coral-500' 
-                   : 'border-gray-400 group-hover:border-coral-500 group-hover:bg-coral-500 group-active:bg-coral-600'
-               }`}>
-                 <FiBookmark size={20} className={`transition-colors duration-200 ${
-                   saved 
-                     ? 'text-white' 
-                     : 'text-gray-400 group-hover:text-white group-active:text-white'
-                 }`} />
+               <div
+                 className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 transition-all duration-200 ${
+                   saved
+                     ? 'border-coral-500 bg-coral-500'
+                     : 'border-gray-400 group-hover:border-coral-500 group-hover:bg-coral-500 group-active:bg-coral-600'
+                 }`}
+               >
+                 <FiBookmark
+                   size={20}
+                   className={`transition-colors duration-200 ${
+                     saved
+                       ? 'text-white'
+                       : 'text-gray-400 group-hover:text-white group-active:text-white'
+                   }`}
+                 />
                </div>
                <span className="caption-1 text-system-secondary-label">
                  {saved ? '保存済み' : '保存'}
@@ -346,7 +362,7 @@ export default function PlaceDetailPanel() {
                    {photos.map((photo, index) => (
                      <div key={index} className="flex-shrink-0">
                        <img
-                         src={photo.getUrl({ maxWidth: 400, maxHeight: 300 })}
+                         src={typeof photo === 'string' ? photo : photo.getUrl({ maxWidth: 400, maxHeight: 300 })}
                          alt={`${place.name} - 写真 ${index + 1}`}
                          className="w-32 h-24 object-cover rounded-lg shadow-sm"
                        />
