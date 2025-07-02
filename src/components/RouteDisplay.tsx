@@ -53,61 +53,113 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
         this.div.style.transform = `scale(${scale})`;
         this.div.style.transformOrigin = 'center';
 
-        // ルート情報オーバーレイの内容
+        // design_ruleに沿ったルート情報オーバーレイの内容
         this.div.innerHTML = `
           <div style="
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
             border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 4px 20px rgba(78, 205, 196, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            min-width: 360px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans JP', sans-serif;
+            min-width: 300px;
+            animation: modal-zoom-in 0.3s cubic-bezier(0.19, 0.91, 0.38, 1);
           ">
             <div style="
               display: flex;
               align-items: center;
               justify-content: space-between;
-              padding: 16px 24px;
-              background: linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05));
+              padding: 16px 20px;
+              background: linear-gradient(135deg, rgba(78, 205, 196, 0.08), rgba(78, 205, 196, 0.03));
+              border-bottom: 1px solid rgba(78, 205, 196, 0.12);
             ">
-              <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-                <span style="font-size: 28px; color: rgb(37, 99, 235);">${getTravelModeIcon()}</span>
-                <div style="display: flex; flex-direction: column; gap: 4px;">
-                  <span style="font-size: 48px; font-weight: 700; color: rgb(31, 41, 55);">
-                    ${route.durationText}
-                  </span>
-                  <span style="font-size: 28px; color: rgb(107, 114, 128); font-weight: 500;">
-                    ${route.distanceText}
+              <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+                <div style="
+                  width: 40px;
+                  height: 40px;
+                  background: linear-gradient(135deg, #4ECDC4, #4FD1C5);
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 20px;
+                  box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+                  flex-shrink: 0;
+                ">
+                  ${getTravelModeIcon()}
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+                  <div style="display: flex; align-items: baseline; gap: 8px;">
+                    <span style="
+                      font-size: 28px;
+                      line-height: 34px;
+                      letter-spacing: 0.364px;
+                      font-weight: 700;
+                      color: rgba(0, 0, 0, 0.85);
+                    ">
+                      ${route.durationText}
+                    </span>
+                    <span style="
+                      font-size: 15px;
+                      line-height: 20px;
+                      letter-spacing: -0.24px;
+                      color: rgba(0, 0, 0, 0.5);
+                      font-weight: 500;
+                    ">
+                      (${route.distanceText})
+                    </span>
+                  </div>
+                  <span style="
+                    font-size: 13px;
+                    line-height: 18px;
+                    letter-spacing: -0.078px;
+                    color: #4ECDC4;
+                    font-weight: 500;
+                  ">
+                    ${getTravelModeLabel()}ルート
                   </span>
                 </div>
               </div>
               <button 
                 id="delete-route-btn-${route.id}"
                 style="
-                  width: 40px;
-                  height: 40px;
-                  background: rgb(239, 68, 68);
+                  width: 32px;
+                  height: 32px;
+                  background: rgba(255, 107, 107, 0.9);
                   color: white;
                   border: none;
                   border-radius: 50%;
                   cursor: pointer;
-                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                  transition: background-color 0.15s;
+                  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.25);
+                  transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
                   display: flex;
                   align-items: center;
                   justify-content: center;
                   flex-shrink: 0;
-                  aspect-ratio: 1;
+                  backdrop-filter: blur(8px);
                 "
-                onmouseover="this.style.background='rgb(220, 38, 38)'"
-                onmouseout="this.style.background='rgb(239, 68, 68)'"
+                onmouseover="this.style.background='rgba(229, 62, 62, 0.95)'; this.style.transform='scale(1.05)'"
+                onmouseout="this.style.background='rgba(255, 107, 107, 0.9)'; this.style.transform='scale(1)'"
+                onmousedown="this.style.transform='scale(0.95)'"
+                onmouseup="this.style.transform='scale(1.05)'"
               >
-                <span style="font-size: 20px;">✕</span>
+                <span style="font-size: 16px; font-weight: 500;">✕</span>
               </button>
             </div>
           </div>
+          <style>
+            @keyframes modal-zoom-in {
+              from { 
+                opacity: 0;
+                transform: scale(0.85) translateY(8px);
+              }
+              to { 
+                opacity: 1;
+                transform: scale(1) translateY(0);
+              }
+            }
+          </style>
         `;
 
         // 削除ボタンのクリックイベントを追加
@@ -137,8 +189,8 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
         );
 
         if (position) {
-          this.div.style.left = position.x - 140 + 'px'; // 中央揃え（2倍サイズ対応）
-          this.div.style.top = position.y - 40 + 'px'; // 中央揃え（2倍サイズ対応）
+          this.div.style.left = position.x - 150 + 'px'; // 中央揃え（幅300pxの半分）
+          this.div.style.top = position.y - 35 + 'px'; // 中央揃え
         }
       }
 
@@ -222,6 +274,22 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
         return '🚴';
       default:
         return '🚗';
+    }
+  };
+
+  // 移動手段のラベルを取得
+  const getTravelModeLabel = () => {
+    switch (route.travelMode) {
+      case google.maps.TravelMode.WALKING:
+        return '徒歩';
+      case google.maps.TravelMode.DRIVING:
+        return '車';
+      case google.maps.TravelMode.TRANSIT:
+        return '電車';
+      case google.maps.TravelMode.BICYCLING:
+        return '自転車';
+      default:
+        return '車';
     }
   };
 

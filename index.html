@@ -3,14 +3,57 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="旅行計画に特化したマップWebアプリ" />
-    <!-- PWA 基本設定 -->
+    
+    <!-- SEO メタタグ -->
+    <meta name="description" content="旅行計画に特化したマップWebアプリ。Google Mapsで候補地管理、移動時間確認、ルート検索が可能です。" />
+    <meta name="keywords" content="旅行計画,地図,Google Maps,ルート検索,移動時間,候補地管理" />
+    <meta name="author" content="Travel Planner Map" />
+    
+    <!-- OGP メタタグ -->
+    <meta property="og:title" content="Travel Planner Map - 旅行計画マップアプリ" />
+    <meta property="og:description" content="旅行計画に特化したマップWebアプリ。候補地管理から移動時間確認まで一括管理。" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://travel-planner.vercel.app" />
+    <meta property="og:image" content="https://travel-planner.vercel.app/og-image.png" />
+    <meta property="og:site_name" content="Travel Planner Map" />
+    <meta property="og:locale" content="ja_JP" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Travel Planner Map - 旅行計画マップアプリ" />
+    <meta name="twitter:description" content="旅行計画に特化したマップWebアプリ。候補地管理から移動時間確認まで一括管理。" />
+    <meta name="twitter:image" content="https://travel-planner.vercel.app/og-image.png" />
+    
+    <!-- PWA 設定 -->
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#1a73e8" />
-    <title>Travel Planner Map</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="TravelMap" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    
+    <!-- ファビコン -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    
+    <!-- プリロード -->
+    <link rel="preconnect" href="https://maps.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://maps.googleapis.com" />
+    
+    <title>Travel Planner Map - 旅行計画マップアプリ</title>
   </head>
   <body class="h-screen w-screen overflow-hidden">
     <div id="root" class="h-full w-full"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- NoScript フォールバック -->
+    <noscript>
+      <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h1>JavaScript が無効になっています</h1>
+        <p>このアプリケーションを使用するにはJavaScriptを有効にしてください。</p>
+      </div>
+    </noscript>
   </body>
 </html> 

@@ -58,7 +58,8 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
     if (labelModeRef.current && e.latLng) {
       console.log('📍 Label mode - adding label');
       addLabel('', { lat: e.latLng.lat(), lng: e.latLng.lng() });
-      onLabelModeChange(false);
+      // ラベルモードを維持して連続でメモを追加可能にする
+      // onLabelModeChange(false); // この行をコメントアウト
       return;
     }
 
@@ -157,9 +158,7 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
             category: classifyCategory(detail.types || []),
             memo: '',
             estimatedCost: estimateCost((detail as any).price_level, classifyCategory(detail.types || [])),
-            photos: detail.photos?.slice(0, 3).map(photo => 
-              photo.getUrl({ maxWidth: 400 })
-            ) || [],
+            photos: detail.photos || [],
             createdAt: new Date(),
             updatedAt: new Date(),
             // Google Maps API互換プロパティ

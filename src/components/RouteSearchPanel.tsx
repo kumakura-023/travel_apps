@@ -413,12 +413,11 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
             bottom: 0,
             left: `${leftPosition}px`,
             width: '480px',
-            backgroundColor: 'white',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
             zIndex: 40,
             overflowY: 'auto',
             pointerEvents: 'auto'
           }}
+          className="glass-effect shadow-elevation-5 border-r border-system-separator"
         >
           {children}
         </div>
@@ -427,14 +426,16 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
     if (isTablet) {
       // タブレットでは画面下部に配置
       return (
-        <div className="fixed left-0 right-0 bottom-0 h-[60vh] bg-white rounded-t-2xl shadow-elevation-5 z-50 overflow-y-auto">
+        <div className="fixed left-0 right-0 bottom-0 h-[60vh] 
+                        glass-effect rounded-t-2xl shadow-elevation-5 z-50 
+                        overflow-y-auto safe-area-inset">
           {children}
         </div>
       );
     }
     // モバイルではフルスクリーン
     return (
-      <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+      <div className="fixed inset-0 glass-effect z-50 overflow-y-auto safe-area-inset">
         {children}
       </div>
     );
@@ -444,15 +445,17 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
 
   return (
     <>
-      {/* 背景スクリーン (mobile/tablet) - 一時的に無効化 */}
-      {/* {(!isDesktop) && <div className="modal-backdrop" onClick={onClose} />} */}
+      {/* 背景スクリーン (mobile/tablet) */}
+      {(!isDesktop) && <div className="modal-backdrop" onClick={onClose} />}
 
       <Container>
         {/* ヘッダー */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <div className="flex items-center space-x-2">
-            <MdNavigation className="text-blue-500" size={24} />
-            <h2 className="text-lg font-semibold text-gray-800">ルート検索</h2>
+        <div className="flex items-center justify-between p-5 border-b border-system-separator">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-coral-500/10 rounded-full flex items-center justify-center">
+              <MdNavigation className="text-coral-500 w-4 h-4" />
+            </div>
+            <h2 className="headline text-system-label">ルート検索</h2>
           </div>
           <button 
             onClick={() => {
@@ -465,68 +468,86 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
               console.log('パネル閉じる時のルートクリア実行');
               onClose();
             }}
-            className="p-1 bg-white hover:bg-gray-100 rounded-full shadow transition-colors"
+            className="w-8 h-8 bg-system-secondary-background hover:bg-coral-500/10 
+                       rounded-full flex items-center justify-center 
+                       transition-all duration-150 ease-ios-default
+                       hover:scale-110 active:scale-95
+                       text-system-secondary-label hover:text-coral-500"
             title="ルート検索を閉じる"
           >
-            <MdClose size={20} className="text-gray-600" />
+            <MdClose size={18} />
           </button>
         </div>
 
-                <div className="p-4 space-y-4">
-
-
+        <div className="p-5 space-y-5">
           {/* 説明テキスト */}
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-3">
             {selectionMode === 'origin' && (
-              <p className="text-sm text-green-600 bg-green-50 py-2 px-3 rounded-lg">
-                🟢 出発地を入力中：地図上の地点をタップするか、下のフィールドに直接入力
-              </p>
+              <div className="bg-coral-500/10 border border-coral-500/20 py-3 px-4 rounded-xl">
+                <p className="subheadline text-coral-600 flex items-center justify-center space-x-2">
+                  <span>🟢</span>
+                  <span>出発地を入力中：地図上の地点をタップするか、下のフィールドに直接入力</span>
+                </p>
+              </div>
             )}
             {selectionMode === 'destination' && (
-              <p className="text-sm text-red-600 bg-red-50 py-2 px-3 rounded-lg">
-                🔴 目的地を入力中：地図上の地点をタップするか、下のフィールドに直接入力
-              </p>
+              <div className="bg-coral-500/10 border border-coral-500/20 py-3 px-4 rounded-xl">
+                <p className="subheadline text-coral-600 flex items-center justify-center space-x-2">
+                  <span>🔴</span>
+                  <span>目的地を入力中：地図上の地点をタップするか、下のフィールドに直接入力</span>
+                </p>
+              </div>
             )}
             
-            {/* デバッグ情報表示 */}
-            <div className="text-xs text-gray-500 bg-gray-50 py-2 px-3 rounded-lg">
-              <div>選択モード: {selectionMode || 'なし'}</div>
-              <div>出発地設定済み: {storeOrigin ? '✅' : '❌'}</div>
-              <div>目的地設定済み: {storeDestination ? '✅' : '❌'}</div>
-            </div>
+            {/* デバッグ情報表示（開発時のみ） */}
+            {import.meta.env.DEV && (
+              <div className="footnote text-system-tertiary-label bg-system-secondary-background py-2 px-3 rounded-lg">
+                <div>選択モード: {selectionMode || 'なし'}</div>
+                <div>出発地設定済み: {storeOrigin ? '✅' : '❌'}</div>
+                <div>目的地設定済み: {storeDestination ? '✅' : '❌'}</div>
+              </div>
+            )}
           </div>
 
           {/* 移動手段選択 */}
-          <div className="flex justify-center space-x-2">
-            {travelModes.map(({ mode, icon: Icon, label }) => (
-              <div key={mode} className="relative">
-                <button
-                  onClick={() => setSelectedMode(mode)}
-                  className={`flex flex-col items-center p-3 rounded-lg transition-all ${
-                    selectedMode === mode
-                      ? 'bg-blue-500 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  } ${mode === 'TRANSIT' ? 'relative' : ''}`}
-                  title={mode === 'TRANSIT' ? '⚠️ 日本では詳細な公共交通機関データが提供されていません' : ''}
-                >
-                  <Icon size={24} />
-                  <span className="text-xs mt-1">{label}</span>
-                  {mode === 'TRANSIT' && (
-                    <span className="absolute -top-1 -right-1 text-xs">⚠️</span>
-                  )}
-                </button>
-              </div>
-            ))}
+          <div className="space-y-3">
+            <label className="subheadline text-system-label">移動手段</label>
+            <div className="flex justify-center space-x-2">
+              {travelModes.map(({ mode, icon: Icon, label }) => (
+                <div key={mode} className="relative">
+                  <button
+                    onClick={() => setSelectedMode(mode)}
+                    className={`flex flex-col items-center p-3 rounded-xl 
+                               transition-all duration-150 ease-ios-default
+                               hover:scale-105 active:scale-95
+                               ${
+                                 selectedMode === mode
+                                   ? 'bg-coral-500 text-white shadow-elevation-2'
+                                   : 'bg-system-secondary-background text-system-secondary-label hover:bg-coral-500/10 hover:text-coral-500'
+                               } ${mode === 'TRANSIT' ? 'relative' : ''}`}
+                    title={mode === 'TRANSIT' ? '⚠️ 日本では詳細な公共交通機関データが提供されていません' : ''}
+                  >
+                    <Icon size={20} />
+                    <span className="caption-1 mt-1 font-medium">{label}</span>
+                    {mode === 'TRANSIT' && (
+                      <span className="absolute -top-1 -right-1 caption-2">⚠️</span>
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* 公共交通機関の制限に関する注意書き */}
           {selectedMode === 'TRANSIT' && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="flex items-start space-x-2">
-                <span className="text-amber-500 mt-0.5">⚠️</span>
-                <div className="text-sm text-amber-700">
-                  <div className="font-medium mb-1">日本の公共交通機関について</div>
-                  <div className="text-xs space-y-1">
+            <div className="glass-effect bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
+              <div className="flex items-start space-x-3">
+                <span className="text-orange-500 mt-0.5 text-lg">⚠️</span>
+                <div className="flex-1">
+                  <div className="subheadline font-semibold text-orange-600 mb-2">
+                    日本の公共交通機関について
+                  </div>
+                  <div className="footnote text-system-secondary-label space-y-1">
                     <div>• Google Directions APIでは日本の詳細な電車・地下鉄データが提供されていません</div>
                     <div>• 検索失敗時は自動的に徒歩ルートで代替表示します</div>
                     <div>• 詳細な乗換案内は Google Maps アプリをご利用ください</div>
@@ -536,9 +557,9 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
             </div>
           )}
 
-                    {/* 出発地入力 */}
+          {/* 出発地入力 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">出発地</label>
+            <label className="subheadline text-system-label font-medium">出発地</label>
             <div className="flex space-x-2">
               <input 
                 ref={originInputRef}
@@ -547,7 +568,7 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
                 onChange={(e) => {
                   originValueRef.current = e.target.value;
                 }}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
+                className="input flex-1"
               />
               <button
                 onClick={() => {
@@ -562,13 +583,15 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
                     console.log('Store state after setting origin mode:', currentState);
                   }, 100);
                 }}
-                className={`px-3 py-3 rounded-lg border transition-all ${
-                  selectionMode === 'origin' 
-                    ? 'bg-green-600 text-white border-green-600' 
-                    : storeOrigin
-                    ? 'bg-green-100 text-green-600 border-green-300'
-                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                }`}
+                className={`px-4 py-3 rounded-lg border transition-all duration-150 ease-ios-default
+                           hover:scale-105 active:scale-95
+                           ${
+                             selectionMode === 'origin' 
+                               ? 'bg-coral-500 text-white border-coral-500 shadow-elevation-1' 
+                               : storeOrigin
+                               ? 'bg-coral-500/10 text-coral-600 border-coral-500/30'
+                               : 'bg-system-secondary-background text-system-secondary-label border-system-separator hover:border-coral-500/30 hover:text-coral-500'
+                           }`}
                 title="地図から出発地を選択"
               >
                 {storeOrigin ? '🟢' : '📍'}
@@ -580,16 +603,19 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
           <div className="flex justify-center">
             <button
               onClick={handleSwap}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+              className="p-3 bg-system-secondary-background hover:bg-coral-500/10 
+                         rounded-full transition-all duration-150 ease-ios-default
+                         hover:scale-110 active:scale-95
+                         text-system-secondary-label hover:text-coral-500"
               title="出発地と目的地を入れ替え"
             >
-              <MdSwapVert size={20} className="text-gray-600" />
+              <MdSwapVert size={20} />
             </button>
           </div>
 
-                    {/* 目的地入力 */}
+          {/* 目的地入力 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">目的地</label>
+            <label className="subheadline text-system-label font-medium">目的地</label>
             <div className="flex space-x-2">
               <input 
                 ref={destinationInputRef}
@@ -598,7 +624,7 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
                 onChange={(e) => {
                   destinationValueRef.current = e.target.value;
                 }}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all" 
+                className="input flex-1"
               />
               <button
                 onClick={() => {
@@ -613,13 +639,15 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
                     console.log('Store state after setting destination mode:', currentState);
                   }, 100);
                 }}
-                className={`px-3 py-3 rounded-lg border transition-all ${
-                  selectionMode === 'destination' 
-                    ? 'bg-red-600 text-white border-red-600' 
-                    : storeDestination
-                    ? 'bg-red-100 text-red-600 border-red-300'
-                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                }`}
+                className={`px-4 py-3 rounded-lg border transition-all duration-150 ease-ios-default
+                           hover:scale-105 active:scale-95
+                           ${
+                             selectionMode === 'destination' 
+                               ? 'bg-coral-500 text-white border-coral-500 shadow-elevation-1' 
+                               : storeDestination
+                               ? 'bg-coral-500/10 text-coral-600 border-coral-500/30'
+                               : 'bg-system-secondary-background text-system-secondary-label border-system-separator hover:border-coral-500/30 hover:text-coral-500'
+                           }`}
                 title="地図から目的地を選択"
               >
                 {storeDestination ? '🔴' : '📍'}
@@ -631,48 +659,70 @@ export default function RouteSearchPanel({ isOpen, onClose, selectedOrigin, sele
           <button
             onClick={handleSearch}
             disabled={isSearching}
-            className="w-full flex items-center justify-center space-x-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+            className="btn-primary w-full flex items-center justify-center space-x-2 
+                       disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <MdSearch size={20} />
-            <span>{isSearching ? '検索中...' : '検索'}</span>
+            <MdSearch size={18} />
+            <span>{isSearching ? '検索中...' : 'ルートを検索'}</span>
           </button>
 
-          {/* 検索結果表示 */}
+          {/* 検索結果 */}
           {searchResult && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+            <div className="glass-effect rounded-xl p-4 shadow-elevation-1 
+                            bg-teal-500/10 border border-teal-500/20">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-8 h-8 bg-teal-500/20 rounded-full flex items-center justify-center">
                   {React.createElement(getTravelModeIcon(searchResult.mode), { 
-                    size: 24, 
-                    className: "text-green-600" 
+                    size: 16, 
+                    className: "text-teal-600" 
                   })}
-                  <div className="flex-1">
-                    <div className="text-2xl font-bold text-green-800">
-                      {searchResult.duration}
-                    </div>
-                    <div className="text-sm text-green-600">
-                      距離: {searchResult.distance}
-                    </div>
-                    <div className="text-xs text-green-500 mt-1">
-                      地図上にルートを表示中
-                    </div>
-                  </div>
                 </div>
-                <button
-                  onClick={() => {
-                    console.log('=== 検索結果削除ボタンクリック ===');
-                    console.log('現在のルート数:', routes.length);
-                    clearAllRoutes();
-                    clearSelections();
-                    setSearchResult(null);
-                    console.log('ルートクリア実行完了');
-                  }}
-                  className="p-2 hover:bg-green-100 rounded-full transition-colors"
-                  title="ルートを削除"
-                >
-                  <MdClose size={16} className="text-green-600" />
-                </button>
+                <div>
+                  <h3 className="subheadline font-semibold text-teal-700">
+                    ルート検索結果
+                  </h3>
+                  <p className="caption-1 text-system-secondary-label">
+                    {searchResult.mode === 'WALKING' && '徒歩'}
+                    {searchResult.mode === 'DRIVING' && '車'}
+                    {searchResult.mode === 'TRANSIT' && '公共交通機関'}
+                    {searchResult.mode === 'BICYCLING' && '自転車'}
+                  </p>
+                </div>
               </div>
+              
+                             <div className="space-y-2">
+                 <div className="flex items-center justify-between">
+                   <span className="callout text-system-secondary-label">所要時間</span>
+                   <span className="headline font-semibold text-teal-600">
+                     {searchResult.duration}
+                   </span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                   <span className="callout text-system-secondary-label">距離</span>
+                   <span className="subheadline font-medium text-system-label">
+                     {searchResult.distance}
+                   </span>
+                 </div>
+               </div>
+               
+               {/* クリアボタン */}
+               <button
+                 onClick={() => {
+                   console.log('=== 検索結果削除ボタンクリック ===');
+                   console.log('現在のルート数:', routes.length);
+                   clearAllRoutes();
+                   clearSelections();
+                   setSearchResult(null);
+                   console.log('ルートクリア実行完了');
+                 }}
+                 className="w-full mt-3 px-4 py-2 bg-system-secondary-background text-system-secondary-label
+                            rounded-lg callout font-medium transition-all duration-150 ease-ios-default
+                            hover:bg-coral-500/10 hover:text-coral-500 active:scale-95
+                            border border-system-separator hover:border-coral-500/30"
+                 title="ルートを削除"
+               >
+                 ルートをクリア
+               </button>
             </div>
           )}
         </div>

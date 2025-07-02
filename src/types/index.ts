@@ -20,6 +20,7 @@ export interface Place {
   photos: string[];
   createdAt: Date;
   updatedAt: Date;
+  scheduledDay?: number; // 何日目に予定しているか（1始まり）
   labelText?: string;
   labelFontSize?: number;
   labelWidth?: number;
@@ -59,6 +60,7 @@ export interface MapLabel {
   color: string;
   width: number; // px
   height: number; // px
+  linkedPlaceId?: string; // 候補地とのリンク
 }
 
 // 2地点間移動時間表示のための型定義

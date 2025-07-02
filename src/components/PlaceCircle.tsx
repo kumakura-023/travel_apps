@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Marker } from '@react-google-maps/api';
 import { Place } from '../types';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
-import { getCategoryColor, getCategoryIcon } from '../utils/categoryIcons';
+import { getCategoryColor, getCategoryIcon, getCategoryDisplayName } from '../utils/categoryIcons';
 import { usePlacesStore } from '../store/placesStore';
 import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
@@ -103,101 +103,132 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
         this.div.style.transform = `scale(${scale})`;
         this.div.style.transformOrigin = 'center bottom';
 
-        // Reactコンポーネントの内容をHTMLとして設定
+        // design_ruleに沿ったReactコンポーネントの内容をHTMLとして設定
         this.div.innerHTML = `
           <div style="
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 4px 20px rgba(${hexToRgb(color)}, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            min-width: 200px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans JP', sans-serif;
+            min-width: 240px;
+            transform-origin: center bottom;
+            animation: modal-zoom-in 0.3s cubic-bezier(0.19, 0.91, 0.38, 1);
           ">
             <!-- ヘッダー部分 -->
             <div style="
               display: flex;
               align-items: center;
               justify-content: space-between;
-              padding: 12px;
-              background: linear-gradient(to right, rgba(${hexToRgb(color)}, 0.1), rgba(${hexToRgb(color)}, 0.05));
+              padding: 16px 20px 12px 20px;
+              background: linear-gradient(135deg, rgba(${hexToRgb(color)}, 0.08), rgba(${hexToRgb(color)}, 0.03));
+              border-bottom: 1px solid rgba(${hexToRgb(color)}, 0.12);
             ">
-              <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
                 <div style="
-                  width: 24px;
-                  height: 24px;
+                  width: 28px;
+                  height: 28px;
                   background: ${color};
                   border-radius: 50%;
                   display: flex;
                   align-items: center;
                   justify-content: center;
                   color: white;
-                  font-size: 12px;
+                  font-size: 14px;
                   flex-shrink: 0;
+                  box-shadow: 0 2px 8px rgba(${hexToRgb(color)}, 0.3);
                 ">
                   ${getCategoryEmoji()}
                 </div>
                 <div style="
                   display: flex; 
                   align-items: center; 
-                  gap: 6px; 
+                  gap: 8px; 
                   color: ${color};
-                  font-weight: 500;
+                  font-weight: 600;
                 ">
-                  <span style="font-size: 14px;">${getCategoryLabel()}</span>
+                  <span style="
+                    font-size: 15px; 
+                    line-height: 20px; 
+                    letter-spacing: -0.24px;
+                  ">${getCategoryLabel()}</span>
                 </div>
               </div>
               <button 
                 id="delete-btn-${place.id}"
                 style="
-                  width: 24px;
-                  height: 24px;
-                  background: rgb(239, 68, 68);
+                  width: 28px;
+                  height: 28px;
+                  background: rgba(239, 68, 68, 0.9);
                   color: white;
                   border: none;
                   border-radius: 50%;
                   cursor: pointer;
-                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                  transition: background-color 0.15s;
+                  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+                  transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
                   display: flex;
                   align-items: center;
                   justify-content: center;
                   flex-shrink: 0;
                   aspect-ratio: 1;
+                  backdrop-filter: blur(8px);
                 "
-                onmouseover="this.style.background='rgb(220, 38, 38)'"
-                onmouseout="this.style.background='rgb(239, 68, 68)'"
+                onmouseover="this.style.background='rgba(220, 38, 38, 0.95)'; this.style.transform='scale(1.05)'"
+                onmouseout="this.style.background='rgba(239, 68, 68, 0.9)'; this.style.transform='scale(1)'"
+                onmousedown="this.style.transform='scale(0.95)'"
+                onmouseup="this.style.transform='scale(1.05)'"
               >
-                <span style="font-size: 12px;">✕</span>
+                <span style="font-size: 14px; font-weight: 500;">✕</span>
               </button>
             </div>
             
             <!-- コンテンツ部分 -->
-            <div style="padding: 12px;">
+            <div style="padding: 16px 20px 20px 20px;">
               <h3 style="
-                font-size: 14px;
+                font-size: 17px;
+                line-height: 22px;
+                letter-spacing: -0.408px;
                 font-weight: 600;
-                margin: 0 0 4px 0;
-                color: rgb(31, 41, 55);
+                margin: 0 0 8px 0;
+                color: rgba(0, 0, 0, 0.85);
               ">
                 ${place.name}
               </h3>
-              <p style="
-                font-size: 12px;
-                color: rgb(107, 114, 128);
-                margin: 0 0 8px 0;
-                line-height: 1.4;
-              ">
-                ${place.address}
-              </p>
+              ${place.scheduledDay ? `
+                <div style="
+                  font-size: 14px;
+                  line-height: 20px;
+                  letter-spacing: -0.24px;
+                  color: #1a73e8;
+                  font-weight: 600;
+                  margin: 0 0 12px 0;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  background: rgba(26, 115, 232, 0.08);
+                  padding: 6px 12px;
+                  border-radius: 8px;
+                  border-left: 3px solid #1a73e8;
+                ">
+                  <span style="font-size: 12px;">📅</span>
+                  ${place.scheduledDay}日目
+                </div>
+              ` : ''}
               ${place.estimatedCost > 0 ? `
                 <div style="
-                  font-size: 12px;
-                  color: rgb(59, 130, 246);
+                  font-size: 14px;
+                  line-height: 20px;
+                  letter-spacing: -0.24px;
+                  color: #4ECDC4;
                   font-weight: 500;
-                  margin: 0 0 8px 0;
+                  margin: 0 0 16px 0;
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
                 ">
+                  <span style="font-size: 12px;">💰</span>
                   予想費用: ¥${place.estimatedCost.toLocaleString()}
                 </div>
               ` : ''}
@@ -205,60 +236,84 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
               <!-- ルート検索ボタン -->
               <div style="
                 display: flex;
-                gap: 6px;
-                margin-top: 8px;
+                gap: 8px;
+                margin-top: 16px;
               ">
                 <button 
                   id="set-origin-btn-${place.id}"
                   style="
                     flex: 1;
-                    padding: 6px 8px;
-                    background: rgb(34, 197, 94);
+                    padding: 8px 12px;
+                    background: rgba(34, 197, 94, 0.9);
                     color: white;
                     border: none;
-                    border-radius: 6px;
+                    border-radius: 8px;
                     cursor: pointer;
-                    font-size: 11px;
+                    font-size: 13px;
+                    line-height: 18px;
+                    letter-spacing: -0.078px;
                     font-weight: 500;
-                    transition: background-color 0.15s;
+                    transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 4px;
+                    gap: 6px;
+                    backdrop-filter: blur(8px);
+                    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
                   "
-                  onmouseover="this.style.background='rgb(22, 163, 74)'"
-                  onmouseout="this.style.background='rgb(34, 197, 94)'"
+                  onmouseover="this.style.background='rgba(22, 163, 74, 0.95)'; this.style.transform='scale(1.02)'"
+                  onmouseout="this.style.background='rgba(34, 197, 94, 0.9)'; this.style.transform='scale(1)'"
+                  onmousedown="this.style.transform='scale(0.98)'"
+                  onmouseup="this.style.transform='scale(1.02)'"
                 >
-                  <span style="font-size: 10px;">🚀</span>
+                  <span style="font-size: 11px;">🚀</span>
                   出発地
                 </button>
                 <button 
                   id="set-destination-btn-${place.id}"
                   style="
                     flex: 1;
-                    padding: 6px 8px;
-                    background: rgb(239, 68, 68);
+                    padding: 8px 12px;
+                    background: rgba(255, 107, 107, 0.9);
                     color: white;
                     border: none;
-                    border-radius: 6px;
+                    border-radius: 8px;
                     cursor: pointer;
-                    font-size: 11px;
+                    font-size: 13px;
+                    line-height: 18px;
+                    letter-spacing: -0.078px;
                     font-weight: 500;
-                    transition: background-color 0.15s;
+                    transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 4px;
+                    gap: 6px;
+                    backdrop-filter: blur(8px);
+                    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.25);
                   "
-                  onmouseover="this.style.background='rgb(220, 38, 38)'"
-                  onmouseout="this.style.background='rgb(239, 68, 68)'"
+                  onmouseover="this.style.background='rgba(229, 62, 62, 0.95)'; this.style.transform='scale(1.02)'"
+                  onmouseout="this.style.background='rgba(255, 107, 107, 0.9)'; this.style.transform='scale(1)'"
+                  onmousedown="this.style.transform='scale(0.98)'"
+                  onmouseup="this.style.transform='scale(1.02)'"
                 >
-                  <span style="font-size: 10px;">🎯</span>
+                  <span style="font-size: 11px;">🎯</span>
                   目的地
                 </button>
               </div>
             </div>
           </div>
+          <style>
+            @keyframes modal-zoom-in {
+              from { 
+                opacity: 0;
+                transform: scale(0.85) translateY(8px);
+              }
+              to { 
+                opacity: 1;
+                transform: scale(1) translateY(0);
+              }
+            }
+          </style>
         `;
 
         // 削除ボタンのクリックイベントを追加
@@ -306,8 +361,8 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
         );
 
         if (position) {
-          this.div.style.left = position.x - 100 + 'px'; // 中央揃え（幅200pxの半分）
-          this.div.style.top = position.y - 140 + 'px'; // マーカーの上に表示
+          this.div.style.left = position.x - 120 + 'px'; // 中央揃え（幅240pxの半分）
+          this.div.style.top = position.y - 160 + 'px'; // マーカーの上に表示
         }
       }
 
@@ -398,54 +453,30 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
     openRouteSearch();
   };
 
-  // カテゴリの絵文字を取得
   const getCategoryEmoji = () => {
-    switch (place.category) {
-      case 'restaurant':
-        return '🍽️';
-      case 'hotel':
-        return '🏨';
-      case 'sightseeing':
-        return '🏛️';
-      case 'transport':
-        return '🚌';
-      case 'shopping':
-        return '🛍️';
-      case 'other':
-      default:
-        return '📍';
-    }
+    const iconMapping: { [key: string]: string } = {
+      'hotel': '🏨',
+      'restaurant': '🍽️',
+      'sightseeing': '🎯',
+      'shopping': '🛍️',
+      'transport': '🚉',
+      'other': '📍'
+    };
+    return iconMapping[place.category] || iconMapping['other'];
   };
 
-  // カテゴリのラベルを取得
   const getCategoryLabel = () => {
-    switch (place.category) {
-      case 'restaurant':
-        return 'レストラン';
-      case 'hotel':
-        return 'ホテル';
-      case 'sightseeing':
-        return '観光地';
-      case 'transport':
-        return '交通';
-      case 'shopping':
-        return 'ショッピング';
-      case 'other':
-      default:
-        return 'その他';
-    }
+    // PlaceCategory型に対応した共通関数を使用
+    return getCategoryDisplayName(place.category);
   };
 
-  // 16進数カラーをRGBに変換
-    const hexToRgb = (hex: string): string => {
+  // HEXカラーをRGBに変換する関数
+  const hexToRgb = (hex: string): string => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     if (result) {
-      const r = parseInt(result[1], 16);
-      const g = parseInt(result[2], 16);
-      const b = parseInt(result[3], 16);
-      return `${r}, ${g}, ${b}`;
+      return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
     }
-    return '128, 128, 128'; // フォールバック
+    return '0, 0, 0';
   };
 
   const handleClick = (e: google.maps.MapMouseEvent) => {

@@ -15,7 +15,7 @@ export default function AddLabelToggle({ onToggle }: Props) {
         onToggle(next);
       }}
     >
-      {active ? 'ラベル配置中' : 'ラベル追加'}
+      {active ? 'メモ配置中' : 'メモ追加'}
     </button>
   );
 } 

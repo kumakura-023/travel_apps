@@ -115,9 +115,10 @@ export default function SearchBar({
 
   return (
     <div
-      className={`fixed top-4 z-50 flex items-center justify-between rounded-full shadow-md bg-white ${
-        isDesktop ? 'left-4 w-[480px]' : 'mx-4 left-0 right-0'
-      }`}
+      className={`fixed top-4 z-50 flex items-center justify-between 
+                  glass-effect rounded-xl shadow-elevation-2
+                  transition-all duration-150 ease-ios-default
+                  ${isDesktop ? 'left-4 w-[480px]' : 'mx-4 left-0 right-0'}`}
     >
       <div className="flex-1">
         <Autocomplete
@@ -143,7 +144,10 @@ export default function SearchBar({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full bg-transparent py-3 pl-4 pr-2 text-lg focus:outline-none"
+            className="w-full bg-transparent py-3 pl-4 pr-2 
+                       text-[17px] tracking-[-0.408px] font-system
+                       text-system-label placeholder-system-tertiary-label
+                       focus:outline-none"
           />
         </Autocomplete>
       </div>
@@ -152,15 +156,23 @@ export default function SearchBar({
         {inputValue && (
           <button
             onClick={clear}
-            className="p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+            className="p-1 text-system-tertiary-label hover:text-system-secondary-label
+                       transition-colors duration-150 focus:outline-none"
+            title="クリア"
           >
-            ✕
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         )}
         
         {/* 検索アイコン（虫眼鏡）*/}
         <button
-          className="p-2 text-gray-500 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors focus:outline-none"
+          className="p-2 text-system-secondary-label hover:text-coral-500 
+                     hover:bg-coral-500/10 rounded-full 
+                     transition-all duration-150 ease-ios-default
+                     hover:scale-110 focus:outline-none active:scale-95"
           title="検索"
         >
           <FiSearch size={18} />
@@ -169,7 +181,10 @@ export default function SearchBar({
         {/* ナビゲーション（ルート検索）ボタン */}
         <button
           onClick={openRouteSearch}
-          className="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors focus:outline-none"
+          className="p-2 text-coral-500 hover:text-coral-600 
+                     hover:bg-coral-500/10 rounded-full 
+                     transition-all duration-150 ease-ios-default
+                     hover:scale-110 focus:outline-none active:scale-95"
           title="ルート検索"
         >
           <MdNavigation size={18} />
