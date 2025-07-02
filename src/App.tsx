@@ -1,6 +1,6 @@
 import { LoadScript } from '@react-google-maps/api';
 import * as React from 'react';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import Map from './components/Map';
 import SearchBar from './components/SearchBar';
 import PlaceDetailPanel from './components/PlaceDetailPanel';
@@ -10,6 +10,8 @@ import TravelTimeControls from './components/TravelTimeControls';
 import SelectionBanner from './components/SelectionBanner';
 import TestPlacesButton from './components/TestPlacesButton';
 import RouteSearchPanel from './components/RouteSearchPanel';
+import Tutorial from './components/Tutorial';
+import KeyboardShortcuts from './components/KeyboardShortcuts';
 import { useRouteSearchStore } from './store/routeSearchStore';
 import { useDeviceDetect } from './hooks/useDeviceDetect';
 import { useGoogleMaps } from './hooks/useGoogleMaps';
@@ -52,6 +54,10 @@ function App() {
   const { panTo, zoomIn, zoomOut } = useGoogleMaps();
 
   const searchRef = useRef<HTMLInputElement>(null);
+  
+  // チュートリアル・ヘルプ関連のstate
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 
   const focusSearch = useCallback(() => {
     searchRef.current?.focus();
@@ -65,13 +71,35 @@ function App() {
     }
   }, []);
 
+  const showHelp = useCallback(() => {
+    setShowKeyboardShortcuts(true);
+  }, []);
+
   useKeyboardShortcuts({
     isDesktop,
     focusSearch,
     clearSearch,
     zoomIn,
     zoomOut,
+    showHelp,
   });
+
+  // 初回起動時のチュートリアル表示
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem('travel-app-tutorial-seen');
+    if (!hasSeenTutorial) {
+      // 少し遅らせてチュートリアルを表示
+      const timer = setTimeout(() => {
+        setShowTutorial(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleTutorialClose = useCallback(() => {
+    setShowTutorial(false);
+    localStorage.setItem('travel-app-tutorial-seen', 'true');
+  }, []);
 
   const handlePlaceSelected = (lat: number, lng: number) => {
     panTo(lat, lng, 17);
@@ -81,6 +109,26 @@ function App() {
 
   // Tab navigation state
   const [activeTab, setActiveTab] = React.useState<TabKey>('map');
+  
+  // Label mode state
+  const [labelMode, setLabelMode] = React.useState(false);
+
+  // ラベルモードのトグル機能
+  const handleLabelModeToggle = useCallback(() => {
+    setLabelMode(prev => !prev);
+  }, []);
+
+  // ESCキーでラベルモードを終了
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && labelMode) {
+        setLabelMode(false);
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [labelMode]);
   
   // Route search store
   const { 
@@ -123,7 +171,12 @@ function App() {
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>
       {/* Navigation */}
-      <TabNavigation active={activeTab} onChange={setActiveTab} />
+      <TabNavigation 
+        active={activeTab} 
+        onChange={setActiveTab}
+        labelMode={labelMode}
+        onLabelModeToggle={handleLabelModeToggle}
+      />
 
       {/* ルート検索画面またはリストタブでは検索バーを非表示 */}
       {!isRouteSearchOpen && activeTab !== 'list' && (
@@ -140,7 +193,11 @@ function App() {
       {/* 地点選択中のバナー */}
       <SelectionBanner />
       
-      <Map showLabelToggle={activeTab !== 'list'} />
+      <Map 
+        showLabelToggle={false} 
+        labelMode={labelMode}
+        onLabelModeChange={setLabelMode}
+      />
       
       {/* リスト表示タブ */}
       {activeTab === 'list' && <PlaceList />}
@@ -159,7 +216,19 @@ function App() {
       {activeTab === 'travelTime' && <TravelTimeControls />}
 
       {/* プラン名表示 */}
-      <PlanNameDisplay />
+      <PlanNameDisplay activeTab={activeTab} />
+
+      {/* チュートリアル */}
+      <Tutorial 
+        isOpen={showTutorial} 
+        onClose={handleTutorialClose} 
+      />
+
+      {/* キーボードショートカット */}
+      <KeyboardShortcuts 
+        isOpen={showKeyboardShortcuts} 
+        onClose={() => setShowKeyboardShortcuts(false)} 
+      />
     </LoadScript>
   );
 }

@@ -18,12 +18,13 @@ import MapOverlayManager from './MapOverlayManager';
 interface MapContainerProps {
   children?: React.ReactNode;
   showLabelToggle?: boolean;
+  labelMode?: boolean;
+  onLabelModeChange?: (mode: boolean) => void;
 }
 
-export default function MapContainer({ children, showLabelToggle = true }: MapContainerProps) {
+export default function MapContainer({ children, showLabelToggle = true, labelMode = false, onLabelModeChange }: MapContainerProps) {
   const { setMap } = useGoogleMaps();
   const [zoom, setZoom] = useState(14);
-  const [labelMode, setLabelMode] = useState(false);
 
   // 地図の読み込み完了時のハンドラー
   const handleMapLoad = (map: google.maps.Map) => {
@@ -49,14 +50,14 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
           {/* イベント処理コンポーネント（UIを持たない） */}
           <MapEventHandler 
             labelMode={labelMode} 
-            onLabelModeChange={setLabelMode} 
+            onLabelModeChange={onLabelModeChange || (() => {})} 
           />
           
           {/* オーバーレイ管理コンポーネント */}
           <MapOverlayManager 
             zoom={zoom} 
             labelMode={labelMode}
-            onLabelModeChange={setLabelMode}
+            onLabelModeChange={onLabelModeChange || (() => {})}
             showLabelToggle={showLabelToggle}
           >
             {children}

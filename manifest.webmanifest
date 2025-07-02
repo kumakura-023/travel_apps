@@ -1,9 +1,81 @@
 {
   "name": "Travel Planner Map",
   "short_name": "TravelMap",
-  "start_url": ".",
+  "description": "旅行計画に特化したマップWebアプリ。候補地管理から移動時間確認まで一括管理。",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#1a73e8",
-  "icons": []
+  "categories": ["travel", "productivity", "navigation"],
+  "lang": "ja",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192", 
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "デスクトップ画面"
+    },
+    {
+      "src": "/screenshot-mobile.png", 
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "モバイル画面"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "新しい計画",
+      "short_name": "新規",
+      "description": "新しい旅行計画を作成",
+      "url": "/?action=new",
+      "icons": [
+        {
+          "src": "/shortcut-new.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "地図表示",
+      "short_name": "地図",
+      "description": "地図を表示",
+      "url": "/?tab=map",
+      "icons": [
+        {
+          "src": "/shortcut-map.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 } 

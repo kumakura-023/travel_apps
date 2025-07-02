@@ -3,7 +3,7 @@ import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { useTravelTimeStore } from '../store/travelTimeStore';
 import { usePlacesStore } from '../store/placesStore';
 import { useEffect, useRef } from 'react';
-import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit, MdAccessTime } from 'react-icons/md';
+import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit } from 'react-icons/md';
 
 export default function TravelTimeOverlay() {
   const { map } = useGoogleMaps();
@@ -80,8 +80,9 @@ export default function TravelTimeOverlay() {
   // 移動時間機能が無効か起点がない場合は何も表示しない
   if (!enabled || !origin) return null;
 
-  // Rough radius estimation: 80m per minute walking, 250m driving, 200m transit.
-  const modeFactor = mode === 'WALKING' ? 80 : mode === 'DRIVING' ? 250 : 200;
+  // Rough radius estimation: 80m per minute walking, 125m driving, 200m transit.
+  // 車の値を都市部での実際の移動速度に合わせて調整（信号待ちや渋滞を考慮）
+  const modeFactor = mode === 'WALKING' ? 80 : mode === 'DRIVING' ? 125 : 200;
   const radius = modeFactor * timeRange;
 
   // アイコンとラベルを取得
@@ -103,6 +104,17 @@ export default function TravelTimeOverlay() {
     }
   };
 
+  const getModeColor = () => {
+    switch (mode) {
+      case 'WALKING': return '#4ECDC4'; // teal-500
+      case 'DRIVING': return '#3B82F6'; // blue-500
+      case 'TRANSIT': return '#8B5CF6'; // violet-500
+      default: return '#4ECDC4';
+    }
+  };
+
+  const modeColor = getModeColor();
+
   return (
     <>
       <Circle
@@ -110,9 +122,9 @@ export default function TravelTimeOverlay() {
         center={origin}
         radius={radius}
         options={{
-          fillColor: '#3B82F6',
-          fillOpacity: 0.15,
-          strokeColor: '#3B82F6',
+          fillColor: modeColor,
+          fillOpacity: 0.12,
+          strokeColor: modeColor,
           strokeOpacity: 0.4,
           strokeWeight: 2,
           zIndex: 60,
@@ -138,26 +150,54 @@ export default function TravelTimeOverlay() {
         }}
       >
         <div className="p-0 max-w-none">
-          <div className="bg-white/95 backdrop-blur-sm rounded-full shadow-elevation-2 border border-blue-200/50 overflow-hidden">
-            {/* コンパクトなバッジ */}
-            <div className="flex items-center gap-2 px-3 py-1.5">
-              <div className="flex items-center gap-1.5 text-blue-600">
-                {getModeIcon()}
-                <span className="text-sm font-medium">{getModeLabel()}</span>
+          <div className="glass-effect rounded-xl shadow-elevation-3 border border-white/30 overflow-hidden">
+            {/* ヘッダー部分 */}
+            <div 
+              className="flex items-center justify-between px-4 py-3 border-b border-white/20"
+              style={{
+                background: `linear-gradient(135deg, ${modeColor}15, ${modeColor}08)`,
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white shadow-elevation-2"
+                  style={{ backgroundColor: modeColor }}
+                >
+                  {getModeIcon()}
+                </div>
+                <div className="flex flex-col">
+                  <span className="footnote font-semibold tracking-tight" style={{ color: modeColor }}>
+                    {getModeLabel()}
+                  </span>
+                  <span className="caption-2 text-system-secondary-label">
+                    移動時間範囲
+                  </span>
+                </div>
               </div>
-              <div className="text-xs text-gray-600 border-l border-gray-300 pl-2">
-                {timeRange}分
+              
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <span className="headline font-bold text-system-label">
+                    {timeRange}
+                  </span>
+                  <span className="caption-1 text-system-secondary-label ml-1">
+                    分
+                  </span>
+                </div>
+                <button
+                  className="w-6 h-6 bg-coral-500/90 hover:bg-coral-600 active:scale-95
+                           rounded-full transition-all duration-150 ease-ios-default 
+                           text-white flex items-center justify-center
+                           shadow-elevation-2 backdrop-filter backdrop-blur-sm"
+                  onClick={() => {
+                    clearCircle();
+                    useTravelTimeStore.getState().setOrigin(null);
+                  }}
+                  aria-label="移動時間の円を削除"
+                >
+                  <MdClose className="w-3 h-3" />
+                </button>
               </div>
-              <button
-                className="p-0.5 hover:bg-red-100 rounded-full transition-colors duration-150 text-gray-400 hover:text-red-500"
-                onClick={() => {
-                  clearCircle();
-                  useTravelTimeStore.getState().setOrigin(null);
-                }}
-                aria-label="移動時間の円を削除"
-              >
-                <MdClose className="w-3 h-3" />
-              </button>
             </div>
           </div>
         </div>

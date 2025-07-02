@@ -6,6 +6,7 @@ interface Props {
   clearSearch: () => void;
   zoomIn: () => void;
   zoomOut: () => void;
+  showHelp?: () => void;
 }
 
 export const useKeyboardShortcuts = ({
@@ -14,6 +15,7 @@ export const useKeyboardShortcuts = ({
   clearSearch,
   zoomIn,
   zoomOut,
+  showHelp,
 }: Props) => {
   useEffect(() => {
     if (!isDesktop) return;
@@ -54,9 +56,15 @@ export const useKeyboardShortcuts = ({
         zoomOut();
         return;
       }
+      // ? show help
+      if (e.key === '?' && showHelp) {
+        e.preventDefault();
+        showHelp();
+        return;
+      }
     };
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isDesktop, focusSearch, clearSearch, zoomIn, zoomOut]);
+  }, [isDesktop, focusSearch, clearSearch, zoomIn, zoomOut, showHelp]);
 }; 

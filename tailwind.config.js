@@ -83,6 +83,38 @@ export default {
         'coral-glow': '0 4px 20px rgba(255, 107, 107, 0.25)',
         'teal-glow': '0 4px 20px rgba(78, 205, 196, 0.25)',
       },
+      transitionTimingFunction: {
+        'ios-default': 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        'ios-in-out': 'cubic-bezier(0.42, 0, 0.58, 1)',
+        'ios-out': 'cubic-bezier(0.19, 0.91, 0.38, 1)',
+      },
+      animation: {
+        'modal-fade-in': 'modal-fade-in 0.2s cubic-bezier(0.19, 0.91, 0.38, 1)',
+        'modal-zoom-in': 'modal-zoom-in 0.3s cubic-bezier(0.19, 0.91, 0.38, 1)',
+        'spring': 'spring-scale 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+      },
+      keyframes: {
+        'modal-fade-in': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        'modal-zoom-in': {
+          from: { 
+            opacity: '0',
+            transform: 'scale(0.95) translateY(8px)',
+          },
+          to: { 
+            opacity: '1',
+            transform: 'scale(1) translateY(0)',
+          },
+        },
+        'spring-scale': {
+          '0%': { transform: 'scale(1)' },
+          '30%': { transform: 'scale(1.05)' },
+          '60%': { transform: 'scale(0.95)' },
+          '100%': { transform: 'scale(1)' },
+        },
+      },
     },
   },
   plugins: [],

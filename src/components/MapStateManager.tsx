@@ -62,13 +62,9 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
     zoomControlOptions: {
       position: google.maps.ControlPosition.RIGHT_BOTTOM,
     },
-    fullscreenControl: isDesktopViewport,
+    fullscreenControl: false,
     streetViewControl: false,
-    mapTypeControl: true,
-    mapTypeControlOptions: {
-      position: google.maps.ControlPosition.TOP_LEFT,
-      style: google.maps.MapTypeControlStyle.DEFAULT,
-    },
+    mapTypeControl: false,
     gestureHandling: 'greedy',
     disableDefaultUI: false,
     

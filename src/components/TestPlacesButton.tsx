@@ -18,6 +18,7 @@ export default function TestPlacesButton() {
         memo: 'JRの主要駅',
         estimatedCost: 0,
         photos: [],
+        scheduledDay: 1,
       },
       {
         name: '浅草寺',
@@ -27,6 +28,7 @@ export default function TestPlacesButton() {
         memo: '歴史ある寺院',
         estimatedCost: 500,
         photos: [],
+        scheduledDay: 1,
       },
       {
         name: 'スカイツリー',
@@ -36,6 +38,7 @@ export default function TestPlacesButton() {
         memo: '展望台',
         estimatedCost: 2000,
         photos: [],
+        scheduledDay: 2,
       },
     ];
 
@@ -51,9 +54,22 @@ export default function TestPlacesButton() {
   return (
     <button
       onClick={addTestPlaces}
-      className="fixed bottom-4 right-4 z-50 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg transition-colors"
+      className="fixed bottom-4 right-4 z-50 
+                 glass-effect rounded-lg shadow-elevation-2
+                 bg-teal-500/10 border-teal-500/20 text-teal-600
+                 px-4 py-2 font-medium text-[14px] tracking-[-0.24px]
+                 hover:bg-teal-500/20 hover:text-teal-700 hover:scale-105
+                 active:scale-95 transition-all duration-150 ease-ios-default"
+      title="開発用：テスト候補地を追加"
     >
-      テスト候補地を追加
+      <span className="flex items-center space-x-2">
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+        <span>テスト候補地</span>
+      </span>
     </button>
   );
 } 

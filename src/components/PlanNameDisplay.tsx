@@ -2,13 +2,21 @@ import React, { useState } from 'react';
 import { usePlanStore } from '../store/planStore';
 import PlanNameEditModal from './PlanNameEditModal';
 import DateSelectionModal from './DateSelectionModal';
+import { TabKey } from './TabNavigation';
 
-const PlanNameDisplay: React.FC = () => {
+interface PlanNameDisplayProps {
+  activeTab?: TabKey;
+}
+
+const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
   const { plan } = usePlanStore();
   const [nameModal, setNameModal] = useState(false);
   const [dateModal, setDateModal] = useState(false);
 
   if (!plan) return null;
+
+  // リスト表示画面では非表示にする
+  if (activeTab === 'list') return null;
 
   const formatDateRange = () => {
     if (!plan.startDate) return null;
@@ -39,7 +47,7 @@ const PlanNameDisplay: React.FC = () => {
 
   return (
     <>
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-30 
                       glass-effect rounded-xl shadow-elevation-2 animate-spring
                       px-6 py-3 max-w-[280px] w-auto
                       text-system-label

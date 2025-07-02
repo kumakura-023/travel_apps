@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Place } from '../types';
 import LabelEditDialog from './LabelEditDialog';
 import { usePlacesStore } from '../store/placesStore';
+import { getCategoryColor } from '../utils/categoryIcons';
 
 interface Props {
   place: Place;
@@ -22,18 +23,19 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
   if (zoom < 12) return null;
 
   const scale = Math.pow(2, zoom - 14);
+  const categoryColor = getCategoryColor(place.category);
 
   const labelPos = place.labelPosition ?? place.coordinates;
 
-  const baseFontSize = place.labelFontSize ?? 10;
-  const baseWidth = place.labelWidth ?? 120;
-  const baseHeight = place.labelHeight ?? 32;
+  const baseFontSize = place.labelFontSize ?? 12;
+  const baseWidth = place.labelWidth ?? 140;
+  const baseHeight = place.labelHeight ?? 36;
 
   const fontSize = baseFontSize * scale;
   const width = baseWidth * scale;
   const height = baseHeight * scale;
-  const color = place.labelColor ?? '#202124';
-  const fontFamily = place.labelFontFamily ?? 'sans-serif';
+  const color = place.labelColor ?? 'rgba(0, 0, 0, 0.85)';
+  const fontFamily = place.labelFontFamily ?? '-apple-system, BlinkMacSystemFont, sans-serif';
 
   const displayText = (place.labelText ?? place.name).length > 15 && scale <= 1
     ? `${(place.labelText ?? place.name).slice(0, 14)}…`
@@ -42,17 +44,15 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
   const handleSave = (u: Partial<import('../types').MapLabel>) => {
     updatePlace(place.id, {
       labelText: u.text ?? place.labelText ?? place.name,
-      labelFontSize: u.fontSize ?? place.labelFontSize ?? 10,
-      labelWidth: u.width ?? place.labelWidth ?? 120,
-      labelHeight: u.height ?? place.labelHeight ?? 32,
-      labelColor: u.color ?? place.labelColor ?? '#202124',
-      labelFontFamily: u.fontFamily ?? place.labelFontFamily ?? 'sans-serif',
+      labelFontSize: u.fontSize ?? place.labelFontSize ?? 12,
+      labelWidth: u.width ?? place.labelWidth ?? 140,
+      labelHeight: u.height ?? place.labelHeight ?? 36,
+      labelColor: u.color ?? place.labelColor ?? 'rgba(0, 0, 0, 0.85)',
+      labelFontFamily: u.fontFamily ?? place.labelFontFamily ?? '-apple-system, BlinkMacSystemFont, sans-serif',
     });
   };
 
-  // pointerEvents auto to allow double click; stop propagation to not trigger POI zoom
-
-  // --- resize logic ---
+  // resize logic
   const resizeStart = useRef<{ clientX: number; clientY: number; width: number; height: number }>(
     {
       clientX: 0,
@@ -68,8 +68,8 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
       ev.stopPropagation();
       const dxBase = (ev.clientX - resizeStart.current.clientX) / scale;
       const dyBase = (ev.clientY - resizeStart.current.clientY) / scale;
-      const newWidth = Math.max(40, resizeStart.current.width + dxBase);
-      const newHeight = Math.max(16, resizeStart.current.height + dyBase);
+      const newWidth = Math.max(60, resizeStart.current.width + dxBase);
+      const newHeight = Math.max(24, resizeStart.current.height + dyBase);
       updatePlace(place.id, { labelWidth: newWidth, labelHeight: newHeight });
     };
     const stop = () => setResizing(false);
@@ -79,7 +79,6 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', stop);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resizing, scale]);
 
   useEffect(() => {
@@ -103,7 +102,7 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
     };
   };
 
-  // add start ref for drag
+  // drag logic
   const dragStart = useRef<{ clientX: number; clientY: number; world: google.maps.Point | null }>(
     {
       clientX: 0,
@@ -112,7 +111,6 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
     },
   );
 
-  // effect for resizing remains; add effect for dragging
   useEffect(() => {
     if (!dragging) return;
     if (!map) return;
@@ -137,7 +135,6 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', stopDrag);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dragging, map]);
 
   const handleDragMouseDown = (e: React.MouseEvent) => {
@@ -161,7 +158,10 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
       >
         <div
           ref={containerRef}
-          className="bg-yellow-100 shadow rounded select-none hover:bg-yellow-200 cursor-pointer transform translate-x-2 -translate-y-2 flex items-center justify-center relative"
+          className="glass-effect rounded-lg shadow-elevation-2 select-none cursor-pointer 
+                     transform translate-x-2 -translate-y-2 flex items-center justify-center relative
+                     hover:shadow-elevation-3 transition-all duration-150 ease-ios-default
+                     border border-white/30"
           style={{
             pointerEvents: 'auto',
             fontSize,
@@ -169,6 +169,9 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
             height,
             fontFamily,
             color,
+            background: `linear-gradient(135deg, ${categoryColor}15, ${categoryColor}08)`,
+            borderLeftColor: categoryColor,
+            borderLeftWidth: '3px',
           }}
           onDoubleClick={(e) => {
             e.stopPropagation();
@@ -183,38 +186,52 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
           {/* delete button */}
           {showControls && (
             <span
-              className="absolute -top-1 -left-1 w-4 h-4 bg-red-600 text-white text-[10px] flex items-center justify-center rounded-full cursor-pointer"
-              style={{ transform: `scale(${scale})` }}
+              className="absolute -top-2 -right-2 w-5 h-5 bg-coral-500 text-white 
+                         caption-1 flex items-center justify-center rounded-full cursor-pointer
+                         hover:bg-coral-600 active:scale-95 transition-all duration-150 ease-ios-default
+                         shadow-elevation-2"
+              style={{ transform: `scale(${Math.min(scale, 1.2)})` }}
               onClick={(e) => {
                 e.stopPropagation();
                 updatePlace(place.id, { labelHidden: true });
               }}
             >
-              ×
+              ✕
             </span>
           )}
-          {displayText}
+          
+          {/* label text */}
+          <span className="footnote font-medium tracking-tight px-2 py-1 
+                          text-center leading-tight truncate">
+            {displayText}
+          </span>
+          
           {/* resize handle */}
           {showControls && (
             <span
-              className="absolute w-2 h-2 bg-blue-500 bottom-0 right-0 translate-x-1/2 translate-y-1/2 cursor-se-resize"
-              style={{ transform: `scale(${scale}) translate(50%, 50%)` }}
+              className="absolute w-3 h-3 bg-teal-500 bottom-0 right-0 
+                         translate-x-1/2 translate-y-1/2 cursor-se-resize rounded-sm
+                         hover:bg-teal-600 transition-colors duration-150 ease-ios-default
+                         shadow-elevation-1"
               onMouseDown={handleResizeMouseDown}
+              style={{ transform: `scale(${Math.min(scale, 1.2)}) translate(50%, 50%)` }}
             />
           )}
         </div>
       </OverlayView>
+
+      {/* Edit Dialog */}
       {editing && (
         <LabelEditDialog
           label={{
             id: place.id,
             text: place.labelText ?? place.name,
-            position: { lat: place.coordinates.lat, lng: place.coordinates.lng },
-            fontSize: place.labelFontSize ?? 10,
-            fontFamily: place.labelFontFamily ?? 'sans-serif',
-            color: place.labelColor ?? '#202124',
-            width: place.labelWidth ?? 120,
-            height: place.labelHeight ?? 32,
+            fontSize: place.labelFontSize ?? 12,
+            width: place.labelWidth ?? 140,
+            height: place.labelHeight ?? 36,
+            color: place.labelColor ?? 'rgba(0, 0, 0, 0.85)',
+            fontFamily: place.labelFontFamily ?? '-apple-system, BlinkMacSystemFont, sans-serif',
+            position: labelPos,
           }}
           onSave={handleSave}
           onClose={() => setEditing(false)}

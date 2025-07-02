@@ -7,16 +7,19 @@ import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { MapLabel } from '../types';
+import { classifyCategory } from '../utils/categoryClassifier';
+import { getCategoryColor } from '../utils/categoryIcons';
 
 // コンポーネントのインポート
 import PlaceCircle from './PlaceCircle';
 import PlaceLabel from './PlaceLabel';
 import LabelOverlay from './LabelOverlay';
 import LabelEditDialog from './LabelEditDialog';
-import AddLabelToggle from './AddLabelToggle';
+// import AddLabelToggle from './AddLabelToggle'; // TabNavigation に統合済み
 import TravelTimeCircle from './TravelTimeCircle';
 import RouteDisplay from './RouteDisplay';
 import RouteMarkers from './RouteMarkers';
+import PlaceMarkerCluster from './PlaceMarkerCluster';
 
 /**
  * 地図オーバーレイの管理を担当するコンポーネント
@@ -52,25 +55,39 @@ export default function MapOverlayManager({
 
   return (
     <>
+      {/* マーカークラスタリング（多数の地点がある場合） */}
+      <PlaceMarkerCluster zoom={zoom} threshold={15} />
+      
       {/* 候補地のサークルとオーバーレイ */}
       {savedPlaces.map((p) => (
         <PlaceCircle key={`place-circle-${p.id}`} place={p} zoom={zoom} />
       ))}
       
       {/* 選択中の地点のマーカー */}
-      {place && place.geometry?.location && (
-        <Marker
-          position={{
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          }}
-          icon={{
-            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-            scaledSize: new google.maps.Size(48, 48),
-            anchor: new google.maps.Point(24, 48),
-          }}
-        />
-      )}
+      {place && place.geometry?.location && (() => {
+        // POI地点のカテゴリーを分類
+        const category = classifyCategory(place.types);
+        const categoryColor = getCategoryColor(category);
+        
+        return (
+          <Marker
+            position={{
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+            }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              fillColor: categoryColor,
+              fillOpacity: 0.9,
+              strokeWeight: 3,
+              strokeColor: '#ffffff',
+              scale: 16, // 通常のマーカーより大きく表示
+              anchor: new google.maps.Point(0, 0), // 中央に配置
+            }}
+            zIndex={1000} // 他のマーカーより前面に表示
+          />
+        );
+      })()}
       
       {/* 地点の付箋ラベル */}
       {savedPlaces.map((p) => (
@@ -119,8 +136,7 @@ export default function MapOverlayManager({
         />
       )}
       
-      {/* ラベル追加トグル */}
-      {showLabelToggle && <AddLabelToggle onToggle={onLabelModeChange} />}
+      {/* ラベル追加トグルは TabNavigation に統合済み */}
       
       {/* 子コンポーネント */}
       {children}

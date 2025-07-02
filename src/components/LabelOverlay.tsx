@@ -1,7 +1,8 @@
 import { OverlayView } from '@react-google-maps/api';
 import { MapLabel } from '../types';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useLabelsStore } from '../store/labelsStore';
+import { usePlacesStore } from '../store/placesStore';
 
 interface Props {
   label: MapLabel;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: Props) {
+  const { places } = usePlacesStore();
   const [dragging, setDragging] = useState(false);
   const [resizing, setResizing] = useState(false);
   const [showControls, setShowControls] = useState(false);
@@ -21,6 +23,12 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     clientY: 0,
     world: null,
   });
+
+  // リンクされた候補地を取得
+  const linkedPlace = useMemo(() => 
+    label.linkedPlaceId ? places.find(place => place.id === label.linkedPlaceId) : null,
+    [label.linkedPlaceId, places]
+  );
 
   const resizeStart = useRef<{ clientX: number; clientY: number; width: number; height: number }>(
     {
@@ -40,8 +48,8 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
       ev.stopPropagation();
       const dx = ev.clientX - resizeStart.current.clientX;
       const dy = ev.clientY - resizeStart.current.clientY;
-      const newWidth = Math.max(40, resizeStart.current.width + dx);
-      const newHeight = Math.max(16, resizeStart.current.height + dy);
+      const newWidth = Math.max(60, resizeStart.current.width + dx);
+      const newHeight = Math.max(28, resizeStart.current.height + dy);
       onResize({ width: newWidth, height: newHeight });
     };
     const stopResize = () => setResizing(false);
@@ -141,7 +149,14 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     <OverlayView position={label.position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
       <div
         ref={containerRef}
-        className="bg-yellow-100 shadow rounded select-none hover:bg-yellow-200 cursor-move flex items-center justify-center relative"
+        className={`glass-effect rounded-lg shadow-elevation-2 select-none cursor-move 
+                   flex items-center justify-center relative
+                   hover:shadow-elevation-3 transition-all duration-150 ease-ios-default
+                   border border-white/30 ${
+                     linkedPlace 
+                       ? 'bg-gradient-to-br from-coral-500/15 to-coral-500/8' 
+                       : 'bg-gradient-to-br from-teal-500/10 to-teal-500/5'
+                   }`}
         style={{
           fontSize: label.fontSize * scale,
           fontFamily: label.fontFamily,
@@ -150,6 +165,8 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
           height: label.height * scale,
           pointerEvents: 'auto',
           transform: 'translate(8px,-8px)',
+          borderLeftColor: linkedPlace ? '#FF6B6B' : '#4ECDC4',
+          borderLeftWidth: '3px',
         }}
         onDoubleClick={onEdit}
         onClick={(e) => {
@@ -160,22 +177,51 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
       >
         {showControls && (
           <span
-            className="absolute -top-1 -left-1 w-4 h-4 bg-red-600 text-white text-[10px] flex items-center justify-center rounded-full cursor-pointer"
-            style={{ transform: `scale(${scale})` }}
+            className="absolute -top-2 -right-2 w-5 h-5 bg-coral-500 text-white 
+                       caption-1 flex items-center justify-center rounded-full cursor-pointer
+                       hover:bg-coral-600 active:scale-95 transition-all duration-150 ease-ios-default
+                       shadow-elevation-2"
+            style={{ transform: `scale(${Math.min(scale, 1.2)})` }}
             onClick={(e) => {
               e.stopPropagation();
               deleteLabel(label.id);
             }}
           >
-            ×
+            ✕
           </span>
         )}
-        {label.text || 'ラベル'}
+        
+        {/* label text */}
+        <div className="flex items-center gap-1 px-3 py-2">
+          {linkedPlace && (
+            <svg 
+              className="w-3 h-3 text-coral-500 flex-shrink-0" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2"
+              style={{ transform: `scale(${Math.min(scale, 1.2)})` }}
+            >
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+          )}
+          <span 
+            className="footnote font-medium tracking-tight text-center leading-tight truncate"
+            title={linkedPlace ? `${linkedPlace.name}にリンク: ${label.text}` : label.text}
+          >
+            {label.text || 'メモ'}
+          </span>
+        </div>
+        
         {showControls && (
           <span
-            className="absolute w-2 h-2 bg-blue-500 bottom-0 right-0 translate-x-1/2 translate-y-1/2 cursor-se-resize"
+            className="absolute w-3 h-3 bg-teal-500 bottom-0 right-0 
+                       translate-x-1/2 translate-y-1/2 cursor-se-resize rounded-sm
+                       hover:bg-teal-600 transition-colors duration-150 ease-ios-default
+                       shadow-elevation-1"
             onMouseDown={handleResizeMouseDown}
-            style={{ transform: `scale(${scale}) translate(50%, 50%)` }}
+            style={{ transform: `scale(${Math.min(scale, 1.2)}) translate(50%, 50%)` }}
           />
         )}
       </div>

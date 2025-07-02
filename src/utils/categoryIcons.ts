@@ -13,12 +13,12 @@ const pathMap: Record<PlaceCategory, string> = {
 export function getCategoryIcon(category: PlaceCategory, saved = false): google.maps.Icon {
   const size = 40;
   const colorMap: Record<PlaceCategory, string> = {
-    hotel: '#1976D2',
-    restaurant: '#F57C00',
-    sightseeing: '#388E3C',
-    shopping: '#7B1FA2',
-    transport: '#616161',
-    other: '#D32F2F',
+    hotel: '#EC4899',      // マゼンタピンク（旅行アプリらしい温かみのある色）
+    restaurant: '#F97316', // オレンジ（現在より少し明るく）
+    sightseeing: '#3B82F6', // 明るい青（観光地らしい爽やかな色）
+    shopping: '#A855F7',   // 明るい紫（ショッピングらしい華やかな色）
+    transport: '#6B7280',  // グレー（現在と同様）
+    other: '#EF4444',      // 明るい赤（より鮮やか）
   };
 
   const color = colorMap[category];
@@ -38,12 +38,12 @@ export function getCategoryIcon(category: PlaceCategory, saved = false): google.
 
 export function getCategoryColor(category: PlaceCategory) {
   const colorMap: Record<PlaceCategory, string> = {
-    hotel: '#1976D2',
-    restaurant: '#F57C00',
-    sightseeing: '#388E3C',
-    shopping: '#7B1FA2',
-    transport: '#616161',
-    other: '#D32F2F',
+    hotel: '#EC4899',      // マゼンタピンク（旅行アプリらしい温かみのある色）
+    restaurant: '#F97316', // オレンジ（現在より少し明るく）
+    sightseeing: '#3B82F6', // 明るい青（観光地らしい爽やかな色）
+    shopping: '#A855F7',   // 明るい紫（ショッピングらしい華やかな色）
+    transport: '#6B7280',  // グレー（現在と同様）
+    other: '#EF4444',      // 明るい赤（より鮮やか）
   };
   return colorMap[category];
 }

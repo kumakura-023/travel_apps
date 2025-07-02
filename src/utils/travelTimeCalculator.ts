@@ -1,9 +1,9 @@
 import { TravelMode } from '../types/travelTime';
 
-// 概算速度 (km/h) - 仕様より
+// 概算速度 (km/h) - 都市部の実際の移動速度を考慮
 export const TRAVEL_SPEEDS: Record<TravelMode, number> = {
   walking: 4,
-  driving: 30,
+  driving: 15, // 信号待ちや渋滞を考慮した現実的な速度
   transit: 25,
 };
 
