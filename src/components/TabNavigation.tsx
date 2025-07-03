@@ -1,6 +1,7 @@
 import { MdMap, MdAccessTime, MdList, MdEditNote } from 'react-icons/md';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import useMediaQuery from '../hooks/useMediaQuery';
+import { useUIStore } from '../store/uiStore';
 
 export type TabKey = 'map' | 'travelTime' | 'list';
 
@@ -21,13 +22,19 @@ export default function TabNavigation({ active, onChange, labelMode = false, onL
   const { isDesktop } = useDeviceDetect();
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
+  const { isTabNavigationVisible } = useUIStore();
 
-  // 全デバイス共通で右端縦配置
+  // スマホ・タブレット版で非表示の場合はrenderしない
+  if (!isDesktop && !isTabNavigationVisible) {
+    return null;
+  }
+
   return (
     <nav className={`fixed right-4 top-1/2 -translate-y-1/2 transform w-16 
                     glass-effect-border rounded-xl 
                     flex flex-col items-center py-3 z-40
-                    transition-all duration-150 ease-ios-default`}>
+                    transition-all duration-150 ease-ios-default
+                    ${!isDesktop && !isTabNavigationVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       {tabs.map((t) => (
         <button
           key={t.key}
