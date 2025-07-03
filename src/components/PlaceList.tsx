@@ -179,6 +179,7 @@ export default function PlaceList() {
                 selectedDay={selectedDay}
                 onDayChange={setSelectedDay}
                 className="flex-1"
+                allDaysLabel="全日程"
               />
               {selectedDay !== undefined && (
                 <button
