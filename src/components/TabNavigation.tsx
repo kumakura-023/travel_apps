@@ -25,8 +25,7 @@ export default function TabNavigation({ active, onChange, labelMode = false, onL
   // 全デバイス共通で右端縦配置
   return (
     <nav className={`fixed right-4 top-1/2 -translate-y-1/2 transform w-16 
-                    glass-effect rounded-xl 
-                    border border-white/30 backdrop-blur-xl
+                    glass-effect-border rounded-xl 
                     flex flex-col items-center py-3 z-40
                     transition-all duration-150 ease-ios-default`}>
       {tabs.map((t) => (

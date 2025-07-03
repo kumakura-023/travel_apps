@@ -121,8 +121,7 @@ export default function SearchBar({
   return (
     <div
       className={`fixed top-4 z-50 flex items-center justify-between 
-                  glass-effect rounded-xl 
-                  border border-white/30 backdrop-blur-xl
+                  glass-effect-border rounded-xl 
                   transition-all duration-150 ease-ios-default
                   ${isDesktop ? 'left-4 w-[480px]' : isTablet ? 'left-4 w-[360px]' : 'left-4 w-[480px] max-w-[calc(100vw-2rem)]'}`}
     >
