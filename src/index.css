@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* プルトゥリフレッシュ機能を無効化 */
+html,
+body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ----------------------
    Travel App Design System Additions
    ---------------------- */
