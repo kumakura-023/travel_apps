@@ -22,6 +22,7 @@ export default function PlaceDetailPanel() {
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>('');
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const startY = useRef<number>(0);
@@ -46,20 +47,37 @@ export default function PlaceDetailPanel() {
 
   // スクロール展開のタッチハンドラー
   const handleTouchStart = (e: React.TouchEvent) => {
+    const debugMsg = `TouchStart: mobile=${isMobile}, expanded=${isExpanded}`;
+    console.log(debugMsg);
+    setDebugInfo(debugMsg);
+    
     if (!isMobile || isExpanded) return;
     startY.current = e.touches[0].clientY;
     isDragging.current = false;
+    
+    const startMsg = `Start Y: ${startY.current}`;
+    console.log(startMsg);
+    setDebugInfo(prev => prev + ' | ' + startMsg);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    const moveMsg = `TouchMove: mobile=${isMobile}, expanded=${isExpanded}`;
+    console.log(moveMsg);
+    
     if (!isMobile || isExpanded) return;
     
     currentY.current = e.touches[0].clientY;
     const deltaY = startY.current - currentY.current;
     
-    // 10px以上の動きで展開
-    if (Math.abs(deltaY) > 10) {
-      console.log('Scroll detected, expanding panel', { deltaY, startY: startY.current, currentY: currentY.current });
+    const detailMsg = `Delta: ${deltaY.toFixed(1)}, Abs: ${Math.abs(deltaY).toFixed(1)}`;
+    console.log(detailMsg);
+    setDebugInfo(`${moveMsg} | ${detailMsg}`);
+    
+    // 1px以上の動きで展開（超敏感設定）
+    if (Math.abs(deltaY) > 1) {
+      const expandMsg = `🚀 EXPANDING! Delta: ${deltaY}`;
+      console.log(expandMsg);
+      setDebugInfo(expandMsg);
       setIsExpanded(true);
     }
   };
@@ -275,6 +293,15 @@ export default function PlaceDetailPanel() {
              <FiX size={20} />
            </button>
          </div>
+         
+         {/* デバッグ情報表示（開発用） */}
+         {isMobile && debugInfo && (
+           <div className="bg-red-100 border border-red-300 rounded mx-4 mb-2 p-2">
+             <p className="text-xs text-red-800 font-mono break-all">
+               DEBUG: {debugInfo}
+             </p>
+           </div>
+         )}
          <div 
            ref={contentRef} 
            className={`${isExpanded ? "overflow-y-auto" : "overflow-hidden"}`}
