@@ -317,20 +317,20 @@ export default function PlaceDetailPanel() {
       <div 
         ref={panelRef}
         className={`fixed left-0 right-0 bottom-0 glass-effect shadow-elevation-5 
-                   border-t border-system-separator z-50 flex flex-col
+                   border-t border-system-separator z-50 flex flex-col touch-none
                    transition-all duration-300 ease-ios-default
                    ${isDragActive ? '' : (isExpanded ? 'top-0' : 'h-[50vh] max-h-[50vh]')}`}
         style={{
           height: isDragActive ? `${panelHeight}vh` : (isExpanded ? '100vh' : undefined)
         }}
-             >
+        onTouchMove={handleHandleTouchMove}
+        onTouchEnd={handleHandleTouchEnd}
+      >
          {/* スワイプハンドルと閉じるボタン */}
          <div 
            ref={handleRef}
            className="flex justify-between items-center pt-2 pb-1 px-4 cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
            onTouchStart={handleHandleTouchStart}
-           onTouchMove={handleHandleTouchMove}
-           onTouchEnd={handleHandleTouchEnd}
          >
            <div className="w-8"></div> {/* スペーサー */}
            <div className="w-10 h-1 bg-system-secondary-label/40 rounded-full" />
