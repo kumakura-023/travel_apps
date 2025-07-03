@@ -17,29 +17,29 @@ export default function MapTypeSwitcher() {
 
   return (
     <div className="fixed top-4 right-4 z-50 
-                    glass-effect rounded-lg shadow-elevation-2 
+                    glass-effect rounded-lg 
+                    border border-white/30 backdrop-blur-xl
                     flex overflow-hidden
                     transition-all duration-150 ease-ios-default">
       <button
-        className={`px-4 py-2 text-[15px] font-medium tracking-[-0.24px] font-system
+        className={`px-3 py-2 text-sm font-medium
                    transition-all duration-150 ease-ios-default
                    ${
                      type === 'roadmap' 
-                       ? 'bg-coral-500 text-white shadow-elevation-1' 
-                       : 'text-system-label hover:text-coral-500 hover:bg-coral-500/5'
+                       ? 'bg-coral-500 text-white border border-coral-400/30' 
+                       : 'bg-white/80 text-system-secondary-label hover:bg-white/90 hover:text-coral-500'
                    }`}
         onClick={() => switchType('roadmap')}
       >
         地図
       </button>
       <button
-        className={`px-4 py-2 text-[15px] font-medium tracking-[-0.24px] font-system
-                   border-l border-system-separator
+        className={`px-3 py-2 text-sm font-medium
                    transition-all duration-150 ease-ios-default
                    ${
                      type === 'hybrid' 
-                       ? 'bg-coral-500 text-white shadow-elevation-1' 
-                       : 'text-system-label hover:text-coral-500 hover:bg-coral-500/5'
+                       ? 'bg-coral-500 text-white border border-coral-400/30' 
+                       : 'bg-white/80 text-system-secondary-label hover:bg-white/90 hover:text-coral-500'
                    }`}
         onClick={() => switchType('hybrid')}
       >

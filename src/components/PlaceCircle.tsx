@@ -274,7 +274,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                     padding: 8px 12px;
                     background: rgba(34, 197, 94, 0.9);
                     color: white;
-                    border: none;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
                     border-radius: 8px;
                     cursor: pointer;
                     font-size: 13px;
@@ -286,8 +286,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                     align-items: center;
                     justify-content: center;
                     gap: 6px;
-                    backdrop-filter: blur(8px);
-                    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
+                    backdrop-filter: blur(12px);
                   "
                   onmouseover="this.style.background='rgba(22, 163, 74, 0.95)'; this.style.transform='scale(1.02)'"
                   onmouseout="this.style.background='rgba(34, 197, 94, 0.9)'; this.style.transform='scale(1)'"
@@ -304,7 +303,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                     padding: 8px 12px;
                     background: rgba(255, 107, 107, 0.9);
                     color: white;
-                    border: none;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
                     border-radius: 8px;
                     cursor: pointer;
                     font-size: 13px;
@@ -316,8 +315,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                     align-items: center;
                     justify-content: center;
                     gap: 6px;
-                    backdrop-filter: blur(8px);
-                    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.25);
+                    backdrop-filter: blur(12px);
                   "
                   onmouseover="this.style.background='rgba(229, 62, 62, 0.95)'; this.style.transform='scale(1.02)'"
                   onmouseout="this.style.background='rgba(255, 107, 107, 0.9)'; this.style.transform='scale(1)'"

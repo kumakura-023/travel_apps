@@ -25,7 +25,8 @@ export default function TabNavigation({ active, onChange, labelMode = false, onL
   // 全デバイス共通で右端縦配置
   return (
     <nav className={`fixed right-4 top-1/2 -translate-y-1/2 transform w-16 
-                    glass-effect rounded-xl shadow-elevation-2 
+                    glass-effect rounded-xl 
+                    border border-white/30 backdrop-blur-xl
                     flex flex-col items-center py-3 z-40
                     transition-all duration-150 ease-ios-default`}>
       {tabs.map((t) => (
@@ -61,8 +62,8 @@ export default function TabNavigation({ active, onChange, labelMode = false, onL
                      hover:scale-105 active:scale-95
                      ${
                        labelMode 
-                         ? 'text-white bg-teal-500 shadow-elevation-2' 
-                         : 'text-system-secondary-label hover:text-teal-500 hover:bg-teal-500/10'
+                         ? 'text-white bg-teal-500 border border-teal-400/30' 
+                         : 'text-system-secondary-label hover:text-teal-500 hover:bg-white/10'
                      }`}
           onClick={onLabelModeToggle}
           title={labelMode ? 'メモ配置を終了' : 'メモを追加'}

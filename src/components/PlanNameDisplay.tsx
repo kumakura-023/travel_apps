@@ -50,7 +50,8 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
   return (
     <>
       <div className={`fixed top-4 z-30 
-                      glass-effect rounded-xl shadow-elevation-2 animate-spring
+                      glass-effect rounded-xl 
+                      border border-white/30 backdrop-blur-xl
                       px-6 py-3 max-w-[280px] w-auto
                       text-system-label
                       transition-all duration-150 ease-ios-default
