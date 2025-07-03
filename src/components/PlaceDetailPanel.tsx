@@ -44,61 +44,43 @@ export default function PlaceDetailPanel() {
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
 
-  // タッチイベントハンドラー（スマホ版のみ）
+  // プルツーリフレッシュ防止（スマホ版のみ）
   useEffect(() => {
-    if (!isMobile || !panelRef.current || !contentRef.current) return;
+    if (!isMobile || !panelRef.current) return;
 
     const panel = panelRef.current;
-    const content = contentRef.current;
+
+    const handleTouchMove = (e: TouchEvent) => {
+      // 展開状態でスクロール位置が上端の場合、プルツーリフレッシュを防ぐ
+      if (isExpanded && contentRef.current && contentRef.current.scrollTop === 0) {
+        const touch = e.touches[0];
+        const deltaY = startY.current - touch.clientY;
+        
+        if (deltaY < 0) {
+          e.preventDefault();
+        }
+      }
+    };
 
     const handleTouchStart = (e: TouchEvent) => {
       startY.current = e.touches[0].clientY;
-      isDragging.current = true;
     };
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isDragging.current) return;
-      
-      currentY.current = e.touches[0].clientY;
-      const deltaY = startY.current - currentY.current;
-      
-      // 展開状態の場合は、プルツーリフレッシュを防ぐ
-      if (isExpanded && content.scrollTop === 0 && deltaY < 0) {
-        e.preventDefault();
-      }
-      
-      // 非展開状態では、パネル内のタッチで展開
-      if (!isExpanded && deltaY > 30) {
-        setIsExpanded(true);
-      }
-    };
-
-    const handleTouchEnd = () => {
-      isDragging.current = false;
-    };
-
-    // パネル内のタッチで展開（非展開状態のみ）
-    const handleContentTouch = (e: TouchEvent) => {
-      if (!isExpanded) {
-        setIsExpanded(true);
-      }
-    };
-
-    panel.addEventListener('touchstart', handleTouchStart, { passive: false });
+    panel.addEventListener('touchstart', handleTouchStart, { passive: true });
     panel.addEventListener('touchmove', handleTouchMove, { passive: false });
-    panel.addEventListener('touchend', handleTouchEnd);
-    
-    if (!isExpanded) {
-      content.addEventListener('touchstart', handleContentTouch);
-    }
 
     return () => {
       panel.removeEventListener('touchstart', handleTouchStart);
       panel.removeEventListener('touchmove', handleTouchMove);
-      panel.removeEventListener('touchend', handleTouchEnd);
-      content.removeEventListener('touchstart', handleContentTouch);
     };
   }, [isMobile, isExpanded]);
+
+  // パネル展開ハンドラー（スマホ版のみ）
+  const handleExpandPanel = () => {
+    if (isMobile && !isExpanded) {
+      setIsExpanded(true);
+    }
+  };
 
   if (!place) return null;
 
@@ -280,7 +262,11 @@ export default function PlaceDetailPanel() {
              <FiX size={20} />
            </button>
          </div>
-         <div ref={contentRef} className={isExpanded ? "overflow-y-auto" : "overflow-hidden"}>
+         <div 
+           ref={contentRef} 
+           className={`${isExpanded ? "overflow-y-auto" : "overflow-hidden cursor-pointer"}`}
+           onClick={handleExpandPanel}
+         >
            {children}
          </div>
        </div>
