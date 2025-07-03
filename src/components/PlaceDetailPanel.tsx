@@ -317,7 +317,7 @@ export default function PlaceDetailPanel() {
       <div 
         ref={panelRef}
         className={`fixed left-0 right-0 bottom-0 glass-effect shadow-elevation-5 
-                   border-t border-system-separator z-50 flex flex-col touch-none
+                   border-t border-system-separator z-50 flex flex-col touch-pan-y
                    transition-all duration-300 ease-ios-default
                    ${isDragActive ? '' : (isExpanded ? 'top-0' : 'h-[50vh] max-h-[50vh]')}`}
         style={{
