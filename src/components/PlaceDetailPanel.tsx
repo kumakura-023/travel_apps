@@ -49,13 +49,6 @@ export default function PlaceDetailPanel() {
 
     const panel = panelRef.current;
 
-    const handleScroll = () => {
-      // スクロールが発生したら自動的に全画面表示に切り替え
-      if (!isExpanded) {
-        setIsExpanded(true);
-      }
-    };
-
     const handleTouchStart = (e: TouchEvent) => {
       startY.current = e.touches[0].clientY;
       isDragging.current = true;
@@ -78,13 +71,11 @@ export default function PlaceDetailPanel() {
       isDragging.current = false;
     };
 
-    panel.addEventListener('scroll', handleScroll);
     panel.addEventListener('touchstart', handleTouchStart);
     panel.addEventListener('touchmove', handleTouchMove);
     panel.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      panel.removeEventListener('scroll', handleScroll);
       panel.removeEventListener('touchstart', handleTouchStart);
       panel.removeEventListener('touchmove', handleTouchMove);
       panel.removeEventListener('touchend', handleTouchEnd);
