@@ -316,14 +316,12 @@ export default function PlaceDetailPanel() {
     return (
       <div 
         ref={panelRef}
-        className={`fixed left-0 right-0 glass-effect shadow-elevation-5 
+        className={`fixed left-0 right-0 bottom-0 glass-effect shadow-elevation-5 
                    border-t border-system-separator z-50 flex flex-col
                    transition-all duration-300 ease-ios-default
-                   ${isDragActive ? '' : (isExpanded 
-                     ? 'top-0 bottom-0' 
-                     : 'bottom-0 h-[50vh] max-h-[50vh]')}`}
+                   ${isDragActive ? '' : (isExpanded ? 'top-0' : 'h-[50vh] max-h-[50vh]')}`}
         style={{
-          height: isDragActive ? `${panelHeight}vh` : undefined
+          height: isDragActive ? `${panelHeight}vh` : (isExpanded ? '100vh' : undefined)
         }}
              >
          {/* スワイプハンドルと閉じるボタン */}

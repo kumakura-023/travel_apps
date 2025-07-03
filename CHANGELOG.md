@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.9] - 2024-12-19
+
+### 🐛 バグ修正
+- **モバイル版詳細パネル**: ハンドルバーをドラッグした際にパネルが画面上部へ張り付く問題を修正
+  - `bottom: 0` を常時維持し、ドラッグ中でもパネル下端を基準に高さを連続的に変化させる
+  - 展開状態のみ `top: 0` を付与し、不要な `bottom-0` の重複を排除
+  - クラス名とインラインスタイルの整合性を整理し、位置ズレを解消
+
 ## [1.2.8] - 2024-12-19
 
 ### ✨ 新機能
