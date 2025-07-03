@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.8] - 2024-12-19
+
+### ✨ 新機能
+- **モバイル版詳細パネル**: iOS風ドラッグ操作による展開/縮小機能を実装
+  - パネル上部のハンドルバーからのドラッグ操作に対応
+  - ドラッグ中にパネルの高さがリアルタイムで変化
+  - ドラッグ終了時の移動量（50px以上）に基づいて展開/縮小を判定
+  - iOS風のボトムシートのような滑らかな操作感を実現
+  - ハンドルバーに適切なカーソル表示（grab/grabbing）
+
+### 🔧 技術的改善
+- パネルをflexboxコンテナに変更し、ハンドルエリアとコンテンツエリアの配置を最適化
+- ドラッグ中の高さ制御を動的に調整（30vh〜100vhの範囲）
+- タッチイベントの`preventDefault`でブラウザデフォルト動作を抑制
+
 ## [1.2.7] - 2024-12-19
 
 ### Fixed
