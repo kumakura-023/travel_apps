@@ -2,9 +2,13 @@ import React from 'react';
 import { MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit, MdDelete } from 'react-icons/md';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
+import useMediaQuery from '../hooks/useMediaQuery';
 
 export default function TravelTimeControls() {
   const { isDesktop } = useDeviceDetect();
+  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+  const isMobile = !isDesktop && !isTablet;
+  
   const {
     selectingOrigin,
     startSelecting,
@@ -27,7 +31,7 @@ export default function TravelTimeControls() {
     clearAll: s.clearAll,
   }));
 
-  const containerClasses = isDesktop
+  const containerClasses = isDesktop || isTablet
     ? 'fixed top-[25%] right-4 transform -translate-y-1/2 glass-effect rounded-xl shadow-elevation-2 p-5 z-50 w-64 space-y-4'
     : 'fixed top-0 left-0 right-0 glass-effect border-b border-system-separator p-3 flex items-center justify-between z-30 safe-area-inset';
 
@@ -39,7 +43,7 @@ export default function TravelTimeControls() {
 
   return (
     <div className={containerClasses}>
-      {isDesktop ? (
+      {isDesktop || isTablet ? (
         // デスクトップレイアウト（縦配置）
         <>
           {/* 起点選択ボタン */}
