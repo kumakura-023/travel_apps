@@ -13,7 +13,9 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
   const { plan } = usePlanStore();
   const [nameModal, setNameModal] = useState(false);
   const [dateModal, setDateModal] = useState(false);
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+  const isMobile = !isDesktop && !isTablet;
 
   if (!plan) return null;
 
@@ -54,7 +56,7 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
                       px-6 py-3 max-w-[280px] w-auto
                       text-system-label
                       transition-all duration-150 ease-ios-default
-                      ${isTablet ? 'right-4' : 'left-1/2 transform -translate-x-1/2'}`}>
+                      ${isDesktop ? 'left-1/2 transform -translate-x-1/2' : 'right-4'}`}>
         
         <div className="flex flex-col items-center space-y-1">
           {/* プラン名 - クリック可能 */}
