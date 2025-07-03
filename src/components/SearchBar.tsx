@@ -5,6 +5,7 @@ import { MdNavigation } from 'react-icons/md';
 import { useSelectedPlaceStore } from '../store/placeStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
+import useMediaQuery from '../hooks/useMediaQuery';
 
 interface Props {
   onPlaceSelected: (lat: number, lng: number) => void;
@@ -26,6 +27,10 @@ export default function SearchBar({
   const { openRouteSearch } = useRouteSearchStore();
   const placesServiceRef = useRef<google.maps.places.PlacesService>();
   const { map } = useGoogleMaps();
+
+  // タブレット判定を追加
+  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+  const isMobile = !isDesktop && !isTablet;
 
   const combinedRef = inputRef ?? localRef;
 
@@ -118,7 +123,7 @@ export default function SearchBar({
       className={`fixed top-4 z-50 flex items-center justify-between 
                   glass-effect rounded-xl shadow-elevation-2
                   transition-all duration-150 ease-ios-default
-                  ${isDesktop ? 'left-4 w-[480px]' : 'mx-4 left-0 right-0'}`}
+                  left-4 w-[480px] max-w-[calc(100vw-2rem)]`}
     >
       <div className="flex-1">
         <Autocomplete
