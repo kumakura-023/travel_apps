@@ -4,6 +4,7 @@ import { Place } from '../types';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { getCategoryColor, getCategoryIcon, getCategoryDisplayName } from '../utils/categoryIcons';
 import { usePlacesStore } from '../store/placesStore';
+import { usePlanStore } from '../store/planStore';
 import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
@@ -15,7 +16,11 @@ interface Props {
 
 export default function PlaceCircle({ place, zoom = 14 }: Props) {
   const { map } = useGoogleMaps();
-  const { deletePlace } = usePlacesStore((s) => ({ deletePlace: s.deletePlace }));
+  const { deletePlace, updatePlace } = usePlacesStore((s) => ({ 
+    deletePlace: s.deletePlace,
+    updatePlace: s.updatePlace
+  }));
+  const { plan } = usePlanStore();
   const { 
     selectionState, 
     startSelection, 
@@ -196,26 +201,49 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
               ">
                 ${place.name}
               </h3>
-              ${place.scheduledDay ? `
+              
+              <!-- 日程設定 -->
+              ${plan ? `
                 <div style="
-                  font-size: 14px;
-                  line-height: 20px;
-                  letter-spacing: -0.24px;
-                  color: #1a73e8;
-                  font-weight: 600;
                   margin: 0 0 12px 0;
                   display: flex;
                   align-items: center;
                   gap: 8px;
-                  background: rgba(26, 115, 232, 0.08);
-                  padding: 6px 12px;
+                  background: rgba(255, 107, 114, 0.08);
+                  padding: 8px 12px;
                   border-radius: 8px;
-                  border-left: 3px solid #1a73e8;
+                  border-left: 3px solid #FF6B72;
                 ">
-                  <span style="font-size: 12px;">📅</span>
-                  ${place.scheduledDay}日目
+                  <span style="font-size: 12px; color: #FF6B72;">📅</span>
+                  <label style="
+                    font-size: 14px;
+                    line-height: 20px;
+                    letter-spacing: -0.24px;
+                    color: #FF6B72;
+                    font-weight: 500;
+                    margin-right: 4px;
+                  ">訪問日:</label>
+                  <select 
+                    id="day-selector-${place.id}"
+                    style="
+                      padding: 4px 8px;
+                      border: 1px solid rgba(255, 107, 114, 0.3);
+                      border-radius: 6px;
+                      background: white;
+                      color: #FF6B72;
+                      font-size: 13px;
+                      font-weight: 500;
+                      outline: none;
+                      cursor: pointer;
+                      min-width: 70px;
+                    "
+                  >
+                    <option value="">未設定</option>
+                    ${generateDayOptions()}
+                  </select>
                 </div>
               ` : ''}
+              
               ${place.estimatedCost > 0 ? `
                 <div style="
                   font-size: 14px;
@@ -322,6 +350,20 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
           deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             handleDelete();
+          });
+        }
+
+        // 日程選択のイベントを追加
+        const daySelector = this.div.querySelector(`#day-selector-${place.id}`) as HTMLSelectElement;
+        if (daySelector) {
+          // 現在の値を設定
+          daySelector.value = place.scheduledDay ? place.scheduledDay.toString() : '';
+          
+          daySelector.addEventListener('change', (e) => {
+            e.stopPropagation();
+            const target = e.target as HTMLSelectElement;
+            const selectedDay = target.value ? parseInt(target.value) : undefined;
+            handleScheduledDayChange(selectedDay);
           });
         }
 
@@ -448,9 +490,29 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
     setSelectedDestination({
       lat: place.coordinates.lat,
       lng: place.coordinates.lng,
-      name: place.name
+      name: place.name,
     });
     openRouteSearch();
+  };
+
+  // 日程変更ハンドラー
+  const handleScheduledDayChange = (day: number | undefined) => {
+    updatePlace(place.id, { scheduledDay: day });
+  };
+
+  // 日程選択オプションを生成
+  const generateDayOptions = () => {
+    if (!plan || !plan.startDate) return '';
+    
+    const maxDays = plan.endDate 
+      ? Math.ceil((plan.endDate.getTime() - plan.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1 
+      : 7;
+    
+    const options = [];
+    for (let i = 1; i <= maxDays; i++) {
+      options.push(`<option value="${i}">${i}日目</option>`);
+    }
+    return options.join('');
   };
 
   const getCategoryEmoji = () => {
