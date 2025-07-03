@@ -43,11 +43,18 @@ export default function PlaceDetailPanel() {
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
 
-  // タッチイベントハンドラー（スマホ版のみ）
+  // スクロールイベントハンドラー（スマホ版のみ）
   useEffect(() => {
     if (!isMobile || !panelRef.current) return;
 
     const panel = panelRef.current;
+
+    const handleScroll = () => {
+      // スクロールが発生したら自動的に全画面表示に切り替え
+      if (!isExpanded) {
+        setIsExpanded(true);
+      }
+    };
 
     const handleTouchStart = (e: TouchEvent) => {
       startY.current = e.touches[0].clientY;
@@ -71,16 +78,18 @@ export default function PlaceDetailPanel() {
       isDragging.current = false;
     };
 
+    panel.addEventListener('scroll', handleScroll);
     panel.addEventListener('touchstart', handleTouchStart);
     panel.addEventListener('touchmove', handleTouchMove);
     panel.addEventListener('touchend', handleTouchEnd);
 
     return () => {
+      panel.removeEventListener('scroll', handleScroll);
       panel.removeEventListener('touchstart', handleTouchStart);
       panel.removeEventListener('touchmove', handleTouchMove);
       panel.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isMobile]);
+  }, [isMobile, isExpanded]);
 
   if (!place) return null;
 
