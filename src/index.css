@@ -50,7 +50,7 @@
     @apply bg-gray-900/70 backdrop-blur-xl backdrop-saturate-150 border border-white/10;
   }
   .glass-effect-border {
-    @apply bg-white/70 backdrop-blur-xl backdrop-saturate-150 border border-white/30;
+    @apply bg-white/70 backdrop-blur-xl backdrop-saturate-150 border border-white/50;
   }
 
   /* Button system */
