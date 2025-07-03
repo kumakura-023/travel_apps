@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useRef } from 'react';
-import { FiX, FiTrash2, FiBookmark, FiSearch, FiChevronLeft, FiChevronRight, FiCalendar } from 'react-icons/fi';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { FiX, FiTrash2, FiBookmark, FiSearch, FiChevronLeft, FiChevronRight, FiCalendar, FiChevronUp, FiChevronDown } from 'react-icons/fi';
 import { MdDirections } from 'react-icons/md';
 import useMediaQuery from '../hooks/useMediaQuery';
 import { useSelectedPlaceStore } from '../store/placeStore';
@@ -21,6 +21,12 @@ export default function PlaceDetailPanel() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const startY = useRef<number>(0);
+  const currentY = useRef<number>(0);
+  const isDragging = useRef<boolean>(false);
+
   const { deletePlace, addPlace, updatePlace } = usePlacesStore((s) => ({ 
     deletePlace: s.deletePlace, 
     addPlace: s.addPlace,
@@ -36,6 +42,45 @@ export default function PlaceDetailPanel() {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
+
+  // タッチイベントハンドラー（スマホ版のみ）
+  useEffect(() => {
+    if (!isMobile || !panelRef.current) return;
+
+    const panel = panelRef.current;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      startY.current = e.touches[0].clientY;
+      isDragging.current = true;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging.current) return;
+      currentY.current = e.touches[0].clientY;
+      const deltaY = startY.current - currentY.current;
+      
+      // 上方向へのスワイプで展開
+      if (deltaY > 50) {
+        setIsExpanded(true);
+      } else if (deltaY < -50) {
+        setIsExpanded(false);
+      }
+    };
+
+    const handleTouchEnd = () => {
+      isDragging.current = false;
+    };
+
+    panel.addEventListener('touchstart', handleTouchStart);
+    panel.addEventListener('touchmove', handleTouchMove);
+    panel.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      panel.removeEventListener('touchstart', handleTouchStart);
+      panel.removeEventListener('touchmove', handleTouchMove);
+      panel.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isMobile]);
 
   if (!place) return null;
 
@@ -164,6 +209,14 @@ export default function PlaceDetailPanel() {
     }
   };
 
+  // 詳細パネルを閉じるハンドラー
+  const handleClosePanel = () => {
+    setPlace(null);
+    if (isMobile) {
+      setIsExpanded(false);
+    }
+  };
+
   const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     if (isDesktop) {
       return (
@@ -183,13 +236,34 @@ export default function PlaceDetailPanel() {
         </div>
       );
     }
-    // mobile - 左サイドパネル形式（画面の80%幅）
+    // mobile - ボトムシート形式
     return (
-      <div className="fixed left-0 top-0 bottom-0 w-[80vw] max-w-[400px]
-                      glass-effect shadow-elevation-5 border-r border-system-separator
-                      z-40 overflow-y-auto safe-area-inset">
-        {children}
-      </div>
+      <div 
+        ref={panelRef}
+        className={`fixed left-0 right-0 glass-effect shadow-elevation-5 
+                   border-t border-system-separator z-50 overflow-y-auto
+                   transition-all duration-300 ease-ios-default
+                   ${isExpanded 
+                     ? 'top-0 bottom-0' 
+                     : 'bottom-0 h-[50vh] max-h-[50vh]'
+                   }`}
+             >
+         {/* スワイプハンドルと展開ボタン */}
+         <div className="flex justify-between items-center pt-2 pb-1 px-4">
+           <div className="w-8"></div> {/* スペーサー */}
+           <div className="w-10 h-1 bg-system-secondary-label/40 rounded-full" />
+           <button
+             onClick={() => setIsExpanded(!isExpanded)}
+             className="w-8 h-8 flex items-center justify-center 
+                        text-system-secondary-label hover:text-coral-500
+                        transition-colors duration-150"
+             title={isExpanded ? '縮小' : '展開'}
+           >
+             {isExpanded ? <FiChevronDown size={20} /> : <FiChevronUp size={20} />}
+           </button>
+         </div>
+         {children}
+       </div>
     );
   };
 
@@ -259,7 +333,7 @@ export default function PlaceDetailPanel() {
                              flex items-center justify-center
                              hover:shadow-elevation-2 hover:scale-105 
                              active:scale-95 transition-all duration-150 ease-ios-default"
-                  onClick={() => setPlace(null)}
+                  onClick={handleClosePanel}
                   title="閉じる"
                 >
                   <FiX size={18} className="text-gray-600" />
