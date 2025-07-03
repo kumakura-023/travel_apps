@@ -22,12 +22,16 @@ export default function PlaceDetailPanel() {
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [panelHeight, setPanelHeight] = useState<number>(50); // vh単位
+  const [isDragActive, setIsDragActive] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string>('');
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const handleRef = useRef<HTMLDivElement>(null);
   const startY = useRef<number>(0);
   const currentY = useRef<number>(0);
   const isDragging = useRef<boolean>(false);
+  const initialPanelHeight = useRef<number>(50);
 
   const { deletePlace, addPlace, updatePlace } = usePlacesStore((s) => ({ 
     deletePlace: s.deletePlace, 
@@ -45,41 +49,82 @@ export default function PlaceDetailPanel() {
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
 
-  // スクロール展開のタッチハンドラー
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const debugMsg = `TouchStart: mobile=${isMobile}, expanded=${isExpanded}`;
+  // パネル高さの初期化
+  useEffect(() => {
+    if (isMobile) {
+      setPanelHeight(isExpanded ? 100 : 50);
+    }
+  }, [isExpanded, isMobile]);
+
+  // ハンドルバーでのドラッグ操作
+  const handleHandleTouchStart = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    
+    e.preventDefault();
+    startY.current = e.touches[0].clientY;
+    initialPanelHeight.current = isExpanded ? 100 : 50;
+    setIsDragActive(true);
+    isDragging.current = true;
+    
+    const debugMsg = `Handle TouchStart: Y=${startY.current}, height=${initialPanelHeight.current}vh`;
     console.log(debugMsg);
     setDebugInfo(debugMsg);
-    
-    if (!isMobile || isExpanded) return;
-    startY.current = e.touches[0].clientY;
-    isDragging.current = false;
-    
-    const startMsg = `Start Y: ${startY.current}`;
-    console.log(startMsg);
-    setDebugInfo(prev => prev + ' | ' + startMsg);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    const moveMsg = `TouchMove: mobile=${isMobile}, expanded=${isExpanded}`;
-    console.log(moveMsg);
+  const handleHandleTouchMove = (e: React.TouchEvent) => {
+    if (!isMobile || !isDragging.current) return;
     
-    if (!isMobile || isExpanded) return;
-    
+    e.preventDefault();
     currentY.current = e.touches[0].clientY;
     const deltaY = startY.current - currentY.current;
     
-    const detailMsg = `Delta: ${deltaY.toFixed(1)}, Abs: ${Math.abs(deltaY).toFixed(1)}`;
-    console.log(detailMsg);
-    setDebugInfo(`${moveMsg} | ${detailMsg}`);
+    // vh単位での変化量計算（画面高さの1%を基準）
+    const viewportHeight = window.innerHeight;
+    const deltaVh = (deltaY / viewportHeight) * 100;
     
-    // 1px以上の動きで展開（超敏感設定）
-    if (Math.abs(deltaY) > 1) {
-      const expandMsg = `🚀 EXPANDING! Delta: ${deltaY}`;
-      console.log(expandMsg);
-      setDebugInfo(expandMsg);
-      setIsExpanded(true);
+    // 新しい高さ計算（50vh〜100vhの範囲）
+    let newHeight = initialPanelHeight.current + deltaVh;
+    newHeight = Math.max(30, Math.min(100, newHeight)); // 30vh〜100vhに制限
+    
+    setPanelHeight(newHeight);
+    
+    const debugMsg = `Dragging: deltaY=${deltaY.toFixed(1)}, height=${newHeight.toFixed(1)}vh`;
+    console.log(debugMsg);
+    setDebugInfo(debugMsg);
+  };
+
+  const handleHandleTouchEnd = (e: React.TouchEvent) => {
+    if (!isMobile || !isDragging.current) return;
+    
+    const deltaY = startY.current - currentY.current;
+    const threshold = 50; // 50px以上の移動で状態変更
+    
+    // 展開/縮小の判定
+    if (Math.abs(deltaY) > threshold) {
+      if (deltaY > 0) {
+        // 上方向のドラッグ → 展開
+        setIsExpanded(true);
+        setPanelHeight(100);
+      } else {
+        // 下方向のドラッグ → 縮小
+        setIsExpanded(false);
+        setPanelHeight(50);
+      }
+    } else {
+      // 閾値以下の場合は元の状態に戻す
+      if (isExpanded) {
+        setPanelHeight(100);
+      } else {
+        setPanelHeight(50);
+      }
     }
+    
+    setIsDragActive(false);
+    isDragging.current = false;
+    
+    const finalMsg = `TouchEnd: deltaY=${deltaY.toFixed(1)}, final=${isExpanded ? 'expanded' : 'collapsed'}`;
+    console.log(finalMsg);
+    setDebugInfo(finalMsg);
   };
 
   // プルツーリフレッシュ防止（展開状態のみ）
@@ -272,15 +317,23 @@ export default function PlaceDetailPanel() {
       <div 
         ref={panelRef}
         className={`fixed left-0 right-0 glass-effect shadow-elevation-5 
-                   border-t border-system-separator z-50
+                   border-t border-system-separator z-50 flex flex-col
                    transition-all duration-300 ease-ios-default
-                   ${isExpanded 
-                     ? 'top-0 bottom-0 overflow-y-auto' 
-                     : 'bottom-0 h-[50vh] max-h-[50vh] overflow-hidden'
-                   }`}
+                   ${isDragActive ? '' : (isExpanded 
+                     ? 'top-0 bottom-0' 
+                     : 'bottom-0 h-[50vh] max-h-[50vh]')}`}
+        style={{
+          height: isDragActive ? `${panelHeight}vh` : undefined
+        }}
              >
          {/* スワイプハンドルと閉じるボタン */}
-         <div className="flex justify-between items-center pt-2 pb-1 px-4">
+         <div 
+           ref={handleRef}
+           className="flex justify-between items-center pt-2 pb-1 px-4 cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
+           onTouchStart={handleHandleTouchStart}
+           onTouchMove={handleHandleTouchMove}
+           onTouchEnd={handleHandleTouchEnd}
+         >
            <div className="w-8"></div> {/* スペーサー */}
            <div className="w-10 h-1 bg-system-secondary-label/40 rounded-full" />
            <button
@@ -304,9 +357,7 @@ export default function PlaceDetailPanel() {
          )}
          <div 
            ref={contentRef} 
-           className={`${isExpanded ? "overflow-y-auto" : "overflow-hidden"}`}
-           onTouchStart={handleTouchStart}
-           onTouchMove={handleTouchMove}
+           className={`flex-1 ${isExpanded ? "overflow-y-auto" : "overflow-hidden"}`}
          >
            {children}
          </div>
