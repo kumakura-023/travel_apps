@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2024-12-19
+
+### Fixed
+- **スクロール展開機能**: 超敏感な検知とデバッグ表示を追加
+  - タッチ移動の検知感度を1px以上に変更（超敏感設定）
+  - スマホ画面上でのデバッグ情報表示を追加
+  - より詳細なタッチイベントログを実装
+  - タッチイベントが正しく発火しているかを確認可能
+
+### Added
+- **デバッグ機能**: スマホでのタッチ動作確認用
+  - 画面上にリアルタイムデバッグ情報表示
+  - タッチ座標とデルタ値の表示
+  - イベント発火状況の可視化
+
 ## [1.2.6] - 2024-12-19
 
 ### Fixed
