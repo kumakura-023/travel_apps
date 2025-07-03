@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
+import useMediaQuery from '../hooks/useMediaQuery';
 
 export default function MapTypeSwitcher() {
   const { map } = useGoogleMaps();
   const [type, setType] = useState<'roadmap' | 'hybrid'>('roadmap');
+  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
 
   const switchType = (t: 'roadmap' | 'hybrid') => {
     setType(t);
     map?.setMapTypeId(t);
   };
+
+  // タブレット版では非表示
+  if (isTablet) return null;
 
   return (
     <div className="fixed top-4 right-4 z-50 

@@ -3,6 +3,7 @@ import { usePlanStore } from '../store/planStore';
 import PlanNameEditModal from './PlanNameEditModal';
 import DateSelectionModal from './DateSelectionModal';
 import { TabKey } from './TabNavigation';
+import useMediaQuery from '../hooks/useMediaQuery';
 
 interface PlanNameDisplayProps {
   activeTab?: TabKey;
@@ -12,6 +13,7 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
   const { plan } = usePlanStore();
   const [nameModal, setNameModal] = useState(false);
   const [dateModal, setDateModal] = useState(false);
+  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
 
   if (!plan) return null;
 
@@ -47,11 +49,12 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
 
   return (
     <>
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-30 
+      <div className={`fixed top-4 z-30 
                       glass-effect rounded-xl shadow-elevation-2 animate-spring
                       px-6 py-3 max-w-[280px] w-auto
                       text-system-label
-                      transition-all duration-150 ease-ios-default">
+                      transition-all duration-150 ease-ios-default
+                      ${isTablet ? 'right-4' : 'left-1/2 transform -translate-x-1/2'}`}>
         
         <div className="flex flex-col items-center space-y-1">
           {/* プラン名 - クリック可能 */}
