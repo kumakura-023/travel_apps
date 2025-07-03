@@ -62,7 +62,8 @@ export default function PlaceDetailPanel() {
     
     e.preventDefault();
     startY.current = e.touches[0].clientY;
-    initialPanelHeight.current = isExpanded ? 100 : 50;
+    // 現在の高さを基準にドラッグを開始する（途中状態でも正しく計算）
+    initialPanelHeight.current = panelHeight;
     setIsDragActive(true);
     isDragging.current = true;
     
@@ -99,24 +100,18 @@ export default function PlaceDetailPanel() {
     const deltaY = startY.current - currentY.current;
     const threshold = 50; // 50px以上の移動で状態変更
     
-    // 展開/縮小の判定
-    if (Math.abs(deltaY) > threshold) {
-      if (deltaY > 0) {
-        // 上方向のドラッグ → 展開
-        setIsExpanded(true);
-        setPanelHeight(100);
-      } else {
-        // 下方向のドラッグ → 縮小
-        setIsExpanded(false);
-        setPanelHeight(50);
-      }
+    // ドラッグ終了後の高さに応じて展開状態を決定
+    const targetHeight = panelHeight; // 最新の高さ
+    const EXPANDED_VH = 100;
+    const COLLAPSED_VH = 50;
+    const MIDPOINT_VH = (EXPANDED_VH + COLLAPSED_VH) / 2; // 75vh
+
+    if (targetHeight >= MIDPOINT_VH) {
+      setIsExpanded(true);
+      setPanelHeight(EXPANDED_VH);
     } else {
-      // 閾値以下の場合は元の状態に戻す
-      if (isExpanded) {
-        setPanelHeight(100);
-      } else {
-        setPanelHeight(50);
-      }
+      setIsExpanded(false);
+      setPanelHeight(COLLAPSED_VH);
     }
     
     setIsDragActive(false);
