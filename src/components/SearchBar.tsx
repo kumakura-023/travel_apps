@@ -123,7 +123,7 @@ export default function SearchBar({
       className={`fixed top-4 z-50 flex items-center justify-between 
                   glass-effect rounded-xl shadow-elevation-2
                   transition-all duration-150 ease-ios-default
-                  ${isDesktop || isTablet ? 'left-4 w-[480px]' : 'mx-4 left-0 right-0'}`}
+                  left-4 w-[480px] max-w-[calc(100vw-2rem)]`}
     >
       <div className="flex-1">
         <Autocomplete

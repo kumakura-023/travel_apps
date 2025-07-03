@@ -169,9 +169,11 @@ export default function PlaceDetailPanel() {
         </div>
       );
     }
-    // mobile full screen
+    // mobile - 左サイドパネル形式（画面の80%幅）
     return (
-      <div className="fixed inset-0 glass-effect z-50 overflow-y-auto safe-area-inset">
+      <div className="fixed left-0 top-0 bottom-0 w-[80vw] max-w-[400px]
+                      glass-effect shadow-elevation-5 border-r border-system-separator
+                      z-40 overflow-y-auto safe-area-inset">
         {children}
       </div>
     );
@@ -179,8 +181,8 @@ export default function PlaceDetailPanel() {
 
   return (
     <>
-      {/* 背景スクリーン (mobile only) */}
-      {isMobile && <div className="modal-backdrop" onClick={() => setPlace(null)} />}
+      {/* 背景スクリーン (全デバイス) */}
+      <div className="modal-backdrop" onClick={() => setPlace(null)} />
 
       <Container>
         <div className="relative">
