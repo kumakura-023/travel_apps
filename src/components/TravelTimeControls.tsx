@@ -32,8 +32,8 @@ export default function TravelTimeControls() {
   }));
 
   const containerClasses = isDesktop || isTablet
-    ? 'fixed top-[25%] right-4 transform -translate-y-1/2 glass-effect rounded-xl border border-white/30 backdrop-blur-xl p-5 z-50 w-64 space-y-4'
-    : 'fixed top-[25%] right-4 transform -translate-y-1/2 glass-effect rounded-xl border border-white/30 backdrop-blur-xl p-4 z-50 w-56 space-y-3';
+    ? 'fixed top-[25%] right-4 transform -translate-y-1/2 glass-effect-border rounded-xl p-5 z-50 w-64 space-y-4'
+    : 'fixed top-[25%] right-4 transform -translate-y-1/2 glass-effect-border rounded-xl p-4 z-50 w-56 space-y-3';
 
   const travelModes = [
     { key: 'walking', icon: <MdDirectionsWalk className="w-5 h-5" />, aria: '徒歩' },

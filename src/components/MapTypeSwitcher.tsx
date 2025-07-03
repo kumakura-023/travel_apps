@@ -17,8 +17,7 @@ export default function MapTypeSwitcher() {
 
   return (
     <div className="fixed top-4 right-4 z-50 
-                    glass-effect rounded-lg 
-                    border border-white/30 backdrop-blur-xl
+                    glass-effect-border rounded-lg 
                     flex overflow-hidden
                     transition-all duration-150 ease-ios-default">
       <button
