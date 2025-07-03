@@ -44,60 +44,25 @@ export default function PlaceDetailPanel() {
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
 
-  // スクロールベースのパネル展開機能（スマホ版のみ）
-  useEffect(() => {
-    if (!isMobile || !contentRef.current) return;
+  // スクロール展開のタッチハンドラー
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMobile || isExpanded) return;
+    startY.current = e.touches[0].clientY;
+    isDragging.current = false;
+  };
 
-    const content = contentRef.current;
-
-    // コンテンツエリアのタッチイベント
-    const handleContentTouchStart = (e: TouchEvent) => {
-      if (isExpanded) return;
-      startY.current = e.touches[0].clientY;
-      isDragging.current = false;
-    };
-
-    const handleContentTouchMove = (e: TouchEvent) => {
-      if (isExpanded) return;
-      
-      if (!isDragging.current) {
-        isDragging.current = true;
-      }
-
-      currentY.current = e.touches[0].clientY;
-      const deltaY = startY.current - currentY.current;
-      
-      // スクロール動作（上下どちらでも）を検知したら展開
-      if (Math.abs(deltaY) > 15) {
-        e.preventDefault(); // デフォルトの動作を防ぐ
-        setIsExpanded(true);
-      }
-    };
-
-    const handleContentTouchEnd = () => {
-      isDragging.current = false;
-    };
-
-    // ホイールイベントでも展開（PC でのテスト用）
-    const handleContentWheel = (e: WheelEvent) => {
-      if (!isExpanded && Math.abs(e.deltaY) > 0) {
-        e.preventDefault();
-        setIsExpanded(true);
-      }
-    };
-
-    content.addEventListener('touchstart', handleContentTouchStart, { passive: true });
-    content.addEventListener('touchmove', handleContentTouchMove, { passive: false });
-    content.addEventListener('touchend', handleContentTouchEnd, { passive: true });
-    content.addEventListener('wheel', handleContentWheel, { passive: false });
-
-    return () => {
-      content.removeEventListener('touchstart', handleContentTouchStart);
-      content.removeEventListener('touchmove', handleContentTouchMove);
-      content.removeEventListener('touchend', handleContentTouchEnd);
-      content.removeEventListener('wheel', handleContentWheel);
-    };
-  }, [isMobile, isExpanded]);
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isMobile || isExpanded) return;
+    
+    currentY.current = e.touches[0].clientY;
+    const deltaY = startY.current - currentY.current;
+    
+    // 10px以上の動きで展開
+    if (Math.abs(deltaY) > 10) {
+      console.log('Scroll detected, expanding panel', { deltaY, startY: startY.current, currentY: currentY.current });
+      setIsExpanded(true);
+    }
+  };
 
   // プルツーリフレッシュ防止（展開状態のみ）
   useEffect(() => {
@@ -313,6 +278,8 @@ export default function PlaceDetailPanel() {
          <div 
            ref={contentRef} 
            className={`${isExpanded ? "overflow-y-auto" : "overflow-hidden"}`}
+           onTouchStart={handleTouchStart}
+           onTouchMove={handleTouchMove}
          >
            {children}
          </div>

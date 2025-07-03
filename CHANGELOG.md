@@ -1,5 +1,36 @@
 # CHANGELOG
 
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.2.6] - 2024-12-19
+
+### Fixed
+- **スクロール展開機能**: Reactイベントハンドラーを使用した確実な動作を実現
+  - `addEventListener`からReactの`onTouchStart`/`onTouchMove`に変更
+  - より直接的で確実なタッチイベント検知
+  - 10px以上の縦方向移動で展開をトリガー
+  - デバッグ用コンソールログを追加（開発者ツールで動作確認可能）
+
+### Changed
+- イベントハンドラーをReactネイティブな方法に統一
+- より安定したタッチ操作検知の実装
+
+## [1.2.5] - 2024-12-19
+
+### 🐛 緊急修正
+- **スクロール展開機能**: Reactイベントハンドラーを使用した確実な検知に変更
+  - `addEventListener`からReactの`onTouchStart`/`onTouchMove`に変更
+  - より直接的で確実なタッチイベント検知
+  - 10px以上の縦方向移動で展開をトリガー
+  - デバッグ用コンソールログを追加（開発者ツールで動作確認可能）
+
+### 🔧 技術的改善
+- イベントハンドラーをReactネイティブな方法に統一
+- より安定したタッチ操作検知
+
 ## v1.2.4 (2024-12-19)
 
 ### 🐛 バグ修正
