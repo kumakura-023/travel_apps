@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { FiX, FiTrash2, FiBookmark, FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiX, FiTrash2, FiBookmark, FiSearch, FiChevronLeft, FiChevronRight, FiCalendar } from 'react-icons/fi';
 import { MdDirections } from 'react-icons/md';
 import useMediaQuery from '../hooks/useMediaQuery';
 import { useSelectedPlaceStore } from '../store/placeStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
+import { usePlanStore } from '../store/planStore';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { BookingService } from '../services/bookingService';
 import ConfirmDialog from './ConfirmDialog';
@@ -13,17 +14,20 @@ import { classifyCategory } from '../utils/categoryClassifier';
 import { getCategoryPath, getCategoryColor, getCategoryDisplayName } from '../utils/categoryIcons';
 import { estimateCost } from '../utils/estimateCost';
 import ImageCarouselModal from './ImageCarouselModal';
+import DaySelector from './DaySelector';
 
 export default function PlaceDetailPanel() {
   const { place, setPlace } = useSelectedPlaceStore();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const { deletePlace, addPlace } = usePlacesStore((s) => ({ 
+  const { deletePlace, addPlace, updatePlace } = usePlacesStore((s) => ({ 
     deletePlace: s.deletePlace, 
-    addPlace: s.addPlace 
+    addPlace: s.addPlace,
+    updatePlace: s.updatePlace
   }));
   const savedPlaces = usePlacesStore((s) => s.places);
+  const { plan } = usePlanStore();
   const { setSelectedOrigin, setSelectedDestination, openRouteSearch } = useRouteSearchStore();
   const { map } = useGoogleMaps();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -47,6 +51,9 @@ export default function PlaceDetailPanel() {
 
   // 登録済みか判定
   const saved = savedPlaces.some((p) => p.name === place.name && p.address === place.formatted_address);
+  
+  // 保存済み候補地の情報を取得
+  const savedPlace = savedPlaces.find((p) => p.name === place.name && p.address === place.formatted_address);
 
   const getLatLng = () => {
     const coords = (place as any).coordinates as { lat: number; lng: number } | undefined;
@@ -150,6 +157,13 @@ export default function PlaceDetailPanel() {
     setImageModalOpen(true);
   };
 
+  // 訪問日変更ハンドラー
+  const handleScheduledDayChange = (day: number | undefined) => {
+    if (savedPlace) {
+      updatePlace(savedPlace.id, { scheduledDay: day });
+    }
+  };
+
   const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     if (isDesktop) {
       return (
@@ -162,7 +176,7 @@ export default function PlaceDetailPanel() {
     }
     if (isTablet) {
       return (
-        <div className="fixed left-0 top-0 bottom-0 w-[540px] 
+        <div className="fixed left-0 top-0 bottom-0 w-[min(540px,50vw)] 
                         glass-effect shadow-elevation-5 border-r border-system-separator
                         z-40 overflow-y-auto">
           {children}
@@ -397,6 +411,24 @@ export default function PlaceDetailPanel() {
                 <span className="caption-1 text-system-secondary-label">付近を検索</span>
               </button>
             </div>
+            
+            {/* 訪問日設定（保存済み候補地の場合のみ表示） */}
+            {saved && plan && (
+              <div className="pt-4 border-t border-system-separator/30 mt-4">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="w-6 h-6 text-coral-500 flex-shrink-0">
+                    <FiCalendar size={18} />
+                  </div>
+                  <span className="subheadline font-medium text-system-label">訪問日設定</span>
+                </div>
+                <DaySelector
+                  selectedDay={savedPlace?.scheduledDay}
+                  onDayChange={handleScheduledDayChange}
+                  maxDays={plan && plan.endDate ? Math.ceil((plan.endDate.getTime() - plan.startDate!.getTime()) / (1000 * 60 * 60 * 24)) + 1 : 7}
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
         </div>
 

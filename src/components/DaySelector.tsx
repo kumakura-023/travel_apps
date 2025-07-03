@@ -5,9 +5,10 @@ interface Props {
   onDayChange: (day: number | undefined) => void;
   maxDays?: number;
   className?: string;
+  allDaysLabel?: string;
 }
 
-export default function DaySelector({ selectedDay, onDayChange, maxDays = 14, className = '' }: Props) {
+export default function DaySelector({ selectedDay, onDayChange, maxDays = 14, className = '', allDaysLabel = '未設定' }: Props) {
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     onDayChange(value === '' ? undefined : parseInt(value));
@@ -26,7 +27,7 @@ export default function DaySelector({ selectedDay, onDayChange, maxDays = 14, cl
                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                    hover:border-gray-400 transition-colors"
       >
-        <option value="">全日程</option>
+        <option value="">{allDaysLabel}</option>
         {Array.from({ length: maxDays }, (_, i) => i + 1).map((day) => (
           <option key={day} value={day}>
             {day}日目
