@@ -181,9 +181,7 @@ export default function PlaceDetailPanel() {
 
   return (
     <>
-      {/* 背景スクリーン (全デバイス) */}
-      <div className="modal-backdrop" onClick={() => setPlace(null)} />
-
+      {/* 背景スクリーンは削除 - web版と同じ動作にする */}
       <Container>
         <div className="relative">
           {photos.length > 0 && (
