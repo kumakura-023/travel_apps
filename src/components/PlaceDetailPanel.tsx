@@ -44,19 +44,22 @@ export default function PlaceDetailPanel() {
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
 
-  // スクロールベースのパネル展開とプルツーリフレッシュ防止（スマホ版のみ）
+  // スクロールベースのパネル展開機能（スマホ版のみ）
   useEffect(() => {
-    if (!isMobile || !panelRef.current || !contentRef.current) return;
+    if (!isMobile || !contentRef.current) return;
 
-    const panel = panelRef.current;
     const content = contentRef.current;
 
-    const handleTouchStart = (e: TouchEvent) => {
+    // コンテンツエリアのタッチイベント
+    const handleContentTouchStart = (e: TouchEvent) => {
+      if (isExpanded) return;
       startY.current = e.touches[0].clientY;
       isDragging.current = false;
     };
 
-    const handleTouchMove = (e: TouchEvent) => {
+    const handleContentTouchMove = (e: TouchEvent) => {
+      if (isExpanded) return;
+      
       if (!isDragging.current) {
         isDragging.current = true;
       }
@@ -64,39 +67,66 @@ export default function PlaceDetailPanel() {
       currentY.current = e.touches[0].clientY;
       const deltaY = startY.current - currentY.current;
       
-      // 非展開状態で上方向へのスクロール動作を検知したら展開
-      if (!isExpanded && Math.abs(deltaY) > 10) {
+      // スクロール動作（上下どちらでも）を検知したら展開
+      if (Math.abs(deltaY) > 15) {
+        e.preventDefault(); // デフォルトの動作を防ぐ
         setIsExpanded(true);
-        return;
-      }
-      
-      // 展開状態でスクロール位置が上端の場合、プルツーリフレッシュを防ぐ
-      if (isExpanded && content.scrollTop === 0 && deltaY < 0) {
-        e.preventDefault();
       }
     };
 
-    const handleTouchEnd = () => {
+    const handleContentTouchEnd = () => {
       isDragging.current = false;
     };
 
     // ホイールイベントでも展開（PC でのテスト用）
-    const handleWheel = (e: WheelEvent) => {
+    const handleContentWheel = (e: WheelEvent) => {
       if (!isExpanded && Math.abs(e.deltaY) > 0) {
+        e.preventDefault();
         setIsExpanded(true);
       }
     };
 
-    panel.addEventListener('touchstart', handleTouchStart, { passive: true });
-    panel.addEventListener('touchmove', handleTouchMove, { passive: false });
-    panel.addEventListener('touchend', handleTouchEnd, { passive: true });
-    content.addEventListener('wheel', handleWheel, { passive: true });
+    content.addEventListener('touchstart', handleContentTouchStart, { passive: true });
+    content.addEventListener('touchmove', handleContentTouchMove, { passive: false });
+    content.addEventListener('touchend', handleContentTouchEnd, { passive: true });
+    content.addEventListener('wheel', handleContentWheel, { passive: false });
 
     return () => {
-      panel.removeEventListener('touchstart', handleTouchStart);
-      panel.removeEventListener('touchmove', handleTouchMove);
-      panel.removeEventListener('touchend', handleTouchEnd);
-      content.removeEventListener('wheel', handleWheel);
+      content.removeEventListener('touchstart', handleContentTouchStart);
+      content.removeEventListener('touchmove', handleContentTouchMove);
+      content.removeEventListener('touchend', handleContentTouchEnd);
+      content.removeEventListener('wheel', handleContentWheel);
+    };
+  }, [isMobile, isExpanded]);
+
+  // プルツーリフレッシュ防止（展開状態のみ）
+  useEffect(() => {
+    if (!isMobile || !isExpanded || !contentRef.current) return;
+
+    const content = contentRef.current;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      startY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      // 展開状態でスクロール位置が上端の場合、プルツーリフレッシュを防ぐ
+      if (content.scrollTop === 0) {
+        currentY.current = e.touches[0].clientY;
+        const deltaY = startY.current - currentY.current;
+        
+        if (deltaY < -10) { // 下方向のスワイプ
+          e.preventDefault();
+        }
+      }
+    };
+
+    content.addEventListener('touchstart', handleTouchStart, { passive: true });
+    content.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      content.removeEventListener('touchstart', handleTouchStart);
+      content.removeEventListener('touchmove', handleTouchMove);
     };
   }, [isMobile, isExpanded]);
 
