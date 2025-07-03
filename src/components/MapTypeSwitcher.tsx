@@ -5,15 +5,17 @@ import useMediaQuery from '../hooks/useMediaQuery';
 export default function MapTypeSwitcher() {
   const { map } = useGoogleMaps();
   const [type, setType] = useState<'roadmap' | 'hybrid'>('roadmap');
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+  const isMobile = !isDesktop && !isTablet;
 
   const switchType = (t: 'roadmap' | 'hybrid') => {
     setType(t);
     map?.setMapTypeId(t);
   };
 
-  // タブレット版では非表示
-  if (isTablet) return null;
+  // タブレット版・スマホ版では非表示
+  if (!isDesktop) return null;
 
   return (
     <div className="fixed top-4 right-4 z-50 
