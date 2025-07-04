@@ -60,14 +60,16 @@ export default function PlaceDetailPanel() {
   const handleHandleTouchStart = (e: React.TouchEvent) => {
     if (!isMobile) return;
     
+    // パネル全体のイベントを防ぐため、stopPropagationを使用
     e.preventDefault();
+    e.stopPropagation();
+    
     startY.current = e.touches[0].clientY;
-    // 現在の高さを基準にドラッグを開始する（途中状態でも正しく計算）
     initialPanelHeight.current = panelHeight;
     setIsDragActive(true);
     isDragging.current = true;
     
-    const debugMsg = `Handle TouchStart: Y=${startY.current}, height=${initialPanelHeight.current}vh`;
+    const debugMsg = `TouchStart: Y=${startY.current}, height=${initialPanelHeight.current}vh, isDragging=${isDragging.current}`;
     console.log(debugMsg);
     setDebugInfo(debugMsg);
   };
@@ -76,6 +78,8 @@ export default function PlaceDetailPanel() {
     if (!isMobile || !isDragging.current) return;
     
     e.preventDefault();
+    e.stopPropagation();
+    
     currentY.current = e.touches[0].clientY;
     const deltaY = startY.current - currentY.current;
     
@@ -97,8 +101,9 @@ export default function PlaceDetailPanel() {
   const handleHandleTouchEnd = (e: React.TouchEvent) => {
     if (!isMobile || !isDragging.current) return;
     
+    e.stopPropagation();
+    
     const deltaY = startY.current - currentY.current;
-    const threshold = 50; // 50px以上の移動で状態変更
     
     // ドラッグ終了後の高さに応じて展開状態を決定
     const targetHeight = panelHeight; // 最新の高さ
@@ -312,25 +317,26 @@ export default function PlaceDetailPanel() {
       <div 
         ref={panelRef}
         className={`fixed left-0 right-0 bottom-0 glass-effect shadow-elevation-5 
-                   border-t border-system-separator z-50 flex flex-col touch-pan-y
+                   border-t border-system-separator z-50 flex flex-col
                    transition-all duration-300 ease-ios-default
                    ${isDragActive ? '' : (isExpanded ? 'top-0' : 'h-[50vh] max-h-[50vh]')}`}
         style={{
           height: isDragActive ? `${panelHeight}vh` : (isExpanded ? '100vh' : undefined)
         }}
-        onTouchMove={handleHandleTouchMove}
-        onTouchEnd={handleHandleTouchEnd}
       >
          {/* スワイプハンドルと閉じるボタン */}
          <div 
            ref={handleRef}
-           className="flex justify-between items-center pt-2 pb-1 px-4 cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
+           className="flex justify-between items-center pt-2 pb-1 px-4 cursor-grab active:cursor-grabbing flex-shrink-0"
            onTouchStart={handleHandleTouchStart}
+           onTouchMove={handleHandleTouchMove}
+           onTouchEnd={handleHandleTouchEnd}
          >
            <div className="w-8"></div> {/* スペーサー */}
            <div className="w-10 h-1 bg-system-secondary-label/40 rounded-full" />
            <button
              onClick={handleClosePanel}
+             onTouchStart={(e) => e.stopPropagation()}
              className="w-8 h-8 flex items-center justify-center 
                         text-system-secondary-label hover:text-coral-500
                         transition-colors duration-150"
