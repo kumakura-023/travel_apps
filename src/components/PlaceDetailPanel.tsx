@@ -1,7 +1,9 @@
-import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { FiX, FiTrash2, FiBookmark, FiSearch, FiChevronLeft, FiChevronRight, FiCalendar, FiChevronUp, FiChevronDown } from 'react-icons/fi';
 import { MdDirections } from 'react-icons/md';
 import useMediaQuery from '../hooks/useMediaQuery';
+import { useBottomSheet } from '../hooks/useBottomSheet';
+import { usePullToRefreshPrevention } from '../hooks/usePullToRefreshPrevention';
 import { useSelectedPlaceStore } from '../store/placeStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { usePlanStore } from '../store/planStore';
@@ -21,16 +23,6 @@ export default function PlaceDetailPanel() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [sheetPercent, setSheetPercent] = useState<number>(50); // 0-100: 0=全展開, 50=中間, 100=折り畳み
-  const sheetPercentRef = useRef(sheetPercent);
-  const [debugInfo, setDebugInfo] = useState<string>('');
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const handleRef = useRef<HTMLDivElement>(null);
-  const startY = useRef<number>(0);
-  const isDragging = useRef<boolean>(false);
-  const initialSheetPercent = useRef<number>(50);
 
   const { deletePlace, addPlace, updatePlace } = usePlacesStore((s) => ({ 
     deletePlace: s.deletePlace, 
@@ -48,132 +40,11 @@ export default function PlaceDetailPanel() {
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
 
-  // パネル位置の初期化
-  useEffect(() => {
-    if (isMobile) {
-      setSheetPercent(isExpanded ? 0 : 50);
-    }
-  }, [isExpanded, isMobile]);
-
-  useEffect(() => {
-    sheetPercentRef.current = sheetPercent;
-  }, [sheetPercent]);
-
-  // ハンドルバーでのドラッグ開始
-  const handleHandleTouchStart = (e: React.TouchEvent) => {
-    if (!isMobile) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    startY.current = e.touches[0].clientY;
-    initialSheetPercent.current = sheetPercent;
-    isDragging.current = true;
-    
-    const debugMsg = `TouchStart: Y=${startY.current}, percent=${initialSheetPercent.current}%, isDragging=${isDragging.current}`;
-    console.log(debugMsg);
-    setDebugInfo(debugMsg);
-
-    // ドキュメントレベルでイベントを捕捉 (capture: true で早期取得)
-    document.addEventListener('touchmove', handleWindowTouchMove, { passive: false, capture: true });
-    document.addEventListener('touchend', handleWindowTouchEnd, { passive: false, capture: true });
-  };
-
-  // Window レベルでのドラッグ処理 (stable reference)
-  const handleWindowTouchMove = useCallback((e: TouchEvent) => {
-    if (!isDragging.current) return;
-    
-    e.preventDefault();
-    
-    const currentY = e.touches[0].clientY;
-    const deltaY = currentY - startY.current;
-    
-    // パーセンテージでの変化量計算（画面高さの1%を基準）
-    const viewportHeight = window.innerHeight;
-    const deltaPercent = (deltaY / viewportHeight) * 100;
-    
-    // 新しいパーセンテージ計算（0%〜100%の範囲）
-    let newPercent = initialSheetPercent.current + deltaPercent;
-    newPercent = Math.max(0, Math.min(100, newPercent));
-    
-    setSheetPercent(newPercent);
-    
-    const debugMsg = `Dragging: deltaY=${deltaY.toFixed(1)}, percent=${newPercent.toFixed(1)}%`;
-    console.log(debugMsg);
-    setDebugInfo(debugMsg);
-  }, []);
-
-  // Window レベルでのドラッグ終了 (stable reference)
-  const handleWindowTouchEnd = useCallback((e: TouchEvent) => {
-    if (!isDragging.current) return;
-    
-    e.preventDefault();
-    
-    // 最新のパーセンテージを参照
-    const currentPercent = sheetPercentRef.current;
-
-    // スナップ判定: 0-25% → 0%, 25-75% → 50%, 75-100% → 100%
-    let targetPercent: number;
-    if (currentPercent <= 25) {
-      targetPercent = 0;
-    } else if (currentPercent <= 75) {
-      targetPercent = 50;
-    } else {
-      targetPercent = 100;
-    }
-    
-    setSheetPercent(targetPercent);
-    setIsExpanded(targetPercent === 0);
-    
-    isDragging.current = false;
-    
-    const finalMsg = `TouchEnd: final=${targetPercent}%, expanded=${targetPercent === 0}`;
-    console.log(finalMsg);
-    setDebugInfo(finalMsg);
-
-    // イベントリスナーを削除
-    document.removeEventListener('touchmove', handleWindowTouchMove, { capture: true } as any);
-    document.removeEventListener('touchend', handleWindowTouchEnd, { capture: true } as any);
-  }, [handleWindowTouchMove]);
-
-  // プルツーリフレッシュ防止（展開状態のみ）
-  useEffect(() => {
-    if (!isMobile || sheetPercent !== 0 || !contentRef.current) return;
-
-    const content = contentRef.current;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      startY.current = e.touches[0].clientY;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      // 展開状態でスクロール位置が上端の場合、プルツーリフレッシュを防ぐ
-      if (content.scrollTop === 0) {
-        const currentY = e.touches[0].clientY;
-        const deltaY = currentY - startY.current;
-        
-        if (deltaY > 10) { // 下方向のスワイプ
-          e.preventDefault();
-        }
-      }
-    };
-
-    content.addEventListener('touchstart', handleTouchStart, { passive: true });
-    content.addEventListener('touchmove', handleTouchMove, { passive: false });
-
-    return () => {
-      content.removeEventListener('touchstart', handleTouchStart);
-      content.removeEventListener('touchmove', handleTouchMove);
-    };
-  }, [isMobile, sheetPercent]);
-
-  // コンポーネントのアンマウント時にイベントリスナーをクリーンアップ
-  useEffect(() => {
-    return () => {
-      document.removeEventListener('touchmove', handleWindowTouchMove, { capture: true } as any);
-      document.removeEventListener('touchend', handleWindowTouchEnd, { capture: true } as any);
-    };
-  }, []);
+  // BottomSheet機能（モバイル版のみ）
+  const bottomSheet = useBottomSheet(50); // 初期位置は中間（50%）
+  
+  // プルツーリフレッシュ防止（モバイル版・展開時のみ）
+  const { contentRef } = usePullToRefreshPrevention(bottomSheet.state.isExpanded, isMobile);
 
   if (!place) return null;
 
@@ -324,25 +195,21 @@ export default function PlaceDetailPanel() {
     // mobile - Google Maps風BottomSheet
     return (
       <div 
-        ref={sheetRef}
         className="fixed left-0 right-0 bottom-0 h-screen glass-effect shadow-elevation-5 
-                   border-t border-system-separator z-50 flex flex-col touch-none
-                   transition-transform duration-300 ease-ios-default"
-        style={{
-          transform: `translateY(${sheetPercent}%)`
-        }}
+                   border-t border-system-separator z-50 flex flex-col touch-action-pan-y
+                   transition-transform duration-300 ease-out"
+        style={bottomSheet.style}
       >
          {/* スワイプハンドルと閉じるボタン */}
          <div 
-           ref={handleRef}
-           className="flex justify-between items-center pt-2 pb-1 px-4 flex-shrink-0 touch-pan-y"
-           onTouchStart={handleHandleTouchStart}
+           ref={bottomSheet.bindHandleRef}
+           className="flex justify-between items-center pt-2 pb-1 px-4 flex-shrink-0 
+                      cursor-grab active:cursor-grabbing"
          >
            <div className="w-8"></div> {/* スペーサー */}
            <div className="w-10 h-1 bg-system-secondary-label/40 rounded-full" />
            <button
              onClick={handleClosePanel}
-             onTouchStart={(e) => e.stopPropagation()}
              className="w-8 h-8 flex items-center justify-center 
                         text-system-secondary-label hover:text-coral-500
                         transition-colors duration-150"
@@ -352,17 +219,9 @@ export default function PlaceDetailPanel() {
            </button>
          </div>
          
-         {/* デバッグ情報表示（開発用） */}
-         {isMobile && debugInfo && (
-           <div className="bg-red-100 border border-red-300 rounded mx-4 mb-2 p-2">
-             <p className="text-xs text-red-800 font-mono break-all">
-               DEBUG: {debugInfo}
-             </p>
-           </div>
-         )}
          <div 
            ref={contentRef} 
-           className={`flex-1 ${sheetPercent === 0 ? "overflow-y-auto" : "overflow-hidden"}`}
+           className={`flex-1 ${bottomSheet.state.isExpanded ? "overflow-y-auto" : "overflow-hidden"}`}
          >
            {children}
          </div>
