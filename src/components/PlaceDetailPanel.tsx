@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { FiX, FiTrash2, FiBookmark, FiSearch, FiChevronLeft, FiChevronRight, FiCalendar, FiChevronUp, FiChevronDown } from 'react-icons/fi';
 import { MdDirections } from 'react-icons/md';
 import useMediaQuery from '../hooks/useMediaQuery';
@@ -79,8 +79,8 @@ export default function PlaceDetailPanel() {
     window.addEventListener('touchend', handleWindowTouchEnd, { passive: false });
   };
 
-  // Window レベルでのドラッグ処理
-  const handleWindowTouchMove = (e: TouchEvent) => {
+  // Window レベルでのドラッグ処理 (stable reference)
+  const handleWindowTouchMove = useCallback((e: TouchEvent) => {
     if (!isDragging.current) return;
     
     e.preventDefault();
@@ -101,10 +101,10 @@ export default function PlaceDetailPanel() {
     const debugMsg = `Dragging: deltaY=${deltaY.toFixed(1)}, percent=${newPercent.toFixed(1)}%`;
     console.log(debugMsg);
     setDebugInfo(debugMsg);
-  };
+  }, []);
 
-  // Window レベルでのドラッグ終了
-  const handleWindowTouchEnd = (e: TouchEvent) => {
+  // Window レベルでのドラッグ終了 (stable reference)
+  const handleWindowTouchEnd = useCallback((e: TouchEvent) => {
     if (!isDragging.current) return;
     
     e.preventDefault();
@@ -134,7 +134,7 @@ export default function PlaceDetailPanel() {
     // イベントリスナーを削除
     window.removeEventListener('touchmove', handleWindowTouchMove);
     window.removeEventListener('touchend', handleWindowTouchEnd);
-  };
+  }, [handleWindowTouchMove]);
 
   // プルツーリフレッシュ防止（展開状態のみ）
   useEffect(() => {

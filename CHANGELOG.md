@@ -193,3 +193,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - スナップ判定で最新のシート位置を参照するよう `sheetPercentRef` を追加
   - `handleWindowTouchEnd` でステートのスタイル値ズレを解消
   - これにより 0 / 50 / 100 % のスナップが正しく動作 
+
+## [1.2.17] - 2025-07-04
+
+### 🐛 バグ修正
+- **モバイル版詳細パネル**: drag 終了時に isDragging が解除されない不具合を修正
+  - `useCallback` で touchmove/touchend ハンドラーをメモ化し removeEventListener が機能
+  - パネルが再操作不能になる問題を解消 
