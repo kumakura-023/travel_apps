@@ -74,9 +74,9 @@ export default function PlaceDetailPanel() {
     console.log(debugMsg);
     setDebugInfo(debugMsg);
 
-    // window にイベントリスナーを追加
-    window.addEventListener('touchmove', handleWindowTouchMove, { passive: false });
-    window.addEventListener('touchend', handleWindowTouchEnd, { passive: false });
+    // ドキュメントレベルでイベントを捕捉 (capture: true で早期取得)
+    document.addEventListener('touchmove', handleWindowTouchMove, { passive: false, capture: true });
+    document.addEventListener('touchend', handleWindowTouchEnd, { passive: false, capture: true });
   };
 
   // Window レベルでのドラッグ処理 (stable reference)
@@ -132,8 +132,8 @@ export default function PlaceDetailPanel() {
     setDebugInfo(finalMsg);
 
     // イベントリスナーを削除
-    window.removeEventListener('touchmove', handleWindowTouchMove);
-    window.removeEventListener('touchend', handleWindowTouchEnd);
+    document.removeEventListener('touchmove', handleWindowTouchMove, { capture: true } as any);
+    document.removeEventListener('touchend', handleWindowTouchEnd, { capture: true } as any);
   }, [handleWindowTouchMove]);
 
   // プルツーリフレッシュ防止（展開状態のみ）
@@ -170,8 +170,8 @@ export default function PlaceDetailPanel() {
   // コンポーネントのアンマウント時にイベントリスナーをクリーンアップ
   useEffect(() => {
     return () => {
-      window.removeEventListener('touchmove', handleWindowTouchMove);
-      window.removeEventListener('touchend', handleWindowTouchEnd);
+      document.removeEventListener('touchmove', handleWindowTouchMove, { capture: true } as any);
+      document.removeEventListener('touchend', handleWindowTouchEnd, { capture: true } as any);
     };
   }, []);
 
