@@ -159,6 +159,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 閉じるボタンのタッチイベント競合を解決し、ボタンクリックを正常に機能させる
   - `stopPropagation()` によるイベント伝搬制御を追加し、意図しないドラッグ動作を防止
 
+## [1.2.15] - 2025-01-03
+
+### 🔄 大幅リファクタリング
+- **モバイル版詳細パネル**: Google Maps風の非モーダルBottomSheetに完全リファクタリング
+  - 高さベース（`height: vh`）から `transform: translateY(%)` ベースの位置制御に変更
+  - 3段階スナップ（0% = 全展開、50% = 中間、100% = 折り畳み）を実装
+  - ドラッグ検知を改善：ハンドルバーで `touchstart`、`window` で `touchmove/touchend` を捕捉
+  - 指がハンドルバー外に出てもドラッグが継続するように修正
+  - スナップ判定を最適化（0-25% → 0%, 25-75% → 50%, 75-100% → 100%）
+  - 不要な state を削除（`panelHeight`, `isDragActive`, `initialPanelHeight`）
+  - 新しい `sheetPercent` (0-100) による位置管理を導入
+  - Tailwind クラスを整理（`touch-none` でブラウザジェスチャ防止、`touch-pan-y` でハンドルバー操作許可）
+  - アニメーション統一（`transition-transform duration-300 ease-ios-default`）
+
+### 🎨 UX改善
+- よりスムーズで安定したドラッグ操作を実現
+- iOS Safari / Android Chrome でのページスクロール干渉を完全に解決
+- 中間状態を追加してより細かな操作が可能に
+
 ## [1.2.13] - 2025-07-03
 
 ### 🐛 バグ修正

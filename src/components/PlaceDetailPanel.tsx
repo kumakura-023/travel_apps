@@ -22,16 +22,14 @@ export default function PlaceDetailPanel() {
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [panelHeight, setPanelHeight] = useState<number>(50); // vh単位
-  const [isDragActive, setIsDragActive] = useState(false);
+  const [sheetPercent, setSheetPercent] = useState<number>(50); // 0-100: 0=全展開, 50=中間, 100=折り畳み
   const [debugInfo, setDebugInfo] = useState<string>('');
-  const panelRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const startY = useRef<number>(0);
-  const currentY = useRef<number>(0);
   const isDragging = useRef<boolean>(false);
-  const initialPanelHeight = useRef<number>(50);
+  const initialSheetPercent = useRef<number>(50);
 
   const { deletePlace, addPlace, updatePlace } = usePlacesStore((s) => ({ 
     deletePlace: s.deletePlace, 
@@ -49,87 +47,90 @@ export default function PlaceDetailPanel() {
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
 
-  // パネル高さの初期化
+  // パネル位置の初期化
   useEffect(() => {
     if (isMobile) {
-      setPanelHeight(isExpanded ? 100 : 50);
+      setSheetPercent(isExpanded ? 0 : 50);
     }
   }, [isExpanded, isMobile]);
 
-  // ハンドルバーでのドラッグ操作
+  // ハンドルバーでのドラッグ開始
   const handleHandleTouchStart = (e: React.TouchEvent) => {
     if (!isMobile) return;
     
-    // パネル全体のイベントを防ぐため、stopPropagationを使用
     e.preventDefault();
     e.stopPropagation();
     
     startY.current = e.touches[0].clientY;
-    initialPanelHeight.current = panelHeight;
-    setIsDragActive(true);
+    initialSheetPercent.current = sheetPercent;
     isDragging.current = true;
     
-    const debugMsg = `TouchStart: Y=${startY.current}, height=${initialPanelHeight.current}vh, isDragging=${isDragging.current}`;
+    const debugMsg = `TouchStart: Y=${startY.current}, percent=${initialSheetPercent.current}%, isDragging=${isDragging.current}`;
     console.log(debugMsg);
     setDebugInfo(debugMsg);
+
+    // window にイベントリスナーを追加
+    window.addEventListener('touchmove', handleWindowTouchMove, { passive: false });
+    window.addEventListener('touchend', handleWindowTouchEnd, { passive: false });
   };
 
-  const handleHandleTouchMove = (e: React.TouchEvent) => {
-    if (!isMobile || !isDragging.current) return;
+  // Window レベルでのドラッグ処理
+  const handleWindowTouchMove = (e: TouchEvent) => {
+    if (!isDragging.current) return;
     
     e.preventDefault();
-    e.stopPropagation();
     
-    currentY.current = e.touches[0].clientY;
-    const deltaY = startY.current - currentY.current;
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY.current;
     
-    // vh単位での変化量計算（画面高さの1%を基準）
+    // パーセンテージでの変化量計算（画面高さの1%を基準）
     const viewportHeight = window.innerHeight;
-    const deltaVh = (deltaY / viewportHeight) * 100;
+    const deltaPercent = (deltaY / viewportHeight) * 100;
     
-    // 新しい高さ計算（50vh〜100vhの範囲）
-    let newHeight = initialPanelHeight.current + deltaVh;
-    newHeight = Math.max(30, Math.min(100, newHeight)); // 30vh〜100vhに制限
+    // 新しいパーセンテージ計算（0%〜100%の範囲）
+    let newPercent = initialSheetPercent.current + deltaPercent;
+    newPercent = Math.max(0, Math.min(100, newPercent));
     
-    setPanelHeight(newHeight);
+    setSheetPercent(newPercent);
     
-    const debugMsg = `Dragging: deltaY=${deltaY.toFixed(1)}, height=${newHeight.toFixed(1)}vh`;
+    const debugMsg = `Dragging: deltaY=${deltaY.toFixed(1)}, percent=${newPercent.toFixed(1)}%`;
     console.log(debugMsg);
     setDebugInfo(debugMsg);
   };
 
-  const handleHandleTouchEnd = (e: React.TouchEvent) => {
-    if (!isMobile || !isDragging.current) return;
+  // Window レベルでのドラッグ終了
+  const handleWindowTouchEnd = (e: TouchEvent) => {
+    if (!isDragging.current) return;
     
-    e.stopPropagation();
+    e.preventDefault();
     
-    const deltaY = startY.current - currentY.current;
-    
-    // ドラッグ終了後の高さに応じて展開状態を決定
-    const targetHeight = panelHeight; // 最新の高さ
-    const EXPANDED_VH = 100;
-    const COLLAPSED_VH = 50;
-    const MIDPOINT_VH = (EXPANDED_VH + COLLAPSED_VH) / 2; // 75vh
-
-    if (targetHeight >= MIDPOINT_VH) {
-      setIsExpanded(true);
-      setPanelHeight(EXPANDED_VH);
+    // スナップ判定: 0-25% → 0%, 25-75% → 50%, 75-100% → 100%
+    let targetPercent: number;
+    if (sheetPercent <= 25) {
+      targetPercent = 0;
+    } else if (sheetPercent <= 75) {
+      targetPercent = 50;
     } else {
-      setIsExpanded(false);
-      setPanelHeight(COLLAPSED_VH);
+      targetPercent = 100;
     }
     
-    setIsDragActive(false);
+    setSheetPercent(targetPercent);
+    setIsExpanded(targetPercent === 0);
+    
     isDragging.current = false;
     
-    const finalMsg = `TouchEnd: deltaY=${deltaY.toFixed(1)}, final=${isExpanded ? 'expanded' : 'collapsed'}`;
+    const finalMsg = `TouchEnd: final=${targetPercent}%, expanded=${targetPercent === 0}`;
     console.log(finalMsg);
     setDebugInfo(finalMsg);
+
+    // イベントリスナーを削除
+    window.removeEventListener('touchmove', handleWindowTouchMove);
+    window.removeEventListener('touchend', handleWindowTouchEnd);
   };
 
   // プルツーリフレッシュ防止（展開状態のみ）
   useEffect(() => {
-    if (!isMobile || !isExpanded || !contentRef.current) return;
+    if (!isMobile || sheetPercent !== 0 || !contentRef.current) return;
 
     const content = contentRef.current;
 
@@ -140,10 +141,10 @@ export default function PlaceDetailPanel() {
     const handleTouchMove = (e: TouchEvent) => {
       // 展開状態でスクロール位置が上端の場合、プルツーリフレッシュを防ぐ
       if (content.scrollTop === 0) {
-        currentY.current = e.touches[0].clientY;
-        const deltaY = startY.current - currentY.current;
+        const currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY.current;
         
-        if (deltaY < -10) { // 下方向のスワイプ
+        if (deltaY > 10) { // 下方向のスワイプ
           e.preventDefault();
         }
       }
@@ -156,7 +157,15 @@ export default function PlaceDetailPanel() {
       content.removeEventListener('touchstart', handleTouchStart);
       content.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [isMobile, isExpanded]);
+  }, [isMobile, sheetPercent]);
+
+  // コンポーネントのアンマウント時にイベントリスナーをクリーンアップ
+  useEffect(() => {
+    return () => {
+      window.removeEventListener('touchmove', handleWindowTouchMove);
+      window.removeEventListener('touchend', handleWindowTouchEnd);
+    };
+  }, []);
 
   if (!place) return null;
 
@@ -211,86 +220,78 @@ export default function PlaceDetailPanel() {
     if (!pos) return;
 
     if (saved) {
-      // 既に保存済みの場合は削除
-      const target = savedPlaces.find(
-        (p) => p.name === place.name && p.address === place.formatted_address,
-      );
-      if (target) {
-        deletePlace(target.id);
-      }
+      // 既存の場合は削除
+      const target = savedPlaces.find((p) => p.name === place.name && p.address === place.formatted_address);
+      if (target) deletePlace(target.id);
     } else {
-      // 新規保存
+      // 新規追加
       const category = classifyCategory(place.types);
+      const cost = estimateCost(place.price_level, category);
       addPlace({
-        name: place.name || '名称未設定',
+        name: place.name || '名前なし',
         address: place.formatted_address || '',
-        coordinates: pos,
         category,
+        estimatedCost: cost,
+        coordinates: pos,
+        scheduledDay: undefined,
+        photos: photos.map(photo => 
+          typeof photo === 'string' 
+            ? photo 
+            : photo.getUrl({ maxWidth: 800, maxHeight: 600 })
+        ),
         memo: '',
-        estimatedCost: estimateCost((place as any).price_level, category),
-        photos: [],
       });
     }
   };
 
   const handleNearbySearch = () => {
+    if (!map) return;
+    
     const pos = getLatLng();
-    if (!pos || !map) return;
+    if (!pos) return;
 
-    const location = new google.maps.LatLng(pos.lat, pos.lng);
-    // Places APIで周辺検索を実行
-    const service = new google.maps.places.PlacesService(map);
-    const request: google.maps.places.PlaceSearchRequest = {
-      location,
-      radius: 1000, // 1km圏内
-      type: 'point_of_interest',
+    const request = {
+      location: new google.maps.LatLng(pos.lat, pos.lng),
+      radius: 1000,
+      type: 'tourist_attraction',
     };
 
+    const service = new google.maps.places.PlacesService(map);
     service.nearbySearch(request, (results, status) => {
       if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-        console.log('付近の施設:', results);
-        // 検索結果をマップ上に表示する処理を実装
-      } else {
-        console.error('付近検索に失敗しました:', status);
+        console.log('Nearby places:', results);
+        // 結果を表示する処理を追加
       }
     });
   };
 
-  // 画像スクロール機能
   const scrollImages = (direction: 'left' | 'right') => {
     if (!scrollContainerRef.current) return;
-    
-    const scrollAmount = 140; // 画像幅 + 間隔
-    const currentScroll = scrollContainerRef.current.scrollLeft;
-    const targetScroll = direction === 'left' 
-      ? currentScroll - scrollAmount 
-      : currentScroll + scrollAmount;
-    
-    scrollContainerRef.current.scrollTo({
-      left: targetScroll,
+
+    const container = scrollContainerRef.current;
+    const scrollAmount = 140;
+    const newScrollLeft = direction === 'left' 
+      ? container.scrollLeft - scrollAmount 
+      : container.scrollLeft + scrollAmount;
+
+    container.scrollTo({
+      left: newScrollLeft,
       behavior: 'smooth'
     });
   };
 
-  // 画像クリックハンドラー
   const handleImageClick = (index: number) => {
     setSelectedImageIndex(index);
     setImageModalOpen(true);
   };
 
-  // 訪問日変更ハンドラー
   const handleScheduledDayChange = (day: number | undefined) => {
-    if (savedPlace) {
-      updatePlace(savedPlace.id, { scheduledDay: day });
-    }
+    if (!savedPlace) return;
+    updatePlace(savedPlace.id, { scheduledDay: day });
   };
 
-  // 詳細パネルを閉じるハンドラー
   const handleClosePanel = () => {
     setPlace(null);
-    if (isMobile) {
-      setIsExpanded(false);
-    }
   };
 
   const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -312,25 +313,22 @@ export default function PlaceDetailPanel() {
         </div>
       );
     }
-    // mobile - ボトムシート形式
+    // mobile - Google Maps風BottomSheet
     return (
       <div 
-        ref={panelRef}
-        className={`fixed left-0 right-0 bottom-0 glass-effect shadow-elevation-5 
-                   border-t border-system-separator z-50 flex flex-col
-                   transition-all duration-300 ease-ios-default
-                   ${isDragActive ? '' : (isExpanded ? 'top-0' : 'h-[50vh] max-h-[50vh]')}`}
+        ref={sheetRef}
+        className="fixed left-0 right-0 bottom-0 h-screen glass-effect shadow-elevation-5 
+                   border-t border-system-separator z-50 flex flex-col touch-none
+                   transition-transform duration-300 ease-ios-default"
         style={{
-          height: isDragActive ? `${panelHeight}vh` : (isExpanded ? '100vh' : undefined)
+          transform: `translateY(${sheetPercent}%)`
         }}
       >
          {/* スワイプハンドルと閉じるボタン */}
          <div 
            ref={handleRef}
-           className="flex justify-between items-center pt-2 pb-1 px-4 cursor-grab active:cursor-grabbing flex-shrink-0"
+           className="flex justify-between items-center pt-2 pb-1 px-4 flex-shrink-0 touch-pan-y"
            onTouchStart={handleHandleTouchStart}
-           onTouchMove={handleHandleTouchMove}
-           onTouchEnd={handleHandleTouchEnd}
          >
            <div className="w-8"></div> {/* スペーサー */}
            <div className="w-10 h-1 bg-system-secondary-label/40 rounded-full" />
@@ -356,7 +354,7 @@ export default function PlaceDetailPanel() {
          )}
          <div 
            ref={contentRef} 
-           className={`flex-1 ${isExpanded ? "overflow-y-auto" : "overflow-hidden"}`}
+           className={`flex-1 ${sheetPercent === 0 ? "overflow-y-auto" : "overflow-hidden"}`}
          >
            {children}
          </div>
