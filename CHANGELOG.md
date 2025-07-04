@@ -200,3 +200,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **モバイル版詳細パネル**: drag 終了時に isDragging が解除されない不具合を修正
   - `useCallback` で touchmove/touchend ハンドラーをメモ化し removeEventListener が機能
   - パネルが再操作不能になる問題を解消 
+
+## [1.2.18] - 2025-07-04
+
+### 🐛 バグ修正
+- **モバイル版詳細パネル**: ハンドルバー外に指が出た瞬間ドラッグが途切れる問題を修正
+  - `touchmove` / `touchend` を `document` キャプチャフェーズに移動し全イベントを捕捉
+  - 上下どちらのドラッグでも連続的にパーセンテージが変化するよう改善 
