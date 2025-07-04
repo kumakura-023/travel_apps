@@ -73,7 +73,7 @@ function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction):
 // useBottomSheetフックの戻り値の型
 export interface UseBottomSheetReturn {
   state: BottomSheetState;
-  style: { transform: string };
+  style: { transform: string; transition: string };
   bindHandleRef: (element: HTMLDivElement | null) => void;
   snapTo: (percent: 0 | 50 | 100) => void;
   toggleExpand: () => void;
@@ -144,6 +144,14 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     dispatch({ type: 'END_DRAG', percent: state.percent });
   }, [state.isDragging, state.percent]);
 
+  // キャンセル (画面回転やシステム割り込みなど)
+  const handlePointerCancel = useCallback((e: PointerEvent) => {
+    if (!state.isDragging || pointerId.current !== e.pointerId) return;
+
+    pointerId.current = null;
+    dispatch({ type: 'END_DRAG', percent: state.percent });
+  }, [state.isDragging, state.percent]);
+
   // ハンドル要素にイベントリスナーをバインドする関数
   const bindHandleRef = useCallback((element: HTMLDivElement | null) => {
     // 既存のリスナーを削除
@@ -151,6 +159,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
       handleRef.current.removeEventListener('pointerdown', handlePointerDown);
       handleRef.current.removeEventListener('pointermove', handlePointerMove);
       handleRef.current.removeEventListener('pointerup', handlePointerUp);
+      handleRef.current.removeEventListener('pointercancel', handlePointerCancel);
     }
 
     handleRef.current = element;
@@ -160,8 +169,9 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
       element.addEventListener('pointerdown', handlePointerDown, { passive: false });
       element.addEventListener('pointermove', handlePointerMove, { passive: false });
       element.addEventListener('pointerup', handlePointerUp, { passive: false });
+      element.addEventListener('pointercancel', handlePointerCancel, { passive: false });
     }
-  }, [handlePointerDown, handlePointerMove, handlePointerUp]);
+  }, [handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel]);
 
   // 指定位置にスナップする関数
   const snapTo = useCallback((percent: 0 | 50 | 100) => {
@@ -180,14 +190,16 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
         handleRef.current.removeEventListener('pointerdown', handlePointerDown);
         handleRef.current.removeEventListener('pointermove', handlePointerMove);
         handleRef.current.removeEventListener('pointerup', handlePointerUp);
+        handleRef.current.removeEventListener('pointercancel', handlePointerCancel);
       }
     };
-  }, [handlePointerDown, handlePointerMove, handlePointerUp]);
+  }, [handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel]);
 
   return {
     state,
     style: {
-      transform: `translateY(${state.percent}%)`
+      transform: `translateY(${state.percent}%)`,
+      transition: state.isDragging ? 'none' : 'transform 0.25s ease-out'
     },
     bindHandleRef,
     snapTo,
