@@ -23,6 +23,7 @@ export default function PlaceDetailPanel() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [sheetPercent, setSheetPercent] = useState<number>(50); // 0-100: 0=全展開, 50=中間, 100=折り畳み
+  const sheetPercentRef = useRef(sheetPercent);
   const [debugInfo, setDebugInfo] = useState<string>('');
   const sheetRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -53,6 +54,10 @@ export default function PlaceDetailPanel() {
       setSheetPercent(isExpanded ? 0 : 50);
     }
   }, [isExpanded, isMobile]);
+
+  useEffect(() => {
+    sheetPercentRef.current = sheetPercent;
+  }, [sheetPercent]);
 
   // ハンドルバーでのドラッグ開始
   const handleHandleTouchStart = (e: React.TouchEvent) => {
@@ -104,11 +109,14 @@ export default function PlaceDetailPanel() {
     
     e.preventDefault();
     
+    // 最新のパーセンテージを参照
+    const currentPercent = sheetPercentRef.current;
+
     // スナップ判定: 0-25% → 0%, 25-75% → 50%, 75-100% → 100%
     let targetPercent: number;
-    if (sheetPercent <= 25) {
+    if (currentPercent <= 25) {
       targetPercent = 0;
-    } else if (sheetPercent <= 75) {
+    } else if (currentPercent <= 75) {
       targetPercent = 50;
     } else {
       targetPercent = 100;
