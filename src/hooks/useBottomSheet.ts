@@ -94,6 +94,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
   const startY = useRef<number>(0);
   const initialPercentRef = useRef<number>(0);
   const pointerId = useRef<number | null>(null);
+  const viewportHeightRef = useRef<number>(window.innerHeight);
 
   // ドラッグ開始処理
   const handlePointerDown = useCallback((e: PointerEvent) => {
@@ -104,6 +105,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     
     startY.current = e.clientY;
     initialPercentRef.current = state.percent;
+    viewportHeightRef.current = window.innerHeight;
     pointerId.current = e.pointerId;
     
     // ポインターキャプチャを設定（指がハンドル外に出ても継続）
@@ -122,7 +124,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     const deltaY = currentY - startY.current;
     
     // 画面高さに対する変化量をパーセンテージで計算
-    const viewportHeight = window.innerHeight;
+    const viewportHeight = viewportHeightRef.current;
     const deltaPercent = (deltaY / viewportHeight) * 100;
     
     const newPercent = initialPercentRef.current + deltaPercent;

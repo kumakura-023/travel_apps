@@ -5,7 +5,9 @@
 /* プルトゥリフレッシュ機能を無効化 */
 html,
 body {
-  overscroll-behavior: none;
+  /* 垂直方向のオーバースクロールを抑止し、iOSのアドレスバー伸縮によるpointercancelを軽減 */
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
   -webkit-overflow-scrolling: touch;
 }
 

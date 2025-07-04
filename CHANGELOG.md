@@ -229,3 +229,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **モバイル版詳細パネル**: ハンドルバー外に指が出た瞬間ドラッグが途切れる問題を修正
   - `touchmove` / `touchend` を `document` キャプチャフェーズに移動し全イベントを捕捉
   - 上下どちらのドラッグでも連続的にパーセンテージが変化するよう改善 
+
+## [1.2.20] - 2025-07-04
+
+### 🐛 バグ修正
+- **モバイル版詳細パネル**: iOS Safari でアドレスバーが青く縮む際に BottomSheet が 50% にリセットされる問題を修正
+  - ドラッグ開始時に `viewportHeight` を固定し、`pointermove` では固定値を使用してパーセンテージを算出
+  - `pointercancel` 発生時でも現位置からスナップ判定を行い、位置ズレを防止
+  - `overscroll-behavior-y: contain` を `html, body` に適用し、ページ全体のプルツーリフレッシュを抑止
+  - BottomSheet コンテナに `overscroll-y-contain` と `touch-pan-y` を追加し、Safari の overscroll に対応
+
+### 🎨 UX改善
+- アドレスバー伸縮中もパネルが指に追従し続けるように
+- `pointercancel` が発生しても滑らかなスナップ遷移を維持
+
+### 🧹 保守性向上
+- `useBottomSheet` に `viewportHeightRef` を追加し、単一責任原則に沿ったロジック分離
+- CSS ルールを整理し、ブラウザ固有の挙動を抽象化 

@@ -196,7 +196,7 @@ export default function PlaceDetailPanel() {
     return (
       <div 
         className="fixed left-0 right-0 bottom-0 h-screen glass-effect shadow-elevation-5 
-                   border-t border-system-separator z-50 flex flex-col touch-action-pan-y
+                   border-t border-system-separator z-50 flex flex-col touch-pan-y overscroll-y-contain
                    transition-transform duration-300 ease-out"
         style={bottomSheet.style}
       >
