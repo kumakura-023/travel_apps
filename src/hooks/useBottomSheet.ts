@@ -94,7 +94,14 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
   const startY = useRef<number>(0);
   const initialPercentRef = useRef<number>(0);
   const pointerId = useRef<number | null>(null);
+  const draggingRef = useRef<boolean>(false);
+  const percentRef = useRef<number>(initialPercent);
   const viewportHeightRef = useRef<number>(window.innerHeight);
+
+  // state.percent が変化したら percentRef を更新
+  useEffect(() => {
+    percentRef.current = state.percent;
+  }, [state.percent]);
 
   // ドラッグ開始処理
   const handlePointerDown = useCallback((e: PointerEvent) => {
@@ -104,19 +111,21 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     const target = e.currentTarget as HTMLDivElement;
     
     startY.current = e.clientY;
-    initialPercentRef.current = state.percent;
+    initialPercentRef.current = percentRef.current;
     viewportHeightRef.current = window.innerHeight;
     pointerId.current = e.pointerId;
+    
+    draggingRef.current = true;
     
     // ポインターキャプチャを設定（指がハンドル外に出ても継続）
     target.setPointerCapture(e.pointerId);
     
-    dispatch({ type: 'START_DRAG', initialPercent: state.percent });
-  }, [state.percent]);
+    dispatch({ type: 'START_DRAG', initialPercent: percentRef.current });
+  }, []);
 
   // ドラッグ中の処理
   const handlePointerMove = useCallback((e: PointerEvent) => {
-    if (!state.isDragging || pointerId.current !== e.pointerId) return;
+    if (!draggingRef.current || pointerId.current !== e.pointerId) return;
     
     e.preventDefault();
     
@@ -129,33 +138,39 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     
     const newPercent = initialPercentRef.current + deltaPercent;
     
+    percentRef.current = newPercent;
+    
     dispatch({ type: 'UPDATE_DRAG', percent: newPercent });
-  }, [state.isDragging]);
+  }, []);
 
   // ドラッグ終了処理
   const handlePointerUp = useCallback((e: PointerEvent) => {
-    if (!state.isDragging || pointerId.current !== e.pointerId) return;
+    if (!draggingRef.current || pointerId.current !== e.pointerId) return;
     
     e.preventDefault();
     
     const target = e.currentTarget as HTMLDivElement;
     target.releasePointerCapture(e.pointerId);
     
+    draggingRef.current = false;
     pointerId.current = null;
     
-    dispatch({ type: 'END_DRAG', percent: state.percent });
-  }, [state.isDragging, state.percent]);
+    dispatch({ type: 'END_DRAG', percent: percentRef.current });
+  }, []);
 
   // キャンセル (画面回転やシステム割り込みなど)
   const handlePointerCancel = useCallback((e: PointerEvent) => {
-    if (!state.isDragging || pointerId.current !== e.pointerId) return;
+    if (!draggingRef.current || pointerId.current !== e.pointerId) return;
 
+    draggingRef.current = false;
     pointerId.current = null;
-    dispatch({ type: 'END_DRAG', percent: state.percent });
-  }, [state.isDragging, state.percent]);
+    dispatch({ type: 'END_DRAG', percent: percentRef.current });
+  }, []);
 
   // ハンドル要素にイベントリスナーをバインドする関数
   const bindHandleRef = useCallback((element: HTMLDivElement | null) => {
+    if (element === handleRef.current) return;
+
     // 既存のリスナーを削除
     if (handleRef.current) {
       handleRef.current.removeEventListener('pointerdown', handlePointerDown);
@@ -166,14 +181,14 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
 
     handleRef.current = element;
 
-    // 新しい要素にリスナーを追加
+    // 新しい要素にリスナーを追加（1度だけ）
     if (element) {
       element.addEventListener('pointerdown', handlePointerDown, { passive: false });
       element.addEventListener('pointermove', handlePointerMove, { passive: false });
       element.addEventListener('pointerup', handlePointerUp, { passive: false });
       element.addEventListener('pointercancel', handlePointerCancel, { passive: false });
     }
-  }, [handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel]);
+  }, []);
 
   // 指定位置にスナップする関数
   const snapTo = useCallback((percent: 0 | 50 | 100) => {
@@ -195,7 +210,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
         handleRef.current.removeEventListener('pointercancel', handlePointerCancel);
       }
     };
-  }, [handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel]);
+  }, []);
 
   return {
     state,
