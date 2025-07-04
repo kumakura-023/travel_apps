@@ -7,13 +7,14 @@ export interface BottomSheetState {
   isExpanded: boolean;
 }
 
-// BottomSheetのアクション型
-type BottomSheetAction = 
-  | { type: 'START_DRAG'; initialPercent: number }
+// BottomSheet のアクション型
+type BottomSheetAction =
+  | { type: 'START_DRAG' }
   | { type: 'UPDATE_DRAG'; percent: number }
   | { type: 'END_DRAG'; percent: number }
-  | { type: 'SNAP_TO'; percent: number }
-  | { type: 'TOGGLE_EXPAND' };
+  | { type: 'SET_PERCENT'; percent: number }
+  | { type: 'EXPAND' }
+  | { type: 'COLLAPSE' };
 
 // ステート管理のためのreducer
 function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction): BottomSheetState {
@@ -21,7 +22,7 @@ function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction):
     case 'START_DRAG':
       return {
         ...state,
-        isDragging: true
+        isDragging: true,
       };
 
     case 'UPDATE_DRAG':
@@ -31,7 +32,7 @@ function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction):
       };
 
     case 'END_DRAG': {
-      // スナップ判定: 0-25% → 0%, 25-75% → 50%, 75-100% → 100%
+      // 終了時に 0/50/100 にスナップ
       let targetPercent: number;
       if (action.percent <= 25) {
         targetPercent = 0;
@@ -40,29 +41,37 @@ function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction):
       } else {
         targetPercent = 100;
       }
-      
+
       return {
         ...state,
         percent: targetPercent,
         isDragging: false,
-        isExpanded: targetPercent === 0
+        isExpanded: targetPercent === 0,
       };
     }
 
-    case 'SNAP_TO':
+    case 'SET_PERCENT':
       return {
         ...state,
-        percent: action.percent,
+        percent: Math.max(0, Math.min(100, action.percent)),
+        isExpanded: action.percent === 0,
         isDragging: false,
-        isExpanded: action.percent === 0
       };
 
-    case 'TOGGLE_EXPAND':
-      const newPercent = state.isExpanded ? 50 : 0;
+    case 'EXPAND':
       return {
         ...state,
-        percent: newPercent,
-        isExpanded: !state.isExpanded
+        percent: 0,
+        isExpanded: true,
+        isDragging: false,
+      };
+
+    case 'COLLAPSE':
+      return {
+        ...state,
+        percent: 100,
+        isExpanded: false,
+        isDragging: false,
       };
 
     default:
@@ -75,8 +84,9 @@ export interface UseBottomSheetReturn {
   state: BottomSheetState;
   style: { transform: string; transition: string };
   bindHandleRef: (element: HTMLDivElement | null) => void;
-  snapTo: (percent: 0 | 50 | 100) => void;
-  toggleExpand: () => void;
+  setPercent: (p: number) => void;
+  expand: () => void;
+  collapse: () => void;
 }
 
 /**
@@ -120,7 +130,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     // ポインターキャプチャを設定（指がハンドル外に出ても継続）
     target.setPointerCapture(e.pointerId);
     
-    dispatch({ type: 'START_DRAG', initialPercent: percentRef.current });
+    dispatch({ type: 'START_DRAG' });
   }, []);
 
   // ドラッグ中の処理
@@ -191,13 +201,17 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
   }, []);
 
   // 指定位置にスナップする関数
-  const snapTo = useCallback((percent: 0 | 50 | 100) => {
-    dispatch({ type: 'SNAP_TO', percent });
+  const setPercent = useCallback((p: number) => {
+    dispatch({ type: 'SET_PERCENT', percent: p });
   }, []);
 
   // 展開/縮小をトグルする関数
-  const toggleExpand = useCallback(() => {
-    dispatch({ type: 'TOGGLE_EXPAND' });
+  const expand = useCallback(() => {
+    dispatch({ type: 'EXPAND' });
+  }, []);
+
+  const collapse = useCallback(() => {
+    dispatch({ type: 'COLLAPSE' });
   }, []);
 
   // クリーンアップ
@@ -219,7 +233,8 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
       transition: state.isDragging ? 'none' : 'transform 0.25s ease-out'
     },
     bindHandleRef,
-    snapTo,
-    toggleExpand
+    setPercent,
+    expand,
+    collapse
   };
 } 

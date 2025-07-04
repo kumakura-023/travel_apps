@@ -44,7 +44,11 @@ export default function PlaceDetailPanel() {
   const bottomSheet = useBottomSheet(50); // 初期位置は中間（50%）
   
   // プルツーリフレッシュ防止（モバイル版・展開時のみ）
-  const { contentRef } = usePullToRefreshPrevention(bottomSheet.state.isExpanded, isMobile);
+  const { contentRef } = usePullToRefreshPrevention(
+    bottomSheet.state.isExpanded,
+    isMobile,
+    bottomSheet.state.isDragging,
+  );
 
   if (!place) return null;
 
@@ -201,10 +205,27 @@ export default function PlaceDetailPanel() {
         style={bottomSheet.style}
       >
          {/* スワイプハンドルと閉じるボタン */}
-         <div 
+         <div
            ref={bottomSheet.bindHandleRef}
+           role="separator"
+           aria-orientation="vertical"
+           tabIndex={0}
+           onKeyDown={(e) => {
+             if (e.code === 'Space' || e.key === ' ') {
+               e.preventDefault();
+               bottomSheet.state.isExpanded ? bottomSheet.collapse() : bottomSheet.expand();
+             }
+             if (e.key === 'ArrowUp') {
+               e.preventDefault();
+               bottomSheet.setPercent(Math.max(0, bottomSheet.state.percent - 50));
+             }
+             if (e.key === 'ArrowDown') {
+               e.preventDefault();
+               bottomSheet.setPercent(Math.min(100, bottomSheet.state.percent + 50));
+             }
+           }}
            className="flex justify-between items-center pt-2 pb-1 px-4 flex-shrink-0 
-                      cursor-grab active:cursor-grabbing"
+                      cursor-grab active:cursor-grabbing focus:outline-none"
          >
            <div className="w-8"></div> {/* スペーサー */}
            <div className="w-10 h-1 bg-system-secondary-label/40 rounded-full" />

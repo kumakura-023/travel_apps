@@ -246,3 +246,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🧹 保守性向上
 - `useBottomSheet` に `viewportHeightRef` を追加し、単一責任原則に沿ったロジック分離
 - CSS ルールを整理し、ブラウザ固有の挙動を抽象化 
+
+## [1.3.0] - 2025-07-04
+
+### ✨ 新機能 & Refactor
+
+- **モバイル版 BottomSheet**: Pointer Events 対応でタッチ・マウス操作を統一し、ドラッグ操作の安定性を大幅改善
+- `useBottomSheet` を全面改修し、`useReducer` による純粋ステート管理 (START_DRAG / UPDATE_DRAG / END_DRAG / SET_PERCENT / EXPAND / COLLAPSE) を導入
+- ドラッグ開始時に `window.innerHeight` を固定し、画面回転による不具合を解消
+- Imperative API (`expand`, `collapse`, `setPercent`) を提供し、コンポーネント側の制御を簡素化
+- `PlaceDetailPanel` からドラッグロジックを分離し、単一責任原則を徹底
+- アクセシビリティ向上: ハンドルに `role="separator"` とキーボード操作 (Space / ArrowUp / ArrowDown) を追加
+- `usePullToRefreshPrevention` を拡張し、ドラッグ中は `preventDefault` をスキップして干渉を低減
+
+### �� バグ修正
+
+- iOS Safari / Android Chrome でドラッグ中にプルツーリフレッシュが誤動作する問題を修正
+
+### その他
+
+- ESLint / TypeScript ビルドに通過するよう型定義を調整 

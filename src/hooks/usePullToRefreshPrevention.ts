@@ -6,7 +6,8 @@ import { useEffect, useRef } from 'react';
  */
 export function usePullToRefreshPrevention(
   isExpanded: boolean,
-  isMobile: boolean
+  isMobile: boolean,
+  isDragging: boolean = false,
 ) {
   const contentRef = useRef<HTMLDivElement>(null);
   const startY = useRef<number>(0);
@@ -21,6 +22,9 @@ export function usePullToRefreshPrevention(
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      // BottomSheet のドラッグ中はプルツーリフレッシュ制御をスキップ
+      if (isDragging) return;
+
       // 展開状態でスクロール位置が上端の場合、プルツーリフレッシュを防ぐ
       if (content.scrollTop === 0) {
         const currentY = e.touches[0].clientY;
@@ -39,7 +43,7 @@ export function usePullToRefreshPrevention(
       content.removeEventListener('touchstart', handleTouchStart);
       content.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [isMobile, isExpanded]);
+  }, [isMobile, isExpanded, isDragging]);
 
   return { contentRef };
 } 
