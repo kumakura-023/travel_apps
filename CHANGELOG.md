@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.19] - 2025-01-03
+
+### 🔄 大幅リファクタリング
+- **モバイル版BottomSheet**: 単一責任原則に基づく完全なコードリファクタリングを実施
+  - 新規 `useBottomSheet` カスタムフックを作成し、ドラッグ処理とステート管理を分離
+  - `usePullToRefreshPrevention` カスタムフックでプルツーリフレッシュ防止機能を独立化
+  - `PlaceDetailPanel.tsx` からBottomSheet関連のロジックを除去し、データ表示専用に特化
+  - Pointer Events に変更してタッチ・マウス操作を統一的に処理
+  - `useReducer` による純粋関数でのステート管理を導入
+
+### 🎨 技術的改善
+- **ドラッグ処理の最適化**: `ref.current?.setPointerCapture(e.pointerId)` でキャプチャを保持し、指がハンドル外に出ても継続操作可能
+- **CSS最適化**: `touch-action: pan-y` を適用し、ブラウザのデフォルトジェスチャとの競合を解決
+- **アニメーション統一**: `transition: transform .25s ease-out` で一貫したアニメーション制御
+- **メモリリーク防止**: イベントリスナーの適切なクリーンアップを実装
+
+### 🧹 保守性向上
+- BottomSheet機能の再利用性を確保（他のコンポーネントでも利用可能）
+- TypeScript strict mode を満たす型安全な実装
+- 既存のPC/タブレット表示機能には影響なし
+- コードの可読性と保守性を大幅に向上
+
 ## [1.2.9] - 2024-12-19
 
 ### 🐛 バグ修正
