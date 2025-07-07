@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.5] - 2025-01-03
+
+### 🔄 iOS Safari対応強化
+- **モバイル版BottomSheet**: iOS Safari でのドラッグ操作問題を修正
+  - PointerEvent と TouchEvent の両対応を実装（`window.PointerEvent` による自動判定）
+  - iOS Safari の `touch-action` 未実装問題を TouchEvent による代替で解決
+  - 汎用 Drag ハンドラーを共通化し、Pointer/Touch 用 dispatcher から呼び出し
+  - ドラッグ中のページスクロール抑止機能を追加（`setGlobalScrollLock` ユーティリティ）
+  - タップで開閉トグル機能を追加（300ms デバウンス付き）
+
+### 🎨 技術的改善
+- **単一責任原則の維持**: スクロール制御ロジックを `utils/scrollLock.ts` に分離
+- **CSS最適化**: BottomSheet ルート要素を `touch-none` に変更し、ハンドル要素も `touch-none` 追加
+- **アクセシビリティ向上**: ハンドルのタップ操作でパネルの展開・縮小が可能に
+- **イベント管理強化**: 適切なクリーンアップとメモリリーク防止を実装
+
+### 🧹 保守性向上
+- 複数コンポーネントで再利用可能な scrollLock ユーティリティを提供
+- 既存 API (`UseBottomSheetReturn`) は変更なし、後方互換性を保持
+- TypeScript 型安全性を向上（共通イベント型を定義）
+- 「変わりにくいもの」（インターフェース）への依存を実現
+
 ## [1.2.19] - 2025-01-03
 
 ### 🔄 大幅リファクタリング

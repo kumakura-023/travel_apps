@@ -200,7 +200,7 @@ export default function PlaceDetailPanel() {
     return (
       <div 
         className="fixed left-0 right-0 bottom-0 h-screen h-[100dvh] glass-effect shadow-elevation-5 
-                   border-t border-system-separator z-50 flex flex-col touch-pan-y overscroll-y-contain
+                   border-t border-system-separator z-50 flex flex-col touch-none overscroll-y-contain
                    transition-transform duration-300 ease-out"
         style={bottomSheet.style}
       >
@@ -210,6 +210,7 @@ export default function PlaceDetailPanel() {
            role="separator"
            aria-orientation="vertical"
            tabIndex={0}
+           onClick={bottomSheet.handleToggle}
            onKeyDown={(e) => {
              if (e.code === 'Space' || e.key === ' ') {
                e.preventDefault();
@@ -225,7 +226,7 @@ export default function PlaceDetailPanel() {
              }
            }}
            className="flex justify-between items-center pt-2 pb-1 px-4 flex-shrink-0 
-                      cursor-grab active:cursor-grabbing focus:outline-none"
+                      cursor-grab active:cursor-grabbing focus:outline-none touch-none"
          >
            <div className="w-8"></div> {/* スペーサー */}
            <div className="w-10 h-1 bg-system-secondary-label/40 rounded-full" />
@@ -242,7 +243,7 @@ export default function PlaceDetailPanel() {
          
          <div 
            ref={contentRef} 
-           className={`flex-1 ${bottomSheet.state.isExpanded ? "overflow-y-auto" : "overflow-hidden"}`}
+           className={`flex-1 ${bottomSheet.state.isExpanded ? "overflow-y-auto touch-pan-y" : "overflow-hidden"}`}
          >
            {children}
          </div>

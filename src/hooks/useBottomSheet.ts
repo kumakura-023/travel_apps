@@ -1,4 +1,5 @@
 import { useReducer, useRef, useCallback, useEffect } from 'react';
+import { setGlobalScrollLock } from '../utils/scrollLock';
 
 // BottomSheetの状態を管理する型
 export interface BottomSheetState {
@@ -14,7 +15,8 @@ type BottomSheetAction =
   | { type: 'END_DRAG'; percent: number }
   | { type: 'SET_PERCENT'; percent: number }
   | { type: 'EXPAND' }
-  | { type: 'COLLAPSE' };
+  | { type: 'COLLAPSE' }
+  | { type: 'CANCEL_DRAG' };
 
 // ステート管理のためのreducer
 function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction): BottomSheetState {
@@ -74,6 +76,12 @@ function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction):
         isDragging: false,
       };
 
+    case 'CANCEL_DRAG':
+      return {
+        ...state,
+        isDragging: false,
+      };
+
     default:
       return state;
   }
@@ -87,11 +95,30 @@ export interface UseBottomSheetReturn {
   setPercent: (p: number) => void;
   expand: () => void;
   collapse: () => void;
+  handleToggle: () => void;
+}
+
+// ドラッグ開始時の共通処理
+interface DragStartEvent {
+  clientY: number;
+  preventDefault: () => void;
+  stopPropagation: () => void;
+}
+
+// ドラッグ中の共通処理
+interface DragMoveEvent {
+  clientY: number;
+  preventDefault: () => void;
+}
+
+// ドラッグ終了時の共通処理
+interface DragEndEvent {
+  preventDefault: () => void;
 }
 
 /**
  * BottomSheet機能を提供するカスタムフック
- * Pointer Eventsを使用してタッチ・マウス操作を統一的に処理
+ * PointerEventとTouchEventの両対応でタッチ・マウス操作を統一的に処理
  */
 export function useBottomSheet(initialPercent: number = 50): UseBottomSheetReturn {
   const [state, dispatch] = useReducer(bottomSheetReducer, {
@@ -100,42 +127,42 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     isExpanded: initialPercent === 0
   });
 
+  // Pointer Events サポート判定
+  const supportsPointer = typeof window !== 'undefined' && window.PointerEvent !== undefined;
+
   const handleRef = useRef<HTMLDivElement | null>(null);
   const startY = useRef<number>(0);
   const initialPercentRef = useRef<number>(0);
   const pointerId = useRef<number | null>(null);
   const draggingRef = useRef<boolean>(false);
   const percentRef = useRef<number>(initialPercent);
-  const viewportHeightRef = useRef<number>(window.innerHeight);
+  const viewportHeightRef = useRef<number>(0);
+  const tapTimeoutRef = useRef<number | null>(null);
 
   // state.percent が変化したら percentRef を更新
   useEffect(() => {
     percentRef.current = state.percent;
   }, [state.percent]);
 
-  // ドラッグ開始処理
-  const handlePointerDown = useCallback((e: PointerEvent) => {
+  // 共通のドラッグ開始処理
+  const handleDragStart = useCallback((e: DragStartEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const target = e.currentTarget as HTMLDivElement;
-    
     startY.current = e.clientY;
     initialPercentRef.current = percentRef.current;
     viewportHeightRef.current = window.innerHeight;
-    pointerId.current = e.pointerId;
-    
     draggingRef.current = true;
     
-    // ポインターキャプチャを設定（指がハンドル外に出ても継続）
-    target.setPointerCapture(e.pointerId);
+    // ページスクロールを無効化
+    setGlobalScrollLock(true);
     
     dispatch({ type: 'START_DRAG' });
   }, []);
 
-  // ドラッグ中の処理
-  const handlePointerMove = useCallback((e: PointerEvent) => {
-    if (!draggingRef.current || pointerId.current !== e.pointerId) return;
+  // 共通のドラッグ中処理
+  const handleDragMove = useCallback((e: DragMoveEvent) => {
+    if (!draggingRef.current) return;
     
     e.preventDefault();
     
@@ -153,29 +180,113 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     dispatch({ type: 'UPDATE_DRAG', percent: newPercent });
   }, []);
 
-  // ドラッグ終了処理
-  const handlePointerUp = useCallback((e: PointerEvent) => {
-    if (!draggingRef.current || pointerId.current !== e.pointerId) return;
+  // 共通のドラッグ終了処理
+  const handleDragEnd = useCallback((e: DragEndEvent) => {
+    if (!draggingRef.current) return;
     
     e.preventDefault();
+    
+    draggingRef.current = false;
+    pointerId.current = null;
+    
+    // ページスクロールを復元
+    setGlobalScrollLock(false);
+    
+    dispatch({ type: 'END_DRAG', percent: percentRef.current });
+  }, []);
+
+  // 共通のドラッグキャンセル処理
+  const handleDragCancel = useCallback(() => {
+    if (!draggingRef.current) return;
+
+    draggingRef.current = false;
+    pointerId.current = null;
+    
+    // ページスクロールを復元
+    setGlobalScrollLock(false);
+    
+    dispatch({ type: 'CANCEL_DRAG' });
+  }, []);
+
+  // PointerEvent版ハンドラー
+  const handlePointerDown = useCallback((e: PointerEvent) => {
+    const target = e.currentTarget as HTMLDivElement;
+    pointerId.current = e.pointerId;
+    
+    // ポインターキャプチャを設定（指がハンドル外に出ても継続）
+    target.setPointerCapture(e.pointerId);
+    
+    handleDragStart(e);
+  }, [handleDragStart]);
+
+  const handlePointerMove = useCallback((e: PointerEvent) => {
+    if (!draggingRef.current || pointerId.current !== e.pointerId) return;
+    handleDragMove(e);
+  }, [handleDragMove]);
+
+  const handlePointerUp = useCallback((e: PointerEvent) => {
+    if (!draggingRef.current || pointerId.current !== e.pointerId) return;
     
     const target = e.currentTarget as HTMLDivElement;
     target.releasePointerCapture(e.pointerId);
     
-    draggingRef.current = false;
-    pointerId.current = null;
-    
-    dispatch({ type: 'END_DRAG', percent: percentRef.current });
-  }, []);
+    handleDragEnd(e);
+  }, [handleDragEnd]);
 
-  // キャンセル (画面回転やシステム割り込みなど)
   const handlePointerCancel = useCallback((e: PointerEvent) => {
     if (!draggingRef.current || pointerId.current !== e.pointerId) return;
+    handleDragCancel();
+  }, [handleDragCancel]);
 
-    draggingRef.current = false;
-    pointerId.current = null;
-    dispatch({ type: 'END_DRAG', percent: percentRef.current });
-  }, []);
+  // TouchEvent版ハンドラー
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (e.touches.length > 1) return; // マルチタッチは無視
+    
+    const touch = e.touches[0];
+    handleDragStart({
+      clientY: touch.clientY,
+      preventDefault: () => e.preventDefault(),
+      stopPropagation: () => e.stopPropagation()
+    });
+  }, [handleDragStart]);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!draggingRef.current || e.touches.length === 0) return;
+    
+    const touch = e.touches[0];
+    handleDragMove({
+      clientY: touch.clientY,
+      preventDefault: () => e.preventDefault()
+    });
+  }, [handleDragMove]);
+
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    if (!draggingRef.current) return;
+    
+    handleDragEnd({
+      preventDefault: () => e.preventDefault()
+    });
+  }, [handleDragEnd]);
+
+  const handleTouchCancel = useCallback((e: TouchEvent) => {
+    if (!draggingRef.current) return;
+    handleDragCancel();
+  }, [handleDragCancel]);
+
+  // タップで開閉トグル（300msデバウンス）
+  const handleToggle = useCallback(() => {
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+    }
+    
+    tapTimeoutRef.current = setTimeout(() => {
+      if (state.isExpanded) {
+        dispatch({ type: 'COLLAPSE' });
+      } else {
+        dispatch({ type: 'EXPAND' });
+      }
+    }, 300);
+  }, [state.isExpanded]);
 
   // ハンドル要素にイベントリスナーをバインドする関数
   const bindHandleRef = useCallback((element: HTMLDivElement | null) => {
@@ -183,22 +294,40 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
 
     // 既存のリスナーを削除
     if (handleRef.current) {
-      handleRef.current.removeEventListener('pointerdown', handlePointerDown);
-      handleRef.current.removeEventListener('pointermove', handlePointerMove);
-      handleRef.current.removeEventListener('pointerup', handlePointerUp);
-      handleRef.current.removeEventListener('pointercancel', handlePointerCancel);
+      if (supportsPointer) {
+        handleRef.current.removeEventListener('pointerdown', handlePointerDown);
+        handleRef.current.removeEventListener('pointermove', handlePointerMove);
+        handleRef.current.removeEventListener('pointerup', handlePointerUp);
+        handleRef.current.removeEventListener('pointercancel', handlePointerCancel);
+      } else {
+        handleRef.current.removeEventListener('touchstart', handleTouchStart);
+        handleRef.current.removeEventListener('touchmove', handleTouchMove);
+        handleRef.current.removeEventListener('touchend', handleTouchEnd);
+        handleRef.current.removeEventListener('touchcancel', handleTouchCancel);
+      }
     }
 
     handleRef.current = element;
 
-    // 新しい要素にリスナーを追加（1度だけ）
+    // 新しい要素にリスナーを追加
     if (element) {
-      element.addEventListener('pointerdown', handlePointerDown, { passive: false });
-      element.addEventListener('pointermove', handlePointerMove, { passive: false });
-      element.addEventListener('pointerup', handlePointerUp, { passive: false });
-      element.addEventListener('pointercancel', handlePointerCancel, { passive: false });
+      if (supportsPointer) {
+        element.addEventListener('pointerdown', handlePointerDown, { passive: false });
+        element.addEventListener('pointermove', handlePointerMove, { passive: false });
+        element.addEventListener('pointerup', handlePointerUp, { passive: false });
+        element.addEventListener('pointercancel', handlePointerCancel, { passive: false });
+      } else {
+        element.addEventListener('touchstart', handleTouchStart, { passive: false });
+        element.addEventListener('touchmove', handleTouchMove, { passive: false });
+        element.addEventListener('touchend', handleTouchEnd, { passive: false });
+        element.addEventListener('touchcancel', handleTouchCancel, { passive: false });
+      }
     }
-  }, []);
+  }, [
+    supportsPointer,
+    handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel,
+    handleTouchStart, handleTouchMove, handleTouchEnd, handleTouchCancel
+  ]);
 
   // 指定位置にスナップする関数
   const setPercent = useCallback((p: number) => {
@@ -217,14 +346,34 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
   // クリーンアップ
   useEffect(() => {
     return () => {
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+      }
+      
       if (handleRef.current) {
-        handleRef.current.removeEventListener('pointerdown', handlePointerDown);
-        handleRef.current.removeEventListener('pointermove', handlePointerMove);
-        handleRef.current.removeEventListener('pointerup', handlePointerUp);
-        handleRef.current.removeEventListener('pointercancel', handlePointerCancel);
+        if (supportsPointer) {
+          handleRef.current.removeEventListener('pointerdown', handlePointerDown);
+          handleRef.current.removeEventListener('pointermove', handlePointerMove);
+          handleRef.current.removeEventListener('pointerup', handlePointerUp);
+          handleRef.current.removeEventListener('pointercancel', handlePointerCancel);
+        } else {
+          handleRef.current.removeEventListener('touchstart', handleTouchStart);
+          handleRef.current.removeEventListener('touchmove', handleTouchMove);
+          handleRef.current.removeEventListener('touchend', handleTouchEnd);
+          handleRef.current.removeEventListener('touchcancel', handleTouchCancel);
+        }
+      }
+      
+      // ドラッグ中にアンマウントされた場合のスクロールロック解除
+      if (draggingRef.current) {
+        setGlobalScrollLock(false);
       }
     };
-  }, []);
+  }, [
+    supportsPointer,
+    handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel,
+    handleTouchStart, handleTouchMove, handleTouchEnd, handleTouchCancel
+  ]);
 
   return {
     state,
@@ -235,6 +384,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     bindHandleRef,
     setPercent,
     expand,
-    collapse
+    collapse,
+    handleToggle
   };
 } 
