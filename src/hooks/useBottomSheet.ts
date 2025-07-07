@@ -13,7 +13,7 @@ type BottomSheetAction =
   | { type: 'START_DRAG' }
   | { type: 'UPDATE_DRAG'; percent: number }
   | { type: 'END_DRAG'; percent: number; snapPoints: number[]; startY: number; endY: number }
-  | { type: 'SET_PERCENT'; percent: number }
+  | { type: 'SET_PERCENT'; percent: number; snapPoints: number[] }
   | { type: 'EXPAND'; snapPoints: number[] }
   | { type: 'COLLAPSE'; snapPoints: number[] }
   | { type: 'CANCEL_DRAG' }
@@ -84,17 +84,19 @@ function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction):
         ...state,
         percent: targetPercent,
         isDragging: false,
-        isExpanded: targetPercent === 0,
+        isExpanded: targetPercent === action.snapPoints[0],
       };
     }
 
-    case 'SET_PERCENT':
+    case 'SET_PERCENT': {
+      const minSnap = action.snapPoints[0];
       return {
         ...state,
         percent: Math.max(0, Math.min(100, action.percent)),
-        isExpanded: action.percent === 0,
+        isExpanded: action.percent === minSnap,
         isDragging: false,
       };
+    }
 
     case 'EXPAND': {
       const currentPercent = state.percent;
@@ -103,7 +105,7 @@ function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction):
       return {
         ...state,
         percent: targetPercent,
-        isExpanded: targetPercent === 0,
+        isExpanded: targetPercent === action.snapPoints[0],
         isDragging: false,
       };
     }
@@ -115,7 +117,7 @@ function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction):
       return {
         ...state,
         percent: targetPercent,
-        isExpanded: targetPercent === 0,
+        isExpanded: targetPercent === action.snapPoints[0],
         isDragging: false,
       };
     }
@@ -132,7 +134,7 @@ function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction):
       return {
         ...state,
         percent: targetPercent,
-        isExpanded: targetPercent === 0,
+        isExpanded: targetPercent === sortedPoints[0],
         isDragging: false,
       };
     }
@@ -192,13 +194,15 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
   // スナップポイントをメモ化
   const snapPoints = useMemo(() => {
     const INITIAL_PERCENT = 50;
-    return isStandalone ? [20, 50, 80] : [50, 80];
+    return isStandalone ? [10, 50, 80] : [10, 50];
   }, [isStandalone]);
+
+  const minSnap = (isStandalone ? [10,50,80] : [10,50])[0];
 
   const [state, dispatch] = useReducer(bottomSheetReducer, {
     percent: initialPercent,
     isDragging: false,
-    isExpanded: initialPercent === 0
+    isExpanded: initialPercent === minSnap
   });
 
   // Pointer Events サポート判定
@@ -442,8 +446,8 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
 
   // 指定位置にスナップする関数
   const setPercent = useCallback((p: number) => {
-    dispatch({ type: 'SET_PERCENT', percent: p });
-  }, []);
+    dispatch({ type: 'SET_PERCENT', percent: p, snapPoints });
+  }, [snapPoints]);
 
   // 展開/縮小をトグルする関数
   const expand = useCallback(() => {

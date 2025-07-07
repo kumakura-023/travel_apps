@@ -48,6 +48,7 @@ export default function PlaceDetailPanel() {
     bottomSheet.state.isExpanded,
     isMobile,
     bottomSheet.state.isDragging,
+    bottomSheet.collapse,
   );
 
   if (!place) return null;

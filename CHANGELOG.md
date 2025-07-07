@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.8] - 2025-07-07
+
+### ✨ スナップロジック変更
+- **PWA版**: スナップポイントを `10% ↔ 50% ↔ 80%` に変更
+- **ブラウザ版**: スナップポイントを `10% ↔ 50%` に変更
+
+### 📜 UX改善
+- **10%展開時スクロール**: 最小展開(10%)でパネルコンテンツをスクロール可能に
+- **オーバースクロールで段階遷移**: 10%状態でコンテンツ先頭(スクロール上限)に達し、そのまま下方向へスワイプするとパネルが次段(50%)へ自動で遷移
+
+### 🔧 実装詳細
+- `useBottomSheet` の `snapPoints` を PWA/ブラウザ向けに更新
+- `isExpanded` 判定を `snapPoints[0]` に基づいて判定(10%)
+- `usePullToRefreshPrevention` に `onOverscrollDown` コールバックを追加し、オーバースクロール時に `collapse()` をトリガー
+- `PlaceDetailPanel` で新しい `usePullToRefreshPrevention` API を利用
+
+### 🧹 保守性
+- API変更なし (`UseBottomSheetReturn` 保持)
+- TypeScript / ESLint エラーゼロを維持
+- 既存のアクセシビリティ, スクロールロック機能に影響なし
+
 ## [1.3.7] - 2025-01-07
 
 ### 🔄 iOS Safari対応強化

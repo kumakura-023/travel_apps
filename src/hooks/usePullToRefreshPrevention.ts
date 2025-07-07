@@ -8,6 +8,7 @@ export function usePullToRefreshPrevention(
   isExpanded: boolean,
   isMobile: boolean,
   isDragging: boolean = false,
+  onOverscrollDown?: () => void,
 ) {
   const contentRef = useRef<HTMLDivElement>(null);
   const startY = useRef<number>(0);
@@ -32,6 +33,7 @@ export function usePullToRefreshPrevention(
         
         if (deltaY > 10) { // 下方向のスワイプ
           e.preventDefault();
+          onOverscrollDown?.();
         }
       }
     };
@@ -43,7 +45,7 @@ export function usePullToRefreshPrevention(
       content.removeEventListener('touchstart', handleTouchStart);
       content.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [isMobile, isExpanded, isDragging]);
+  }, [isMobile, isExpanded, isDragging, onOverscrollDown]);
 
   return { contentRef };
 } 
