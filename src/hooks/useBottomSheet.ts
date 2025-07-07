@@ -191,6 +191,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
 
   // スナップポイントをメモ化
   const snapPoints = useMemo(() => {
+    const INITIAL_PERCENT = 50;
     return isStandalone ? [20, 50, 80] : [50, 80];
   }, [isStandalone]);
 
@@ -290,49 +291,44 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     dispatch({ type: 'CANCEL_DRAG' });
   }, []);
 
-  // PointerEvent版ハンドラー
-  const handlePointerDown = useCallback((e: PointerEvent) => {
-    const target = e.currentTarget as HTMLDivElement;
-    pointerId.current = e.pointerId;
-    
-    // ポインターキャプチャを設定（指がハンドル外に出ても継続）
-    target.setPointerCapture(e.pointerId);
-    
-    handleDragStart(e);
-  }, [handleDragStart]);
-
-  const handlePointerMove = useCallback((e: PointerEvent) => {
+  // グローバルリスナー用のイベントハンドラー
+  const handleGlobalPointerMove = useCallback((e: PointerEvent) => {
     if (!draggingRef.current || pointerId.current !== e.pointerId) return;
     handleDragMove(e);
   }, [handleDragMove]);
 
-  const handlePointerUp = useCallback((e: PointerEvent) => {
+  const handleGlobalPointerUp = useCallback((e: PointerEvent) => {
     if (!draggingRef.current || pointerId.current !== e.pointerId) return;
     
-    const target = e.currentTarget as HTMLDivElement;
-    target.releasePointerCapture(e.pointerId);
+    // グローバルリスナーを解除
+    window.removeEventListener('pointermove', handleGlobalPointerMove);
+    window.removeEventListener('pointerup', handleGlobalPointerUp);
+    window.removeEventListener('pointercancel', handleGlobalPointerCancel);
+    
+    // ポインターキャプチャを解除
+    if (handleRef.current) {
+      try {
+        handleRef.current.releasePointerCapture(e.pointerId);
+      } catch (error) {
+        // setPointerCapture がサポートされていない場合は無視
+      }
+    }
     
     handleDragEnd(e);
-  }, [handleDragEnd]);
+  }, [handleDragEnd, handleGlobalPointerMove]);
 
-  const handlePointerCancel = useCallback((e: PointerEvent) => {
+  const handleGlobalPointerCancel = useCallback((e: PointerEvent) => {
     if (!draggingRef.current || pointerId.current !== e.pointerId) return;
-    handleDragCancel();
-  }, [handleDragCancel]);
-
-  // TouchEvent版ハンドラー
-  const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (e.touches.length > 1) return; // マルチタッチは無視
     
-    const touch = e.touches[0];
-    handleDragStart({
-      clientY: touch.clientY,
-      preventDefault: () => e.preventDefault(),
-      stopPropagation: () => e.stopPropagation()
-    });
-  }, [handleDragStart]);
+    // グローバルリスナーを解除
+    window.removeEventListener('pointermove', handleGlobalPointerMove);
+    window.removeEventListener('pointerup', handleGlobalPointerUp);
+    window.removeEventListener('pointercancel', handleGlobalPointerCancel);
+    
+    handleDragCancel();
+  }, [handleDragCancel, handleGlobalPointerMove, handleGlobalPointerUp]);
 
-  const handleTouchMove = useCallback((e: TouchEvent) => {
+  const handleGlobalTouchMove = useCallback((e: TouchEvent) => {
     if (!draggingRef.current || e.touches.length === 0) return;
     
     const touch = e.touches[0];
@@ -342,18 +338,67 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     });
   }, [handleDragMove]);
 
-  const handleTouchEnd = useCallback((e: TouchEvent) => {
+  const handleGlobalTouchEnd = useCallback((e: TouchEvent) => {
     if (!draggingRef.current) return;
+    
+    // グローバルリスナーを解除
+    window.removeEventListener('touchmove', handleGlobalTouchMove);
+    window.removeEventListener('touchend', handleGlobalTouchEnd);
+    window.removeEventListener('touchcancel', handleGlobalTouchCancel);
     
     handleDragEnd({
       preventDefault: () => e.preventDefault()
     });
-  }, [handleDragEnd]);
+  }, [handleDragEnd, handleGlobalTouchMove]);
 
-  const handleTouchCancel = useCallback((e: TouchEvent) => {
+  const handleGlobalTouchCancel = useCallback((e: TouchEvent) => {
     if (!draggingRef.current) return;
+    
+    // グローバルリスナーを解除
+    window.removeEventListener('touchmove', handleGlobalTouchMove);
+    window.removeEventListener('touchend', handleGlobalTouchEnd);
+    window.removeEventListener('touchcancel', handleGlobalTouchCancel);
+    
     handleDragCancel();
-  }, [handleDragCancel]);
+  }, [handleDragCancel, handleGlobalTouchMove, handleGlobalTouchEnd]);
+
+  // PointerEvent版ハンドラー
+  const handlePointerDown = useCallback((e: PointerEvent) => {
+    pointerId.current = e.pointerId;
+    
+    // ポインターキャプチャを設定（try-catchで囲む）
+    try {
+      const target = e.currentTarget as HTMLDivElement;
+      target.setPointerCapture(e.pointerId);
+    } catch (error) {
+      // setPointerCapture がサポートされていない場合は無視
+    }
+    
+    // グローバルリスナーを登録
+    window.addEventListener('pointermove', handleGlobalPointerMove, { passive: false });
+    window.addEventListener('pointerup', handleGlobalPointerUp, { passive: false });
+    window.addEventListener('pointercancel', handleGlobalPointerCancel, { passive: false });
+    
+    handleDragStart(e);
+  }, [handleDragStart, handleGlobalPointerMove, handleGlobalPointerUp, handleGlobalPointerCancel]);
+
+  // TouchEvent版ハンドラー
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (e.touches.length > 1) return; // マルチタッチは無視
+    
+    const touch = e.touches[0];
+    
+    // グローバルリスナーを登録
+    window.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
+    window.addEventListener('touchend', handleGlobalTouchEnd, { passive: false });
+    window.addEventListener('touchcancel', handleGlobalTouchCancel, { passive: false });
+    
+    handleDragStart({
+      clientY: touch.clientY,
+      preventDefault: () => e.preventDefault(),
+      stopPropagation: () => e.stopPropagation()
+    });
+  }, [handleDragStart, handleGlobalTouchMove, handleGlobalTouchEnd, handleGlobalTouchCancel]);
 
   // タップで開閉トグル（300msデバウンス）
   const handleToggle = useCallback(() => {
@@ -374,14 +419,8 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     if (handleRef.current) {
       if (supportsPointer) {
         handleRef.current.removeEventListener('pointerdown', handlePointerDown);
-        handleRef.current.removeEventListener('pointermove', handlePointerMove);
-        handleRef.current.removeEventListener('pointerup', handlePointerUp);
-        handleRef.current.removeEventListener('pointercancel', handlePointerCancel);
       } else {
         handleRef.current.removeEventListener('touchstart', handleTouchStart);
-        handleRef.current.removeEventListener('touchmove', handleTouchMove);
-        handleRef.current.removeEventListener('touchend', handleTouchEnd);
-        handleRef.current.removeEventListener('touchcancel', handleTouchCancel);
       }
     }
 
@@ -391,20 +430,14 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     if (element) {
       if (supportsPointer) {
         element.addEventListener('pointerdown', handlePointerDown, { passive: false });
-        element.addEventListener('pointermove', handlePointerMove, { passive: false });
-        element.addEventListener('pointerup', handlePointerUp, { passive: false });
-        element.addEventListener('pointercancel', handlePointerCancel, { passive: false });
       } else {
         element.addEventListener('touchstart', handleTouchStart, { passive: false });
-        element.addEventListener('touchmove', handleTouchMove, { passive: false });
-        element.addEventListener('touchend', handleTouchEnd, { passive: false });
-        element.addEventListener('touchcancel', handleTouchCancel, { passive: false });
       }
     }
   }, [
     supportsPointer,
-    handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel,
-    handleTouchStart, handleTouchMove, handleTouchEnd, handleTouchCancel
+    handlePointerDown,
+    handleTouchStart
   ]);
 
   // 指定位置にスナップする関数
@@ -421,6 +454,14 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     dispatch({ type: 'COLLAPSE', snapPoints });
   }, [snapPoints]);
 
+  // スタイル計算
+  const style = useMemo(() => {
+    const transform = `translateY(${state.percent}%)`;
+    const transition = state.isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    return { transform, transition };
+  }, [state.percent, state.isDragging]);
+
   // クリーンアップ
   useEffect(() => {
     return () => {
@@ -431,16 +472,18 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
       if (handleRef.current) {
         if (supportsPointer) {
           handleRef.current.removeEventListener('pointerdown', handlePointerDown);
-          handleRef.current.removeEventListener('pointermove', handlePointerMove);
-          handleRef.current.removeEventListener('pointerup', handlePointerUp);
-          handleRef.current.removeEventListener('pointercancel', handlePointerCancel);
         } else {
           handleRef.current.removeEventListener('touchstart', handleTouchStart);
-          handleRef.current.removeEventListener('touchmove', handleTouchMove);
-          handleRef.current.removeEventListener('touchend', handleTouchEnd);
-          handleRef.current.removeEventListener('touchcancel', handleTouchCancel);
         }
       }
+      
+      // グローバルリスナーのクリーンアップ
+      window.removeEventListener('pointermove', handleGlobalPointerMove);
+      window.removeEventListener('pointerup', handleGlobalPointerUp);
+      window.removeEventListener('pointercancel', handleGlobalPointerCancel);
+      window.removeEventListener('touchmove', handleGlobalTouchMove);
+      window.removeEventListener('touchend', handleGlobalTouchEnd);
+      window.removeEventListener('touchcancel', handleGlobalTouchCancel);
       
       // ドラッグ中にアンマウントされた場合のスクロールロック解除
       if (draggingRef.current) {
@@ -449,16 +492,19 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     };
   }, [
     supportsPointer,
-    handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel,
-    handleTouchStart, handleTouchMove, handleTouchEnd, handleTouchCancel
+    handlePointerDown,
+    handleTouchStart,
+    handleGlobalPointerMove,
+    handleGlobalPointerUp,
+    handleGlobalPointerCancel,
+    handleGlobalTouchMove,
+    handleGlobalTouchEnd,
+    handleGlobalTouchCancel
   ]);
 
   return {
     state,
-    style: {
-      transform: `translateY(${state.percent}%)`,
-      transition: state.isDragging ? 'none' : 'transform 0.25s ease-out'
-    },
+    style,
     bindHandleRef,
     setPercent,
     expand,

@@ -226,7 +226,7 @@ export default function PlaceDetailPanel() {
              }
            }}
            className="flex justify-between items-center pt-2 pb-1 px-4 flex-shrink-0 
-                      cursor-grab active:cursor-grabbing focus:outline-none touch-none"
+                      touch-none cursor-grab active:cursor-grabbing focus:outline-none"
          >
            <div className="w-8"></div> {/* スペーサー */}
            <div className="w-10 h-1 bg-system-secondary-label/40 rounded-full" />

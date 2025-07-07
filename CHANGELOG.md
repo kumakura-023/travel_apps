@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.7] - 2025-01-07
+
+### 🔄 iOS Safari対応強化
+- **グローバルリスナー方式**: BottomSheetドラッグの確実性を向上
+  - ドラッグ開始時のみwindowにイベントリスナーを登録し、終了時に自動解除
+  - iOS Safariでゆっくりドラッグして指をハンドル外で離しても確実にスナップ
+  - 速いドラッグ・遅いドラッグのどちらでも安定した動作を実現
+  - `setPointerCapture`をtry-catchで囲んで、サポートされていないブラウザでも動作
+
+### 🎯 スクロールロック改善
+- **documentElement制御**: `document.documentElement.style.overflow = 'hidden'`を追加
+- **overscrollBehavior制御**: `body.style.overscrollBehaviorY = 'contain'`でオーバースクロール防止
+- **完全な状態復元**: 元のスタイル値を記録し、ドラッグ終了後に正確に復元
+- **メモリリーク防止**: 複数の状態記録変数を適切に管理・クリーンアップ
+
+### 🎨 CSS最適化
+- **touch-none統一**: BottomSheetルート要素とハンドル要素に統一適用
+- **cursor-grab**: ハンドル要素に`cursor-grab active:cursor-grabbing`を適用
+- **タッチイベント分離**: コンテンツ領域は展開時のみ`touch-pan-y`を適用
+
+### 🔧 技術的改善
+- **方向判定の精密化**: Δy < -5px（上方向）、Δy > 5px（下方向）、|Δy| ≤ 5px（最近接）
+- **スナップロジック強化**: 上端・下端での変化防止ロジックを改善
+- **イベントハンドラー最適化**: PointerEventとTouchEventの統合処理を改善
+- **メモリ効率化**: 不要なイベントリスナーの削除と適切なクリーンアップ
+
+### 🧹 保守性向上
+- 既存API（`UseBottomSheetReturn`）は完全に維持、後方互換性を保証
+- TypeScript strict modeでのエラーゼロを維持
+- 既存のアクセシビリティ機能（キーボード操作、ハンドルタップ）を完全保持
+
 ## [1.3.6] - 2025-01-03
 
 ### ✨ 新機能
@@ -310,7 +341,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - アクセシビリティ向上: ハンドルに `role="separator"` とキーボード操作 (Space / ArrowUp / ArrowDown) を追加
 - `usePullToRefreshPrevention` を拡張し、ドラッグ中は `preventDefault` をスキップして干渉を低減
 
-### �� バグ修正
+### 🐛 バグ修正
 
 - iOS Safari / Android Chrome でドラッグ中にプルツーリフレッシュが誤動作する問題を修正
 
