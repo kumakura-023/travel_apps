@@ -51,7 +51,7 @@ const AppMenu: React.FC = () => {
       <div
         className={`fixed z-50 glass-effect shadow-elevation-5 
                    transition-transform duration-300 ease-ios-default
-                   ${isDesktop ? 'h-full' : 'h-screen w-screen'} 
+                   ${isDesktop ? 'h-full' : 'h-screen h-[100dvh] w-screen'} 
                    overflow-y-auto scrollbar-hide`}
         style={{
           width: isDesktop ? width : '100%',

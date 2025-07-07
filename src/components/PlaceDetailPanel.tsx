@@ -199,7 +199,7 @@ export default function PlaceDetailPanel() {
     // mobile - Google Maps風BottomSheet
     return (
       <div 
-        className="fixed left-0 right-0 bottom-0 h-screen glass-effect shadow-elevation-5 
+        className="fixed left-0 right-0 bottom-0 h-screen h-[100dvh] glass-effect shadow-elevation-5 
                    border-t border-system-separator z-50 flex flex-col touch-pan-y overscroll-y-contain
                    transition-transform duration-300 ease-out"
         style={bottomSheet.style}
