@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.6] - 2025-01-03
+
+### ✨ 新機能
+- **PWA/ブラウザ対応スナップ機能**: BottomSheetのスナップ位置をPWA/ブラウザで動的に切り替え
+  - PWA版: 3段階スナップ（20% ↔ 50% ↔ 80%）による細かい操作
+  - ブラウザ版: 2段階スナップ（50% ↔ 80%）によるシンプルな操作
+  - `window.matchMedia('(display-mode: standalone)')` による自動判定
+
+### 🎯 UX改善
+- **方向ベーススナップ**: ドラッグ方向に応じて1段階ずつ移動
+  - 上方向ドラッグ（Δy < 0）: 現在位置より小さいスナップ点の最大値へ移動
+  - 下方向ドラッグ（Δy > 0）: 現在位置より大きいスナップ点の最小値へ移動  
+  - 微小移動（±5px以内）: 最も近いスナップ点へ移動
+- **キーボード操作統一**: 矢印キー（↑↓）とタップトグルで同じ方向ロジックを使用
+  - ArrowUp: `expand()` → 上方向に1段階移動
+  - ArrowDown: `collapse()` → 下方向に1段階移動
+  - Space: `handleToggle()` → 最小値と次段階の切り替え
+
+### 🔧 技術的改善
+- **isStandalone判定のメモ化**: フック内部で1回だけ判定し、パフォーマンスを向上
+- **スナップロジックの汎用化**: `getNextSnapPoint()` ヘルパー関数による方向別スナップ計算
+- **ドラッグ方向検知**: `getDragDirection()` による5px閾値での方向判定
+- **単一責任原則**: スナップロジックを独立した純粋関数として実装
+
+### 🧹 保守性向上
+- 既存API（`UseBottomSheetReturn`）は変更なし、後方互換性を保持
+- ESLint/TypeScriptエラーゼロ、型安全性を維持
+- 既存機能（iOS Safari対応、スクロールロック、アクセシビリティ）の回帰なし
+
 ## [1.3.5] - 2025-01-03
 
 ### 🔄 iOS Safari対応強化

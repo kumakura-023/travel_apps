@@ -1,4 +1,4 @@
-import { useReducer, useRef, useCallback, useEffect } from 'react';
+import { useReducer, useRef, useCallback, useEffect, useMemo } from 'react';
 import { setGlobalScrollLock } from '../utils/scrollLock';
 
 // BottomSheetの状態を管理する型
@@ -12,11 +12,54 @@ export interface BottomSheetState {
 type BottomSheetAction =
   | { type: 'START_DRAG' }
   | { type: 'UPDATE_DRAG'; percent: number }
-  | { type: 'END_DRAG'; percent: number }
+  | { type: 'END_DRAG'; percent: number; snapPoints: number[]; startY: number; endY: number }
   | { type: 'SET_PERCENT'; percent: number }
-  | { type: 'EXPAND' }
-  | { type: 'COLLAPSE' }
-  | { type: 'CANCEL_DRAG' };
+  | { type: 'EXPAND'; snapPoints: number[] }
+  | { type: 'COLLAPSE'; snapPoints: number[] }
+  | { type: 'CANCEL_DRAG' }
+  | { type: 'TOGGLE'; snapPoints: number[] };
+
+// スナップポイントから次の位置を計算するヘルパー関数
+function getNextSnapPoint(
+  currentPercent: number,
+  snapPoints: number[],
+  direction: 'up' | 'down' | 'nearest'
+): number {
+  const sortedPoints = [...snapPoints].sort((a, b) => a - b);
+  
+  if (direction === 'nearest') {
+    // 最も近いポイントを選択
+    return sortedPoints.reduce((prev, curr) => 
+      Math.abs(curr - currentPercent) < Math.abs(prev - currentPercent) ? curr : prev
+    );
+  }
+  
+  if (direction === 'up') {
+    // 現在値より小さい点のうち最大のもの
+    const candidates = sortedPoints.filter(p => p < currentPercent);
+    return candidates.length > 0 ? Math.max(...candidates) : currentPercent;
+  }
+  
+  if (direction === 'down') {
+    // 現在値より大きい点のうち最小のもの
+    const candidates = sortedPoints.filter(p => p > currentPercent);
+    return candidates.length > 0 ? Math.min(...candidates) : currentPercent;
+  }
+  
+  return currentPercent;
+}
+
+// ドラッグ方向を判定する関数
+function getDragDirection(startY: number, endY: number): 'up' | 'down' | 'nearest' {
+  const deltaY = endY - startY;
+  const threshold = 5; // ピクセル単位の閾値
+  
+  if (Math.abs(deltaY) <= threshold) {
+    return 'nearest';
+  }
+  
+  return deltaY < 0 ? 'up' : 'down';
+}
 
 // ステート管理のためのreducer
 function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction): BottomSheetState {
@@ -34,15 +77,8 @@ function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction):
       };
 
     case 'END_DRAG': {
-      // 終了時に 0/50/100 にスナップ
-      let targetPercent: number;
-      if (action.percent <= 25) {
-        targetPercent = 0;
-      } else if (action.percent <= 75) {
-        targetPercent = 50;
-      } else {
-        targetPercent = 100;
-      }
+      const direction = getDragDirection(action.startY, action.endY);
+      const targetPercent = getNextSnapPoint(action.percent, action.snapPoints, direction);
 
       return {
         ...state,
@@ -60,21 +96,46 @@ function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction):
         isDragging: false,
       };
 
-    case 'EXPAND':
+    case 'EXPAND': {
+      const currentPercent = state.percent;
+      const targetPercent = getNextSnapPoint(currentPercent, action.snapPoints, 'up');
+      
       return {
         ...state,
-        percent: 0,
-        isExpanded: true,
+        percent: targetPercent,
+        isExpanded: targetPercent === 0,
         isDragging: false,
       };
+    }
 
-    case 'COLLAPSE':
+    case 'COLLAPSE': {
+      const currentPercent = state.percent;
+      const targetPercent = getNextSnapPoint(currentPercent, action.snapPoints, 'down');
+      
       return {
         ...state,
-        percent: 100,
-        isExpanded: false,
+        percent: targetPercent,
+        isExpanded: targetPercent === 0,
         isDragging: false,
       };
+    }
+
+    case 'TOGGLE': {
+      const currentPercent = state.percent;
+      const sortedPoints = [...action.snapPoints].sort((a, b) => a - b);
+      
+      // 現在が最小値なら次の段階へ、それ以外なら最小値へ
+      const targetPercent = currentPercent === sortedPoints[0] 
+        ? getNextSnapPoint(currentPercent, action.snapPoints, 'down')
+        : sortedPoints[0];
+      
+      return {
+        ...state,
+        percent: targetPercent,
+        isExpanded: targetPercent === 0,
+        isDragging: false,
+      };
+    }
 
     case 'CANCEL_DRAG':
       return {
@@ -121,6 +182,18 @@ interface DragEndEvent {
  * PointerEventとTouchEventの両対応でタッチ・マウス操作を統一的に処理
  */
 export function useBottomSheet(initialPercent: number = 50): UseBottomSheetReturn {
+  // PWA/ブラウザ判定をメモ化
+  const isStandalone = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           (window.navigator as any).standalone === true;
+  }, []);
+
+  // スナップポイントをメモ化
+  const snapPoints = useMemo(() => {
+    return isStandalone ? [20, 50, 80] : [50, 80];
+  }, [isStandalone]);
+
   const [state, dispatch] = useReducer(bottomSheetReducer, {
     percent: initialPercent,
     isDragging: false,
@@ -132,6 +205,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
 
   const handleRef = useRef<HTMLDivElement | null>(null);
   const startY = useRef<number>(0);
+  const endY = useRef<number>(0);
   const initialPercentRef = useRef<number>(0);
   const pointerId = useRef<number | null>(null);
   const draggingRef = useRef<boolean>(false);
@@ -150,6 +224,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     e.stopPropagation();
 
     startY.current = e.clientY;
+    endY.current = e.clientY;
     initialPercentRef.current = percentRef.current;
     viewportHeightRef.current = window.innerHeight;
     draggingRef.current = true;
@@ -167,6 +242,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     e.preventDefault();
     
     const currentY = e.clientY;
+    endY.current = currentY;
     const deltaY = currentY - startY.current;
     
     // 画面高さに対する変化量をパーセンテージで計算
@@ -192,8 +268,14 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     // ページスクロールを復元
     setGlobalScrollLock(false);
     
-    dispatch({ type: 'END_DRAG', percent: percentRef.current });
-  }, []);
+    dispatch({ 
+      type: 'END_DRAG', 
+      percent: percentRef.current,
+      snapPoints,
+      startY: startY.current,
+      endY: endY.current
+    });
+  }, [snapPoints]);
 
   // 共通のドラッグキャンセル処理
   const handleDragCancel = useCallback(() => {
@@ -280,13 +362,9 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     }
     
     tapTimeoutRef.current = setTimeout(() => {
-      if (state.isExpanded) {
-        dispatch({ type: 'COLLAPSE' });
-      } else {
-        dispatch({ type: 'EXPAND' });
-      }
+      dispatch({ type: 'TOGGLE', snapPoints });
     }, 300);
-  }, [state.isExpanded]);
+  }, [snapPoints]);
 
   // ハンドル要素にイベントリスナーをバインドする関数
   const bindHandleRef = useCallback((element: HTMLDivElement | null) => {
@@ -336,12 +414,12 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
 
   // 展開/縮小をトグルする関数
   const expand = useCallback(() => {
-    dispatch({ type: 'EXPAND' });
-  }, []);
+    dispatch({ type: 'EXPAND', snapPoints });
+  }, [snapPoints]);
 
   const collapse = useCallback(() => {
-    dispatch({ type: 'COLLAPSE' });
-  }, []);
+    dispatch({ type: 'COLLAPSE', snapPoints });
+  }, [snapPoints]);
 
   // クリーンアップ
   useEffect(() => {

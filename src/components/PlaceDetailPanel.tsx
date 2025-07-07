@@ -214,15 +214,15 @@ export default function PlaceDetailPanel() {
            onKeyDown={(e) => {
              if (e.code === 'Space' || e.key === ' ') {
                e.preventDefault();
-               bottomSheet.state.isExpanded ? bottomSheet.collapse() : bottomSheet.expand();
+               bottomSheet.handleToggle();
              }
              if (e.key === 'ArrowUp') {
                e.preventDefault();
-               bottomSheet.setPercent(Math.max(0, bottomSheet.state.percent - 50));
+               bottomSheet.expand();
              }
              if (e.key === 'ArrowDown') {
                e.preventDefault();
-               bottomSheet.setPercent(Math.min(100, bottomSheet.state.percent + 50));
+               bottomSheet.collapse();
              }
            }}
            className="flex justify-between items-center pt-2 pb-1 px-4 flex-shrink-0 
