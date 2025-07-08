@@ -2,7 +2,13 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+export default defineConfig(({ command, mode }) => {
+  // GitHub Pages用のベースパス設定
+  const isGitHubPages = mode === 'github-pages' || process.env.GITHUB_ACTIONS === 'true';
+  const base = isGitHubPages ? '/travel-planner-map/' : '/';
+  
+  return {
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -15,8 +21,8 @@ export default defineConfig({
         theme_color: '#1a73e8',
         background_color: '#ffffff',
         display: 'standalone',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -46,4 +52,5 @@ export default defineConfig({
       }
     }
   }
-}); 
+  };
+});
