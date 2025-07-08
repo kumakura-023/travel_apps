@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.3.13] - 2025-01-07
+
+### 🐛 バグ修正
+- **ブラウザ版55%状態オーバースクロール修正**: 55%（中間スナップ）状態での下方向オーバースクロール時にBottomSheetが確実に100%位置（閉じる）に移動するよう修正
+  - `contentRef`での検知問題を解決：55%状態では`overflow-hidden + touch-none`によりtouchmoveが発火しない問題を修正
+  - BottomSheetルート要素でのイベント検知に変更し、オーバースクロール動作を確実に捕捉
+  - PWA版（standalone）の既存動作（10% → 50% → 80%）には一切影響なし
+
+### 🔧 技術的改善
+- **usePullToRefreshPrevention強化**: フックを改修してより柔軟なオーバースクロール検知を実現
+  - 新パラメータ`targetElement?: HTMLElement | null`を追加し、外部から検知対象要素を指定可能に
+  - `scrollTop <= 1`判定を削除し、純粋にΔy（下方向10px以上）でオーバースクロール判定
+  - `contentRef`に依存しない汎用的なオーバースクロール検知ロジックを実装
+- **単一責任原則の強化**: BottomSheetルート要素の参照をコンポーネント側で管理し、フックは純粋なイベント処理に集約
+- **既存API保持**: `UseBottomSheetReturn`インターフェースは変更なし、後方互換性を完全保持
+
+### 🎯 動作確認
+- **ブラウザ版**: 20% → 下スワイプ → 55% → 下方向オーバースクロール → 100%で閉じる動作を確認
+- **PWA版**: 従来の10% → 50% → 80%スナップ動作の維持を確認
+- **型チェック・ビルド**: TypeScript・ESLintエラーゼロを維持
+
 ## [1.3.12] - 2025-01-07
 
 ### 🐛 バグ修正

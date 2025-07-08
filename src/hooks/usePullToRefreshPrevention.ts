@@ -9,15 +9,18 @@ export function usePullToRefreshPrevention(
   isMobile: boolean,
   isDragging: boolean = false,
   onOverscrollDown?: () => void,
+  targetElement?: HTMLElement | null,
 ) {
   const contentRef = useRef<HTMLDivElement>(null);
   const startY = useRef<number>(0);
   const isOverscrollCallbackTriggered = useRef<boolean>(false);
 
   useEffect(() => {
-    if (!isMobile || !isPanelActive || !contentRef.current) return;
+    if (!isMobile || !isPanelActive) return;
 
-    const content = contentRef.current;
+    // targetElementが指定された場合はそれを使用、そうでなければcontentRefを使用
+    const element = targetElement || contentRef.current;
+    if (!element) return;
 
     const handleTouchStart = (e: TouchEvent) => {
       startY.current = e.touches[0].clientY;
@@ -28,20 +31,17 @@ export function usePullToRefreshPrevention(
       // BottomSheet のドラッグ中はプルツーリフレッシュ制御をスキップ
       if (isDragging) return;
 
-      // 展開状態でスクロール位置が上端の場合、プルツーリフレッシュを防ぐ
-      if (content.scrollTop <= 1) {
-        const currentY = e.touches[0].clientY;
-        const deltaY = currentY - startY.current;
+      const currentY = e.touches[0].clientY;
+      const deltaY = currentY - startY.current;
+      
+      if (deltaY > 10) { // 下方向のスワイプ
+        // 確実にpull-to-refreshを抑制するため常にpreventDefault()を実行
+        e.preventDefault();
         
-        if (deltaY > 10) { // 下方向のスワイプ
-          // 確実にpull-to-refreshを抑制するため常にpreventDefault()を実行
-          e.preventDefault();
-          
-          // パネルのドラッグ状態を考慮して二重処理を防止
-          if (!isDragging && !isOverscrollCallbackTriggered.current) {
-            isOverscrollCallbackTriggered.current = true;
-            onOverscrollDown?.();
-          }
+        // パネルのドラッグ状態を考慮して二重処理を防止
+        if (!isDragging && !isOverscrollCallbackTriggered.current) {
+          isOverscrollCallbackTriggered.current = true;
+          onOverscrollDown?.();
         }
       }
     };
@@ -51,16 +51,16 @@ export function usePullToRefreshPrevention(
       isOverscrollCallbackTriggered.current = false;
     };
 
-    content.addEventListener('touchstart', handleTouchStart, { passive: true });
-    content.addEventListener('touchmove', handleTouchMove, { passive: false });
-    content.addEventListener('touchend', handleTouchEnd, { passive: true });
+    element.addEventListener('touchstart', handleTouchStart, { passive: true });
+    element.addEventListener('touchmove', handleTouchMove, { passive: false });
+    element.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
-      content.removeEventListener('touchstart', handleTouchStart);
-      content.removeEventListener('touchmove', handleTouchMove);
-      content.removeEventListener('touchend', handleTouchEnd);
+      element.removeEventListener('touchstart', handleTouchStart);
+      element.removeEventListener('touchmove', handleTouchMove);
+      element.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isMobile, isPanelActive, isDragging, onOverscrollDown]);
+  }, [isMobile, isPanelActive, isDragging, onOverscrollDown, targetElement]);
 
   return { contentRef };
 } 
