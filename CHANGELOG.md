@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.10] - 2025-01-07
+
+### 🔄 オーバースクロール挙動改善
+- **BottomSheetオーバースクロール対応**: 展開状態での下方向オーバースクロール時にpull-to-refreshの代わりにパネル縮小を実行
+  - PWA版・ブラウザ版ともに展開状態（最上位スナップポイント）での下方向オーバースクロールで50%まで縮小
+  - ブラウザ版での50%位置からの下方向オーバースクロールでパネルを完全に閉じる（100%）
+  - `usePullToRefreshPrevention`に`onOverscrollDown`コールバック機能を強化
+  - オーバースクロール検知時の`preventDefault()`実行を強化し、OS標準のpull-to-refreshを確実に抑制
+
+### 📱 ブラウザ版スナップポイント最適化
+- **スナップポイント調整**: ブラウザ版（display-mode: browser）のスナップポイントを`[10, 50]` → `[20, 55]`に変更
+  - より使いやすい位置での段階的操作を実現
+  - ブラウザ版の初期位置を55%に統一し、デザイン的にも最適化
+  - PWA版の`[10, 50, 80]`スナップポイントは既存のまま維持
+
+### 🧹 単一責任原則の強化
+- **ロジック集約**: スナップポイント計算ロジックを`useBottomSheet`に集約
+- **関心事の分離**: オーバースクロール検知とpull-to-refresh無効化を`usePullToRefreshPrevention`に集約
+- **UT拡充**: `getNextSnapPoint`関数の新しいスナップポイント配列での動作テストを追加
+- **コンポーネント最適化**: `PlaceDetailPanel`等でブラウザ版時の初期値を55%に統一
+
+### 🔧 技術的改善
+- **二重処理防止**: オーバースクロールコールバック実行時のパネルドラッグ状態考慮機能を追加
+- **イベント制御強化**: `touchmove`での`preventDefault()`呼び出し箇所を改善
+- **型安全性向上**: オーバースクロールコールバックの型定義を明確化
+
 ## [1.3.9] - 2025-01-07
 
 ### 🔧 UXバグ修正

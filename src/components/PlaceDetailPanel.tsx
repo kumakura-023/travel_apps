@@ -43,12 +43,43 @@ export default function PlaceDetailPanel() {
   // BottomSheet機能（モバイル版のみ）
   const bottomSheet = useBottomSheet(55); // 初期位置を55%に変更
   
+  // オーバースクロール時の動的処理
+  const handleOverscrollDown = useMemo(() => {
+    if (!isMobile) return undefined;
+    
+    return () => {
+      const currentPercent = bottomSheet.state.percent;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                           (window.navigator as any).standalone === true;
+      
+      if (isStandalone) {
+        // PWA版: 最上位から50%まで縮小
+        if (currentPercent <= 10) {
+          bottomSheet.setPercent(50);
+        } else {
+          bottomSheet.collapse();
+        }
+      } else {
+        // ブラウザ版: 現在位置に応じて動的に処理
+        if (currentPercent <= 20) {
+          // 最上位(20%)から55%まで縮小
+          bottomSheet.setPercent(55);
+        } else if (currentPercent >= 50 && currentPercent <= 60) {
+          // 50%付近から100%(閉じる)まで移動
+          bottomSheet.setPercent(100);
+        } else {
+          bottomSheet.collapse();
+        }
+      }
+    };
+  }, [bottomSheet, isMobile]);
+  
   // プルツーリフレッシュ防止（モバイル版・展開時のみ）
   const { contentRef } = usePullToRefreshPrevention(
     bottomSheet.state.percent <= 50,
     isMobile,
     bottomSheet.state.isDragging,
-    bottomSheet.collapse,
+    handleOverscrollDown,
   );
 
   if (!place) return null;

@@ -3,7 +3,7 @@ import { setGlobalScrollLock } from '../utils/scrollLock';
 
 // 新しい定数をexport
 export const DRAG_THRESHOLD_PX = 25;
-export const DEFAULT_SNAP_POINTS_BROWSER = [15, 50];
+export const DEFAULT_SNAP_POINTS_BROWSER = [20, 55];
 
 // BottomSheetの状態を管理する型
 export interface BottomSheetState {
@@ -64,6 +64,12 @@ function getDragDirection(startY: number, endY: number): 'up' | 'down' | 'neares
   
   return deltaY < 0 ? 'up' : 'down';
 }
+
+// テストケース（開発時のみ）:
+// snapPoints = [20, 55] の場合:
+// - getNextSnapPoint(30, [20, 55], 'up') => 20 (上方向への1段階移動)
+// - getNextSnapPoint(30, [20, 55], 'down') => 55 (下方向への1段階移動)
+// - getNextSnapPoint(37.5, [20, 55], 'nearest') => 20 or 55 (より近い方)
 
 // ステート管理のためのreducer
 function bottomSheetReducer(state: BottomSheetState, action: BottomSheetAction): BottomSheetState {

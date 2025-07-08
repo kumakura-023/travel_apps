@@ -12,6 +12,7 @@ export function usePullToRefreshPrevention(
 ) {
   const contentRef = useRef<HTMLDivElement>(null);
   const startY = useRef<number>(0);
+  const isOverscrollCallbackTriggered = useRef<boolean>(false);
 
   useEffect(() => {
     if (!isMobile || !isPanelActive || !contentRef.current) return;
@@ -20,6 +21,7 @@ export function usePullToRefreshPrevention(
 
     const handleTouchStart = (e: TouchEvent) => {
       startY.current = e.touches[0].clientY;
+      isOverscrollCallbackTriggered.current = false;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -32,14 +34,21 @@ export function usePullToRefreshPrevention(
         const deltaY = currentY - startY.current;
         
         if (deltaY > 10) { // 下方向のスワイプ
+          // 確実にpull-to-refreshを抑制するため常にpreventDefault()を実行
           e.preventDefault();
-          onOverscrollDown?.();
+          
+          // パネルのドラッグ状態を考慮して二重処理を防止
+          if (!isDragging && !isOverscrollCallbackTriggered.current) {
+            isOverscrollCallbackTriggered.current = true;
+            onOverscrollDown?.();
+          }
         }
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
       startY.current = 0;
+      isOverscrollCallbackTriggered.current = false;
     };
 
     content.addEventListener('touchstart', handleTouchStart, { passive: true });
