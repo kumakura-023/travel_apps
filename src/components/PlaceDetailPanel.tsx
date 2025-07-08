@@ -61,11 +61,11 @@ export default function PlaceDetailPanel() {
         }
       } else {
         // ブラウザ版: 現在位置に応じて動的に処理
-        if (currentPercent <= 20) {
+        if (currentPercent <= 25) {
           // 最上位(20%)から55%まで縮小
           bottomSheet.setPercent(55);
-        } else if (currentPercent >= 50 && currentPercent <= 60) {
-          // 50%付近から100%(閉じる)まで移動
+        } else if (currentPercent >= 50) {
+          // 55%位置（中間位置）から100%(閉じる)まで移動
           bottomSheet.setPercent(100);
         } else {
           bottomSheet.collapse();
@@ -76,7 +76,14 @@ export default function PlaceDetailPanel() {
   
   // プルツーリフレッシュ防止（モバイル版・展開時のみ）
   const { contentRef } = usePullToRefreshPrevention(
-    bottomSheet.state.percent <= 50,
+    (() => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                           (window.navigator as any).standalone === true;
+      // PWA版では50%以下、ブラウザ版では55%以下でオーバースクロール検知を有効化
+      return isStandalone 
+        ? bottomSheet.state.percent <= 50 
+        : bottomSheet.state.percent <= 55;
+    })(),
     isMobile,
     bottomSheet.state.isDragging,
     handleOverscrollDown,
