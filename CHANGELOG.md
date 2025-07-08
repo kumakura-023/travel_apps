@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.9] - 2025-01-07
+
+### 🔧 UXバグ修正
+- **BottomSheet敏感度調整**: ブラウザ版での50%スナップ状態からの軽い上スクロールによる10%への誤展開を防止
+  - `getDragDirection`の閾値を5px → 25pxに変更
+  - ブラウザ版のスナップポイントを`[10, 50]` → `[15, 50]`に変更
+  - 初期位置を50% → 55%に変更し、デザイン的にも最適化
+
+### 🎯 プルツーリフレッシュ改善
+- **オーバースクロール検知精度向上**: 一度スクロールした後でも確実にcollapse動作を実現
+  - `scrollTop`判定を`=== 0` → `<= 1`に緩和し、微小スクロールでも検知
+  - `touchend`で`startY`をリセットし、連続操作での誤動作を防止
+  - `isPanelActive`による制御を追加し、`percent <= 50`の条件で動作
+
+### 🧹 保守性向上
+- **新しい定数のexport**: `DRAG_THRESHOLD_PX`、`DEFAULT_SNAP_POINTS_BROWSER`を追加
+- **既存API維持**: 後方互換性を保持し、型チェックとESLintをパス
+- **日本語コメント維持**: 既存のコードスタイルを保持
+
 ## [1.3.8] - 2025-07-07
 
 ### ✨ スナップロジック変更

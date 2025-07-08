@@ -1,6 +1,10 @@
 import { useReducer, useRef, useCallback, useEffect, useMemo } from 'react';
 import { setGlobalScrollLock } from '../utils/scrollLock';
 
+// 新しい定数をexport
+export const DRAG_THRESHOLD_PX = 25;
+export const DEFAULT_SNAP_POINTS_BROWSER = [15, 50];
+
 // BottomSheetの状態を管理する型
 export interface BottomSheetState {
   percent: number; // 0=全展開, 50=中間, 100=折り畳み
@@ -52,7 +56,7 @@ function getNextSnapPoint(
 // ドラッグ方向を判定する関数
 function getDragDirection(startY: number, endY: number): 'up' | 'down' | 'nearest' {
   const deltaY = endY - startY;
-  const threshold = 5; // ピクセル単位の閾値
+  const threshold = DRAG_THRESHOLD_PX; // 新しい定数を使用
   
   if (Math.abs(deltaY) <= threshold) {
     return 'nearest';
@@ -193,11 +197,10 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
 
   // スナップポイントをメモ化
   const snapPoints = useMemo(() => {
-    const INITIAL_PERCENT = 50;
-    return isStandalone ? [10, 50, 80] : [10, 50];
+    return isStandalone ? [10, 50, 80] : DEFAULT_SNAP_POINTS_BROWSER;
   }, [isStandalone]);
 
-  const minSnap = (isStandalone ? [10,50,80] : [10,50])[0];
+  const minSnap = (isStandalone ? [10,50,80] : DEFAULT_SNAP_POINTS_BROWSER)[0];
 
   const [state, dispatch] = useReducer(bottomSheetReducer, {
     percent: initialPercent,

@@ -41,11 +41,11 @@ export default function PlaceDetailPanel() {
   const isMobile = !isDesktop && !isTablet;
 
   // BottomSheet機能（モバイル版のみ）
-  const bottomSheet = useBottomSheet(50); // 初期位置は中間（50%）
+  const bottomSheet = useBottomSheet(55); // 初期位置を55%に変更
   
   // プルツーリフレッシュ防止（モバイル版・展開時のみ）
   const { contentRef } = usePullToRefreshPrevention(
-    bottomSheet.state.isExpanded,
+    bottomSheet.state.percent <= 50,
     isMobile,
     bottomSheet.state.isDragging,
     bottomSheet.collapse,
