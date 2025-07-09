@@ -577,3 +577,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### その他
 
 - ESLint / TypeScript ビルドに通過するよう型定義を調整 
+
+## [1.3.20] - 2025-07-10
+
+### 🐛 バグ修正
+- **詳細パネル再表示不具合の完全修正**: マップをタップしてパネルを閉じたあとに POI をタップしてもパネルが表示されない問題を解決
+  - `hooks/useBottomSheet.ts` で `bottomSheetStore` の外部更新を購読し、`percent` が変更された際に内部状態を同期
+  - ドラッグ中は同期を無視し、同値時はスキップしてループを防止
+  - `tapTimeoutRef` の型を `number | NodeJS.Timeout` に変更し、TypeScript エラーを解消
+
+### 🎯 動作確認
+- 55%表示中にマップタップ → パネルが閉じる
+- 続けて POI タップ → パネルが 55% で確実に再表示
+- ドラッグ操作・スナップ挙動・Pull-to-Refresh 無効化に回帰なし
+- ESLint / TypeScript エラーゼロを維持 

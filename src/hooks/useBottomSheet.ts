@@ -226,7 +226,7 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
   const draggingRef = useRef<boolean>(false);
   const percentRef = useRef<number>(initialPercent);
   const viewportHeightRef = useRef<number>(0);
-  const tapTimeoutRef = useRef<number | null>(null);
+  const tapTimeoutRef = useRef<number | NodeJS.Timeout | null>(null);
 
   // state.percent が変化したら percentRef を更新
   useEffect(() => {
@@ -247,6 +247,19 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
       prevStateRef.current = currentState;
     }
   }, [state.percent, state.isDragging]);
+
+  // グローバルストアが外部から変更された際に internal state を同期
+  useEffect(() => {
+    const unsubscribe = useBottomSheetStore.subscribe((storeState) => {
+      // ドラッグ中は内部状態を優先
+      if (draggingRef.current) return;
+      // percent が変化している場合のみ同期（ループ防止）
+      if (storeState.percent !== percentRef.current) {
+        dispatch({ type: 'SET_PERCENT', percent: storeState.percent, snapPoints });
+      }
+    });
+    return unsubscribe;
+  }, [snapPoints]);
 
   // 共通のドラッグ開始処理
   const handleDragStart = useCallback((e: DragStartEvent) => {
