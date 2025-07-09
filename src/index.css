@@ -176,4 +176,11 @@ body {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Chrome, Safari, Opera */
   }
+}
+
+@layer utilities {
+  /* オーバースクロール制御ユーティリティ */
+  .overscroll-y-contain {
+    overscroll-behavior-y: contain;
+  }
 } 

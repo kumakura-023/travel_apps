@@ -281,7 +281,7 @@ export default function PlaceDetailPanel() {
          
          <div 
            ref={contentRef} 
-           className={`flex-1 ${bottomSheet.state.isExpanded ? "overflow-y-auto touch-pan-y" : "overflow-hidden"}`}
+           className={`flex-1 ${bottomSheet.state.isExpanded ? "overflow-y-auto overscroll-y-contain touch-pan-y" : "overflow-hidden"}`}
          >
            {children}
          </div>
@@ -291,7 +291,16 @@ export default function PlaceDetailPanel() {
 
   return (
     <>
-      {/* 背景スクリーンは削除 - web版と同じ動作にする */}
+      {/* モバイル版でBottomSheetが非閉状態の時に透明オーバーレイを表示 */}
+      {isMobile && bottomSheet.state.percent < 100 && (
+        <div
+          className="fixed inset-0 z-40 cursor-default"
+          onClick={() => {
+            bottomSheet.setPercent(100);
+            setPlace(null);
+          }}
+        />
+      )}
       <Container>
         <div className="relative">
           {photos.length > 0 && (
