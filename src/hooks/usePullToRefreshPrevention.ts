@@ -34,19 +34,17 @@ export function usePullToRefreshPrevention(
       const currentY = e.touches[0].clientY;
       const deltaY = currentY - startY.current;
       
-      if (deltaY > 10) { // 下方向のスワイプ
-        // 確実にpull-to-refreshを抑制するため常にpreventDefault()を実行
-        e.preventDefault();
-        
-        // スクロール上端に達している場合のみオーバースクロール処理を実行
-        if (element.scrollTop === 0) {
-          // パネルのドラッグ状態を考慮して二重処理を防止
-          if (!isDragging && !isOverscrollCallbackTriggered.current) {
-            isOverscrollCallbackTriggered.current = true;
-            onOverscrollDown?.();
-          }
+      const atTop = element.scrollTop === 0;
+      const isPullDown = deltaY > 10;
+      
+      if (atTop && isPullDown) {
+        e.preventDefault(); // P2R 完全阻止
+        if (!isOverscrollCallbackTriggered.current) {
+          isOverscrollCallbackTriggered.current = true;
+          onOverscrollDown?.(); // パネル55%へ
         }
       }
+      // ★ 最下端 overscroll は一切触らない
     };
 
     const handleTouchEnd = (e: TouchEvent) => {

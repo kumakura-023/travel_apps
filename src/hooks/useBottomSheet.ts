@@ -1,5 +1,6 @@
 import { useReducer, useRef, useCallback, useEffect, useMemo } from 'react';
 import { setGlobalScrollLock } from '../utils/scrollLock';
+import { useBottomSheetStore } from '../store/bottomSheetStore';
 
 // 新しい定数をexport
 export const DRAG_THRESHOLD_PX = 25;
@@ -231,6 +232,12 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
   useEffect(() => {
     percentRef.current = state.percent;
   }, [state.percent]);
+
+  // グローバルストアを同期
+  useEffect(() => {
+    const { setState } = useBottomSheetStore.getState();
+    setState(state.percent, state.isDragging);
+  }, [state.percent, state.isDragging]);
 
   // 共通のドラッグ開始処理
   const handleDragStart = useCallback((e: DragStartEvent) => {
