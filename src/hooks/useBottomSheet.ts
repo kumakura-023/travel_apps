@@ -203,10 +203,10 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
 
   // スナップポイントをメモ化
   const snapPoints = useMemo(() => {
-    return isStandalone ? [10, 50, 80] : DEFAULT_SNAP_POINTS_BROWSER;
+    return isStandalone ? [10, 55, 80] : DEFAULT_SNAP_POINTS_BROWSER;
   }, [isStandalone]);
 
-  const minSnap = (isStandalone ? [10,50,80] : DEFAULT_SNAP_POINTS_BROWSER)[0];
+  const minSnap = (isStandalone ? [10, 55, 80] : DEFAULT_SNAP_POINTS_BROWSER)[0];
 
   const [state, dispatch] = useReducer(bottomSheetReducer, {
     percent: initialPercent,

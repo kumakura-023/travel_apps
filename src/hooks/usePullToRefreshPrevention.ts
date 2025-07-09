@@ -38,10 +38,13 @@ export function usePullToRefreshPrevention(
         // 確実にpull-to-refreshを抑制するため常にpreventDefault()を実行
         e.preventDefault();
         
-        // パネルのドラッグ状態を考慮して二重処理を防止
-        if (!isDragging && !isOverscrollCallbackTriggered.current) {
-          isOverscrollCallbackTriggered.current = true;
-          onOverscrollDown?.();
+        // スクロール上端に達している場合のみオーバースクロール処理を実行
+        if (element.scrollTop === 0) {
+          // パネルのドラッグ状態を考慮して二重処理を防止
+          if (!isDragging && !isOverscrollCallbackTriggered.current) {
+            isOverscrollCallbackTriggered.current = true;
+            onOverscrollDown?.();
+          }
         }
       }
     };

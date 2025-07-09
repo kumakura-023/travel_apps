@@ -4,6 +4,8 @@ import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useSelectedPlaceStore } from '../store/placeStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
+import { useBottomSheet } from '../hooks/useBottomSheet';
+import useMediaQuery from '../hooks/useMediaQuery';
 import { Place } from '../types';
 import { classifyCategory } from '../utils/categoryClassifier';
 import { estimateCost } from '../utils/estimateCost';
@@ -24,8 +26,14 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
   
   // ストア依存をインターフェースで抽象化
   const { selectionMode, selectPointFromMap, isRouteSearchOpen } = useRouteSearchStore();
-  const { setPlace } = useSelectedPlaceStore();
+  const { setPlace, place } = useSelectedPlaceStore();
   const { addLabel } = useLabelsStore();
+  
+  // モバイル版BottomSheet制御用
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+  const isMobile = !isDesktop && !isTablet;
+  const bottomSheet = useBottomSheet(55);
 
   console.log('🔄 MapEventHandler render - selectionMode:', selectionMode);
   console.log('🗺️ Map instance state:', !!map, map);
@@ -77,6 +85,14 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
     if (!clicked.placeId) {
       console.log('❌ No placeId found - not a POI click');
       console.log('Regular map click - checking for route selection mode');
+      
+      // 55%状態でマップタップ時にパネルを閉じる処理（モバイルのみ）
+      if (isMobile && place && bottomSheet.state.percent === 55 && !bottomSheet.state.isDragging) {
+        console.log('📱 Mobile: 55% panel state detected - closing panel on map tap');
+        bottomSheet.setPercent(100);
+        setPlace(null);
+        return;
+      }
       
       // POIではないが、ルート選択モードの場合は座標を使用
       if (currentRouteState.selectionMode && e.latLng) {
@@ -172,6 +188,11 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
           console.log('🚀 Calling setPlace to open detail panel...');
           
           setPlace(placeForPanel);
+          
+          // モバイル版では常に55%位置で詳細パネルを表示
+          if (isMobile) {
+            bottomSheet.setPercent(55);
+          }
           
           if (detail.geometry?.location) {
             const currentZoom = map!.getZoom() ?? 14;
