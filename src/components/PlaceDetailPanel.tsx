@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { FiX, FiTrash2, FiBookmark, FiSearch, FiChevronLeft, FiChevronRight, FiCalendar, FiChevronUp, FiChevronDown } from 'react-icons/fi';
 import { MdDirections } from 'react-icons/md';
 import useMediaQuery from '../hooks/useMediaQuery';
@@ -17,6 +17,7 @@ import { getCategoryPath, getCategoryColor, getCategoryDisplayName } from '../ut
 import { estimateCost } from '../utils/estimateCost';
 import ImageCarouselModal from './ImageCarouselModal';
 import DaySelector from './DaySelector';
+import { useBottomSheetStore } from '../store/bottomSheetStore';
 
 export default function PlaceDetailPanel() {
   const { place, setPlace } = useSelectedPlaceStore();
@@ -86,6 +87,17 @@ export default function PlaceDetailPanel() {
     bottomSheet.state.isDragging,
     handleOverscrollDown,
   );
+
+  // アンマウント時にBottomSheetの状態を初期化
+  useEffect(() => {
+    return () => {
+      // モバイル版のみ、アンマウント時に BottomSheet を閉じる
+      if (isMobile) {
+        console.log('PlaceDetailPanel unmounted - resetting BottomSheet to closed state');
+        useBottomSheetStore.getState().setState(100, false);
+      }
+    };
+  }, [isMobile]);
 
   if (!place) return null;
 

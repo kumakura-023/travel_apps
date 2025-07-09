@@ -189,8 +189,9 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
           
           setPlace(placeForPanel);
           
-          // モバイル版では常に55%位置で詳細パネルを表示
+          // POI クリック時は常に55%位置で詳細パネルを表示（モバイル版のみ）
           if (isMobile) {
+            console.log('📱 Setting BottomSheet to 55% position for POI detail panel');
             useBottomSheetStore.getState().setState(55, false);
           }
           

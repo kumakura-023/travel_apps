@@ -6,6 +6,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.3.18] - 2025-07-09
+
+### 🐛 バグ修正
+- **POI パネルが開かない不具合の修正**: 地点詳細パネルの表示が不安定だった問題を解決
+  - `MapEventHandler.tsx`で POI クリック時に`useBottomSheetStore.getState().setState(55, false)`を確実に実行
+  - `PlaceDetailPanel.tsx`でアンマウント時に`useBottomSheetStore.getState().setState(100, false)`を実行し、状態を初期化
+  - `useBottomSheet.ts`で store との同期処理を最適化し、二重更新を防止
+
+### ✨ 新機能
+- **アイコンバー切替 UI の改良**: スマホ/タブレット版でのナビゲーション操作性を向上
+  - `TabNavigationToggle.tsx`を新規作成し、ArrowLeft/ArrowRight アイコンによる直感的な操作を実現
+  - `TabNavigation.tsx`を修正し、`translate-x-full`による滑らかなスライドイン/アウト効果を実装
+  - 検索バーに重ならない位置にトグルボタンを配置し、アイコンバーの表示/非表示を切替可能に
+
+### 🔧 技術的改善
+- **単一責任原則の強化**: コンポーネントの責任範囲を明確化し保守性を向上
+  - `TabToggleButton.tsx`を削除し、新しい`TabNavigationToggle`に統一
+  - `useBottomSheet.ts`でprevStateRefを使用した変更検知により、不要な store 更新を防止
+  - グローバルストアとローカルステートの同期ロジックを最適化
+
+### 🎯 動作確認
+- **スマホ/PWA版**: マップをタップしてパネルを閉じた後、別の POI をタップすると確実にパネルが表示される
+- **アイコンバー**: 検索バーと重ならない位置に矢印ボタンが配置され、タップでスライドイン/アウト
+- **デスクトップ版**: 従来の UI に影響なし、ESLint / TypeScript エラーゼロを維持
+
+この修正により、モバイル版での POI 選択とナビゲーション操作が大幅に改善され、より直感的な UI となりました。
+
+## [1.3.17] - 2025-07-09
+
+### 🐛 バグ修正
+- **パネル内コンテンツのオーバースクロール後に上方向スクロールが反応しない問題の修正**: `usePullToRefreshPrevention.ts`での`preventDefault()`の発火条件を修正し、最下端オーバースクロール時の慣性スクロールを抑制しないように変更。
+- **モバイル55%表示中にMAPをタップしてもパネルが閉じない問題の修正**: `MapEventHandler.tsx`で`useBottomSheet(55)`の呼び出しを削除し、`useBottomSheetStore()`を利用してグローバル状態を参照するように変更。
+
+### 🔧 技術的改善
+- **グローバルストアの導入**: `src/store/bottomSheetStore.ts`を新規作成し、`zustand`を使用して`percent`, `isDragging`, `setState`を持つストアを実装。複数のコンポーネント間でBottomSheetの状態を共有可能に。
+- **`useBottomSheet.ts`の修正**: グローバルストアを同期するための`useEffect`を追加し、状態変更時に`bottomSheetStore.setState(state.percent, state.isDragging)`を呼び出すように。
+- **`usePullToRefreshPrevention.ts`の改善**: `handleTouchMove`を上端のみで`preventDefault()`を実行するように修正し、最下端オーバースクロールには介入しないように。
+
+### 🎯 動作確認
+- **パネル全展開時、上端PullDownでパネル55%へ縮小**
+- **55%状態でMAP任意位置タップでパネルが閉じる**
+- **パネル内最下端オーバースクロール後、指を離してすぐ上スクロールが可能**
+- **Pull-to-Refreshは一度も発動しない**
+
+この修正により、モバイル版での地点詳細パネルの操作性が大幅に向上し、意図しないマップ操作が発生する問題が解消されました。
+
 ## [1.3.16] - 2025-07-02
 
 ### 🐛 バグ修正

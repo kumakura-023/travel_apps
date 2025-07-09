@@ -6,7 +6,7 @@ import SearchBar from './components/SearchBar';
 import PlaceDetailPanel from './components/PlaceDetailPanel';
 import MapTypeSwitcher from './components/MapTypeSwitcher';
 import TabNavigation, { TabKey } from './components/TabNavigation';
-import TabToggleButton from './components/TabToggleButton';
+
 import TravelTimeControls from './components/TravelTimeControls';
 import SelectionBanner from './components/SelectionBanner';
 import TestPlacesButton from './components/TestPlacesButton';
@@ -179,8 +179,7 @@ function App() {
         onLabelModeToggle={handleLabelModeToggle}
       />
 
-      {/* Tab Toggle Button for mobile/tablet */}
-      <TabToggleButton />
+
 
       {/* ルート検索画面またはリストタブでは検索バーを非表示 */}
       {!isRouteSearchOpen && activeTab !== 'list' && (

@@ -233,10 +233,19 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     percentRef.current = state.percent;
   }, [state.percent]);
 
-  // グローバルストアを同期
+  // グローバルストアを同期（二重更新を防ぐため、前回の値と比較）
+  const prevStateRef = useRef<{ percent: number; isDragging: boolean }>({ percent: initialPercent, isDragging: false });
   useEffect(() => {
-    const { setState } = useBottomSheetStore.getState();
-    setState(state.percent, state.isDragging);
+    const currentState = { percent: state.percent, isDragging: state.isDragging };
+    const prevState = prevStateRef.current;
+    
+    // percent または isDragging が変化した場合のみ store を更新
+    if (currentState.percent !== prevState.percent || currentState.isDragging !== prevState.isDragging) {
+      console.log('BottomSheet state changed - updating store:', currentState);
+      const { setState } = useBottomSheetStore.getState();
+      setState(currentState.percent, currentState.isDragging);
+      prevStateRef.current = currentState;
+    }
   }, [state.percent, state.isDragging]);
 
   // 共通のドラッグ開始処理

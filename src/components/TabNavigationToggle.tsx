@@ -1,8 +1,8 @@
-import { MdMoreVert, MdClose } from 'react-icons/md';
+import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 import { useUIStore } from '../store/uiStore';
 import useMediaQuery from '../hooks/useMediaQuery';
 
-export default function TabToggleButton() {
+export default function TabNavigationToggle() {
   const { isTabNavigationVisible, toggleTabNavigation } = useUIStore();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   
@@ -12,18 +12,19 @@ export default function TabToggleButton() {
   return (
     <button
       onClick={toggleTabNavigation}
-      className="fixed top-4 right-20 z-50 w-10 h-10 
-                 glass-effect-border rounded-full 
+      className="w-12 h-12 glass-effect-border rounded-full 
                  flex items-center justify-center
-                 transition-all duration-150 ease-ios-default
+                 transition-all duration-300 ease-ios-default
                  hover:scale-105 active:scale-95
-                 text-system-secondary-label hover:text-coral-500"
+                 text-system-secondary-label hover:text-coral-500
+                 shadow-elevation-1"
       title={isTabNavigationVisible ? 'ナビゲーションを非表示' : 'ナビゲーションを表示'}
     >
+      {/* 表示状態によってアイコンを切り替え */}
       {isTabNavigationVisible ? (
-        <MdClose size={20} />
+        <MdChevronRight size={24} className="transition-transform duration-300" />
       ) : (
-        <MdMoreVert size={20} />
+        <MdChevronLeft size={24} className="transition-transform duration-300" />
       )}
     </button>
   );

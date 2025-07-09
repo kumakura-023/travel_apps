@@ -2,6 +2,7 @@ import { MdMap, MdAccessTime, MdList, MdEditNote } from 'react-icons/md';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import useMediaQuery from '../hooks/useMediaQuery';
 import { useUIStore } from '../store/uiStore';
+import TabNavigationToggle from './TabNavigationToggle';
 
 export type TabKey = 'map' | 'travelTime' | 'list';
 
@@ -24,17 +25,12 @@ export default function TabNavigation({ active, onChange, labelMode = false, onL
   const isMobile = !isDesktop && !isTablet;
   const { isTabNavigationVisible } = useUIStore();
 
-  // スマホ・タブレット版で非表示の場合はrenderしない
-  if (!isDesktop && !isTabNavigationVisible) {
-    return null;
-  }
-
   return (
     <nav className={`fixed right-4 top-1/2 -translate-y-1/2 transform w-16 
                     glass-effect-border rounded-xl 
                     flex flex-col items-center py-3 z-40
-                    transition-all duration-150 ease-ios-default
-                    ${!isDesktop && !isTabNavigationVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                    transition-all duration-300 ease-ios-default
+                    ${!isDesktop && !isTabNavigationVisible ? 'translate-x-full opacity-0 pointer-events-none' : 'translate-x-0 opacity-100'}`}>
       {tabs.map((t) => (
         <button
           key={t.key}
@@ -79,6 +75,16 @@ export default function TabNavigation({ active, onChange, labelMode = false, onL
             {labelMode ? '配置中' : 'メモ'}
           </span>
         </button>
+      )}
+      
+      {/* TabNavigationToggle（スマホ・タブレットのみ） */}
+      {!isDesktop && (
+        <>
+          <div className="w-8 h-px bg-system-separator my-2" />
+          <div className="flex items-center justify-center w-full h-16 mx-1 my-1">
+            <TabNavigationToggle />
+          </div>
+        </>
       )}
     </nav>
   );
