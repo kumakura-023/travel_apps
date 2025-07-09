@@ -6,6 +6,7 @@ import SearchBar from './components/SearchBar';
 import PlaceDetailPanel from './components/PlaceDetailPanel';
 import MapTypeSwitcher from './components/MapTypeSwitcher';
 import TabNavigationWrapper from './components/TabNavigationWrapper';
+import { TabKey } from './components/TabNavigation';
 
 import TravelTimeControls from './components/TravelTimeControls';
 import SelectionBanner from './components/SelectionBanner';
@@ -172,7 +173,12 @@ function App() {
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>
       {/* Navigation */}
-      <TabNavigationWrapper />
+      <TabNavigationWrapper 
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        labelMode={labelMode}
+        onLabelModeToggle={handleLabelModeToggle}
+      />
 
 
 
