@@ -299,16 +299,7 @@ export default function PlaceDetailPanel() {
 
   return (
     <>
-      {/* モバイル版でBottomSheetが非閉状態の時に透明オーバーレイを表示 */}
-      {isMobile && bottomSheet.state.percent < 100 && (
-        <div
-          className="fixed inset-0 z-40 cursor-default"
-          onClick={() => {
-            bottomSheet.setPercent(100);
-            setPlace(null);
-          }}
-        />
-      )}
+      {/* オーバーレイを廃止し、マップへのタップを直接検知させる（MapEventHandlerで処理） */}
       <Container>
         <div className="relative">
           {photos.length > 0 && (

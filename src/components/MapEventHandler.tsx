@@ -28,13 +28,10 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
   const { selectionMode, selectPointFromMap, isRouteSearchOpen } = useRouteSearchStore();
   const { setPlace } = useSelectedPlaceStore();
   const { addLabel } = useLabelsStore();
-  const { place } = useSelectedPlaceStore.getState();
-  
   // モバイル版BottomSheet制御用
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
-  const { percent, isDragging } = useBottomSheetStore();
 
   console.log('🔄 MapEventHandler render - selectionMode:', selectionMode);
   console.log('🗺️ Map instance state:', !!map, map);
@@ -88,7 +85,9 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
       console.log('Regular map click - checking for route selection mode');
       
       // 55%状態でマップタップ時にパネルを閉じる処理（モバイルのみ）
-      if (isMobile && place && percent === 55 && !isDragging) {
+      const { place: currentPlace } = useSelectedPlaceStore.getState();
+      const { percent, isDragging } = useBottomSheetStore.getState();
+      if (isMobile && currentPlace && percent === 55 && !isDragging) {
         console.log('📱 Mobile: 55% panel state detected - closing panel on map tap');
         setPlace(null);
         useBottomSheetStore.getState().setState(100, false);

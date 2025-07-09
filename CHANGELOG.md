@@ -581,10 +581,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.20] - 2025-07-10
 
 ### 🐛 バグ修正
-- **詳細パネル再表示不具合の完全修正**: マップをタップしてパネルを閉じたあとに POI をタップしてもパネルが表示されない問題を解決
+- **詳細パネル再表示 & 連続 POI タップ改善**: マップをタップしてパネルを閉じたあとや、パネル表示中に別 POI をタップしても新しい地点のパネルが即座に開くように修正
   - `hooks/useBottomSheet.ts` で `bottomSheetStore` の外部更新を購読し、`percent` が変更された際に内部状態を同期
   - ドラッグ中は同期を無視し、同値時はスキップしてループを防止
   - `tapTimeoutRef` の型を `number | NodeJS.Timeout` に変更し、TypeScript エラーを解消
+  - `components/PlaceDetailPanel.tsx` の全画面オーバーレイを撤廃し、マップへの直接タップを可能に
+  - `components/MapEventHandler.tsx` で最新の Store 状態を都度取得し、POI 連続タップ時の判定を最適化
 
 ### 🎯 動作確認
 - 55%表示中にマップタップ → パネルが閉じる
