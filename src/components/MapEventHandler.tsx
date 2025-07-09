@@ -26,8 +26,9 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
   
   // ストア依存をインターフェースで抽象化
   const { selectionMode, selectPointFromMap, isRouteSearchOpen } = useRouteSearchStore();
-  const { setPlace, place } = useSelectedPlaceStore();
+  const { setPlace } = useSelectedPlaceStore();
   const { addLabel } = useLabelsStore();
+  const { place } = useSelectedPlaceStore.getState();
   
   // モバイル版BottomSheet制御用
   const isDesktop = useMediaQuery('(min-width: 1024px)');

@@ -19,11 +19,10 @@ const tabs: { key: TabKey; icon: React.ReactNode; label: string }[] = [
   { key: 'list', icon: <MdList size={24} />, label: 'リスト' },
 ];
 
-export default function TabNavigation({ active, onChange, labelMode = false, onLabelModeToggle }: Props) {
+const TabNavigation = ({ isTabNavigationVisible }: { isTabNavigationVisible: boolean }) => {
   const { isDesktop } = useDeviceDetect();
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
-  const { isTabNavigationVisible } = useUIStore();
 
   return (
     <nav className={`fixed right-4 top-1/2 -translate-y-1/2 transform w-16 
@@ -88,4 +87,6 @@ export default function TabNavigation({ active, onChange, labelMode = false, onL
       )}
     </nav>
   );
-} 
+};
+
+export default TabNavigation; 

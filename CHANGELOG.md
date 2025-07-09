@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.3.19] - 2025-07-10
+
+### 🐛 バグ修正
+- **パネル再表示バグ修正**: POIをタップした際にパネルが確実に開くように修正
+  - `MapEventHandler.tsx`で`useSelectedPlaceStore`の使用を更新し、`useBottomSheetStore`を追加
+  - `PlaceDetailPanel.tsx`でアンマウント時に`useBottomSheetStore.getState().setState(100,false)`を追加
+
+### ✨ 新機能
+- **アイコンバー切替 UX 改善**: 新しい`TabNavigationWrapper`コンポーネントを追加し、矢印ボタンでのバーの開閉を可能に
+  - `ArrowToggleButton.tsx`を新規作成し、`useUIStore`で状態を管理
+  - `TabNavigation.tsx`を修正し、`isTabNavigationVisible`プロップを受け取るように変更
+  - `TabToggleButton.tsx`を削除し、`TabNavigationWrapper`で制御
+
+### 🎯 動作確認
+- **モバイル版**: マップタップでパネルが閉じた後、POIをタップするとパネルが必ず開く
+- **アイコンバー**: 矢印ボタンが常時右端に表示され、バーの開閉が可能
+- **デスクトップ版**: UIに影響なし
+
+この修正により、モバイル版でのPOI選択とナビゲーション操作が大幅に改善され、より直感的なUIとなりました。
+
 ## [1.3.18] - 2025-07-09
 
 ### 🐛 バグ修正

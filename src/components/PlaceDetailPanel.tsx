@@ -91,13 +91,9 @@ export default function PlaceDetailPanel() {
   // アンマウント時にBottomSheetの状態を初期化
   useEffect(() => {
     return () => {
-      // モバイル版のみ、アンマウント時に BottomSheet を閉じる
-      if (isMobile) {
-        console.log('PlaceDetailPanel unmounted - resetting BottomSheet to closed state');
-        useBottomSheetStore.getState().setState(100, false);
-      }
+      useBottomSheetStore.getState().setState(100,false);
     };
-  }, [isMobile]);
+  }, []);
 
   if (!place) return null;
 
