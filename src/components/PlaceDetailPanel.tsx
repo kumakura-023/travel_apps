@@ -57,17 +57,13 @@ export default function PlaceDetailPanel() {
       if (isStandalone) {
         // PWA版: 最上位から55%まで縮小
         if (currentPercent <= 10) {
+          // 最上位(0〜10%)から55%へ縮小
           bottomSheet.setPercent(55);
-        } else {
-          bottomSheet.collapse();
         }
       } else {
-        // ブラウザ版: 最上位から55%まで縮小のみ
+        // ブラウザ版: 最上位(〜20%)から55%まで縮小のみ
         if (currentPercent <= 25) {
-          // 最上位(20%)から55%まで縮小
           bottomSheet.setPercent(55);
-        } else {
-          bottomSheet.collapse();
         }
       }
     };
