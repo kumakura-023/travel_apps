@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.24] - 2025-07-10
+
+### ✨ UX向上
+- **編集アイコンの位置・カラー統一**: 鉛筆アイコンをプラン名の左側に移動し、日程編集アイコンと同じカラー／ホバーアニメーションを適用
+  - `PlanNameDisplay.tsx` のアイコンを `w-4 h-4 text-coral-500 hover:scale-110 hover:text-coral-600` に統一
+
 ## [1.3.23] - 2025-07-10
 
 ### ✨ UX向上

@@ -68,20 +68,24 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
       >
         
         <div className="flex flex-col items-center space-y-1">
-          {/* プラン名 & 編集ボタン */}
+          {/* プラン名 & 編集アイコン */}
           <div className="flex items-center space-x-2">
+            {/* 編集アイコン（鉛筆） */}
+            <button
+              onClick={() => setNameModal(true)}
+              className="w-4 h-4 text-coral-500 flex-shrink-0
+                         hover:scale-110 hover:text-coral-600
+                         transition-all duration-150 ease-ios-default
+                         focus:outline-none focus:scale-110"
+              title="プラン名を編集"
+            >
+              <MdEdit size={16} />
+            </button>
+
+            {/* プラン名 */}
             <span className="text-[20px] leading-[24px] font-semibold tracking-[-0.408px] text-system-label">
               {plan.name}
             </span>
-            <button
-              onClick={() => setNameModal(true)}
-              className="p-1 text-system-tertiary-label hover:text-coral-500
-                         hover:bg-coral-500/10 rounded-full
-                         transition-all duration-150 focus:outline-none"
-              title="プラン名を編集"
-            >
-              <MdEdit size={18} />
-            </button>
           </div>
           
           {/* 日付情報 */}
