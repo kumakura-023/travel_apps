@@ -62,7 +62,7 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
                         ? 'top-4 left-1/2 -translate-x-1/2 max-w-[280px]'
                         : isTablet
                         ? 'top-4 right-4 max-w-[280px]'
-                        : 'top-20 left-1/2 -translate-x-1/2 w-[80%] max-w-[calc(100vw-3rem)]'
+                        : 'top-20 left-1/2 -translate-x-1/2 w-[60%] max-w-[calc(100vw-3rem)]'
                     }`}
       >
         
