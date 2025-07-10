@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `PlanNameDisplay.tsx` にモバイル用の `top-20 left-1/2 -translate-x-1/2 w-[80%]` などのクラスを追加し、レスポンシブレイアウトを調整
 
 ### 🔧 デザイン調整
+- **プランタイトルカードサイズ**: モバイル時にカード全体を `scale-[0.70]` で 30% 縮小し、視認性を維持しつつ余白を最適化
+  - `PlanNameDisplay.tsx` に `scale-[0.70] origin-top` を追加
 - **プランタイトルカード余白**: 横方向パディングを `px-6` → `px-4` へ縮小し、実際のカード幅を視覚的に約 60% に
   - `PlanNameDisplay.tsx` のクラスを更新
 
