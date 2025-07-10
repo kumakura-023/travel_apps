@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.23] - 2025-07-10
+
+### ✨ UX向上
+- **プランタイトル編集アイコン追加**: タイトル横に鉛筆アイコンを追加し、クリックで編集画面を表示するように変更
+  - `PlanNameDisplay.tsx` に `react-icons` の `MdEdit` を表示し、`setNameModal(true)` を実行
+
 ## [1.3.22] - 2025-07-10
 
 ### 🐛 バグ修正

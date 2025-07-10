@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MdEdit } from 'react-icons/md';
 import { usePlanStore } from '../store/planStore';
 import PlanNameEditModal from './PlanNameEditModal';
 import DateSelectionModal from './DateSelectionModal';
@@ -67,16 +68,21 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
       >
         
         <div className="flex flex-col items-center space-y-1">
-          {/* プラン名 - クリック可能 */}
-          <button
-            className="text-[20px] leading-[24px] font-semibold tracking-[-0.408px]
-                       hover:text-coral-500 transition-colors duration-150
-                       focus:outline-none focus:text-coral-500"
-            onClick={() => setNameModal(true)}
-            title="プラン名を編集"
-          >
-            {plan.name}
-          </button>
+          {/* プラン名 & 編集ボタン */}
+          <div className="flex items-center space-x-2">
+            <span className="text-[20px] leading-[24px] font-semibold tracking-[-0.408px] text-system-label">
+              {plan.name}
+            </span>
+            <button
+              onClick={() => setNameModal(true)}
+              className="p-1 text-system-tertiary-label hover:text-coral-500
+                         hover:bg-coral-500/10 rounded-full
+                         transition-all duration-150 focus:outline-none"
+              title="プラン名を編集"
+            >
+              <MdEdit size={18} />
+            </button>
+          </div>
           
           {/* 日付情報 */}
           {dateInfo && (
