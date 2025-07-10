@@ -292,8 +292,17 @@ export function useBottomSheet(initialPercent: number = 50): UseBottomSheetRetur
     const viewportHeight = viewportHeightRef.current;
     const deltaPercent = (deltaY / viewportHeight) * 100;
     
-    const newPercent = initialPercentRef.current + deltaPercent;
-    
+    let newPercent = initialPercentRef.current + deltaPercent;
+
+    // 55%より下への縮小を禁止（55%スナップ時に下方向へドラッグしても固定）
+    const MID_SNAP_PERCENT = 55;
+
+    // ・開始位置が55%以下の場合: ドラッグで55%を超えないよう制限
+    // ・開始位置がちょうど55%の場合: 下方向(正のdeltaPercent)は無視
+    if (initialPercentRef.current <= MID_SNAP_PERCENT && newPercent > MID_SNAP_PERCENT) {
+      newPercent = MID_SNAP_PERCENT;
+    }
+
     percentRef.current = newPercent;
     
     dispatch({ type: 'UPDATE_DRAG', percent: newPercent });

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 バグ修正
 - **55%スナップ時の縮小抑止**: 55%状態で下方向スクロールしてもパネルが縮小しないよう`PlaceDetailPanel.tsx`の`handleOverscrollDown`ロジックを修正
+  - **ドラッグ操作での縮小防止**: `useBottomSheet.ts`の`handleDragMove`で55%より下へ動かせないようパーセンテージをクランプ
 
 ## [1.3.19] - 2025-07-10
 
@@ -581,19 +582,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### その他
 
 - ESLint / TypeScript ビルドに通過するよう型定義を調整 
-
-## [1.3.20] - 2025-07-10
-
-### 🐛 バグ修正
-- **詳細パネル再表示 & 連続 POI タップ改善**: マップをタップしてパネルを閉じたあとや、パネル表示中に別 POI をタップしても新しい地点のパネルが即座に開くように修正
-  - `hooks/useBottomSheet.ts` で `bottomSheetStore` の外部更新を購読し、`percent` が変更された際に内部状態を同期
-  - ドラッグ中は同期を無視し、同値時はスキップしてループを防止
-  - `tapTimeoutRef` の型を `number | NodeJS.Timeout` に変更し、TypeScript エラーを解消
-  - `components/PlaceDetailPanel.tsx` の全画面オーバーレイを撤廃し、マップへの直接タップを可能に
-  - `components/MapEventHandler.tsx` で最新の Store 状態を都度取得し、POI 連続タップ時の判定を最適化
-
-### 🎯 動作確認
-- 55%表示中にマップタップ → パネルが閉じる
-- 続けて POI タップ → パネルが 55% で確実に再表示
-- ドラッグ操作・スナップ挙動・Pull-to-Refresh 無効化に回帰なし
-- ESLint / TypeScript エラーゼロを維持 
