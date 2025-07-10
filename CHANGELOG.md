@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **プランタイトル UI 重なり修正**: モバイルのプランタイトル／日付カードが検索バーに隠れる問題を解消。サイズを80%に縮小し検索バー直下の画面中央に配置
   - `PlanNameDisplay.tsx` にモバイル用の `top-20 left-1/2 -translate-x-1/2 w-[80%]` などのクラスを追加し、レスポンシブレイアウトを調整
 
+### 🔧 デザイン調整
+- **プランタイトルカード余白**: 横方向パディングを `px-6` → `px-4` へ縮小し、実際のカード幅を視覚的に約 60% に
+  - `PlanNameDisplay.tsx` のクラスを更新
+
 ## [1.3.21] - 2025-07-10
 
 ### 🐛 バグ修正
@@ -553,7 +557,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.18] - 2025-07-04
 
-### �� バグ修正
+### 🐛 バグ修正
 - **モバイル版詳細パネル**: ハンドルバー外に指が出た瞬間ドラッグが途切れる問題を修正
   - `touchmove` / `touchend` を `document` キャプチャフェーズに移動し全イベントを捕捉
   - 上下どちらのドラッグでも連続的にパーセンテージが変化するよう改善 
