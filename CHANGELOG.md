@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.21] - 2025-07-10
+
+### 🐛 バグ修正
+- **ブラウザ下部アイコンバー重なり修正**: ブラウザ版でパネル内コンテンツを最下端までスクロールした際、下部アイコンバーと重なって画像などが見切れる問題を解消
+  - `PlaceDetailPanel.tsx` のモバイル BottomSheet コンテンツ領域に `pb-20` を付与し、スクロール下限にゆとりを追加
+
 ## [1.3.20] - 2025-07-10
 
 ### 🐛 バグ修正
@@ -541,7 +547,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.18] - 2025-07-04
 
-### 🐛 バグ修正
+### �� バグ修正
 - **モバイル版詳細パネル**: ハンドルバー外に指が出た瞬間ドラッグが途切れる問題を修正
   - `touchmove` / `touchend` を `document` キャプチャフェーズに移動し全イベントを捕捉
   - 上下どちらのドラッグでも連続的にパーセンテージが変化するよう改善 

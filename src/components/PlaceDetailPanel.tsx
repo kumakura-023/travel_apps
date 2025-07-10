@@ -238,6 +238,10 @@ export default function PlaceDetailPanel() {
       );
     }
     // mobile - Google Maps風BottomSheet
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                         (window.navigator as any).standalone === true;
+    // ブラウザ版（非PWA）の場合のみ、下端に余白を設けてアイコンバーとの重なりを回避
+    const contentPaddingClass = isStandalone ? '' : 'pb-20';
     return (
       <div 
         ref={bottomSheetRootRef}
@@ -285,7 +289,7 @@ export default function PlaceDetailPanel() {
          
          <div 
            ref={contentRef} 
-           className={`flex-1 ${bottomSheet.state.isExpanded ? "overflow-y-auto overscroll-y-contain touch-pan-y" : "overflow-hidden"}`}
+           className={`flex-1 ${bottomSheet.state.isExpanded ? "overflow-y-auto overscroll-y-contain touch-pan-y" : "overflow-hidden"} ${contentPaddingClass}`}
          >
            {children}
          </div>
