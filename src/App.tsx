@@ -26,7 +26,11 @@ import { usePlacesStore } from './store/placesStore';
 import { useLabelsStore } from './store/labelsStore';
 import PlanNameDisplay from './components/PlanNameDisplay';
 import { usePlanStore } from './store/planStore';
-import { getActivePlan, createEmptyPlan, setActivePlan } from './services/storageService';
+import { getActivePlan, createEmptyPlan, setActivePlan, loadActivePlanHybrid } from './services/storageService';
+import { useAuth } from './hooks/useAuth';
+import AuthButton from './components/AuthButton';
+import SyncStatusIndicator from './components/SyncStatusIndicator';
+import { TravelPlan } from './types';
 
 // LoadScript用のライブラリを定数として定義
 const LIBRARIES: ('places')[] = ['places'];
@@ -151,24 +155,58 @@ function App() {
     }
   }, [activeTab]);
 
-  // URL共有からの読み込み
-  React.useEffect(() => {
-    const plan = loadPlanFromUrl();
-    if (plan) {
-      usePlacesStore.setState({ places: plan.places });
-      useLabelsStore.setState({ labels: plan.labels });
-      usePlanStore.getState().setPlan(plan);
-      return;
-    }
+  const { user } = useAuth();
+  const planId = usePlanStore((s) => s.plan?.id);
 
-    // URL にプランが無い場合はローカルストレージから取得、なければ新規生成
-    const current = usePlanStore.getState().plan;
-    if (!current) {
-      const stored = getActivePlan() || createEmptyPlan();
-      usePlanStore.getState().setPlan(stored);
-      setActivePlan(stored.id);
-    }
-  }, []);
+  // URL共有からの読み込み & プランロード
+  React.useEffect(() => {
+    (async () => {
+      const planFromUrl = loadPlanFromUrl();
+      if (planFromUrl) {
+        usePlacesStore.setState({ places: planFromUrl.places });
+        useLabelsStore.setState({ labels: planFromUrl.labels });
+        usePlanStore.getState().setPlan(planFromUrl);
+        return;
+      }
+
+      const current = usePlanStore.getState().plan;
+      if (current) return;
+
+      // cloud or local load
+      let loaded: TravelPlan | null = null;
+      if (navigator.onLine && user) {
+        loaded = await loadActivePlanHybrid({ mode: 'cloud', uid: user.uid });
+      }
+      if (!loaded) {
+        loaded = getActivePlan() || createEmptyPlan();
+      }
+
+      if (loaded) {
+        usePlanStore.getState().setPlan(loaded);
+        setActivePlan(loaded.id);
+      }
+    })();
+  }, [user]);
+
+  // リアルタイムリスナー
+  React.useEffect(() => {
+    if (!user) return;
+    const plan = usePlanStore.getState().plan;
+    if (!plan) return;
+
+    let unsub: () => void;
+
+    (async () => {
+      const { listenPlan } = await import('./services/planCloudService');
+      unsub = listenPlan(user.uid, plan.id, (updated) => {
+        usePlanStore.getState().setPlan(updated);
+      });
+    })();
+
+    return () => {
+      if (unsub) unsub();
+    };
+  }, [user, planId]);
 
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>
@@ -233,6 +271,14 @@ function App() {
         isOpen={showKeyboardShortcuts} 
         onClose={() => setShowKeyboardShortcuts(false)} 
       />
+
+      {/* クラウド同期インジケータ */}
+      <SyncStatusIndicator />
+
+      {/* ログインボタン */}
+      <div className="fixed top-3 left-3 z-50">
+        <AuthButton />
+      </div>
     </LoadScript>
   );
 }

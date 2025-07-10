@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-07-10
+
+### ✨ 新機能
+- **クラウド同期 & マルチデバイス編集**: Firebase Authentication + Cloud Firestore 連携を実装し、同一アカウント間でリアルタイムにプランを共有・編集可能に。
+  - `firebase` / `zustand-middleware` を追加、`.env` に Firebase キーを設定
+  - `useAuth` フックで Google Sign-In／Sign-Out を提供
+  - `planCloudService.ts` で Firestore CRUD & `onSnapshot` 監視を実装
+  - `useAutoSave` を拡張し “クラウド優先 / オフライン対応” のハイブリッド保存
+  - `AuthButton` と `SyncStatusIndicator` で UI にログイン＆同期状態を表示
+
+### 🔧 技術的改善
+- `enableIndexedDbPersistence` で Firestore オフラインキャッシュを有効化
+- `savePlanHybrid` / `loadActivePlanHybrid` を追加しストレージ層を抽象化
+- `App.tsx` で起動時ロード & リアルタイムリスナーを統合
+
+### 🛠 移行手順
+1. Firebase コンソールで Web アプリ登録し、Config キーを `.env` へ設定
+2. Firestore セキュリティルールを uid ベースで制限
+3. デプロイ環境(Vercelなど)に同じ環境変数を登録
+
 ## [1.3.24] - 2025-07-10
 
 ### ✨ UX向上

@@ -131,4 +131,33 @@ export function setActivePlan(id: string | null) {
   } else {
     localStorage.removeItem(ACTIVE_PLAN_KEY);
   }
+}
+
+/**
+ * Cloud / Local を切り替えてプランを保存
+ */
+export async function savePlanHybrid(
+  plan: TravelPlan,
+  options: { mode: 'cloud' | 'local'; uid?: string }
+) {
+  if (options.mode === 'cloud') {
+    if (!options.uid) throw new Error('uid is required for cloud save');
+    const { savePlanCloud } = await import('./planCloudService');
+    return savePlanCloud(options.uid, plan);
+  }
+  return savePlan(plan);
+}
+
+/**
+ * Cloud / Local からアクティブプランを取得
+ */
+export async function loadActivePlanHybrid(
+  options: { mode: 'cloud' | 'local'; uid?: string }
+): Promise<TravelPlan | null> {
+  if (options.mode === 'cloud') {
+    if (!options.uid) throw new Error('uid is required for cloud load');
+    const { loadActivePlan } = await import('./planCloudService');
+    return loadActivePlan(options.uid);
+  }
+  return getActivePlan();
 } 

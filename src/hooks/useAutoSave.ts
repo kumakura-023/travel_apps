@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { TravelPlan } from '../types';
-import { savePlan } from '../services/storageService';
+import { savePlanHybrid } from '../services/storageService';
+import { useAuthStore } from './useAuth';
 
 /**
  * TravelPlanの変更を監視して3秒後に自動保存するカスタムフック
@@ -9,6 +10,8 @@ import { savePlan } from '../services/storageService';
 export function useAutoSave(plan: TravelPlan | null) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSynced, setIsSynced] = useState(false);
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
     if (!plan) return;
@@ -17,9 +20,20 @@ export function useAutoSave(plan: TravelPlan | null) {
       clearTimeout(timerRef.current);
     }
     timerRef.current = setTimeout(() => {
-      setIsSaving(true);
-      savePlan(plan);
-      setIsSaving(false);
+      (async () => {
+        setIsSaving(true);
+        try {
+          if (navigator.onLine && user) {
+            await savePlanHybrid(plan, { mode: 'cloud', uid: user.uid });
+            setIsSynced(true);
+          } else {
+            await savePlanHybrid(plan, { mode: 'local' });
+            setIsSynced(false);
+          }
+        } finally {
+          setIsSaving(false);
+        }
+      })();
     }, 3000);
 
     return () => {
@@ -31,5 +45,6 @@ export function useAutoSave(plan: TravelPlan | null) {
 
   return {
     isSaving,
+    isSynced,
   };
 } 
