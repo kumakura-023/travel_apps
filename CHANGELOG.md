@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.22] - 2025-07-10
+
+### 🐛 バグ修正
+- **プランタイトル UI 重なり修正**: モバイルのプランタイトル／日付カードが検索バーに隠れる問題を解消。サイズを80%に縮小し検索バー直下の画面中央に配置
+  - `PlanNameDisplay.tsx` にモバイル用の `top-20 left-1/2 -translate-x-1/2 w-[80%]` などのクラスを追加し、レスポンシブレイアウトを調整
+
 ## [1.3.21] - 2025-07-10
 
 ### 🐛 バグ修正
