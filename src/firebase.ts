@@ -22,3 +22,5 @@ if (typeof window !== 'undefined') {
     // すでに有効化済み、または複数タブ競合などのケースは無視
   });
 } 
+
+console.log('Firebase Config 👉', firebaseConfig);
