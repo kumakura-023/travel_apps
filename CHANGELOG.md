@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.4] - 2025-07-11
+
+### 🐛 バグ修正
+- **候補地が保持されない問題を再修正**: Google アカウントでログインした状態で候補地を追加してもページリロードで消える不具合を解消。
+  - `useAutoSave` を改良し、クラウド保存時でも必ずローカルストレージへバックアップを保存。
+  - クラウド保存失敗時はローカル保存へフォールバックし、データ損失を防止。
+
+### 🔧 技術的改善
+- `useAutoSave.ts` の保存フローを Cloud + Local の二重保存に変更し、同期失敗時の耐障害性を向上。
+
 ## [1.4.3] - 2025-07-11
 
 ### 🐛 バグ修正

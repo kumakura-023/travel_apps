@@ -182,6 +182,9 @@ function App() {
 
       if (loaded) {
         usePlanStore.getState().setPlan(loaded);
+        // 追加: ストアへ地点とラベルを同期
+        usePlacesStore.setState({ places: loaded.places });
+        useLabelsStore.setState({ labels: loaded.labels });
         setActivePlan(loaded.id);
       }
     })();
@@ -199,6 +202,9 @@ function App() {
       const { listenPlan } = await import('./services/planCloudService');
       unsub = listenPlan(user.uid, plan.id, (updated) => {
         usePlanStore.getState().setPlan(updated);
+        // 追加: 地点とラベルをストアに反映
+        usePlacesStore.setState({ places: updated.places });
+        useLabelsStore.setState({ labels: updated.labels });
       });
     })();
 

@@ -23,10 +23,19 @@ export function useAutoSave(plan: TravelPlan | null) {
       (async () => {
         setIsSaving(true);
         try {
+          // オンラインかつログイン済みなら Cloud + Local の二重保存
           if (navigator.onLine && user) {
-            await savePlanHybrid(plan, { mode: 'cloud', uid: user.uid });
-            setIsSynced(true);
+            try {
+              await savePlanHybrid(plan, { mode: 'cloud', uid: user.uid });
+              setIsSynced(true);
+            } catch (err) {
+              console.warn('Cloud save failed, falling back to local save', err);
+              setIsSynced(false);
+            }
+            // Cloud 成功/失敗に関わらずローカルにも保存しておく
+            await savePlanHybrid(plan, { mode: 'local' });
           } else {
+            // オフライン、または未ログイン時はローカル保存のみ
             await savePlanHybrid(plan, { mode: 'local' });
             setIsSynced(false);
           }
