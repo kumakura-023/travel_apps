@@ -154,11 +154,14 @@ function App() {
     }
   }, [activeTab]);
 
-  const { user } = useAuth();
+  // 認証状態と初期化完了フラグを取得
+  const { user, isInitializing } = useAuth();
   const planId = usePlanStore((s) => s.plan?.id);
 
   // URL共有からの読み込み & プランロード
+  // 認証初期化が完了してからプランをロード
   React.useEffect(() => {
+    if (isInitializing) return; // 認証判定待ち
     (async () => {
       const planFromUrl = loadPlanFromUrl();
       if (planFromUrl) {
@@ -188,10 +191,12 @@ function App() {
         setActivePlan(loaded.id);
       }
     })();
-  }, [user]);
+  }, [user, isInitializing]);
 
   // リアルタイムリスナー
+  // 認証初期化が完了してからリアルタイムリスナーを登録
   React.useEffect(() => {
+    if (isInitializing) return;
     if (!user) return;
     const plan = usePlanStore.getState().plan;
     if (!plan) return;
@@ -211,7 +216,7 @@ function App() {
     return () => {
       if (unsub) unsub();
     };
-  }, [user, planId]);
+  }, [user, planId, isInitializing]);
 
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>
