@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2025-07-10
+
+### 🐛 バグ修正
+- **ログインボタン表示位置**: ハンバーガーメニューと重なって見えなかった問題を修正。デスクトップでは右上、モバイルでは左上に表示するように
+
 ## [1.4.0] - 2025-07-10
 
 ### ✨ 新機能

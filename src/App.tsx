@@ -275,8 +275,10 @@ function App() {
       {/* クラウド同期インジケータ */}
       <SyncStatusIndicator />
 
-      {/* ログインボタン */}
-      <div className="fixed top-3 left-3 z-50">
+      {/* ログインボタン（デスクトップは右上、モバイルは左上） */}
+      <div
+        className={`fixed top-3 z-50 ${isDesktop ? 'right-3' : 'left-3'}`}
+      >
         <AuthButton />
       </div>
     </LoadScript>
