@@ -4,7 +4,6 @@ import { useCallback, useRef, useState, useEffect } from 'react';
 import Map from './components/Map';
 import SearchBar from './components/SearchBar';
 import PlaceDetailPanel from './components/PlaceDetailPanel';
-import MapTypeSwitcher from './components/MapTypeSwitcher';
 import TabNavigationWrapper from './components/TabNavigationWrapper';
 import { TabKey } from './components/TabNavigation';
 
@@ -230,7 +229,6 @@ function App() {
         />
       )}
       <PlaceDetailPanel />
-      {activeTab !== 'list' && <MapTypeSwitcher />}
       
       {/* 地点選択中のバナー */}
       <SelectionBanner />

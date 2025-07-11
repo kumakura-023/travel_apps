@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuthStore } from '../hooks/useAuth';
-import { FaSignInAlt, FaSignOutAlt } from 'react-icons/fa';
+import { FaUserCircle } from 'react-icons/fa';
 
 const AuthButton: React.FC = () => {
   const user = useAuthStore((s) => s.user);
@@ -18,10 +18,18 @@ const AuthButton: React.FC = () => {
   return (
     <button
       onClick={handleClick}
-      className="flex items-center gap-1 text-sm text-system-secondary-label hover:text-coral-500 transition-colors"
+      aria-label={user ? 'ログアウト' : 'ログイン'}
+      className="flex items-center justify-center text-system-secondary-label hover:text-coral-500 transition-colors"
     >
-      {user ? <FaSignOutAlt /> : <FaSignInAlt />}
-      <span>{user ? 'ログアウト' : 'ログイン'}</span>
+      {user && user.photoURL ? (
+        <img
+          src={user.photoURL}
+          alt="ユーザーアイコン"
+          className="w-8 h-8 rounded-full"
+        />
+      ) : (
+        <FaUserCircle className="w-8 h-8" />
+      )}
     </button>
   );
 };
