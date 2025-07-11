@@ -13,6 +13,29 @@ export function useAutoSave(plan: TravelPlan | null) {
   const [isSynced, setIsSynced] = useState(false);
   const user = useAuthStore((s) => s.user);
 
+  // beforeunload / pagehide でフラッシュ保存（同期処理のみ実行可能）
+  useEffect(() => {
+    const handleUnload = () => {
+      if (!plan) return;
+      // タイマーが残っている場合はクリア
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      try {
+        // localStorage は同期的に書き込まれるため確実に保存可能
+        savePlanHybrid(plan, { mode: 'local' });
+      } catch (_) {
+        /* ignore */
+      }
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('pagehide', handleUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('pagehide', handleUnload);
+    };
+  }, [plan]);
+
   useEffect(() => {
     if (!plan) return;
     // 変更が検知されたらタイマーをリセット

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🔧 技術的改善
 - `useAutoSave.ts` の保存フローを Cloud + Local の二重保存に変更し、同期失敗時の耐障害性を向上。
+- ブラウザ終了 (`beforeunload` / `pagehide`) 時にローカルへ即時フラッシュ保存する処理を追加し、3秒タイマー前にページを離れてもデータが失われないように改善。
 
 ## [1.4.3] - 2025-07-11
 
