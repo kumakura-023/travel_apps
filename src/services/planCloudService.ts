@@ -14,10 +14,14 @@ function planDocRef(uid: string, planId: string) {
   return doc(db, 'users', uid, 'plans', planId);
 }
 
+// 追加: ユーザードキュメント参照ヘルパ
+function userDocRef(uid: string) {
+  return doc(db, 'users', uid);
+}
+
 export async function loadActivePlan(uid: string): Promise<TravelPlan | null> {
-  // activePlan ドキュメントに planId が格納されている前提
-  const activeRef = doc(db, 'users', uid, 'activePlan');
-  const activeSnap = await getDoc(activeRef);
+  // users/{uid} ドキュメントに activePlanId フィールドが格納されている前提
+  const activeSnap = await getDoc(userDocRef(uid));
   if (!activeSnap.exists()) return null;
   const { activePlanId } = activeSnap.data() as { activePlanId: string };
   if (!activePlanId) return null;
@@ -31,11 +35,11 @@ export async function loadActivePlan(uid: string): Promise<TravelPlan | null> {
 export async function savePlanCloud(uid: string, plan: TravelPlan) {
   const payload = serializePlan({ ...plan, updatedAt: new Date() });
 
-  // activePlan ドキュメントを更新
-  await setDoc(doc(db, 'users', uid, 'activePlan'), {
+  // users/{uid} ドキュメントを upsert して activePlanId を保存
+  await setDoc(userDocRef(uid), {
     activePlanId: plan.id,
     updatedAt: serverTimestamp(),
-  });
+  }, { merge: true });
 
   // plan ドキュメントを upsert
   await setDoc(planDocRef(uid, plan.id), {
