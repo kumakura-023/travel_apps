@@ -1,11 +1,26 @@
 import React from 'react';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { usePlanStore } from '../store/planStore';
+import { usePlacesStore } from '../store/placesStore';
+import { useLabelsStore } from '../store/labelsStore';
 import { FaCloudUploadAlt, FaCloud, FaExclamationTriangle } from 'react-icons/fa';
 
 const SyncStatusIndicator: React.FC = () => {
   const plan = usePlanStore((s) => s.plan);
-  const { isSaving, isSynced } = useAutoSave(plan);
+  const places = usePlacesStore((s) => s.places);
+  const labels = useLabelsStore((s) => s.labels);
+
+  const mergedPlan = React.useMemo(() => {
+    if (!plan) return null;
+    return {
+      ...plan,
+      places,
+      labels,
+      totalCost: places.reduce((sum, p) => sum + (p.estimatedCost || 0), 0),
+    };
+  }, [plan, places, labels]);
+
+  const { isSaving, isSynced } = useAutoSave(mergedPlan);
 
   const isOffline = !navigator.onLine;
 
