@@ -19,8 +19,7 @@
     "uuid": "^11.1.0",
     "workbox-window": "^7.0.0",
     "zustand": "^4.5.2",
-    "firebase": "^10.8.1",
-    "zustand-middleware": "^4.5.2"
+    "firebase": "^10.8.1"
   },
   "devDependencies": {
     "@types/google.maps": "^3.55.0",
