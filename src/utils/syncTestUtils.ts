@@ -141,6 +141,12 @@ export class SyncTestUtils {
       console.log('✅ 基本的な競合解決テスト成功');
     } else {
       console.error('❌ 基本的な競合解決テスト失敗');
+      console.error('期待値:', { expectedPlaceCount, expectedLabelCount, expectedTotalCost });
+      console.error('実際値:', { 
+        actualPlaceCount: resolvedPlan.places.length, 
+        actualLabelCount: resolvedPlan.labels.length, 
+        actualTotalCost: resolvedPlan.totalCost 
+      });
     }
   }
 
@@ -235,6 +241,12 @@ export class SyncTestUtils {
       console.log('✅ 同時編集シミュレーションテスト成功');
     } else {
       console.error('❌ 同時編集シミュレーションテスト失敗');
+      console.error('期待値:', { expectedPlaceCount, expectedLabelCount, expectedTotalCost });
+      console.error('実際値:', { 
+        actualPlaceCount: resolvedPlan.places.length, 
+        actualLabelCount: resolvedPlan.labels.length, 
+        actualTotalCost: resolvedPlan.totalCost 
+      });
     }
   }
 

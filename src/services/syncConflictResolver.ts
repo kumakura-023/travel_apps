@@ -98,7 +98,8 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
         localLabels: localPlan.labels.length,
         remoteLabels: remotePlan.labels.length,
         localTimestamp: localTimestamp.toISOString(),
-        remoteTimestamp: remoteTimestamp.toISOString()
+        remoteTimestamp: remoteTimestamp.toISOString(),
+        timestampDiff: Math.abs(localTimestamp.getTime() - remoteTimestamp.getTime())
       });
     }
 
@@ -135,6 +136,11 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
         changes: {
           placesAdded: resolvedPlaces.length - Math.max(localPlan.places.length, remotePlan.places.length),
           labelsAdded: resolvedLabels.length - Math.max(localPlan.labels.length, remotePlan.labels.length)
+        },
+        timestampComparison: {
+          localNewer: this.isNewer(localTimestamp, remoteTimestamp),
+          sameTimestamp: localTimestamp.getTime() === remoteTimestamp.getTime(),
+          timeDiff: Math.abs(localTimestamp.getTime() - remoteTimestamp.getTime())
         }
       });
     }
@@ -144,7 +150,7 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
 
   /**
    * 削除されたアイテムの情報を取得
-   * ローカルとリモートの差分から削除されたアイテムを特定
+   * 明示的に削除フラグがある場合のみ削除として扱う
    */
   getDeletedItems(localPlan: TravelPlan, remotePlan: TravelPlan): {
     deletedPlaces: DeletedItem[];
@@ -153,70 +159,9 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
     const deletedPlaces: DeletedItem[] = [];
     const deletedLabels: DeletedItem[] = [];
 
-    // 地点の削除を検出
-    const localPlaceIds = new Set(localPlan.places.map(p => p.id));
-    const remotePlaceIds = new Set(remotePlan.places.map(p => p.id));
-
-    // リモートにあってローカルにない地点は削除された可能性
-    remotePlaceIds.forEach(id => {
-      if (!localPlaceIds.has(id)) {
-        const remotePlace = remotePlan.places.find(p => p.id === id);
-        if (remotePlace) {
-          deletedPlaces.push({
-            id,
-            deletedAt: remotePlace.updatedAt,
-            type: 'place'
-          });
-        }
-      }
-    });
-
-    // ローカルにあってリモートにない地点は削除された可能性
-    localPlaceIds.forEach(id => {
-      if (!remotePlaceIds.has(id)) {
-        const localPlace = localPlan.places.find(p => p.id === id);
-        if (localPlace) {
-          deletedPlaces.push({
-            id,
-            deletedAt: localPlace.updatedAt,
-            type: 'place'
-          });
-        }
-      }
-    });
-
-    // ラベルの削除を検出
-    const localLabelIds = new Set(localPlan.labels.map(l => l.id));
-    const remoteLabelIds = new Set(remotePlan.labels.map(l => l.id));
-
-    // リモートにあってローカルにないラベルは削除された可能性
-    remoteLabelIds.forEach(id => {
-      if (!localLabelIds.has(id)) {
-        const remoteLabel = remotePlan.labels.find(l => l.id === id);
-        if (remoteLabel) {
-          deletedLabels.push({
-            id,
-            deletedAt: remoteLabel.updatedAt,
-            type: 'label'
-          });
-        }
-      }
-    });
-
-    // ローカルにあってリモートにないラベルは削除された可能性
-    localLabelIds.forEach(id => {
-      if (!remoteLabelIds.has(id)) {
-        const localLabel = localPlan.labels.find(l => l.id === id);
-        if (localLabel) {
-          deletedLabels.push({
-            id,
-            deletedAt: localLabel.updatedAt,
-            type: 'label'
-          });
-        }
-      }
-    });
-
+    // 現在の実装では削除フラグがないため、削除されたアイテムは空配列を返す
+    // 将来的に削除フラグが追加された場合は、ここで削除されたアイテムを検出する
+    
     return { deletedPlaces, deletedLabels };
   }
 
@@ -242,33 +187,21 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
 
   /**
    * 地点レベルの競合解決
-   * IDベースでマージし、新しい方を採用（削除情報を考慮）
+   * IDベースでマージし、新しい方を採用
    */
   resolvePlacesConflict(localPlaces: Place[], remotePlaces: Place[], deletedPlaces: DeletedItem[] = []): Place[] {
     const placeMap = new Map<string, Place>();
     let conflicts = 0;
     let additions = 0;
-    let deletions = 0;
+    let sameTimestampConflicts = 0;
     
-    // 削除された地点のIDセットを作成
-    const deletedPlaceIds = new Set(deletedPlaces.map(d => d.id));
-    
-    // リモート地点を基準にマップを構築（削除された地点は除外）
+    // リモート地点を基準にマップを構築
     remotePlaces.forEach(place => {
-      if (!deletedPlaceIds.has(place.id)) {
-        placeMap.set(place.id, place);
-      } else {
-        deletions++;
-      }
+      placeMap.set(place.id, place);
     });
     
-    // ローカル地点で競合解決（削除された地点は除外）
+    // ローカル地点で競合解決
     localPlaces.forEach(localPlace => {
-      if (deletedPlaceIds.has(localPlace.id)) {
-        deletions++;
-        return;
-      }
-
       const remotePlace = placeMap.get(localPlace.id);
       if (!remotePlace) {
         // リモートに存在しない場合はローカルを追加
@@ -276,13 +209,24 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
         additions++;
       } else {
         // 競合がある場合は新しい方を採用
-        const resolvedPlace = this.isNewer(localPlace.updatedAt, remotePlace.updatedAt)
-          ? localPlace
-          : remotePlace;
-        placeMap.set(localPlace.id, resolvedPlace);
-        if (resolvedPlace !== remotePlace) {
+        const localTime = localPlace.updatedAt.getTime();
+        const remoteTime = remotePlace.updatedAt.getTime();
+        const timeDiff = Math.abs(localTime - remoteTime);
+        
+        let resolvedPlace: Place;
+        if (timeDiff < 1000) { // 1秒以内の差は同じとみなす
+          // タイムスタンプが同じ場合はリモートを優先
+          resolvedPlace = remotePlace;
+          sameTimestampConflicts++;
+        } else {
+          // タイムスタンプが異なる場合は新しい方を採用
+          resolvedPlace = this.isNewer(localPlace.updatedAt, remotePlace.updatedAt)
+            ? localPlace
+            : remotePlace;
           conflicts++;
         }
+        
+        placeMap.set(localPlace.id, resolvedPlace);
       }
     });
     
@@ -296,7 +240,12 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
         resolvedCount: result.length,
         conflicts,
         additions,
-        deletions
+        sameTimestampConflicts,
+        uniqueIds: {
+          local: localPlaces.map(p => p.id),
+          remote: remotePlaces.map(p => p.id),
+          resolved: result.map(p => p.id)
+        }
       });
     }
     
@@ -305,35 +254,23 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
 
   /**
    * ラベルレベルの競合解決
-   * IDベースでマージし、新しい方を採用（削除情報を考慮）
+   * IDベースでマージし、新しい方を採用
    */
   resolveLabelsConflict(localLabels: MapLabel[], remoteLabels: MapLabel[], deletedLabels: DeletedItem[] = []): MapLabel[] {
     const labelMap = new Map<string, MapLabel>();
     let conflicts = 0;
     let additions = 0;
-    let deletions = 0;
+    let sameTimestampConflicts = 0;
     
-    // 削除されたラベルのIDセットを作成
-    const deletedLabelIds = new Set(deletedLabels.map(d => d.id));
-    
-    // リモートラベルを基準にマップを構築（削除されたラベルは除外）
+    // リモートラベルを基準にマップを構築
     remoteLabels.forEach(label => {
-      if (!deletedLabelIds.has(label.id)) {
-        // 既存データの互換性確保
-        const normalizedLabel = this.normalizeLabel(label);
-        labelMap.set(normalizedLabel.id, normalizedLabel);
-      } else {
-        deletions++;
-      }
+      // 既存データの互換性確保
+      const normalizedLabel = this.normalizeLabel(label);
+      labelMap.set(normalizedLabel.id, normalizedLabel);
     });
     
-    // ローカルラベルで競合解決（削除されたラベルは除外）
+    // ローカルラベルで競合解決
     localLabels.forEach(localLabel => {
-      if (deletedLabelIds.has(localLabel.id)) {
-        deletions++;
-        return;
-      }
-
       // 既存データの互換性確保
       const normalizedLocalLabel = this.normalizeLabel(localLabel);
       const remoteLabel = labelMap.get(normalizedLocalLabel.id);
@@ -344,13 +281,24 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
         additions++;
       } else {
         // 更新時刻で比較し、新しい方を採用
-        const resolvedLabel = this.isNewer(normalizedLocalLabel.updatedAt, remoteLabel.updatedAt)
-          ? normalizedLocalLabel
-          : remoteLabel;
-        labelMap.set(normalizedLocalLabel.id, resolvedLabel);
-        if (resolvedLabel !== remoteLabel) {
+        const localTime = normalizedLocalLabel.updatedAt.getTime();
+        const remoteTime = remoteLabel.updatedAt.getTime();
+        const timeDiff = Math.abs(localTime - remoteTime);
+        
+        let resolvedLabel: MapLabel;
+        if (timeDiff < 1000) { // 1秒以内の差は同じとみなす
+          // タイムスタンプが同じ場合はリモートを優先
+          resolvedLabel = remoteLabel;
+          sameTimestampConflicts++;
+        } else {
+          // タイムスタンプが異なる場合は新しい方を採用
+          resolvedLabel = this.isNewer(normalizedLocalLabel.updatedAt, remoteLabel.updatedAt)
+            ? normalizedLocalLabel
+            : remoteLabel;
           conflicts++;
         }
+        
+        labelMap.set(normalizedLocalLabel.id, resolvedLabel);
       }
     });
     
@@ -364,7 +312,12 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
         resolvedCount: result.length,
         conflicts,
         additions,
-        deletions
+        sameTimestampConflicts,
+        uniqueIds: {
+          local: localLabels.map(l => l.id),
+          remote: remoteLabels.map(l => l.id),
+          resolved: result.map(l => l.id)
+        }
       });
     }
     

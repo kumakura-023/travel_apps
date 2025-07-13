@@ -281,10 +281,13 @@ function App() {
         const remoteTimestamp = updated.updatedAt.getTime();
         const cloudSaveTimestamp = lastCloudSaveTimestamp || 0;
         const timeDiff = Math.abs(remoteTimestamp - cloudSaveTimestamp);
-        const isSelfUpdate = timeDiff < 2000; // 2秒以内を自己更新として判定
+        const isSelfUpdate = timeDiff < 3000; // 3秒以内を自己更新として判定（緩和）
 
-        // 同じタイムスタンプの更新は無視
-        if (remoteTimestamp === lastProcessedTimestamp) {
+        // 同じタイムスタンプの更新は無視（ただし、初回は処理する）
+        if (remoteTimestamp === lastProcessedTimestamp && lastProcessedTimestamp !== 0) {
+          if (import.meta.env.DEV) {
+            console.log('🔄 同じタイムスタンプのため無視:', remoteTimestamp);
+          }
           return;
         }
 
@@ -366,9 +369,14 @@ function App() {
               });
               
               // 解決されたプランをストアに反映
-              usePlanStore.getState().setPlan(resolvedPlan);
-              usePlacesStore.setState({ places: resolvedPlan.places });
-              useLabelsStore.setState({ labels: resolvedPlan.labels });
+              // 競合解決後のタイムスタンプを更新
+              const finalPlan = {
+                ...resolvedPlan,
+                updatedAt: new Date() // 競合解決時刻で更新
+              };
+              usePlanStore.getState().setPlan(finalPlan);
+              usePlacesStore.setState({ places: finalPlan.places });
+              useLabelsStore.setState({ labels: finalPlan.labels });
             } else {
               // ローカルプランがない場合はリモートを採用
               usePlanStore.getState().setPlan(updated);
