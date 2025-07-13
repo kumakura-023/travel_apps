@@ -172,7 +172,57 @@ function App() {
 
   // 自動保存フックを使用
   const plan = usePlanStore((s) => s.plan);
-  const { setIsRemoteUpdateInProgress } = useAutoSave(plan, updateLastSavedTimestamp);
+  const { setIsRemoteUpdateInProgress, saveImmediately } = useAutoSave(plan, updateLastSavedTimestamp);
+
+  // 候補地追加時の即座同期を設定
+  React.useEffect(() => {
+    const { setOnPlaceAdded } = usePlacesStore.getState();
+    
+    setOnPlaceAdded((newPlace) => {
+      if (import.meta.env.DEV) {
+        console.log('🚀 候補地追加検知、即座同期開始:', newPlace.name);
+      }
+      
+      // 即座にローカル保存を実行
+      if (plan) {
+        saveImmediately(plan);
+      }
+      
+      // デバッグログを記録
+      syncDebugUtils.log('save', {
+        type: 'immediate_sync',
+        reason: 'place_added',
+        placeName: newPlace.name,
+        placeId: newPlace.id,
+        timestamp: Date.now()
+      });
+    });
+  }, [plan, saveImmediately]);
+
+  // ラベル追加時の即座同期を設定
+  React.useEffect(() => {
+    const { setOnLabelAdded } = useLabelsStore.getState();
+    
+    setOnLabelAdded((newLabel) => {
+      if (import.meta.env.DEV) {
+        console.log('🚀 ラベル追加検知、即座同期開始:', newLabel.text);
+      }
+      
+      // 即座にローカル保存を実行
+      if (plan) {
+        saveImmediately(plan);
+      }
+      
+      // デバッグログを記録
+      syncDebugUtils.log('save', {
+        type: 'immediate_sync',
+        reason: 'label_added',
+        labelText: newLabel.text,
+        labelId: newLabel.id,
+        timestamp: Date.now()
+      });
+    });
+  }, [plan, saveImmediately]);
 
   // URL共有からの読み込み & プランロード
   // 認証初期化が完了してからプランをロード

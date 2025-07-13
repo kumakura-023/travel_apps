@@ -12,10 +12,15 @@ interface LabelsState {
   ) => MapLabel;
   updateLabel: (id: string, update: Partial<MapLabel>) => void;
   deleteLabel: (id: string) => void;
+  // 即座同期用のコールバック
+  onLabelAdded?: (label: MapLabel) => void;
+  setOnLabelAdded: (callback: (label: MapLabel) => void) => void;
 }
 
 export const useLabelsStore = create<LabelsState>((set) => ({
   labels: [],
+  onLabelAdded: undefined,
+  setOnLabelAdded: (callback) => set({ onLabelAdded: callback }),
   addLabel: (text, position, fontSize = 14) => {
     const now = new Date();
     const newLabel: MapLabel = {
@@ -30,7 +35,18 @@ export const useLabelsStore = create<LabelsState>((set) => ({
       createdAt: now,
       updatedAt: now,
     };
-    set((s) => ({ labels: [...s.labels, newLabel] }));
+    
+    set((s) => {
+      const newState = { labels: [...s.labels, newLabel] };
+      
+      // 即座同期コールバックを実行
+      if (s.onLabelAdded) {
+        s.onLabelAdded(newLabel);
+      }
+      
+      return newState;
+    });
+    
     return newLabel;
   },
   updateLabel: (id, update) =>

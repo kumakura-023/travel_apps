@@ -8,27 +8,40 @@ interface PlacesState {
   addPlace: (partial: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updatePlace: (id: string, update: Partial<Place>) => void;
   deletePlace: (id: string) => void;
+  // 即座同期用のコールバック
+  onPlaceAdded?: (place: Place) => void;
+  setOnPlaceAdded: (callback: (place: Place) => void) => void;
 }
 
 export const usePlacesStore = create<PlacesState>((set, get) => ({
   places: [],
+  onPlaceAdded: undefined,
+  setOnPlaceAdded: (callback) => set({ onPlaceAdded: callback }),
   addPlace: (partial) =>
-    set((state) => ({
-      places: [
-        ...state.places,
-        {
-          ...partial,
-          labelHidden: true,
-          labelPosition: {
-            lat: partial.coordinates.lat,
-            lng: partial.coordinates.lng,
-          },
-          id: uuidv4(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as Place,
-      ],
-    })),
+    set((state) => {
+      const newPlace = {
+        ...partial,
+        labelHidden: true,
+        labelPosition: {
+          lat: partial.coordinates.lat,
+          lng: partial.coordinates.lng,
+        },
+        id: uuidv4(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as Place;
+
+      const newState = {
+        places: [...state.places, newPlace],
+      };
+
+      // 即座同期コールバックを実行
+      if (state.onPlaceAdded) {
+        state.onPlaceAdded(newPlace);
+      }
+
+      return newState;
+    }),
   updatePlace: (id, update) =>
     set((state) => ({
       places: state.places.map((p) => (p.id === id ? { ...p, ...update, updatedAt: new Date() } : p)),

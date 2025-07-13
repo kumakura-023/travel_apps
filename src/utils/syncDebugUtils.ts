@@ -42,6 +42,8 @@ export class SyncDebugUtils {
     totalConflicts: number;
     totalIgnores: number;
     totalDeletes: number;
+    immediateSyncs: number;
+    batchSyncs: number;
     lastSaveTime?: number;
     lastReceiveTime?: number;
     averageTimeBetweenSaves: number;
@@ -54,6 +56,10 @@ export class SyncDebugUtils {
     const conflicts = this.debugLogs.filter(log => log.type === 'conflict');
     const ignores = this.debugLogs.filter(log => log.type === 'ignore');
     const deletes = this.debugLogs.filter(log => log.type === 'delete');
+
+    // 即座同期とバッチ同期を分類
+    const immediateSyncs = saves.filter(log => log.data.type === 'immediate_sync').length;
+    const batchSyncs = saves.filter(log => log.data.type === 'batch_sync').length;
 
     const lastSaveTime = saves.length > 0 ? saves[saves.length - 1].timestamp : undefined;
     const lastReceiveTime = receives.length > 0 ? receives[receives.length - 1].timestamp : undefined;
@@ -92,6 +98,8 @@ export class SyncDebugUtils {
       totalConflicts: conflicts.length,
       totalIgnores: ignores.length,
       totalDeletes: deletes.length,
+      immediateSyncs,
+      batchSyncs,
       lastSaveTime,
       lastReceiveTime,
       averageTimeBetweenSaves,
