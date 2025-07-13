@@ -29,6 +29,7 @@ import { getActivePlan, createEmptyPlan, setActivePlan, loadActivePlanHybrid } f
 import { useAuth } from './hooks/useAuth';
 import AuthButton from './components/AuthButton';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
+import SyncTestButton from './components/SyncTestButton';
 import { TravelPlan } from './types';
 
 // LoadScript用のライブラリを定数として定義
@@ -205,11 +206,31 @@ function App() {
 
     (async () => {
       const { listenPlan } = await import('./services/planCloudService');
+      const { createSyncConflictResolver } = await import('./services/syncConflictResolver');
+      
+      const conflictResolver = createSyncConflictResolver();
+      
       unsub = listenPlan(user.uid, plan.id, (updated) => {
-        usePlanStore.getState().setPlan(updated);
-        // 追加: 地点とラベルをストアに反映
-        usePlacesStore.setState({ places: updated.places });
-        useLabelsStore.setState({ labels: updated.labels });
+        // 競合解決を実行
+        const currentPlan = usePlanStore.getState().plan;
+        if (currentPlan) {
+          const resolvedPlan = conflictResolver.resolveConflict(
+            currentPlan,
+            updated,
+            currentPlan.updatedAt,
+            updated.updatedAt
+          );
+          
+          // 解決されたプランをストアに反映
+          usePlanStore.getState().setPlan(resolvedPlan);
+          usePlacesStore.setState({ places: resolvedPlan.places });
+          useLabelsStore.setState({ labels: resolvedPlan.labels });
+        } else {
+          // ローカルプランがない場合はリモートを採用
+          usePlanStore.getState().setPlan(updated);
+          usePlacesStore.setState({ places: updated.places });
+          useLabelsStore.setState({ labels: updated.labels });
+        }
       });
     })();
 
@@ -255,6 +276,9 @@ function App() {
       
       {/* テスト用候補地追加ボタン（開発時のみ表示） */}
       {import.meta.env.DEV && <TestPlacesButton />}
+      
+      {/* 同期競合解決機能テストボタン（開発時のみ表示） */}
+      <SyncTestButton />
       
       {/* ルート検索パネル */}
       <RouteSearchPanel 

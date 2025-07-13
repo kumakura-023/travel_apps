@@ -45,6 +45,7 @@ export async function savePlanCloud(uid: string, plan: TravelPlan) {
   await setDoc(planDocRef(uid, plan.id), {
     payload,
     updatedAt: serverTimestamp(),
+    lastSavedAt: new Date().toISOString(), // クライアントタイムスタンプ
   });
 }
 

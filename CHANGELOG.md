@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.6] - 2025-07-11
+
+### ✨ 新機能
+- **同期競合解決機能の実装**: 複数デバイスでの同時編集時の競合を適切に解決する機能を実装
+  - `SyncConflictResolver` インターフェースと `DefaultSyncConflictResolver` クラスを新規作成
+  - プランレベルとアイテムレベル（地点・ラベル）の両方で競合解決を実装
+  - タイムスタンプベースの新旧判定ロジックを追加
+  - 既存データとの互換性を確保（MapLabelにタイムスタンプ追加）
+
+### 🔧 技術的改善
+- **単一責任原則の徹底**: 競合解決ロジックを独立したモジュールとして分離
+- **インターフェース依存の実現**: 具体的な実装ではなく抽象的なインターフェースに依存
+- **リアルタイム同期の改良**: App.tsxで競合解決機能を統合し、より精密な同期制御を実現
+- **自動保存の強化**: useAutoSaveにリモート更新中の保存一時停止機能を追加
+- **テスト機能の追加**: 同期競合解決機能のテスト用ユーティリティとテストボタンを実装
+
+### 🧪 テスト機能
+- `SyncTestUtils` クラスで基本的な競合解決テストと同時編集シミュレーションテストを実装
+- 開発環境でのみ表示されるテストボタンで簡単にテスト実行可能
+
 ## [1.4.5] - 2025-07-11
 
 ### �� バグ修正

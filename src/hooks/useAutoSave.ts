@@ -11,6 +11,7 @@ export function useAutoSave(plan: TravelPlan | null) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSynced, setIsSynced] = useState(false);
+  const [isRemoteUpdateInProgress, setIsRemoteUpdateInProgress] = useState(false);
   const user = useAuthStore((s) => s.user);
 
   // beforeunload / pagehide でフラッシュ保存（同期処理のみ実行可能）
@@ -38,6 +39,12 @@ export function useAutoSave(plan: TravelPlan | null) {
 
   useEffect(() => {
     if (!plan) return;
+    
+    // リモート更新中は自動保存を一時停止
+    if (isRemoteUpdateInProgress) {
+      return;
+    }
+    
     // 変更が検知されたらタイマーをリセット
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -73,10 +80,12 @@ export function useAutoSave(plan: TravelPlan | null) {
         clearTimeout(timerRef.current);
       }
     };
-  }, [plan]);
+  }, [plan, isRemoteUpdateInProgress]);
 
   return {
     isSaving,
     isSynced,
+    isRemoteUpdateInProgress,
+    setIsRemoteUpdateInProgress,
   };
 } 

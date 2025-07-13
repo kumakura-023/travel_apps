@@ -16,6 +16,7 @@ interface LabelsState {
 export const useLabelsStore = create<LabelsState>((set) => ({
   labels: [],
   addLabel: (text, position, fontSize = 14) => {
+    const now = new Date();
     const newLabel: MapLabel = {
       id: uuidv4(),
       text,
@@ -25,11 +26,15 @@ export const useLabelsStore = create<LabelsState>((set) => ({
       color: '#202124',
       width: 120,
       height: 32,
+      createdAt: now,
+      updatedAt: now,
     };
     set((s) => ({ labels: [...s.labels, newLabel] }));
     return newLabel;
   },
   updateLabel: (id, update) =>
-    set((s) => ({ labels: s.labels.map((l) => (l.id === id ? { ...l, ...update } : l)) })),
+    set((s) => ({ 
+      labels: s.labels.map((l) => (l.id === id ? { ...l, ...update, updatedAt: new Date() } : l)) 
+    })),
   deleteLabel: (id) => set((s) => ({ labels: s.labels.filter((l) => l.id !== id) })),
 })); 
