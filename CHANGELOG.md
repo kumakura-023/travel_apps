@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.7] - 2025-07-11
+
+### 🐛 バグ修正
+- **Firebase同期の無限ループ修正**: 自己更新による無限ループを防止し、複数デバイスでの同時編集が正常に動作するように修正
+  - 保存タイムスタンプによる自己更新検知機能を追加
+  - 1秒以内の更新は自己更新として無視するロジックを実装
+  - コンソールログで同期状況を詳細に確認可能
+
+### 🔧 技術的改善
+- **同期制御の精密化**: useAutoSaveとリアルタイムリスナー間のタイムスタンプ連携を強化
+- **デバッグ機能の追加**: 同期処理の各段階でコンソールログを出力し、問題の特定を容易に
+- **自己更新検知**: 保存完了時にタイムスタンプを記録し、Firebaseからの更新が自己更新かどうかを判定
+
+### 📊 同期ログ
+- 自動保存開始・完了時のログ出力
+- Firebase更新受信時の詳細情報表示
+- 競合解決結果の統計情報表示
+
 ## [1.4.6] - 2025-07-11
 
 ### ✨ 新機能

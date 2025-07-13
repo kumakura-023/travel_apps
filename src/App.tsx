@@ -27,6 +27,7 @@ import PlanNameDisplay from './components/PlanNameDisplay';
 import { usePlanStore } from './store/planStore';
 import { getActivePlan, createEmptyPlan, setActivePlan, loadActivePlanHybrid } from './services/storageService';
 import { useAuth } from './hooks/useAuth';
+import { useAutoSave } from './hooks/useAutoSave';
 import AuthButton from './components/AuthButton';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 import SyncTestButton from './components/SyncTestButton';
@@ -158,6 +159,14 @@ function App() {
   // 認証状態と初期化完了フラグを取得
   const { user, isInitializing } = useAuth();
   const planId = usePlanStore((s) => s.plan?.id);
+  
+  // 自動保存のタイムスタンプを管理
+  const lastSavedTimestampRef = useRef<number>(0);
+  
+  // 保存タイムスタンプを更新する関数
+  const updateLastSavedTimestamp = useCallback((timestamp: number) => {
+    lastSavedTimestampRef.current = timestamp;
+  }, []);
 
   // URL共有からの読み込み & プランロード
   // 認証初期化が完了してからプランをロード
@@ -211,6 +220,18 @@ function App() {
       const conflictResolver = createSyncConflictResolver();
       
       unsub = listenPlan(user.uid, plan.id, (updated) => {
+        console.log('🔄 Firebase更新を受信:', {
+          remoteTimestamp: updated.updatedAt.getTime(),
+          lastSavedTimestamp: lastSavedTimestampRef.current,
+          isSelfUpdate: Math.abs(updated.updatedAt.getTime() - lastSavedTimestampRef.current) < 1000 // 1秒以内は自己更新とみなす
+        });
+
+        // 自己更新の場合は無視（1秒以内の更新）
+        if (Math.abs(updated.updatedAt.getTime() - lastSavedTimestampRef.current) < 1000) {
+          console.log('🔄 自己更新のため無視');
+          return;
+        }
+
         // 競合解決を実行
         const currentPlan = usePlanStore.getState().plan;
         if (currentPlan) {
@@ -220,6 +241,12 @@ function App() {
             currentPlan.updatedAt,
             updated.updatedAt
           );
+          
+          console.log('🔄 競合解決完了:', {
+            originalPlaces: currentPlan.places.length,
+            remotePlaces: updated.places.length,
+            resolvedPlaces: resolvedPlan.places.length
+          });
           
           // 解決されたプランをストアに反映
           usePlanStore.getState().setPlan(resolvedPlan);
@@ -306,7 +333,7 @@ function App() {
       />
 
       {/* クラウド同期インジケータ */}
-      <SyncStatusIndicator />
+      <SyncStatusIndicator onSave={updateLastSavedTimestamp} />
 
       {/* ログインボタン（デスクトップは右上、モバイルは左上） */}
       <div

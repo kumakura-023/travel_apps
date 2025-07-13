@@ -7,11 +7,12 @@ import { useAuthStore } from './useAuth';
  * TravelPlanの変更を監視して3秒後に自動保存するカスタムフック
  * 戻り値として保存状態（saving/idle）を返す
  */
-export function useAutoSave(plan: TravelPlan | null) {
+export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number) => void) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSynced, setIsSynced] = useState(false);
   const [isRemoteUpdateInProgress, setIsRemoteUpdateInProgress] = useState(false);
+  const lastSavedTimestampRef = useRef<number>(0); // 最後に保存したタイムスタンプ
   const user = useAuthStore((s) => s.user);
 
   // beforeunload / pagehide でフラッシュ保存（同期処理のみ実行可能）
@@ -53,11 +54,20 @@ export function useAutoSave(plan: TravelPlan | null) {
       (async () => {
         setIsSaving(true);
         try {
+          // 保存タイムスタンプを記録
+          const saveTimestamp = Date.now();
+          lastSavedTimestampRef.current = saveTimestamp;
+          
+          console.log('💾 自動保存開始:', { timestamp: saveTimestamp });
+          
           // オンラインかつログイン済みなら Cloud + Local の二重保存
           if (navigator.onLine && user) {
             try {
               await savePlanHybrid(plan, { mode: 'cloud', uid: user.uid });
               setIsSynced(true);
+              console.log('💾 クラウド保存成功:', { timestamp: saveTimestamp });
+              // 保存完了を通知
+              onSave?.(saveTimestamp);
             } catch (err) {
               console.warn('Cloud save failed, falling back to local save', err);
               setIsSynced(false);
@@ -68,6 +78,8 @@ export function useAutoSave(plan: TravelPlan | null) {
             // オフライン、または未ログイン時はローカル保存のみ
             await savePlanHybrid(plan, { mode: 'local' });
             setIsSynced(false);
+            // 保存完了を通知
+            onSave?.(saveTimestamp);
           }
         } finally {
           setIsSaving(false);
@@ -87,5 +99,6 @@ export function useAutoSave(plan: TravelPlan | null) {
     isSynced,
     isRemoteUpdateInProgress,
     setIsRemoteUpdateInProgress,
+    lastSavedTimestamp: lastSavedTimestampRef.current,
   };
 } 
