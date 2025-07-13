@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Place } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { syncDebugUtils } from '../utils/syncDebugUtils';
 
 interface PlacesState {
   places: Place[];
@@ -33,10 +34,36 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
       places: state.places.map((p) => (p.id === id ? { ...p, ...update, updatedAt: new Date() } : p)),
     })),
   deletePlace: (id) => {
-    console.log(`deletePlace called: ${id}`);
+    if (import.meta.env.DEV) {
+      console.log(`deletePlace called: ${id}`);
+    }
     set((state) => {
+      const placeToDelete = state.places.find(p => p.id === id);
+      if (placeToDelete) {
+        if (import.meta.env.DEV) {
+          console.log(`Deleting place: ${placeToDelete.name} (${id})`);
+        }
+        // 削除前にタイムスタンプを更新して同期を確実にする
+        const updatedPlace = { ...placeToDelete, updatedAt: new Date() };
+        if (import.meta.env.DEV) {
+          console.log(`Updated timestamp before deletion: ${updatedPlace.updatedAt.toISOString()}`);
+        }
+        
+        // デバッグログを記録
+        syncDebugUtils.log('delete', {
+          type: 'place',
+          id: placeToDelete.id,
+          name: placeToDelete.name,
+          timestamp: updatedPlace.updatedAt.getTime(),
+          totalPlacesBefore: state.places.length,
+          totalPlacesAfter: state.places.length - 1
+        });
+      }
+      
       const filteredPlaces = state.places.filter((p) => p.id !== id);
-      console.log(`Places: ${state.places.length} -> ${filteredPlaces.length}`);
+      if (import.meta.env.DEV) {
+        console.log(`Places: ${state.places.length} -> ${filteredPlaces.length}`);
+      }
       return {
         places: filteredPlaces,
       };

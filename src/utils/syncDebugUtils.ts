@@ -7,14 +7,14 @@ import { TravelPlan } from '../types';
 export class SyncDebugUtils {
   private debugLogs: Array<{
     timestamp: number;
-    type: 'save' | 'receive' | 'conflict' | 'ignore';
+    type: 'save' | 'receive' | 'conflict' | 'ignore' | 'delete';
     data: any;
   }> = [];
 
   /**
    * デバッグログを記録
    */
-  log(type: 'save' | 'receive' | 'conflict' | 'ignore', data: any) {
+  log(type: 'save' | 'receive' | 'conflict' | 'ignore' | 'delete', data: any) {
     const logEntry = {
       timestamp: Date.now(),
       type,
@@ -41,6 +41,7 @@ export class SyncDebugUtils {
     totalReceives: number;
     totalConflicts: number;
     totalIgnores: number;
+    totalDeletes: number;
     lastSaveTime?: number;
     lastReceiveTime?: number;
     averageTimeBetweenSaves: number;
@@ -52,6 +53,7 @@ export class SyncDebugUtils {
     const receives = this.debugLogs.filter(log => log.type === 'receive');
     const conflicts = this.debugLogs.filter(log => log.type === 'conflict');
     const ignores = this.debugLogs.filter(log => log.type === 'ignore');
+    const deletes = this.debugLogs.filter(log => log.type === 'delete');
 
     const lastSaveTime = saves.length > 0 ? saves[saves.length - 1].timestamp : undefined;
     const lastReceiveTime = receives.length > 0 ? receives[receives.length - 1].timestamp : undefined;
@@ -89,6 +91,7 @@ export class SyncDebugUtils {
       totalReceives: receives.length,
       totalConflicts: conflicts.length,
       totalIgnores: ignores.length,
+      totalDeletes: deletes.length,
       lastSaveTime,
       lastReceiveTime,
       averageTimeBetweenSaves,

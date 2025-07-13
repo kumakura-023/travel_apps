@@ -218,6 +218,8 @@ function App() {
     if (!plan) return;
 
     let unsub: () => void;
+    let lastProcessedTimestamp = 0; // 最後に処理したタイムスタンプ
+    let processingTimeout: ReturnType<typeof setTimeout> | null = null;
 
     (async () => {
       const { listenPlan } = await import('./services/planCloudService');
@@ -231,14 +233,22 @@ function App() {
         const timeDiff = Math.abs(remoteTimestamp - lastSavedTimestamp);
         const isSelfUpdate = timeDiff < 1000;
 
-        console.log('🔄 Firebase更新を受信:', {
-          remoteTimestamp,
-          lastSavedTimestamp,
-          timeDiff,
-          isSelfUpdate,
-          remotePlaces: updated.places.length,
-          remoteLabels: updated.labels.length
-        });
+        // 同じタイムスタンプの更新は無視
+        if (remoteTimestamp === lastProcessedTimestamp) {
+          return;
+        }
+
+        // 開発時のみ詳細ログ
+        if (import.meta.env.DEV) {
+          console.log('🔄 Firebase更新を受信:', {
+            remoteTimestamp,
+            lastSavedTimestamp,
+            timeDiff,
+            isSelfUpdate,
+            remotePlaces: updated.places.length,
+            remoteLabels: updated.labels.length
+          });
+        }
 
         // デバッグログを記録
         if (isSelfUpdate) {
@@ -248,7 +258,9 @@ function App() {
             lastSavedTimestamp,
             timeDiff
           });
-          console.log('🔄 自己更新のため無視');
+          if (import.meta.env.DEV) {
+            console.log('🔄 自己更新のため無視');
+          }
           return;
         }
 
@@ -261,61 +273,79 @@ function App() {
           remoteLabels: updated.labels.length
         });
 
+        // 処理中のタイムアウトをクリア
+        if (processingTimeout) {
+          clearTimeout(processingTimeout);
+        }
+
         // リモート更新中フラグを設定
         setIsRemoteUpdateInProgress(true);
 
-        try {
-          // 競合解決を実行
-          const currentPlan = usePlanStore.getState().plan;
-          if (currentPlan) {
-            const resolvedPlan = conflictResolver.resolveConflict(
-              currentPlan,
-              updated,
-              currentPlan.updatedAt,
-              updated.updatedAt
-            );
-            
-            console.log('🔄 競合解決完了:', {
-              originalPlaces: currentPlan.places.length,
-              remotePlaces: updated.places.length,
-              resolvedPlaces: resolvedPlan.places.length,
-              originalLabels: currentPlan.labels.length,
-              remoteLabels: updated.labels.length,
-              resolvedLabels: resolvedPlan.labels.length
-            });
+        // 処理を遅延させて連続更新をバッチ処理
+        processingTimeout = setTimeout(() => {
+          try {
+            // 競合解決を実行
+            const currentPlan = usePlanStore.getState().plan;
+            if (currentPlan) {
+              const resolvedPlan = conflictResolver.resolveConflict(
+                currentPlan,
+                updated,
+                currentPlan.updatedAt,
+                updated.updatedAt
+              );
+              
+              if (import.meta.env.DEV) {
+                console.log('🔄 競合解決完了:', {
+                  originalPlaces: currentPlan.places.length,
+                  remotePlaces: updated.places.length,
+                  resolvedPlaces: resolvedPlan.places.length,
+                  originalLabels: currentPlan.labels.length,
+                  remoteLabels: updated.labels.length,
+                  resolvedLabels: resolvedPlan.labels.length
+                });
+              }
 
-            // 競合解決ログを記録
-            syncDebugUtils.log('conflict', {
-              originalPlaces: currentPlan.places.length,
-              remotePlaces: updated.places.length,
-              resolvedPlaces: resolvedPlan.places.length,
-              originalLabels: currentPlan.labels.length,
-              remoteLabels: updated.labels.length,
-              resolvedLabels: resolvedPlan.labels.length
-            });
-            
-            // 解決されたプランをストアに反映
-            usePlanStore.getState().setPlan(resolvedPlan);
-            usePlacesStore.setState({ places: resolvedPlan.places });
-            useLabelsStore.setState({ labels: resolvedPlan.labels });
-          } else {
-            // ローカルプランがない場合はリモートを採用
-            usePlanStore.getState().setPlan(updated);
-            usePlacesStore.setState({ places: updated.places });
-            useLabelsStore.setState({ labels: updated.labels });
+              // 競合解決ログを記録
+              syncDebugUtils.log('conflict', {
+                originalPlaces: currentPlan.places.length,
+                remotePlaces: updated.places.length,
+                resolvedPlaces: resolvedPlan.places.length,
+                originalLabels: currentPlan.labels.length,
+                remoteLabels: updated.labels.length,
+                resolvedLabels: resolvedPlan.labels.length
+              });
+              
+              // 解決されたプランをストアに反映
+              usePlanStore.getState().setPlan(resolvedPlan);
+              usePlacesStore.setState({ places: resolvedPlan.places });
+              useLabelsStore.setState({ labels: resolvedPlan.labels });
+            } else {
+              // ローカルプランがない場合はリモートを採用
+              usePlanStore.getState().setPlan(updated);
+              usePlacesStore.setState({ places: updated.places });
+              useLabelsStore.setState({ labels: updated.labels });
+            }
+
+            lastProcessedTimestamp = remoteTimestamp;
+          } finally {
+            // リモート更新中フラグを解除（遅延を短縮）
+            setTimeout(() => {
+              setIsRemoteUpdateInProgress(false);
+              if (import.meta.env.DEV) {
+                console.log('🔄 リモート更新完了、自動保存を再開');
+              }
+            }, 200); // 500msから200msに短縮
           }
-        } finally {
-          // リモート更新中フラグを解除（少し遅延させて自動保存の競合を防ぐ）
-          setTimeout(() => {
-            setIsRemoteUpdateInProgress(false);
-            console.log('🔄 リモート更新完了、自動保存を再開');
-          }, 500);
-        }
+        }, 100); // 100ms遅延でバッチ処理
+
       });
     })();
 
     return () => {
       if (unsub) unsub();
+      if (processingTimeout) {
+        clearTimeout(processingTimeout);
+      }
     };
   }, [user, planId, isInitializing]);
 
