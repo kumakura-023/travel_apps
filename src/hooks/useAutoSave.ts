@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { TravelPlan } from '../types';
 import { savePlanHybrid } from '../services/storageService';
 import { useAuthStore } from './useAuth';
+import { syncDebugUtils } from '../utils/syncDebugUtils';
 
 /**
  * TravelPlanの変更を監視して3秒後に自動保存するカスタムフック
@@ -59,6 +60,14 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
           lastSavedTimestampRef.current = saveTimestamp;
           
           console.log('💾 自動保存開始:', { timestamp: saveTimestamp });
+          
+          // デバッグログを記録
+          syncDebugUtils.log('save', {
+            timestamp: saveTimestamp,
+            places: plan.places.length,
+            labels: plan.labels.length,
+            totalCost: plan.totalCost
+          });
           
           // オンラインかつログイン済みなら Cloud + Local の二重保存
           if (navigator.onLine && user) {

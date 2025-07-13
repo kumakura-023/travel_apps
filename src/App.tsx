@@ -31,6 +31,8 @@ import { useAutoSave } from './hooks/useAutoSave';
 import AuthButton from './components/AuthButton';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 import SyncTestButton from './components/SyncTestButton';
+import SyncDebugButton from './components/SyncDebugButton';
+import { syncDebugUtils } from './utils/syncDebugUtils';
 import { TravelPlan } from './types';
 
 // LoadScript用のライブラリを定数として定義
@@ -220,17 +222,38 @@ function App() {
       const conflictResolver = createSyncConflictResolver();
       
       unsub = listenPlan(user.uid, plan.id, (updated) => {
+        const remoteTimestamp = updated.updatedAt.getTime();
+        const lastSavedTimestamp = lastSavedTimestampRef.current;
+        const timeDiff = Math.abs(remoteTimestamp - lastSavedTimestamp);
+        const isSelfUpdate = timeDiff < 1000;
+
         console.log('🔄 Firebase更新を受信:', {
-          remoteTimestamp: updated.updatedAt.getTime(),
-          lastSavedTimestamp: lastSavedTimestampRef.current,
-          isSelfUpdate: Math.abs(updated.updatedAt.getTime() - lastSavedTimestampRef.current) < 1000 // 1秒以内は自己更新とみなす
+          remoteTimestamp,
+          lastSavedTimestamp,
+          timeDiff,
+          isSelfUpdate
         });
 
-        // 自己更新の場合は無視（1秒以内の更新）
-        if (Math.abs(updated.updatedAt.getTime() - lastSavedTimestampRef.current) < 1000) {
+        // デバッグログを記録
+        if (isSelfUpdate) {
+          syncDebugUtils.log('ignore', {
+            reason: '自己更新',
+            remoteTimestamp,
+            lastSavedTimestamp,
+            timeDiff
+          });
           console.log('🔄 自己更新のため無視');
           return;
         }
+
+        // 他デバイスからの更新として記録
+        syncDebugUtils.log('receive', {
+          remoteTimestamp,
+          lastSavedTimestamp,
+          timeDiff,
+          remotePlaces: updated.places.length,
+          remoteLabels: updated.labels.length
+        });
 
         // 競合解決を実行
         const currentPlan = usePlanStore.getState().plan;
@@ -246,6 +269,16 @@ function App() {
             originalPlaces: currentPlan.places.length,
             remotePlaces: updated.places.length,
             resolvedPlaces: resolvedPlan.places.length
+          });
+
+          // 競合解決ログを記録
+          syncDebugUtils.log('conflict', {
+            originalPlaces: currentPlan.places.length,
+            remotePlaces: updated.places.length,
+            resolvedPlaces: resolvedPlan.places.length,
+            originalLabels: currentPlan.labels.length,
+            remoteLabels: updated.labels.length,
+            resolvedLabels: resolvedPlan.labels.length
           });
           
           // 解決されたプランをストアに反映
@@ -306,6 +339,9 @@ function App() {
       
       {/* 同期競合解決機能テストボタン（開発時のみ表示） */}
       <SyncTestButton />
+      
+      {/* 同期デバッグボタン */}
+      <SyncDebugButton />
       
       {/* ルート検索パネル */}
       <RouteSearchPanel 
