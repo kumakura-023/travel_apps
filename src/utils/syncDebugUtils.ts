@@ -46,6 +46,7 @@ export class SyncDebugUtils {
     averageTimeBetweenSaves: number;
     averageTimeBetweenReceives: number;
     syncSuccessRate: number;
+    syncEfficiency: number;
   } {
     const saves = this.debugLogs.filter(log => log.type === 'save');
     const receives = this.debugLogs.filter(log => log.type === 'receive');
@@ -78,6 +79,11 @@ export class SyncDebugUtils {
       ? (conflicts.length / receives.length) * 100 
       : 0;
 
+    // 同期効率を計算（保存回数 / 受信回数）
+    const syncEfficiency = receives.length > 0 
+      ? (saves.length / receives.length) * 100 
+      : 0;
+
     return {
       totalSaves: saves.length,
       totalReceives: receives.length,
@@ -88,6 +94,7 @@ export class SyncDebugUtils {
       averageTimeBetweenSaves,
       averageTimeBetweenReceives,
       syncSuccessRate,
+      syncEfficiency,
     };
   }
 
@@ -185,8 +192,58 @@ export class SyncDebugUtils {
     console.log('⚔️ 競合パターン:', patterns.conflictPatterns);
     console.log('⏰ タイミング問題:', patterns.timingIssues);
     
+    // 同期の質を評価
+    const quality = this.evaluateSyncQuality(status, patterns);
+    console.log('🎯 同期品質評価:', quality);
+    
     console.log('📝 最近のログ:', this.getRecentLogs(5));
     console.log('🔍 === レポート終了 ===');
+  }
+
+  /**
+   * 同期品質を評価
+   */
+  private evaluateSyncQuality(status: any, patterns: any): {
+    overall: string;
+    issues: string[];
+    recommendations: string[];
+  } {
+    const issues: string[] = [];
+    const recommendations: string[] = [];
+
+    // 同期効率の評価
+    if (status.syncEfficiency < 50) {
+      issues.push('同期効率が低い（保存頻度が少ない）');
+      recommendations.push('自動保存の間隔を短縮することを検討');
+    }
+
+    // 自己更新の無視が多い場合
+    const selfUpdateIgnores = patterns.ignoredUpdates.find((u: any) => u.reason === '自己更新');
+    if (selfUpdateIgnores && selfUpdateIgnores.count > 10) {
+      issues.push('自己更新の無視が多すぎる');
+      recommendations.push('自己更新判定の閾値を調整することを検討');
+    }
+
+    // 保存直後の受信が多い場合
+    const rapidReceives = patterns.timingIssues.find((t: any) => t.issue === '保存直後の受信');
+    if (rapidReceives && rapidReceives.count > 5) {
+      issues.push('保存直後の受信が頻繁に発生');
+      recommendations.push('リモート更新中の自動保存停止時間を延長することを検討');
+    }
+
+    // 全体的な評価
+    let overall = '良好';
+    if (issues.length > 2) {
+      overall = '要改善';
+    } else if (issues.length > 0) {
+      overall = '注意';
+    }
+
+    return {
+      overall,
+      issues,
+      recommendations
+    };
   }
 }
 

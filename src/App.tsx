@@ -170,6 +170,10 @@ function App() {
     lastSavedTimestampRef.current = timestamp;
   }, []);
 
+  // 自動保存フックを使用
+  const plan = usePlanStore((s) => s.plan);
+  const { setIsRemoteUpdateInProgress } = useAutoSave(plan, updateLastSavedTimestamp);
+
   // URL共有からの読み込み & プランロード
   // 認証初期化が完了してからプランをロード
   React.useEffect(() => {
@@ -231,7 +235,9 @@ function App() {
           remoteTimestamp,
           lastSavedTimestamp,
           timeDiff,
-          isSelfUpdate
+          isSelfUpdate,
+          remotePlaces: updated.places.length,
+          remoteLabels: updated.labels.length
         });
 
         // デバッグログを記録
@@ -255,41 +261,55 @@ function App() {
           remoteLabels: updated.labels.length
         });
 
-        // 競合解決を実行
-        const currentPlan = usePlanStore.getState().plan;
-        if (currentPlan) {
-          const resolvedPlan = conflictResolver.resolveConflict(
-            currentPlan,
-            updated,
-            currentPlan.updatedAt,
-            updated.updatedAt
-          );
-          
-          console.log('🔄 競合解決完了:', {
-            originalPlaces: currentPlan.places.length,
-            remotePlaces: updated.places.length,
-            resolvedPlaces: resolvedPlan.places.length
-          });
+        // リモート更新中フラグを設定
+        setIsRemoteUpdateInProgress(true);
 
-          // 競合解決ログを記録
-          syncDebugUtils.log('conflict', {
-            originalPlaces: currentPlan.places.length,
-            remotePlaces: updated.places.length,
-            resolvedPlaces: resolvedPlan.places.length,
-            originalLabels: currentPlan.labels.length,
-            remoteLabels: updated.labels.length,
-            resolvedLabels: resolvedPlan.labels.length
-          });
-          
-          // 解決されたプランをストアに反映
-          usePlanStore.getState().setPlan(resolvedPlan);
-          usePlacesStore.setState({ places: resolvedPlan.places });
-          useLabelsStore.setState({ labels: resolvedPlan.labels });
-        } else {
-          // ローカルプランがない場合はリモートを採用
-          usePlanStore.getState().setPlan(updated);
-          usePlacesStore.setState({ places: updated.places });
-          useLabelsStore.setState({ labels: updated.labels });
+        try {
+          // 競合解決を実行
+          const currentPlan = usePlanStore.getState().plan;
+          if (currentPlan) {
+            const resolvedPlan = conflictResolver.resolveConflict(
+              currentPlan,
+              updated,
+              currentPlan.updatedAt,
+              updated.updatedAt
+            );
+            
+            console.log('🔄 競合解決完了:', {
+              originalPlaces: currentPlan.places.length,
+              remotePlaces: updated.places.length,
+              resolvedPlaces: resolvedPlan.places.length,
+              originalLabels: currentPlan.labels.length,
+              remoteLabels: updated.labels.length,
+              resolvedLabels: resolvedPlan.labels.length
+            });
+
+            // 競合解決ログを記録
+            syncDebugUtils.log('conflict', {
+              originalPlaces: currentPlan.places.length,
+              remotePlaces: updated.places.length,
+              resolvedPlaces: resolvedPlan.places.length,
+              originalLabels: currentPlan.labels.length,
+              remoteLabels: updated.labels.length,
+              resolvedLabels: resolvedPlan.labels.length
+            });
+            
+            // 解決されたプランをストアに反映
+            usePlanStore.getState().setPlan(resolvedPlan);
+            usePlacesStore.setState({ places: resolvedPlan.places });
+            useLabelsStore.setState({ labels: resolvedPlan.labels });
+          } else {
+            // ローカルプランがない場合はリモートを採用
+            usePlanStore.getState().setPlan(updated);
+            usePlacesStore.setState({ places: updated.places });
+            useLabelsStore.setState({ labels: updated.labels });
+          }
+        } finally {
+          // リモート更新中フラグを解除（少し遅延させて自動保存の競合を防ぐ）
+          setTimeout(() => {
+            setIsRemoteUpdateInProgress(false);
+            console.log('🔄 リモート更新完了、自動保存を再開');
+          }, 500);
         }
       });
     })();

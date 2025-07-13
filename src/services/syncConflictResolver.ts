@@ -68,6 +68,15 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
     localTimestamp: Date,
     remoteTimestamp: Date
   ): TravelPlan {
+    console.log('🔄 競合解決開始:', {
+      localPlaces: localPlan.places.length,
+      remotePlaces: remotePlan.places.length,
+      localLabels: localPlan.labels.length,
+      remoteLabels: remotePlan.labels.length,
+      localTimestamp: localTimestamp.toISOString(),
+      remoteTimestamp: remoteTimestamp.toISOString()
+    });
+
     // プランレベルの基本情報は新しい方を採用
     const basePlan = this.isNewer(localTimestamp, remoteTimestamp) ? localPlan : remotePlan;
     
@@ -83,6 +92,19 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
       totalCost: resolvedPlaces.reduce((sum, p) => sum + (p.estimatedCost || 0), 0),
       updatedAt: new Date(), // 競合解決時刻
     };
+
+    console.log('🔄 競合解決完了:', {
+      originalLocalPlaces: localPlan.places.length,
+      originalRemotePlaces: remotePlan.places.length,
+      resolvedPlaces: resolvedPlaces.length,
+      originalLocalLabels: localPlan.labels.length,
+      originalRemoteLabels: remotePlan.labels.length,
+      resolvedLabels: resolvedLabels.length,
+      changes: {
+        placesAdded: resolvedPlaces.length - Math.max(localPlan.places.length, remotePlan.places.length),
+        labelsAdded: resolvedLabels.length - Math.max(localPlan.labels.length, remotePlan.labels.length)
+      }
+    });
 
     return resolvedPlan;
   }
@@ -113,6 +135,8 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
    */
   resolvePlacesConflict(localPlaces: Place[], remotePlaces: Place[]): Place[] {
     const placeMap = new Map<string, Place>();
+    let conflicts = 0;
+    let additions = 0;
     
     // リモート地点を基準にマップを構築
     remotePlaces.forEach(place => {
@@ -125,16 +149,30 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
       if (!remotePlace) {
         // リモートに存在しない場合はローカルを追加
         placeMap.set(localPlace.id, localPlace);
+        additions++;
       } else {
         // 競合がある場合は新しい方を採用
         const resolvedPlace = this.isNewer(localPlace.updatedAt, remotePlace.updatedAt)
           ? localPlace
           : remotePlace;
         placeMap.set(localPlace.id, resolvedPlace);
+        if (resolvedPlace !== remotePlace) {
+          conflicts++;
+        }
       }
     });
     
-    return Array.from(placeMap.values());
+    const result = Array.from(placeMap.values());
+    
+    console.log('🔄 地点競合解決:', {
+      localCount: localPlaces.length,
+      remoteCount: remotePlaces.length,
+      resolvedCount: result.length,
+      conflicts,
+      additions
+    });
+    
+    return result;
   }
 
   /**
@@ -143,6 +181,8 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
    */
   resolveLabelsConflict(localLabels: MapLabel[], remoteLabels: MapLabel[]): MapLabel[] {
     const labelMap = new Map<string, MapLabel>();
+    let conflicts = 0;
+    let additions = 0;
     
     // リモートラベルを基準にマップを構築
     remoteLabels.forEach(label => {
@@ -160,16 +200,30 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
       if (!remoteLabel) {
         // リモートに存在しない場合はローカルを追加
         labelMap.set(normalizedLocalLabel.id, normalizedLocalLabel);
+        additions++;
       } else {
         // 更新時刻で比較し、新しい方を採用
         const resolvedLabel = this.isNewer(normalizedLocalLabel.updatedAt, remoteLabel.updatedAt)
           ? normalizedLocalLabel
           : remoteLabel;
         labelMap.set(normalizedLocalLabel.id, resolvedLabel);
+        if (resolvedLabel !== remoteLabel) {
+          conflicts++;
+        }
       }
     });
     
-    return Array.from(labelMap.values());
+    const result = Array.from(labelMap.values());
+    
+    console.log('🔄 ラベル競合解決:', {
+      localCount: localLabels.length,
+      remoteCount: remoteLabels.length,
+      resolvedCount: result.length,
+      conflicts,
+      additions
+    });
+    
+    return result;
   }
 
   /**
