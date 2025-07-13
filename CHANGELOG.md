@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🧪 テスト機能
 - `SyncTestUtils` クラスで基本的な競合解決テストと同時編集シミュレーションテストを実装
-- 開発環境でのみ表示されるテストボタンで簡単にテスト実行可能
+- 本番環境でも利用可能なテストボタンで簡単にテスト実行可能
 
 ## [1.4.5] - 2025-07-11
 
