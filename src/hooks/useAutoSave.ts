@@ -17,6 +17,7 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
   const lastPlanHashRef = useRef<string>(''); // 最後に保存したプランのハッシュ
   const changeCountRef = useRef<number>(0); // 変更回数のカウンター
   const lastLocalSaveRef = useRef<number>(0); // 最後のローカル保存時刻
+  const lastCloudSaveRef = useRef<number>(0); // 最後のクラウド保存時刻
   const user = useAuthStore((s) => s.user);
 
   // プランのハッシュを計算（変更検知用）- 最適化版
@@ -51,7 +52,8 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     setIsSaving(true);
     try {
       const saveTimestamp = Date.now();
-      lastSavedTimestampRef.current = saveTimestamp;
+      lastCloudSaveRef.current = saveTimestamp;
+      lastSavedTimestampRef.current = saveTimestamp; // クラウド保存時のみ更新
       
       if (import.meta.env.DEV) {
         console.log('☁️ バッチクラウド同期開始:', { 
@@ -151,6 +153,7 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     isRemoteUpdateInProgress,
     setIsRemoteUpdateInProgress,
     lastSavedTimestamp: lastSavedTimestampRef.current,
+    lastCloudSaveTimestamp: lastCloudSaveRef.current,
     saveImmediately, // 外部から即座保存を呼び出せるように公開
   };
 } 

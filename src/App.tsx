@@ -172,7 +172,7 @@ function App() {
 
   // 自動保存フックを使用
   const plan = usePlanStore((s) => s.plan);
-  const { setIsRemoteUpdateInProgress, saveImmediately } = useAutoSave(plan, updateLastSavedTimestamp);
+  const { setIsRemoteUpdateInProgress, saveImmediately, lastCloudSaveTimestamp } = useAutoSave(plan, updateLastSavedTimestamp);
 
   // 候補地追加時の即座同期を設定
   React.useEffect(() => {
@@ -279,9 +279,9 @@ function App() {
       
       unsub = listenPlan(user.uid, plan.id, (updated) => {
         const remoteTimestamp = updated.updatedAt.getTime();
-        const lastSavedTimestamp = lastSavedTimestampRef.current;
-        const timeDiff = Math.abs(remoteTimestamp - lastSavedTimestamp);
-        const isSelfUpdate = timeDiff < 1000;
+        const cloudSaveTimestamp = lastCloudSaveTimestamp || 0;
+        const timeDiff = Math.abs(remoteTimestamp - cloudSaveTimestamp);
+        const isSelfUpdate = timeDiff < 2000; // 2秒以内を自己更新として判定
 
         // 同じタイムスタンプの更新は無視
         if (remoteTimestamp === lastProcessedTimestamp) {
@@ -292,7 +292,7 @@ function App() {
         if (import.meta.env.DEV) {
           console.log('🔄 Firebase更新を受信:', {
             remoteTimestamp,
-            lastSavedTimestamp,
+            cloudSaveTimestamp,
             timeDiff,
             isSelfUpdate,
             remotePlaces: updated.places.length,
@@ -305,7 +305,7 @@ function App() {
           syncDebugUtils.log('ignore', {
             reason: '自己更新',
             remoteTimestamp,
-            lastSavedTimestamp,
+            cloudSaveTimestamp,
             timeDiff
           });
           if (import.meta.env.DEV) {
@@ -317,7 +317,7 @@ function App() {
         // 他デバイスからの更新として記録
         syncDebugUtils.log('receive', {
           remoteTimestamp,
-          lastSavedTimestamp,
+          cloudSaveTimestamp,
           timeDiff,
           remotePlaces: updated.places.length,
           remoteLabels: updated.labels.length
