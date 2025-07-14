@@ -30,7 +30,7 @@ export default function PlaceDetailPanel() {
     addPlace: s.addPlace,
     updatePlace: s.updatePlace
   }));
-  const savedPlaces = usePlacesStore((s) => s.places);
+  const savedPlaces = usePlacesStore((s) => s.getFilteredPlaces());
   const { plan } = usePlanStore();
   const { setSelectedOrigin, setSelectedDestination, openRouteSearch } = useRouteSearchStore();
   const { map } = useGoogleMaps();

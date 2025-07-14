@@ -13,10 +13,14 @@ interface PlacesState {
   updatePlace: (id: string, update: Partial<Place>) => void;
   deletePlace: (id: string) => void;
   clearPlaces: () => void;
+  getFilteredPlaces: () => Place[];
 }
 
 export const usePlacesStore = create<PlacesState>((set, get) => ({
   places: [],
+  get filteredPlaces() {
+    return get().places.filter(p => !p.deleted);
+  },
   onPlaceAdded: undefined,
   onPlaceDeleted: undefined,
   setOnPlaceAdded: (callback) => set({ onPlaceAdded: callback }),
@@ -64,8 +68,8 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
         if (import.meta.env.DEV) {
           console.log(`Deleting place: ${placeToDelete.name} (${id})`);
         }
-        // 削除前にタイムスタンプを更新して同期を確実にする
-        const updatedPlace = { ...placeToDelete, updatedAt: new Date() };
+        // 削除フラグを立ててタイムスタンプを更新
+        const updatedPlace = { ...placeToDelete, deleted: true, updatedAt: new Date() };
         if (import.meta.env.DEV) {
           console.log(`Updated timestamp before deletion: ${updatedPlace.updatedAt.toISOString()}`);
         }
@@ -80,7 +84,7 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
           totalPlacesAfter: state.places.length - 1
         });
 
-        const filteredPlaces = state.places.filter((p) => p.id !== id);
+        const updatedPlaces = state.places.map(p => p.id === id ? updatedPlace : p);
         
         // 削除コールバックを実行（状態更新後）
         if (state.onPlaceDeleted) {
@@ -88,11 +92,11 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
         }
         
         if (import.meta.env.DEV) {
-          console.log(`Places: ${state.places.length} -> ${filteredPlaces.length}`);
+          console.log(`Places: ${state.places.length} -> ${updatedPlaces.length}`);
         }
         
         return {
-          places: filteredPlaces,
+          places: updatedPlaces,
         };
       }
       
@@ -103,4 +107,5 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
     });
   },
   clearPlaces: () => set({ places: [] }),
+  getFilteredPlaces: () => get().places.filter(p => !p.deleted),
 })); 

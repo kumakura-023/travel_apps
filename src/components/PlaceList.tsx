@@ -12,7 +12,7 @@ import PlanNameEditModal from './PlanNameEditModal';
 import DateSelectionModal from './DateSelectionModal';
 
 export default function PlaceList() {
-  const { places } = usePlacesStore();
+  const places = usePlacesStore((s) => s.getFilteredPlaces());
   const { plan } = usePlanStore();
   const { labels } = useLabelsStore();
   const [search, setSearch] = useState('');

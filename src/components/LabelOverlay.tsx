@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: Props) {
-  const { places } = usePlacesStore();
+  const places = usePlacesStore((s) => s.getFilteredPlaces());
   const [dragging, setDragging] = useState(false);
   const [resizing, setResizing] = useState(false);
   const [showControls, setShowControls] = useState(false);

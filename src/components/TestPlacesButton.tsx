@@ -6,7 +6,7 @@ export default function TestPlacesButton() {
 
   const addTestPlaces = () => {
     console.log('テスト候補地追加ボタンがクリックされました');
-    console.log('現在の候補地数:', usePlacesStore.getState().places.length);
+    console.log('現在の候補地数:', usePlacesStore.getState().getFilteredPlaces().length);
     
     // テスト用の候補地を追加
     const testPlaces = [
@@ -47,7 +47,7 @@ export default function TestPlacesButton() {
       addPlace(place);
     });
     
-    console.log('追加後の候補地数:', usePlacesStore.getState().places.length);
+    console.log('追加後の候補地数:', usePlacesStore.getState().getFilteredPlaces().length);
     alert('テスト候補地を追加しました！');
   };
 

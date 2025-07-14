@@ -47,7 +47,7 @@ export default function MapOverlayManager({
   const { map } = useGoogleMaps();
   
   // ストアからの状態取得
-  const { places: savedPlaces } = usePlacesStore();
+  const savedPlaces = usePlacesStore((s) => s.getFilteredPlaces());
   const { place } = useSelectedPlaceStore();
   const { labels, updateLabel } = useLabelsStore();
   const { routes } = useRouteConnectionsStore();

@@ -17,7 +17,7 @@ export default function TravelTimeOverlay() {
     enabled,
   } = useTravelTimeStore();
 
-  const places = usePlacesStore((s) => s.places);
+  const places = usePlacesStore((s) => s.getFilteredPlaces());
 
   const circleRef = useRef<google.maps.Circle | null>(null);
 

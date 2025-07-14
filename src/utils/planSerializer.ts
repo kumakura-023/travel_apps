@@ -24,7 +24,11 @@ function dateReviver(key: string, value: any) {
 }
 
 export function serializePlan(plan: TravelPlan): string {
-  return JSON.stringify(plan, dateReplacer, 2);
+  const filteredPlan = {
+    ...plan,
+    places: plan.places.filter(p => !p.deleted),
+  };
+  return JSON.stringify(filteredPlan, dateReplacer, 2);
 }
 
 export function deserializePlan(json: string): TravelPlan {

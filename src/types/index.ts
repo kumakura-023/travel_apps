@@ -32,6 +32,7 @@ export interface Place {
     lat: number;
     lng: number;
   };
+  deleted?: boolean;
 }
 
 export interface TravelPlan {

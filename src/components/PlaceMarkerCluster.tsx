@@ -15,7 +15,7 @@ const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
   threshold = 10 
 }) => {
   const { map } = useGoogleMaps();
-  const { places } = usePlacesStore();
+  const places = usePlacesStore((s) => s.getFilteredPlaces());
   const { setPlace } = useSelectedPlaceStore();
   const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);

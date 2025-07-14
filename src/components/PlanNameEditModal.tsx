@@ -19,7 +19,7 @@ interface PlanNameEditModalProps {
 
 const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }) => {
   const { plan, setPlan, updatePlan } = usePlanStore();
-  const { places } = usePlacesStore();
+  const places = usePlacesStore((s) => s.getFilteredPlaces());
   const { labels } = useLabelsStore();
   
   const [name, setName] = useState('');

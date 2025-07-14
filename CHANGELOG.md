@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.18] - 2025-07-14
+
+### 🐛 バグ修正
+- **クラウド同期**: 候補地を削除しても、ページをリロードすると元に戻ってしまう問題を修正しました。
+  - 候補地を削除する際に、実際にデータを削除するのではなく `deleted` フラグを立てるように変更しました。
+  - UI上では `deleted` フラグのついた候補地をフィルタリングして非表示にします。
+  - クラウド同期時に `deleted` フラグのついた候補地をプランから完全に削除することで、データの整合性を保ちます。
+
 ## [1.4.17] - 2025-07-14
 
 ### 🐛 バグ修正

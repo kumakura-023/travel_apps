@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function LabelEditDialog({ label, onSave, onClose }: Props) {
-  const { places } = usePlacesStore();
+  const places = usePlacesStore((s) => s.getFilteredPlaces());
   const [text, setText] = useState(label.text);
   const [color, setColor] = useState(label.color);
   const [fontSize, setFontSize] = useState(label.fontSize);

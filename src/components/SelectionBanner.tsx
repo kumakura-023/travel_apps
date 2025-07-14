@@ -6,7 +6,7 @@ import { useDeviceDetect } from '../hooks/useDeviceDetect';
 
 export default function SelectionBanner() {
   const { selectionState, cancelSelection } = useRouteConnectionsStore();
-  const { places } = usePlacesStore();
+  const places = usePlacesStore((s) => s.getFilteredPlaces());
   const { isTouchDevice } = useDeviceDetect();
 
   if (!selectionState.isSelecting || !selectionState.selectedPlaceId) {

@@ -11,7 +11,7 @@ interface SyncStatusIndicatorProps {
 
 const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({ onSave }) => {
   const plan = usePlanStore((s) => s.plan);
-  const places = usePlacesStore((s) => s.places);
+  const places = usePlacesStore((s) => s.getFilteredPlaces());
   const labels = useLabelsStore((s) => s.labels);
 
   const mergedPlan = React.useMemo(() => {

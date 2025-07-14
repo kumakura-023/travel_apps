@@ -19,7 +19,7 @@ const PlanManager: React.FC = () => {
     }
   }, []);
 
-  const places = usePlacesStore((s) => s.places);
+  const places = usePlacesStore((s) => s.getFilteredPlaces());
   const labels = useLabelsStore((s) => s.labels);
 
   // プラン名編集
