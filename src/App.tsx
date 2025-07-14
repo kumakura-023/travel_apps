@@ -183,10 +183,15 @@ function App() {
         console.log('🚀 候補地追加検知、即座同期開始:', newPlace.name);
       }
       
-      // 即座にローカル保存とクラウド同期を実行
-      if (plan) {
-        saveImmediately(plan);
-        saveImmediatelyCloud(plan);
+      const currentPlan = usePlanStore.getState().plan;
+      if (currentPlan) {
+        const planToSave: TravelPlan = {
+          ...currentPlan,
+          places: [...currentPlan.places, newPlace],
+          updatedAt: new Date(),
+        };
+        saveImmediately(planToSave);
+        saveImmediatelyCloud(planToSave);
       }
       
       // デバッグログを記録
@@ -228,7 +233,7 @@ function App() {
         timestamp: Date.now()
       });
     });
-  }, [saveImmediately, saveImmediatelyCloud]);
+  }, [plan, saveImmediately, saveImmediatelyCloud]);
 
   // ラベル追加時の即座同期を設定
   React.useEffect(() => {

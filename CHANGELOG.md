@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.21] - 2025-07-14
+
+### 🐛 バグ修正
+- **クラウド同期**: 候補地の追加が同期されない、またはいずれかの操作で初回のみ同期が失敗する問題を修正しました。
+  - **候補地追加の同期**: `onPlaceAdded` コールバック内で、追加された候補地を含む最新のプラン情報を取得して同期するように修正しました。これにより、候補地の追加が確実にクラウドに反映されます。
+  - **初回操作の安定化**: `onPlaceDeleted` の `useEffect` フックの依存配列に `plan` を追加しました。これにより、アプリ起動後やリロード直後の初回操作からでも、常に最新の状態で同期処理が実行されるようになり、削除操作の信頼性が向上しました。
+
+## [1.4.20] - 2025-07-14
+
+### 🐛 バグ修正
+- **クラウド同期**: 候補地削除時のクラウド同期が正しく行われない問題を修正しました。
+  - `placesStore.ts`の`onPlaceDeleted`コールバックが、削除後の最新の`places`配列を渡すように変更しました。
+  - `App.tsx`の`onPlaceDeleted`コールバック内で、`usePlanStore`から取得した現在のプランに、`placesStore`から渡された最新の`places`配列をマージしてクラウド同期を行うように修正しました。
+  - これにより、削除操作が完了した直後の最新の状態でクラウド同期が実行され、リロード時に削除された場所が復活する問題が解消されました。
+
 ## [1.4.19] - 2025-07-14
 
 ### 🐛 バグ修正
