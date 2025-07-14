@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.24] - 2025-07-14
+
+### 🐛 バグ修正
+- **重大なデグレードの修正**: メモ（ラベル）を追加した後にリロードすると、地図のオーバーレイが一切表示されなくなる問題を修正しました。
+  - メモ作成時に、位置情報が正しいデータ構造（`position` オブジェクト）で保存されていなかったことが原因でした。
+  - `MapEventHandler.tsx` を修正し、常に正しいデータ構造でメモが作成されるようにしました。
+  - これにより、リロード後のコンソールエラーとそれに伴う表示不具合が解消されます。
+
+### ⚠️ 注意事項
+- この修正は、今後作成されるメモにのみ適用されます。問題が発生したバージョンで既に作成してしまった不正なデータを含む旅行プランは、お手数ですが一度削除し、再作成していただく必要があります。
+
 ## [1.4.23] - 2025-07-14
 
 ### ✨ 新機能
