@@ -5,7 +5,11 @@ import { usePlacesStore } from '../store/placesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { FaCloudUploadAlt, FaCloud, FaExclamationTriangle } from 'react-icons/fa';
 
-const SyncStatusIndicator: React.FC = () => {
+interface SyncStatusIndicatorProps {
+  onSave?: (timestamp: number) => void;
+}
+
+const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({ onSave }) => {
   const plan = usePlanStore((s) => s.plan);
   const places = usePlacesStore((s) => s.places);
   const labels = useLabelsStore((s) => s.labels);
@@ -20,7 +24,7 @@ const SyncStatusIndicator: React.FC = () => {
     };
   }, [plan, places, labels]);
 
-  const { isSaving, isSynced } = useAutoSave(mergedPlan);
+  const { isSaving, isSynced } = useAutoSave(mergedPlan, onSave);
 
   const isOffline = !navigator.onLine;
 

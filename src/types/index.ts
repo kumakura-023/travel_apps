@@ -61,6 +61,8 @@ export interface MapLabel {
   width: number; // px
   height: number; // px
   linkedPlaceId?: string; // 候補地とのリンク
+  createdAt: Date; // 作成時刻
+  updatedAt: Date; // 更新時刻
 }
 
 // 2地点間移動時間表示のための型定義

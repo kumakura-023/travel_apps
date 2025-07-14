@@ -27,8 +27,12 @@ import PlanNameDisplay from './components/PlanNameDisplay';
 import { usePlanStore } from './store/planStore';
 import { getActivePlan, createEmptyPlan, setActivePlan, loadActivePlanHybrid } from './services/storageService';
 import { useAuth } from './hooks/useAuth';
+import { useAutoSave } from './hooks/useAutoSave';
 import AuthButton from './components/AuthButton';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
+import SyncTestButton from './components/SyncTestButton';
+import SyncDebugButton from './components/SyncDebugButton';
+import { syncDebugUtils } from './utils/syncDebugUtils';
 import { TravelPlan } from './types';
 
 // LoadScript用のライブラリを定数として定義
@@ -157,6 +161,68 @@ function App() {
   // 認証状態と初期化完了フラグを取得
   const { user, isInitializing } = useAuth();
   const planId = usePlanStore((s) => s.plan?.id);
+  
+  // 自動保存のタイムスタンプを管理
+  const lastSavedTimestampRef = useRef<number>(0);
+  
+  // 保存タイムスタンプを更新する関数
+  const updateLastSavedTimestamp = useCallback((timestamp: number) => {
+    lastSavedTimestampRef.current = timestamp;
+  }, []);
+
+  // 自動保存フックを使用
+  const plan = usePlanStore((s) => s.plan);
+  const { setIsRemoteUpdateInProgress, saveImmediately, lastCloudSaveTimestamp } = useAutoSave(plan, updateLastSavedTimestamp);
+
+  // 候補地追加時の即座同期を設定
+  React.useEffect(() => {
+    const { setOnPlaceAdded } = usePlacesStore.getState();
+    
+    setOnPlaceAdded((newPlace) => {
+      if (import.meta.env.DEV) {
+        console.log('🚀 候補地追加検知、即座同期開始:', newPlace.name);
+      }
+      
+      // 即座にローカル保存を実行
+      if (plan) {
+        saveImmediately(plan);
+      }
+      
+      // デバッグログを記録
+      syncDebugUtils.log('save', {
+        type: 'immediate_sync',
+        reason: 'place_added',
+        placeName: newPlace.name,
+        placeId: newPlace.id,
+        timestamp: Date.now()
+      });
+    });
+  }, [plan, saveImmediately]);
+
+  // ラベル追加時の即座同期を設定
+  React.useEffect(() => {
+    const { setOnLabelAdded } = useLabelsStore.getState();
+    
+    setOnLabelAdded((newLabel) => {
+      if (import.meta.env.DEV) {
+        console.log('🚀 ラベル追加検知、即座同期開始:', newLabel.text);
+      }
+      
+      // 即座にローカル保存を実行
+      if (plan) {
+        saveImmediately(plan);
+      }
+      
+      // デバッグログを記録
+      syncDebugUtils.log('save', {
+        type: 'immediate_sync',
+        reason: 'label_added',
+        labelText: newLabel.text,
+        labelId: newLabel.id,
+        timestamp: Date.now()
+      });
+    });
+  }, [plan, saveImmediately]);
 
   // URL共有からの読み込み & プランロード
   // 認証初期化が完了してからプランをロード
@@ -202,19 +268,142 @@ function App() {
     if (!plan) return;
 
     let unsub: () => void;
+    let lastProcessedTimestamp = 0; // 最後に処理したタイムスタンプ
+    let processingTimeout: ReturnType<typeof setTimeout> | null = null;
 
     (async () => {
       const { listenPlan } = await import('./services/planCloudService');
+      const { createSyncConflictResolver } = await import('./services/syncConflictResolver');
+      
+      const conflictResolver = createSyncConflictResolver();
+      
       unsub = listenPlan(user.uid, plan.id, (updated) => {
-        usePlanStore.getState().setPlan(updated);
-        // 追加: 地点とラベルをストアに反映
-        usePlacesStore.setState({ places: updated.places });
-        useLabelsStore.setState({ labels: updated.labels });
+        const remoteTimestamp = updated.updatedAt.getTime();
+        const cloudSaveTimestamp = lastCloudSaveTimestamp || 0;
+        const timeDiff = Math.abs(remoteTimestamp - cloudSaveTimestamp);
+        const isSelfUpdate = timeDiff < 3000; // 3秒以内を自己更新として判定（緩和）
+
+        // 同じタイムスタンプの更新は無視（ただし、初回は処理する）
+        if (remoteTimestamp === lastProcessedTimestamp && lastProcessedTimestamp !== 0) {
+          if (import.meta.env.DEV) {
+            console.log('🔄 同じタイムスタンプのため無視:', remoteTimestamp);
+          }
+          return;
+        }
+
+        // 開発時のみ詳細ログ
+        if (import.meta.env.DEV) {
+          console.log('🔄 Firebase更新を受信:', {
+            remoteTimestamp,
+            cloudSaveTimestamp,
+            timeDiff,
+            isSelfUpdate,
+            remotePlaces: updated.places.length,
+            remoteLabels: updated.labels.length
+          });
+        }
+
+        // デバッグログを記録
+        if (isSelfUpdate) {
+          syncDebugUtils.log('ignore', {
+            reason: '自己更新',
+            remoteTimestamp,
+            cloudSaveTimestamp,
+            timeDiff
+          });
+          if (import.meta.env.DEV) {
+            console.log('🔄 自己更新のため無視');
+          }
+          return;
+        }
+
+        // 他デバイスからの更新として記録
+        syncDebugUtils.log('receive', {
+          remoteTimestamp,
+          cloudSaveTimestamp,
+          timeDiff,
+          remotePlaces: updated.places.length,
+          remoteLabels: updated.labels.length
+        });
+
+        // 処理中のタイムアウトをクリア
+        if (processingTimeout) {
+          clearTimeout(processingTimeout);
+        }
+
+        // リモート更新中フラグを設定
+        setIsRemoteUpdateInProgress(true);
+
+        // 処理を遅延させて連続更新をバッチ処理
+        processingTimeout = setTimeout(() => {
+          try {
+            // 競合解決を実行
+            const currentPlan = usePlanStore.getState().plan;
+            if (currentPlan) {
+              const resolvedPlan = conflictResolver.resolveConflict(
+                currentPlan,
+                updated,
+                currentPlan.updatedAt,
+                updated.updatedAt
+              );
+              
+              if (import.meta.env.DEV) {
+                console.log('🔄 競合解決完了:', {
+                  originalPlaces: currentPlan.places.length,
+                  remotePlaces: updated.places.length,
+                  resolvedPlaces: resolvedPlan.places.length,
+                  originalLabels: currentPlan.labels.length,
+                  remoteLabels: updated.labels.length,
+                  resolvedLabels: resolvedPlan.labels.length
+                });
+              }
+
+              // 競合解決ログを記録
+              syncDebugUtils.log('conflict', {
+                originalPlaces: currentPlan.places.length,
+                remotePlaces: updated.places.length,
+                resolvedPlaces: resolvedPlan.places.length,
+                originalLabels: currentPlan.labels.length,
+                remoteLabels: updated.labels.length,
+                resolvedLabels: resolvedPlan.labels.length
+              });
+              
+              // 解決されたプランをストアに反映
+              // 競合解決後のタイムスタンプを更新
+              const finalPlan = {
+                ...resolvedPlan,
+                updatedAt: new Date() // 競合解決時刻で更新
+              };
+              usePlanStore.getState().setPlan(finalPlan);
+              usePlacesStore.setState({ places: finalPlan.places });
+              useLabelsStore.setState({ labels: finalPlan.labels });
+            } else {
+              // ローカルプランがない場合はリモートを採用
+              usePlanStore.getState().setPlan(updated);
+              usePlacesStore.setState({ places: updated.places });
+              useLabelsStore.setState({ labels: updated.labels });
+            }
+
+            lastProcessedTimestamp = remoteTimestamp;
+          } finally {
+            // リモート更新中フラグを解除（遅延を短縮）
+            setTimeout(() => {
+              setIsRemoteUpdateInProgress(false);
+              if (import.meta.env.DEV) {
+                console.log('🔄 リモート更新完了、自動保存を再開');
+              }
+            }, 200); // 500msから200msに短縮
+          }
+        }, 100); // 100ms遅延でバッチ処理
+
       });
     })();
 
     return () => {
       if (unsub) unsub();
+      if (processingTimeout) {
+        clearTimeout(processingTimeout);
+      }
     };
   }, [user, planId, isInitializing]);
 
@@ -256,6 +445,12 @@ function App() {
       {/* テスト用候補地追加ボタン（開発時のみ表示） */}
       {import.meta.env.DEV && <TestPlacesButton />}
       
+      {/* 同期競合解決機能テストボタン（開発時のみ表示） */}
+      <SyncTestButton />
+      
+      {/* 同期デバッグボタン */}
+      <SyncDebugButton />
+      
       {/* ルート検索パネル */}
       <RouteSearchPanel 
         isOpen={isRouteSearchOpen} 
@@ -282,7 +477,7 @@ function App() {
       />
 
       {/* クラウド同期インジケータ */}
-      <SyncStatusIndicator />
+      <SyncStatusIndicator onSave={updateLastSavedTimestamp} />
 
       {/* ログインボタン（デスクトップは右上、モバイルは左上） */}
       <div
