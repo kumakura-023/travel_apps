@@ -246,13 +246,18 @@ function App() {
         console.log('🚀 ラベル追加検知、即座同期開始:', newLabel.text);
       }
       
-      // 即座にローカル保存とクラウド同期を実行
-      if (plan) {
-        saveImmediately(plan);
-        saveImmediatelyCloud(plan);
+      const currentPlan = usePlanStore.getState().plan;
+      if (currentPlan) {
+        const planToSave: TravelPlan = {
+          ...currentPlan,
+          labels: [...currentPlan.labels, newLabel],
+          updatedAt: new Date(),
+        };
+        usePlanStore.getState().setPlan(planToSave);
+        saveImmediately(planToSave);
+        saveImmediatelyCloud(planToSave);
       }
       
-      // デバッグログを記録
       syncDebugUtils.log('save', {
         type: 'immediate_sync',
         reason: 'label_added',
@@ -263,27 +268,53 @@ function App() {
     });
   }, [plan, saveImmediately, saveImmediatelyCloud]);
 
+  // ラベル更新時の即座同期を設定
+  React.useEffect(() => {
+    const { setOnLabelUpdated } = useLabelsStore.getState();
+
+    setOnLabelUpdated((updatedLabels) => {
+      if (import.meta.env.DEV) {
+        console.log('📝 ラベル更新検知、即座同期開始:');
+      }
+
+      const currentPlan = usePlanStore.getState().plan;
+      if (currentPlan) {
+        const planToSave: TravelPlan = {
+          ...currentPlan,
+          labels: updatedLabels,
+          updatedAt: new Date(),
+        };
+        usePlanStore.getState().setPlan(planToSave);
+        saveImmediately(planToSave);
+        saveImmediatelyCloud(planToSave);
+      }
+    });
+  }, [plan, saveImmediately, saveImmediatelyCloud]);
+
   // ラベル削除時の即座同期を設定
   React.useEffect(() => {
     const { setOnLabelDeleted } = useLabelsStore.getState();
     
-    setOnLabelDeleted((deletedLabel) => {
+    setOnLabelDeleted((updatedLabels) => {
       if (import.meta.env.DEV) {
-        console.log('🗑️ ラベル削除検知、即座同期開始:', deletedLabel.text);
+        console.log('🗑️ ラベル削除検知、即座同期開始:');
       }
       
-      // 即座にローカル保存とクラウド同期を実行
-      if (plan) {
-        saveImmediately(plan);
-        saveImmediatelyCloud(plan);
+      const currentPlan = usePlanStore.getState().plan;
+      if (currentPlan) {
+        const planToSave: TravelPlan = {
+          ...currentPlan,
+          labels: updatedLabels,
+          updatedAt: new Date(),
+        };
+        usePlanStore.getState().setPlan(planToSave);
+        saveImmediately(planToSave);
+        saveImmediatelyCloud(planToSave);
       }
       
-      // デバッグログを記録
       syncDebugUtils.log('save', {
         type: 'immediate_sync',
         reason: 'label_deleted',
-        labelText: deletedLabel.text,
-        labelId: deletedLabel.id,
         timestamp: Date.now()
       });
     });
@@ -510,14 +541,7 @@ function App() {
       {/* リスト表示タブ */}
       {activeTab === 'list' && <PlaceList />}
       
-      {/* テスト用候補地追加ボタン（開発時のみ表示） */}
-      {import.meta.env.DEV && <TestPlacesButton />}
       
-      {/* 同期競合解決機能テストボタン（開発時のみ表示） */}
-      <SyncTestButton />
-      
-      {/* 同期デバッグボタン */}
-      <SyncDebugButton />
       
       {/* ルート検索パネル */}
       <RouteSearchPanel 

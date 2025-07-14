@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.23] - 2025-07-14
+
+### ✨ 新機能
+- **メモ（ラベル）機能のクラウド同期**: メモ（ラベル）の追加、編集、削除がクラウド経由でリアルタイムに同期されるようになりました。
+
+### 🐛 バグ修正
+- **メモ（ラベル）の編集**: 編集内容が保存されない問題を修正しました。編集、保存後に即座にUIへ反映され、クラウドにも同期されます。
+
+### 🔧 技術的改善
+- `labelsStore`に`onLabelUpdated`コールバックを追加し、ラベルの更新イベントを捕捉できるようにしました。
+- `App.tsx`でラベルの追加、更新、削除の各イベントを購読し、`planStore`の更新とクラウドへの同期処理を実装しました。
+- 同期関連のテスト用ボタン（`TestPlacesButton`, `SyncTestButton`, `SyncDebugButton`）をUIから削除しました。
+
 ## [1.4.22] - 2025-07-14
 
 ### 🐛 バグ修正

@@ -6,20 +6,24 @@ import { syncDebugUtils } from '../utils/syncDebugUtils';
 interface LabelsState {
   labels: MapLabel[];
   onLabelAdded?: (label: MapLabel) => void;
-  onLabelDeleted?: (label: MapLabel) => void;
+  onLabelUpdated?: (updatedLabels: MapLabel[]) => void; // 編集完了時に全ラベルを渡す
+  onLabelDeleted?: (updatedLabels: MapLabel[]) => void; // 削除完了時に全ラベルを渡す
   setOnLabelAdded: (callback: (label: MapLabel) => void) => void;
-  setOnLabelDeleted: (callback: (label: MapLabel) => void) => void;
+  setOnLabelUpdated: (callback: (updatedLabels: MapLabel[]) => void) => void;
+  setOnLabelDeleted: (callback: (updatedLabels: MapLabel[]) => void) => void;
   addLabel: (partial: Partial<MapLabel>) => void;
   updateLabel: (id: string, update: Partial<MapLabel>) => void;
   deleteLabel: (id: string) => void;
   clearLabels: () => void;
 }
 
-export const useLabelsStore = create<LabelsState>((set) => ({
+export const useLabelsStore = create<LabelsState>((set, get) => ({
   labels: [],
   onLabelAdded: undefined,
+  onLabelUpdated: undefined,
   onLabelDeleted: undefined,
   setOnLabelAdded: (callback) => set({ onLabelAdded: callback }),
+  setOnLabelUpdated: (callback) => set({ onLabelUpdated: callback }),
   setOnLabelDeleted: (callback) => set({ onLabelDeleted: callback }),
   addLabel: (partial) =>
     set((s) => {
@@ -41,43 +45,47 @@ export const useLabelsStore = create<LabelsState>((set) => ({
 
       return newState;
     }),
-  updateLabel: (id, update) =>
-    set((s) => ({
-      labels: s.labels.map((l) => (l.id === id ? { ...l, ...update, updatedAt: new Date() } : l)),
-    })),
+  updateLabel: (id, update) => {
+    set((s) => {
+      const updatedLabels = s.labels.map((l) =>
+        l.id === id ? { ...l, ...update, updatedAt: new Date() } : l
+      );
+      
+      // 更新コールバックを実行
+      if (s.onLabelUpdated) {
+        s.onLabelUpdated(updatedLabels);
+      }
+      
+      return { labels: updatedLabels };
+    });
+  },
   deleteLabel: (id) => {
     if (import.meta.env.DEV) {
       console.log(`deleteLabel called: ${id}`);
     }
     set((s) => {
-      const labelToDelete = s.labels.find(l => l.id === id);
-      if (labelToDelete) {
-        if (import.meta.env.DEV) {
-          console.log(`Deleting label: ${labelToDelete.text} (${id})`);
-        }
-        // 削除前にタイムスタンプを更新して同期を確実にする
-        const updatedLabel = { ...labelToDelete, updatedAt: new Date() };
-        if (import.meta.env.DEV) {
-          console.log(`Updated timestamp before deletion: ${updatedLabel.updatedAt.toISOString()}`);
-        }
-        
-        // デバッグログを記録
+      const labelToDelete = s.labels.find((l) => l.id === id);
+      if (!labelToDelete) return { labels: s.labels };
+
+      const filteredLabels = s.labels.filter((l) => l.id !== id);
+      
+      if (import.meta.env.DEV) {
+        console.log(`Deleting label: ${labelToDelete.text} (${id})`);
         syncDebugUtils.log('delete', {
           type: 'label',
           id: labelToDelete.id,
           text: labelToDelete.text,
-          timestamp: updatedLabel.updatedAt.getTime(),
+          timestamp: new Date().getTime(),
           totalLabelsBefore: s.labels.length,
-          totalLabelsAfter: s.labels.length - 1
+          totalLabelsAfter: filteredLabels.length,
         });
-
-        // 削除コールバックを実行
-        if (s.onLabelDeleted) {
-          s.onLabelDeleted(updatedLabel);
-        }
       }
-      
-      const filteredLabels = s.labels.filter((l) => l.id !== id);
+
+      // 削除コールバックを実行（状態更新後）
+      if (s.onLabelDeleted) {
+        s.onLabelDeleted(filteredLabels);
+      }
+
       if (import.meta.env.DEV) {
         console.log(`Labels: ${s.labels.length} -> ${filteredLabels.length}`);
       }
