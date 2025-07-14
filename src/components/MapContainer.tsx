@@ -4,6 +4,7 @@ import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import MapStateManager from './MapStateManager';
 import MapEventHandler from './MapEventHandler';
 import MapOverlayManager from './MapOverlayManager';
+import { useUIStore } from '../store/uiStore';
 
 /**
  * 地図コンテナコンポーネント
@@ -25,6 +26,7 @@ interface MapContainerProps {
 export default function MapContainer({ children, showLabelToggle = true, labelMode = false, onLabelModeChange }: MapContainerProps) {
   const { setMap } = useGoogleMaps();
   const [zoom, setZoom] = useState(14);
+  const isMapInteractionEnabled = useUIStore((s) => s.isMapInteractionEnabled);
 
   // 地図の読み込み完了時のハンドラー
   const handleMapLoad = (map: google.maps.Map) => {
@@ -44,7 +46,14 @@ export default function MapContainer({ children, showLabelToggle = true, labelMo
           mapContainerStyle={containerStyle}
           center={center}
           zoom={zoom}
-          options={mapOptions}
+          options={{
+            ...mapOptions,
+            gestureHandling: isMapInteractionEnabled ? 'auto' : 'none',
+            zoomControl: isMapInteractionEnabled,
+            streetViewControl: isMapInteractionEnabled,
+            mapTypeControl: isMapInteractionEnabled,
+            fullscreenControl: isMapInteractionEnabled,
+          }}
           onLoad={handleMapLoad}
         >
           {/* イベント処理コンポーネント（UIを持たない） */}
