@@ -237,13 +237,13 @@ function App() {
     });
   }, [plan, saveImmediately, saveImmediatelyCloud]);
 
-  // ラベル追加時の即座同期を設定
+  // ラベル追加時のローカル状態更新
   React.useEffect(() => {
     const { setOnLabelAdded } = useLabelsStore.getState();
     
     setOnLabelAdded((newLabel) => {
       if (import.meta.env.DEV) {
-        console.log('🚀 ラベル追加検知、即座同期開始:', newLabel.text);
+        console.log('📝 ラベル追加検知（ローカルのみ）:', newLabel.text);
       }
       
       const currentPlan = usePlanStore.getState().plan;
@@ -254,27 +254,18 @@ function App() {
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
-        saveImmediately(planToSave);
-        saveImmediatelyCloud(planToSave);
+        // saveImmediately(planToSave); // 初回保存はしない
       }
-      
-      syncDebugUtils.log('save', {
-        type: 'immediate_sync',
-        reason: 'label_added',
-        labelText: newLabel.text,
-        labelId: newLabel.id,
-        timestamp: Date.now()
-      });
     });
-  }, [plan, saveImmediately, saveImmediatelyCloud]);
+  }, []);
 
   // ラベル更新時の即座同期を設定
   React.useEffect(() => {
     const { setOnLabelUpdated } = useLabelsStore.getState();
 
-    setOnLabelUpdated((updatedLabels) => {
+    setOnLabelUpdated((updatedLabel, updatedLabels) => {
       if (import.meta.env.DEV) {
-        console.log('📝 ラベル更新検知、即座同期開始:');
+        console.log('📝 ラベル更新検知、同期開始:', updatedLabel);
       }
 
       const currentPlan = usePlanStore.getState().plan;
@@ -285,8 +276,12 @@ function App() {
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
-        saveImmediately(planToSave);
-        saveImmediatelyCloud(planToSave);
+        
+        // 'synced' ステータスのラベルのみクラウド同期
+        if (updatedLabel.status === 'synced') {
+          saveImmediately(planToSave);
+          saveImmediatelyCloud(planToSave);
+        }
       }
     });
   }, [plan, saveImmediately, saveImmediatelyCloud]);

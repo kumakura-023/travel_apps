@@ -64,6 +64,7 @@ export interface MapLabel {
   linkedPlaceId?: string; // 候補地とのリンク
   createdAt: Date; // 作成時刻
   updatedAt: Date; // 更新時刻
+  status?: 'new' | 'synced'; // 同期状態
 }
 
 // 2地点間移動時間表示のための型定義

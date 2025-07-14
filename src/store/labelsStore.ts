@@ -6,10 +6,10 @@ import { syncDebugUtils } from '../utils/syncDebugUtils';
 interface LabelsState {
   labels: MapLabel[];
   onLabelAdded?: (label: MapLabel) => void;
-  onLabelUpdated?: (updatedLabels: MapLabel[]) => void; // 編集完了時に全ラベルを渡す
+  onLabelUpdated?: (updatedLabel: MapLabel, allLabels: MapLabel[]) => void; // 変更されたラベルと全ラベルを渡す
   onLabelDeleted?: (updatedLabels: MapLabel[]) => void; // 削除完了時に全ラベルを渡す
   setOnLabelAdded: (callback: (label: MapLabel) => void) => void;
-  setOnLabelUpdated: (callback: (updatedLabels: MapLabel[]) => void) => void;
+  setOnLabelUpdated: (callback: (updatedLabel: MapLabel, allLabels: MapLabel[]) => void) => void;
   setOnLabelDeleted: (callback: (updatedLabels: MapLabel[]) => void) => void;
   addLabel: (partial: Partial<MapLabel>) => void;
   updateLabel: (id: string, update: Partial<MapLabel>) => void;
@@ -28,11 +28,12 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
   addLabel: (partial) =>
     set((s) => {
       const newLabel = {
-        width: 120, // デフォルト幅
-        height: 40, // デフォルト高さ
-        color: '#000000', // デフォルト文字色
-        fontSize: 14, // デフォルトフォントサイズ
-        fontFamily: 'sans-serif', // デフォルトフォント
+        width: 120,
+        height: 40,
+        color: '#000000',
+        fontSize: 14,
+        fontFamily: 'sans-serif',
+        status: 'new', // 新規作成時は'new'ステータス
         ...partial,
         id: uuidv4(),
         createdAt: new Date(),
@@ -43,7 +44,6 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
         labels: [...s.labels, newLabel],
       };
 
-      // 即座同期コールバックを実行
       if (s.onLabelAdded) {
         s.onLabelAdded(newLabel);
       }
@@ -52,15 +52,19 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
     }),
   updateLabel: (id, update) => {
     set((s) => {
-      const updatedLabels = s.labels.map((l) =>
-        l.id === id ? { ...l, ...update, updatedAt: new Date() } : l
-      );
-      
-      // 更新コールバックを実行
-      if (s.onLabelUpdated) {
-        s.onLabelUpdated(updatedLabels);
+      let updatedLabel: MapLabel | null = null;
+      const updatedLabels = s.labels.map((l) => {
+        if (l.id === id) {
+          updatedLabel = { ...l, ...update, updatedAt: new Date() };
+          return updatedLabel;
+        }
+        return l;
+      });
+
+      if (s.onLabelUpdated && updatedLabel) {
+        s.onLabelUpdated(updatedLabel, updatedLabels);
       }
-      
+
       return { labels: updatedLabels };
     });
   },

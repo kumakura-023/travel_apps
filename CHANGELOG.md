@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.26] - 2025-07-14
+
+### ✨ UX改善
+- **メモ（ラベル）の同期アルゴリズム改善**: メモの編集体験を向上させるため、同期タイミングを最適化しました。
+  - 新規作成されたメモは、テキストが編集・保存されるまでクラウド同期されなくなりました。
+  - これにより、メモの配置、移動、リサイズ中に意図しない同期が発生し、編集作業が妨げられる問題を解消しました。
+
+### 🔧 技術的改善
+- `MapLabel` 型に `status` プロパティを追加し、メモの同期状態（`new` | `synced`）を管理するようにしました。
+- `labelsStore` と `App.tsx` の同期ロジックを修正し、`status` が `synced` のメモに対する操作のみがクラウド同期をトリガーするように変更しました。
+
 ## [1.4.25] - 2025-07-14
 
 ### ✨ UX改善

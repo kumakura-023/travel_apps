@@ -51,7 +51,8 @@ export default function LabelEditDialog({ label, onSave, onClose }: Props) {
       width, 
       height, 
       fontFamily,
-      linkedPlaceId: linkedPlaceId || undefined
+      linkedPlaceId: linkedPlaceId || undefined,
+      status: 'synced', // 保存時にステータスを'synced'に更新
     });
     onClose();
   };
