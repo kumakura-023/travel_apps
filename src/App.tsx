@@ -172,7 +172,7 @@ function App() {
 
   // 自動保存フックを使用
   const plan = usePlanStore((s) => s.plan);
-  const { setIsRemoteUpdateInProgress, saveImmediately, lastCloudSaveTimestamp } = useAutoSave(plan, updateLastSavedTimestamp);
+  const { setIsRemoteUpdateInProgress, saveImmediately, saveImmediatelyCloud, lastCloudSaveTimestamp } = useAutoSave(plan, updateLastSavedTimestamp);
 
   // 候補地追加時の即座同期を設定
   React.useEffect(() => {
@@ -183,9 +183,10 @@ function App() {
         console.log('🚀 候補地追加検知、即座同期開始:', newPlace.name);
       }
       
-      // 即座にローカル保存を実行
+      // 即座にローカル保存とクラウド同期を実行
       if (plan) {
         saveImmediately(plan);
+        saveImmediatelyCloud(plan);
       }
       
       // デバッグログを記録
@@ -197,7 +198,33 @@ function App() {
         timestamp: Date.now()
       });
     });
-  }, [plan, saveImmediately]);
+  }, [plan, saveImmediately, saveImmediatelyCloud]);
+
+  // 候補地削除時の即座同期を設定
+  React.useEffect(() => {
+    const { setOnPlaceDeleted } = usePlacesStore.getState();
+    
+    setOnPlaceDeleted((deletedPlace) => {
+      if (import.meta.env.DEV) {
+        console.log('🗑️ 候補地削除検知、即座同期開始:', deletedPlace.name);
+      }
+      
+      // 即座にローカル保存とクラウド同期を実行
+      if (plan) {
+        saveImmediately(plan);
+        saveImmediatelyCloud(plan);
+      }
+      
+      // デバッグログを記録
+      syncDebugUtils.log('save', {
+        type: 'immediate_sync',
+        reason: 'place_deleted',
+        placeName: deletedPlace.name,
+        placeId: deletedPlace.id,
+        timestamp: Date.now()
+      });
+    });
+  }, [plan, saveImmediately, saveImmediatelyCloud]);
 
   // ラベル追加時の即座同期を設定
   React.useEffect(() => {
@@ -208,9 +235,10 @@ function App() {
         console.log('🚀 ラベル追加検知、即座同期開始:', newLabel.text);
       }
       
-      // 即座にローカル保存を実行
+      // 即座にローカル保存とクラウド同期を実行
       if (plan) {
         saveImmediately(plan);
+        saveImmediatelyCloud(plan);
       }
       
       // デバッグログを記録
@@ -222,7 +250,33 @@ function App() {
         timestamp: Date.now()
       });
     });
-  }, [plan, saveImmediately]);
+  }, [plan, saveImmediately, saveImmediatelyCloud]);
+
+  // ラベル削除時の即座同期を設定
+  React.useEffect(() => {
+    const { setOnLabelDeleted } = useLabelsStore.getState();
+    
+    setOnLabelDeleted((deletedLabel) => {
+      if (import.meta.env.DEV) {
+        console.log('🗑️ ラベル削除検知、即座同期開始:', deletedLabel.text);
+      }
+      
+      // 即座にローカル保存とクラウド同期を実行
+      if (plan) {
+        saveImmediately(plan);
+        saveImmediatelyCloud(plan);
+      }
+      
+      // デバッグログを記録
+      syncDebugUtils.log('save', {
+        type: 'immediate_sync',
+        reason: 'label_deleted',
+        labelText: deletedLabel.text,
+        labelId: deletedLabel.id,
+        timestamp: Date.now()
+      });
+    });
+  }, [plan, saveImmediately, saveImmediatelyCloud]);
 
   // URL共有からの読み込み & プランロード
   // 認証初期化が完了してからプランをロード
@@ -281,7 +335,7 @@ function App() {
         const remoteTimestamp = updated.updatedAt.getTime();
         const cloudSaveTimestamp = lastCloudSaveTimestamp || 0;
         const timeDiff = Math.abs(remoteTimestamp - cloudSaveTimestamp);
-        const isSelfUpdate = timeDiff < 3000; // 3秒以内を自己更新として判定（緩和）
+        const isSelfUpdate = timeDiff < 1000; // 1秒以内を自己更新として判定（厳格化）
 
         // 同じタイムスタンプの更新は無視（ただし、初回は処理する）
         if (remoteTimestamp === lastProcessedTimestamp && lastProcessedTimestamp !== 0) {
@@ -369,14 +423,10 @@ function App() {
               });
               
               // 解決されたプランをストアに反映
-              // 競合解決後のタイムスタンプを更新
-              const finalPlan = {
-                ...resolvedPlan,
-                updatedAt: new Date() // 競合解決時刻で更新
-              };
-              usePlanStore.getState().setPlan(finalPlan);
-              usePlacesStore.setState({ places: finalPlan.places });
-              useLabelsStore.setState({ labels: finalPlan.labels });
+              // 競合解決後のタイムスタンプは更新しない（無限ループ防止）
+              usePlanStore.getState().setPlan(resolvedPlan);
+              usePlacesStore.setState({ places: resolvedPlan.places });
+              useLabelsStore.setState({ labels: resolvedPlan.labels });
             } else {
               // ローカルプランがない場合はリモートを採用
               usePlanStore.getState().setPlan(updated);

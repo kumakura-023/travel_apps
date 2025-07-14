@@ -214,9 +214,9 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
         const timeDiff = Math.abs(localTime - remoteTime);
         
         let resolvedPlace: Place;
-        if (timeDiff < 1000) { // 1秒以内の差は同じとみなす
-          // タイムスタンプが同じ場合はリモートを優先
-          resolvedPlace = remotePlace;
+        if (timeDiff < 500) { // 500ms以内の差は同じとみなす（厳格化）
+          // タイムスタンプが同じ場合はローカルを優先（変更）
+          resolvedPlace = localPlace;
           sameTimestampConflicts++;
         } else {
           // タイムスタンプが異なる場合は新しい方を採用
@@ -230,22 +230,20 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
       }
     });
     
-    const result = Array.from(placeMap.values());
+    // 削除された地点を除外
+    const deletedPlaceIds = new Set(deletedPlaces.map(item => item.id));
+    const result = Array.from(placeMap.values()).filter(place => !deletedPlaceIds.has(place.id));
     
     // 開発時のみ詳細ログ
     if (import.meta.env.DEV) {
-      console.log('🔄 地点競合解決:', {
-        localCount: localPlaces.length,
-        remoteCount: remotePlaces.length,
-        resolvedCount: result.length,
+      console.log('🔄 地点競合解決結果:', {
+        localPlaces: localPlaces.length,
+        remotePlaces: remotePlaces.length,
+        resolvedPlaces: result.length,
         conflicts,
         additions,
         sameTimestampConflicts,
-        uniqueIds: {
-          local: localPlaces.map(p => p.id),
-          remote: remotePlaces.map(p => p.id),
-          resolved: result.map(p => p.id)
-        }
+        deletedPlaces: deletedPlaces.length
       });
     }
     
@@ -286,9 +284,9 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
         const timeDiff = Math.abs(localTime - remoteTime);
         
         let resolvedLabel: MapLabel;
-        if (timeDiff < 1000) { // 1秒以内の差は同じとみなす
-          // タイムスタンプが同じ場合はリモートを優先
-          resolvedLabel = remoteLabel;
+        if (timeDiff < 500) { // 500ms以内の差は同じとみなす（厳格化）
+          // タイムスタンプが同じ場合はローカルを優先（変更）
+          resolvedLabel = normalizedLocalLabel;
           sameTimestampConflicts++;
         } else {
           // タイムスタンプが異なる場合は新しい方を採用
@@ -302,22 +300,20 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
       }
     });
     
-    const result = Array.from(labelMap.values());
+    // 削除されたラベルを除外
+    const deletedLabelIds = new Set(deletedLabels.map(item => item.id));
+    const result = Array.from(labelMap.values()).filter(label => !deletedLabelIds.has(label.id));
     
     // 開発時のみ詳細ログ
     if (import.meta.env.DEV) {
-      console.log('🔄 ラベル競合解決:', {
-        localCount: localLabels.length,
-        remoteCount: remoteLabels.length,
-        resolvedCount: result.length,
+      console.log('🔄 ラベル競合解決結果:', {
+        localLabels: localLabels.length,
+        remoteLabels: remoteLabels.length,
+        resolvedLabels: result.length,
         conflicts,
         additions,
         sameTimestampConflicts,
-        uniqueIds: {
-          local: localLabels.map(l => l.id),
-          remote: remoteLabels.map(l => l.id),
-          resolved: result.map(l => l.id)
-        }
+        deletedLabels: deletedLabels.length
       });
     }
     

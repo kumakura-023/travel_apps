@@ -6,10 +6,9 @@ import { syncDebugUtils } from '../utils/syncDebugUtils';
 
 /**
  * TravelPlanの変更を監視するカスタムフック
- * 即座保存 + バッチ同期方式を採用
+ * イベントベース同期方式を採用
  */
 export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number) => void) {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSynced, setIsSynced] = useState(false);
   const [isRemoteUpdateInProgress, setIsRemoteUpdateInProgress] = useState(false);
@@ -45,7 +44,49 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     }
   }, []);
 
-  // バッチクラウド同期関数
+  // 即座クラウド同期関数（イベントベース）
+  const saveImmediatelyCloud = useCallback(async (plan: TravelPlan) => {
+    if (!navigator.onLine || !user) return;
+    
+    setIsSaving(true);
+    try {
+      const saveTimestamp = Date.now();
+      lastCloudSaveRef.current = saveTimestamp;
+      lastSavedTimestampRef.current = saveTimestamp;
+      
+      if (import.meta.env.DEV) {
+        console.log('☁️ 即座クラウド同期開始:', { 
+          timestamp: saveTimestamp,
+          places: plan.places.length,
+          labels: plan.labels.length
+        });
+      }
+      
+      syncDebugUtils.log('save', {
+        timestamp: saveTimestamp,
+        places: plan.places.length,
+        labels: plan.labels.length,
+        totalCost: plan.totalCost,
+        type: 'immediate_cloud_sync'
+      });
+      
+      await savePlanHybrid(plan, { mode: 'cloud', uid: user.uid });
+      setIsSynced(true);
+      
+      if (import.meta.env.DEV) {
+        console.log('☁️ 即座クラウド同期成功:', { timestamp: saveTimestamp });
+      }
+      
+      onSave?.(saveTimestamp);
+    } catch (err) {
+      console.warn('即座クラウド同期失敗:', err);
+      setIsSynced(false);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user, onSave]);
+
+  // バッチクラウド同期関数（フォールバック用）
   const batchCloudSync = useCallback(async (plan: TravelPlan) => {
     if (!navigator.onLine || !user) return;
     
@@ -53,7 +94,7 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     try {
       const saveTimestamp = Date.now();
       lastCloudSaveRef.current = saveTimestamp;
-      lastSavedTimestampRef.current = saveTimestamp; // クラウド保存時のみ更新
+      lastSavedTimestampRef.current = saveTimestamp;
       
       if (import.meta.env.DEV) {
         console.log('☁️ バッチクラウド同期開始:', { 
@@ -91,9 +132,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
   useEffect(() => {
     const handleUnload = () => {
       if (!plan) return;
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
       try {
         savePlanHybrid(plan, { mode: 'local' });
       } catch (_) {
@@ -122,30 +160,16 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     // 即座にローカル保存を実行
     saveImmediately(plan);
     
-    // 変更が検知されたらバッチ同期タイマーをリセット
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
+    // 開発時のみ詳細ログ
+    if (import.meta.env.DEV) {
+      console.log('🔄 プラン変更検知:', {
+        places: plan.places.length,
+        labels: plan.labels.length,
+        changeCount: changeCountRef.current
+      });
     }
-    
-    // バッチクラウド同期を3秒後に実行
-    timerRef.current = setTimeout(() => {
-      const currentHash = calculatePlanHash(plan);
-      if (currentHash === lastPlanHashRef.current && changeCountRef.current === 0) {
-        return;
-      }
-      
-      lastPlanHashRef.current = currentHash;
-      changeCountRef.current = 0;
-      
-      batchCloudSync(plan);
-    }, 3000); // 3秒後にバッチ同期
 
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, [plan, isRemoteUpdateInProgress, calculatePlanHash, saveImmediately, batchCloudSync]);
+  }, [plan, isRemoteUpdateInProgress, saveImmediately]);
 
   return {
     isSaving,
@@ -155,5 +179,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     lastSavedTimestamp: lastSavedTimestampRef.current,
     lastCloudSaveTimestamp: lastCloudSaveRef.current,
     saveImmediately, // 外部から即座保存を呼び出せるように公開
+    saveImmediatelyCloud, // 外部から即座クラウド同期を呼び出せるように公開
   };
 } 

@@ -1,24 +1,32 @@
 import { create } from 'zustand';
-import { Place } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { Place } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
 
 interface PlacesState {
   places: Place[];
-  addPlace: (partial: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onPlaceAdded?: (place: Place) => void;
+  onPlaceDeleted?: (place: Place) => void;
+  setOnPlaceAdded: (callback: (place: Place) => void) => void;
+  setOnPlaceDeleted: (callback: (place: Place) => void) => void;
+  addPlace: (partial: Partial<Place>) => void;
   updatePlace: (id: string, update: Partial<Place>) => void;
   deletePlace: (id: string) => void;
-  // 即座同期用のコールバック
-  onPlaceAdded?: (place: Place) => void;
-  setOnPlaceAdded: (callback: (place: Place) => void) => void;
+  clearPlaces: () => void;
 }
 
 export const usePlacesStore = create<PlacesState>((set, get) => ({
   places: [],
   onPlaceAdded: undefined,
+  onPlaceDeleted: undefined,
   setOnPlaceAdded: (callback) => set({ onPlaceAdded: callback }),
+  setOnPlaceDeleted: (callback) => set({ onPlaceDeleted: callback }),
   addPlace: (partial) =>
     set((state) => {
+      if (!partial.coordinates) {
+        throw new Error('Coordinates are required for adding a place');
+      }
+      
       const newPlace = {
         ...partial,
         labelHidden: true,
@@ -71,6 +79,11 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
           totalPlacesBefore: state.places.length,
           totalPlacesAfter: state.places.length - 1
         });
+
+        // 削除コールバックを実行
+        if (state.onPlaceDeleted) {
+          state.onPlaceDeleted(updatedPlace);
+        }
       }
       
       const filteredPlaces = state.places.filter((p) => p.id !== id);
@@ -82,4 +95,5 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
       };
     });
   },
+  clearPlaces: () => set({ places: [] }),
 })); 

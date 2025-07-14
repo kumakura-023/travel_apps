@@ -1,57 +1,49 @@
 import { create } from 'zustand';
-import { MapLabel } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { MapLabel } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
 
 interface LabelsState {
   labels: MapLabel[];
-  addLabel: (
-    text: string,
-    position: { lat: number; lng: number },
-    fontSize?: number,
-  ) => MapLabel;
+  onLabelAdded?: (label: MapLabel) => void;
+  onLabelDeleted?: (label: MapLabel) => void;
+  setOnLabelAdded: (callback: (label: MapLabel) => void) => void;
+  setOnLabelDeleted: (callback: (label: MapLabel) => void) => void;
+  addLabel: (partial: Partial<MapLabel>) => void;
   updateLabel: (id: string, update: Partial<MapLabel>) => void;
   deleteLabel: (id: string) => void;
-  // 即座同期用のコールバック
-  onLabelAdded?: (label: MapLabel) => void;
-  setOnLabelAdded: (callback: (label: MapLabel) => void) => void;
+  clearLabels: () => void;
 }
 
 export const useLabelsStore = create<LabelsState>((set) => ({
   labels: [],
   onLabelAdded: undefined,
+  onLabelDeleted: undefined,
   setOnLabelAdded: (callback) => set({ onLabelAdded: callback }),
-  addLabel: (text, position, fontSize = 14) => {
-    const now = new Date();
-    const newLabel: MapLabel = {
-      id: uuidv4(),
-      text,
-      position,
-      fontSize,
-      fontFamily: 'sans-serif',
-      color: '#202124',
-      width: 120,
-      height: 32,
-      createdAt: now,
-      updatedAt: now,
-    };
-    
+  setOnLabelDeleted: (callback) => set({ onLabelDeleted: callback }),
+  addLabel: (partial) =>
     set((s) => {
-      const newState = { labels: [...s.labels, newLabel] };
-      
+      const newLabel = {
+        ...partial,
+        id: uuidv4(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as MapLabel;
+
+      const newState = {
+        labels: [...s.labels, newLabel],
+      };
+
       // 即座同期コールバックを実行
       if (s.onLabelAdded) {
         s.onLabelAdded(newLabel);
       }
-      
+
       return newState;
-    });
-    
-    return newLabel;
-  },
+    }),
   updateLabel: (id, update) =>
-    set((s) => ({ 
-      labels: s.labels.map((l) => (l.id === id ? { ...l, ...update, updatedAt: new Date() } : l)) 
+    set((s) => ({
+      labels: s.labels.map((l) => (l.id === id ? { ...l, ...update, updatedAt: new Date() } : l)),
     })),
   deleteLabel: (id) => {
     if (import.meta.env.DEV) {
@@ -78,6 +70,11 @@ export const useLabelsStore = create<LabelsState>((set) => ({
           totalLabelsBefore: s.labels.length,
           totalLabelsAfter: s.labels.length - 1
         });
+
+        // 削除コールバックを実行
+        if (s.onLabelDeleted) {
+          s.onLabelDeleted(updatedLabel);
+        }
       }
       
       const filteredLabels = s.labels.filter((l) => l.id !== id);
@@ -87,4 +84,5 @@ export const useLabelsStore = create<LabelsState>((set) => ({
       return { labels: filteredLabels };
     });
   },
+  clearLabels: () => set({ labels: [] }),
 })); 
