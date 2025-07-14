@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.27] - 2025-07-14
+
+### ✨ UX改善
+- **スマホ版のメモ操作性を大幅に向上**: スマホでのメモ（ラベル）編集機能を全面的にリファクタリングしました。
+  - **イベントモデルの統一**: `MouseEvent` から `PointerEvent` に移行し、タッチとマウス操作を共通化。PCとスマホで一貫した操作性を実現しました。
+  - **ダブルタップ編集**: スマホでメモをダブルタップ（300ms以内の連続タップ）すると、テキスト編集ダイアログが開くようになりました。
+  - **安全な移動UI**: シングルタップでメモを選択状態にし、専用の「移動ハンドル」を表示します。これにより、地図のスクロールと競合することなく、安全にメモを移動できます。
+
+### 🐛 バグ修正
+- スマホでメモの編集、リサイズ、削除ができなかった問題を修正しました。
+
 ## [1.4.26] - 2025-07-14
 
 ### ✨ UX改善
