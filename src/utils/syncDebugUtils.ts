@@ -355,71 +355,104 @@ export class SyncDebugUtils {
   /**
    * 詳細な同期レポートを生成
    */
-  generateReport(): string {
-    const status = this.analyzeSyncStatus();
-    const patterns = this.analyzeFailurePatterns();
-    const quality = this.evaluateSyncQuality(status, patterns);
-    const eventBasedSync = this.analyzeEventBasedSync();
+  generateDetailedReport(): void {
+    console.log('🔍 === 同期デバッグ詳細レポート ===');
     
-    const report = `
-🔍 同期分析レポート
-===================
+    // 基本統計
+    const stats = this.analyzeSyncStatus();
+    console.log('📊 同期統計:', stats);
+    
+    // 無視された更新の分析
+    const ignoredUpdates = this.debugLogs.filter(log => log.type === 'ignore');
+    console.log('❌ 無視された更新:', ignoredUpdates.map(log => ({
+      reason: log.data.reason,
+      timestamp: log.timestamp
+    })));
+    
+    // 競合パターンの分析
+    const conflictPatterns = this.analyzeFailurePatterns();
+    console.log('⚔️ 競合パターン:', conflictPatterns);
+    
+    // タイミング問題の分析
+    const timingIssues = this.debugLogs.filter(log => log.type === 'conflict'); // タイミング問題は競合パターンとして扱う
+    console.log('⏰ タイミング問題:', timingIssues);
+    
+    // 同期品質評価
+    const qualityReport = this.generateQualityReport();
+    console.log('🎯 同期品質評価:', qualityReport);
+    
+    // 最近のログ（最新5件）
+    const recentLogs = this.debugLogs.slice(-5);
+    console.log('📝 最近のログ:', recentLogs);
+    
+    console.log('🔍 === レポート終了 ===');
+  }
 
-📊 基本統計
------------
-保存回数: ${status.totalSaves}
-受信回数: ${status.totalReceives}
-競合解決回数: ${status.totalConflicts}
-無視回数: ${status.totalIgnores}
-同期成功率: ${status.syncSuccessRate.toFixed(1)}%
-同期効率: ${status.syncEfficiency.toFixed(1)}%
+  /**
+   * 同期品質評価と改善提案を生成
+   */
+  generateQualityReport(): {
+    overall: '良好' | '注意' | '要改善';
+    issues: string[];
+    recommendations: string[];
+  } {
+    const issues: string[] = [];
+    const recommendations: string[] = [];
 
-⏱️ タイミング分析
-------------------
-平均保存間隔: ${status.averageTimeBetweenSaves.toFixed(0)}ms
-平均受信間隔: ${status.averageTimeBetweenReceives.toFixed(0)}ms
-保存・受信比率: ${status.syncEfficiency.toFixed(2)}
+    // 保存直後の受信問題を分析
+    const immediateReceives = this.debugLogs.filter(log => 
+      log.type === 'receive' && 
+      log.data.timeDiff && 
+      log.data.timeDiff < 5000 // 5秒以内の受信
+    ).length;
 
-🚀 イベントベース同期分析
--------------------------
-即座同期回数: ${eventBasedSync.immediateSyncs}
-バッチ同期回数: ${eventBasedSync.batchSyncs}
-即座同期成功率: ${eventBasedSync.immediateSuccessRate.toFixed(1)}%
-平均応答時間: ${eventBasedSync.averageResponseTime.toFixed(0)}ms
-即座同期後の競合: ${eventBasedSync.conflictsAfterImmediate}回
+    if (immediateReceives > 5) {
+      issues.push('保存直後の受信が頻繁に発生');
+      recommendations.push('リモート更新中の自動保存停止時間を延長することを検討');
+    }
 
-❌ 失敗パターン分析
--------------------
-無視された更新:
-${patterns.ignoredUpdates.map(u => `  - ${u.reason}: ${u.count}回`).join('\n')}
+    // 競合解決の成功率を分析
+    const totalConflicts = this.debugLogs.filter(log => log.type === 'conflict').length;
+    const successfulConflicts = this.debugLogs.filter(log => 
+      log.type === 'conflict' && 
+      log.data.hasChanges === false
+    ).length;
 
-競合パターン:
-${patterns.conflictPatterns.map(p => `  - ${p.pattern}: ${p.count}回`).join('\n')}
+    if (totalConflicts > 0 && successfulConflicts / totalConflicts < 0.8) {
+      issues.push('競合解決の成功率が低い');
+      recommendations.push('競合解決ロジックの見直しを検討');
+    }
 
-タイミング問題:
-${patterns.timingIssues.map(t => `  - ${t.issue}: ${t.count}回`).join('\n')}
+    // 位置情報更新の分析を追加
+    const positionUpdates = this.debugLogs.filter(log => 
+      log.type === 'conflict' && 
+      log.data.positionUpdates > 0
+    ).length;
 
-📍 位置情報更新:
-${patterns.positionUpdates.map(p => `  - ${p.type}: ${p.count}回`).join('\n')}
+    if (positionUpdates > 0) {
+      issues.push('位置情報の競合が発生');
+      recommendations.push('位置情報更新時の同期タイミングを最適化');
+    }
 
-📈 品質評価
------------
-全体的評価: ${quality.overall}
+    // 同期効率の分析
+    const saveCount = this.debugLogs.filter(log => log.type === 'save').length;
+    const receiveCount = this.debugLogs.filter(log => log.type === 'receive').length;
+    const ignoreCount = this.debugLogs.filter(log => log.type === 'ignore').length;
 
-問題点:
-${quality.issues.map(issue => `  - ${issue}`).join('\n')}
+    if (saveCount > 0 && (receiveCount + ignoreCount) / saveCount > 2) {
+      issues.push('同期効率が低い（受信・無視が保存より多い）');
+      recommendations.push('自己更新判定の調整を検討');
+    }
 
-改善提案:
-${quality.recommendations.map(rec => `  - ${rec}`).join('\n')}
+    // 全体的な評価
+    let overall: '良好' | '注意' | '要改善' = '良好';
+    if (issues.length >= 3) {
+      overall = '要改善';
+    } else if (issues.length >= 1) {
+      overall = '注意';
+    }
 
-🕒 最新ログ（最新10件）
------------------------
-${this.debugLogs.slice(-10).map(log => 
-  `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.type.toUpperCase()}: ${JSON.stringify(log.data)}`
-).join('\n')}
-`;
-
-    return report;
+    return { overall, issues, recommendations };
   }
 }
 

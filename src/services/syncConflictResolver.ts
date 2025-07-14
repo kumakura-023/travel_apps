@@ -222,14 +222,14 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
           localPlace.labelPosition?.lng !== remotePlace.labelPosition?.lng;
         
         let resolvedPlace: Place;
-        if (timeDiff < 500) { // 500ms以内の差は同じとみなす（厳格化）
+        if (timeDiff < 1000) { // 1秒以内の差は同じとみなす（厳格化）
           // タイムスタンプが同じ場合は位置情報の変更を考慮
           if (hasPositionChange) {
             // 位置情報が変更されている場合はローカルを優先
             resolvedPlace = localPlace;
             positionUpdates++;
           } else {
-            // 位置情報が同じ場合はリモートを優先
+            // 位置情報が同じ場合はリモートを優先（変更）
             resolvedPlace = remotePlace;
           }
           sameTimestampConflicts++;
@@ -300,9 +300,9 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
         const timeDiff = Math.abs(localTime - remoteTime);
         
         let resolvedLabel: MapLabel;
-        if (timeDiff < 500) { // 500ms以内の差は同じとみなす（厳格化）
-          // タイムスタンプが同じ場合はローカルを優先（変更）
-          resolvedLabel = normalizedLocalLabel;
+        if (timeDiff < 1000) { // 1秒以内の差は同じとみなす（厳格化）
+          // タイムスタンプが同じ場合はリモートを優先（変更）
+          resolvedLabel = remoteLabel;
           sameTimestampConflicts++;
         } else {
           // タイムスタンプが異なる場合は新しい方を採用

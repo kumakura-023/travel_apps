@@ -17,6 +17,7 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
   const changeCountRef = useRef<number>(0); // 変更回数のカウンター
   const lastLocalSaveRef = useRef<number>(0); // 最後のローカル保存時刻
   const lastCloudSaveRef = useRef<number>(0); // 最後のクラウド保存時刻
+  const cloudSaveTimestampRef = useRef<number>(0); // クラウド保存タイムスタンプ（独立管理）
   const user = useAuthStore((s) => s.user);
 
   // プランのハッシュを計算（変更検知用）- 最適化版
@@ -73,16 +74,21 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       });
       
       await savePlanHybrid(plan, { mode: 'cloud', uid: user.uid });
+      
+      // クラウド保存完了後にタイムスタンプを更新
+      const cloudSaveTimestamp = Date.now();
+      cloudSaveTimestampRef.current = cloudSaveTimestamp;
       setIsSynced(true);
       
       if (import.meta.env.DEV) {
         console.log('☁️ 即座クラウド同期成功:', { 
-          timestamp: saveTimestamp,
-          cloudSaveTimestamp: lastCloudSaveRef.current
+          saveTimestamp,
+          cloudSaveTimestamp,
+          timeDiff: cloudSaveTimestamp - saveTimestamp
         });
       }
       
-      onSave?.(saveTimestamp);
+      onSave?.(cloudSaveTimestamp);
     } catch (err) {
       console.warn('即座クラウド同期失敗:', err);
       setIsSynced(false);
@@ -118,13 +124,21 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       });
       
       await savePlanHybrid(plan, { mode: 'cloud', uid: user.uid });
+      
+      // クラウド保存完了後にタイムスタンプを更新
+      const cloudSaveTimestamp = Date.now();
+      cloudSaveTimestampRef.current = cloudSaveTimestamp;
       setIsSynced(true);
       
       if (import.meta.env.DEV) {
-        console.log('☁️ バッチクラウド同期成功:', { timestamp: saveTimestamp });
+        console.log('☁️ バッチクラウド同期成功:', { 
+          saveTimestamp,
+          cloudSaveTimestamp,
+          timeDiff: cloudSaveTimestamp - saveTimestamp
+        });
       }
       
-      onSave?.(saveTimestamp);
+      onSave?.(cloudSaveTimestamp);
     } catch (err) {
       console.warn('バッチクラウド同期失敗:', err);
       setIsSynced(false);
@@ -182,7 +196,7 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     isRemoteUpdateInProgress,
     setIsRemoteUpdateInProgress,
     lastSavedTimestamp: lastSavedTimestampRef.current,
-    lastCloudSaveTimestamp: lastCloudSaveRef.current,
+    lastCloudSaveTimestamp: cloudSaveTimestampRef.current, // 独立管理されたクラウド保存タイムスタンプを返す
     saveImmediately, // 外部から即座保存を呼び出せるように公開
     saveImmediatelyCloud, // 外部から即座クラウド同期を呼び出せるように公開
   };

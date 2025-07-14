@@ -335,7 +335,7 @@ function App() {
         const remoteTimestamp = updated.updatedAt.getTime();
         const cloudSaveTimestamp = lastCloudSaveTimestamp || 0;
         const timeDiff = Math.abs(remoteTimestamp - cloudSaveTimestamp);
-        const isSelfUpdate = timeDiff < 2000; // 2秒以内を自己更新として判定（調整）
+        const isSelfUpdate = timeDiff < 3000; // 3秒以内を自己更新として判定（延長）
 
         // 同じタイムスタンプの更新は無視（ただし、初回は処理する）
         if (remoteTimestamp === lastProcessedTimestamp && lastProcessedTimestamp !== 0) {
@@ -446,7 +446,7 @@ function App() {
               if (import.meta.env.DEV) {
                 console.log('🔄 リモート更新完了、自動保存を再開');
               }
-            }, 200); // 500msから200msに短縮
+            }, 300); // 200msから300msに延長
           }
         }, 100); // 100ms遅延でバッチ処理
 
