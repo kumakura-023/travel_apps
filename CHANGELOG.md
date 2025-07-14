@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.17] - 2025-07-14
+
+### 🐛 バグ修正
+- **同期競合の修正**: 候補地を削除した際に、古いデータで上書きされて削除が取り消される問題を修正しました。
+  - `placesStore.ts`の`deletePlace`関数を修正し、状態が更新された後に同期コールバックが実行されるように変更しました。これにより、常に最新の状態で同期が行われ、競合が解消されます。
+
 ## [1.4.16] - 2025-07-11
 
 ### 🔧 同期問題の根本的解決

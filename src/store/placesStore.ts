@@ -80,18 +80,25 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
           totalPlacesAfter: state.places.length - 1
         });
 
-        // 削除コールバックを実行
+        const filteredPlaces = state.places.filter((p) => p.id !== id);
+        
+        // 削除コールバックを実行（状態更新後）
         if (state.onPlaceDeleted) {
           state.onPlaceDeleted(updatedPlace);
         }
+        
+        if (import.meta.env.DEV) {
+          console.log(`Places: ${state.places.length} -> ${filteredPlaces.length}`);
+        }
+        
+        return {
+          places: filteredPlaces,
+        };
       }
       
-      const filteredPlaces = state.places.filter((p) => p.id !== id);
-      if (import.meta.env.DEV) {
-        console.log(`Places: ${state.places.length} -> ${filteredPlaces.length}`);
-      }
+      // 場所が見つからなかった場合
       return {
-        places: filteredPlaces,
+        places: state.places,
       };
     });
   },
