@@ -1,24 +1,14 @@
-import { useEffect, useState } from 'react';
+import useMediaQuery from './useMediaQuery';
 
 export function useDeviceDetect() {
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
-
-  useEffect(() => {
-    const hasTouchSupport = () => {
-      if (typeof window === 'undefined') return false;
-      return (
-        'ontouchstart' in window ||
-        navigator.maxTouchPoints > 0 ||
-        // @ts-ignore
-        navigator.msMaxTouchPoints > 0
-      );
-    };
-
-    setIsTouchDevice(hasTouchSupport());
-  }, []);
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+  const isMobile = !isDesktop && !isTablet;
 
   return {
-    isTouchDevice,
-    isDesktop: !isTouchDevice,
+    isDesktop,
+    isTablet,
+    isMobile,
+    isTouchDevice: isMobile || isTablet, // タッチデバイスの判定も画面ベースに
   };
 } 

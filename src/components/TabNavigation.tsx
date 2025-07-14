@@ -1,6 +1,6 @@
 import { MdMap, MdAccessTime, MdList, MdEditNote } from 'react-icons/md';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
-import useMediaQuery from '../hooks/useMediaQuery';
+import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import { useUIStore } from '../store/uiStore';
 import TabNavigationToggle from './TabNavigationToggle';
 
@@ -21,8 +21,7 @@ const tabs: { key: TabKey; icon: React.ReactNode; label: string }[] = [
 
 const TabNavigation: React.FC<Props> = ({ active, onChange, labelMode = false, onLabelModeToggle }) => {
   const { isDesktop } = useDeviceDetect();
-  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
-  const isMobile = !isDesktop && !isTablet;
+  const { isDesktop } = useDeviceDetect();
   const { isTabNavigationVisible } = useUIStore();
 
   return (
