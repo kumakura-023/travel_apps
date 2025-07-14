@@ -333,8 +333,9 @@ function App() {
       
       unsub = listenPlan(user.uid, plan.id, (updated) => {
         const remoteTimestamp = updated.updatedAt.getTime();
-        const cloudSaveTimestamp = lastCloudSaveTimestamp || 0;
-        const timeDiff = Math.abs(remoteTimestamp - cloudSaveTimestamp);
+        // 現在のクラウド保存タイムスタンプを取得
+        const currentCloudSaveTimestamp = lastCloudSaveTimestamp || 0;
+        const timeDiff = Math.abs(remoteTimestamp - currentCloudSaveTimestamp);
         const isSelfUpdate = timeDiff < 3000; // 3秒以内を自己更新として判定（延長）
 
         // 同じタイムスタンプの更新は無視（ただし、初回は処理する）
@@ -349,13 +350,15 @@ function App() {
         if (import.meta.env.DEV) {
           console.log('🔄 Firebase更新を受信:', {
             remoteTimestamp,
-            cloudSaveTimestamp,
+            currentCloudSaveTimestamp,
             timeDiff,
             isSelfUpdate,
             remotePlaces: updated.places.length,
             remoteLabels: updated.labels.length,
             localPlaces: usePlanStore.getState().plan?.places.length || 0,
-            localLabels: usePlanStore.getState().plan?.labels.length || 0
+            localLabels: usePlanStore.getState().plan?.labels.length || 0,
+            lastCloudSaveTimestampValue: lastCloudSaveTimestamp,
+            cloudSaveTimestampRef: 'N/A' // フック内の値は直接アクセスできない
           });
         }
 
@@ -364,7 +367,7 @@ function App() {
           syncDebugUtils.log('ignore', {
             reason: '自己更新',
             remoteTimestamp,
-            cloudSaveTimestamp,
+            cloudSaveTimestamp: currentCloudSaveTimestamp,
             timeDiff
           });
           if (import.meta.env.DEV) {
@@ -376,7 +379,7 @@ function App() {
         // 他デバイスからの更新として記録
         syncDebugUtils.log('receive', {
           remoteTimestamp,
-          cloudSaveTimestamp,
+          cloudSaveTimestamp: currentCloudSaveTimestamp,
           timeDiff,
           remotePlaces: updated.places.length,
           remoteLabels: updated.labels.length
@@ -459,7 +462,7 @@ function App() {
         clearTimeout(processingTimeout);
       }
     };
-  }, [user, planId, isInitializing]);
+  }, [user, planId, isInitializing, lastCloudSaveTimestamp]);
 
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>

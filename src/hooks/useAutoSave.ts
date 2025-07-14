@@ -84,7 +84,8 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
         console.log('☁️ 即座クラウド同期成功:', { 
           saveTimestamp,
           cloudSaveTimestamp,
-          timeDiff: cloudSaveTimestamp - saveTimestamp
+          timeDiff: cloudSaveTimestamp - saveTimestamp,
+          cloudSaveTimestampRef: cloudSaveTimestampRef.current
         });
       }
       
@@ -134,7 +135,8 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
         console.log('☁️ バッチクラウド同期成功:', { 
           saveTimestamp,
           cloudSaveTimestamp,
-          timeDiff: cloudSaveTimestamp - saveTimestamp
+          timeDiff: cloudSaveTimestamp - saveTimestamp,
+          cloudSaveTimestampRef: cloudSaveTimestampRef.current
         });
       }
       
