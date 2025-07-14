@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.25] - 2025-07-14
+
+### ✨ UX改善
+- **メモ（ラベル）の操作性向上**: メモ機能の操作感を改善しました。
+  - **デフォルトサイズの拡大**: 新規作成時のメモのデフォルトサイズを `120x40` ピクセルに拡大し、視認性と操作性を向上させました。
+  - **リサイズ感度の調整**: メモのサイズ変更時の感度を50%に抑制し、より繊細で正確なサイズ調整が可能になりました。
+
+### 🐛 バグ修正
+- **メモのリサイズ**: 新規作成したメモを即座にリサイズできない問題を修正しました。
+
 ## [1.4.24] - 2025-07-14
 
 ### 🐛 バグ修正

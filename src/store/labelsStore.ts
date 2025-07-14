@@ -28,6 +28,11 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
   addLabel: (partial) =>
     set((s) => {
       const newLabel = {
+        width: 120, // デフォルト幅
+        height: 40, // デフォルト高さ
+        color: '#000000', // デフォルト文字色
+        fontSize: 14, // デフォルトフォントサイズ
+        fontFamily: 'sans-serif', // デフォルトフォント
         ...partial,
         id: uuidv4(),
         createdAt: new Date(),

@@ -46,8 +46,8 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     if (!resizing) return;
     const handleResizeMove = (ev: MouseEvent) => {
       ev.stopPropagation();
-      const dx = ev.clientX - resizeStart.current.clientX;
-      const dy = ev.clientY - resizeStart.current.clientY;
+      const dx = (ev.clientX - resizeStart.current.clientX) / 2; // 感度調整
+      const dy = (ev.clientY - resizeStart.current.clientY) / 2; // 感度調整
       const newWidth = Math.max(60, resizeStart.current.width + dx);
       const newHeight = Math.max(28, resizeStart.current.height + dy);
       onResize({ width: newWidth, height: newHeight });
@@ -135,8 +135,8 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     resizeStart.current = {
       clientX: e.clientX,
       clientY: e.clientY,
-      width: label.width,
-      height: label.height,
+      width: label.width || 120, // フォールバック
+      height: label.height || 40, // フォールバック
     };
   };
 
