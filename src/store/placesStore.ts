@@ -6,9 +6,9 @@ import { syncDebugUtils } from '../utils/syncDebugUtils';
 interface PlacesState {
   places: Place[];
   onPlaceAdded?: (place: Place) => void;
-  onPlaceDeleted?: (place: Place) => void;
+  onPlaceDeleted?: (updatedPlaces: Place[]) => void;
   setOnPlaceAdded: (callback: (place: Place) => void) => void;
-  setOnPlaceDeleted: (callback: (place: Place) => void) => void;
+  setOnPlaceDeleted: (callback: (updatedPlaces: Place[]) => void) => void;
   addPlace: (partial: Partial<Place>) => void;
   updatePlace: (id: string, update: Partial<Place>) => void;
   deletePlace: (id: string) => void;
@@ -88,7 +88,7 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
         
         // 削除コールバックを実行（状態更新後）
         if (state.onPlaceDeleted) {
-          state.onPlaceDeleted(updatedPlace);
+          state.onPlaceDeleted(updatedPlaces);
         }
         
         if (import.meta.env.DEV) {

@@ -204,27 +204,31 @@ function App() {
   React.useEffect(() => {
     const { setOnPlaceDeleted } = usePlacesStore.getState();
     
-    setOnPlaceDeleted((deletedPlace) => {
+    setOnPlaceDeleted((updatedPlaces) => {
       if (import.meta.env.DEV) {
-        console.log('🗑️ 候補地削除検知、即座同期開始:', deletedPlace.name);
+        console.log('🗑️ 候補地削除検知、即座同期開始:');
       }
       
-      // 即座にローカル保存とクラウド同期を実行
-      if (plan) {
-        saveImmediately(plan);
-        saveImmediatelyCloud(plan);
+      // 最新のプランを取得し、placesを更新して保存
+      const currentPlan = usePlanStore.getState().plan;
+      if (currentPlan) {
+        const planToSave: TravelPlan = {
+          ...currentPlan,
+          places: updatedPlaces,
+          updatedAt: new Date(),
+        };
+        saveImmediately(planToSave);
+        saveImmediatelyCloud(planToSave);
       }
       
       // デバッグログを記録
       syncDebugUtils.log('save', {
         type: 'immediate_sync',
         reason: 'place_deleted',
-        placeName: deletedPlace.name,
-        placeId: deletedPlace.id,
         timestamp: Date.now()
       });
     });
-  }, [plan, saveImmediately, saveImmediatelyCloud]);
+  }, [saveImmediately, saveImmediatelyCloud]);
 
   // ラベル追加時の即座同期を設定
   React.useEffect(() => {
