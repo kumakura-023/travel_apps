@@ -129,7 +129,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
       // This was a tap, not a long press
       const now = Date.now();
       if (now - lastTapTimeRef.current < 300) {
-        onEdit();
+        // onEdit();
       }
       lastTapTimeRef.current = now;
     }

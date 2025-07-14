@@ -48,11 +48,11 @@ export default function MapContainer({ children, showLabelToggle = true, labelMo
           zoom={zoom}
           options={{
             ...mapOptions,
-            gestureHandling: isMapInteractionEnabled ? 'auto' : 'none',
-            zoomControl: isMapInteractionEnabled,
-            streetViewControl: isMapInteractionEnabled,
-            mapTypeControl: isMapInteractionEnabled,
-            fullscreenControl: isMapInteractionEnabled,
+            gestureHandling: 'greedy',
+            zoomControl: false,
+            streetViewControl: false,
+            mapTypeControl: false,
+            fullscreenControl: false,
           }}
           onLoad={handleMapLoad}
         >
