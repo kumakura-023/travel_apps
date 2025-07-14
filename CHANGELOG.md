@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.19] - 2025-07-14
+
+### 🐛 バグ修正
+- **クラウド同期**: 候補地を削除してもリロードで復活する問題を根本的に解決しました。
+  - 競合解決ロジック(`syncConflictResolver.ts`)が、`deleted`フラグの付いた候補地を削除対象として正しく認識していなかった問題を修正しました。
+  - これにより、ローカルでの削除操作がクラウドに正しく反映され、データが意図せず元に戻る現象を解消しました。
+- **デバッグログ強化**: 同期競合の分析を容易にするため、競合解決プロセスで扱われるデータの詳細なログを出力するようにしました。
+
 ## [1.4.18] - 2025-07-14
 
 ### 🐛 バグ修正

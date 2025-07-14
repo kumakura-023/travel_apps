@@ -92,14 +92,20 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
   ): TravelPlan {
     // 開発時のみ詳細ログ
     if (import.meta.env.DEV) {
-      console.log('🔄 競合解決開始:', {
-        localPlaces: localPlan.places.length,
-        remotePlaces: remotePlan.places.length,
-        localLabels: localPlan.labels.length,
-        remoteLabels: remotePlan.labels.length,
+      console.log('%c🔄 競合解決開始', 'color: #2e95ea; font-weight: bold;', {
         localTimestamp: localTimestamp.toISOString(),
         remoteTimestamp: remoteTimestamp.toISOString(),
-        timestampDiff: Math.abs(localTimestamp.getTime() - remoteTimestamp.getTime())
+        timeDiff: Math.abs(localTimestamp.getTime() - remoteTimestamp.getTime()),
+        localPlan: {
+          places: localPlan.places.length,
+          labels: localPlan.labels.length,
+          deletedPlaces: localPlan.places.filter(p => p.deleted).length
+        },
+        remotePlan: {
+          places: remotePlan.places.length,
+          labels: remotePlan.labels.length,
+          deletedPlaces: remotePlan.places.filter(p => p.deleted).length
+        }
       });
     }
 
@@ -156,11 +162,37 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
     deletedPlaces: DeletedItem[];
     deletedLabels: DeletedItem[];
   } {
-    const deletedPlaces: DeletedItem[] = [];
-    const deletedLabels: DeletedItem[] = [];
+    const deletedPlaceIds = new Set<string>();
+    const deletedLabelIds = new Set<string>();
 
-    // 現在の実装では削除フラグがないため、削除されたアイテムは空配列を返す
-    // 将来的に削除フラグが追加された場合は、ここで削除されたアイテムを検出する
+    // ローカルプランとリモートプランから `deleted` フラグを持つアイテムを収集
+    localPlan.places.forEach(p => p.deleted && deletedPlaceIds.add(p.id));
+    remotePlan.places.forEach(p => p.deleted && deletedPlaceIds.add(p.id));
+    
+    // ToDo: ラベルの削除も同様に実装する
+    // localPlan.labels.forEach(l => l.deleted && deletedLabelIds.add(l.id));
+    // remotePlan.labels.forEach(l => l.deleted && deletedLabelIds.add(l.id));
+
+    const deletedPlaces = Array.from(deletedPlaceIds).map(id => ({
+      id,
+      deletedAt: new Date(), // 正確な削除時刻は不明なため現在時刻を設定
+      type: 'place' as const
+    }));
+
+    const deletedLabels = Array.from(deletedLabelIds).map(id => ({
+      id,
+      deletedAt: new Date(),
+      type: 'label' as const
+    }));
+
+    if (import.meta.env.DEV) {
+      if (deletedPlaces.length > 0 || deletedLabels.length > 0) {
+        console.log('🗑️ 削除済みアイテムを検出:', {
+          deletedPlaces: deletedPlaces.map(p => p.id),
+          deletedLabels: deletedLabels.map(l => l.id),
+        });
+      }
+    }
     
     return { deletedPlaces, deletedLabels };
   }
@@ -251,15 +283,15 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
     
     // 開発時のみ詳細ログ
     if (import.meta.env.DEV) {
-      console.log('🔄 地点競合解決結果:', {
-        localPlaces: localPlaces.length,
-        remotePlaces: remotePlaces.length,
+      console.log('%c🔄 地点競合解決結果', 'color: #2e95ea;', {
+        localPlaces: `${localPlaces.length} (deleted: ${localPlaces.filter(p => p.deleted).length})`,
+        remotePlaces: `${remotePlaces.length} (deleted: ${remotePlaces.filter(p => p.deleted).length})`,
         resolvedPlaces: result.length,
         conflicts,
         additions,
         sameTimestampConflicts,
         positionUpdates,
-        deletedPlaces: deletedPlaces.length
+        deletedItems: deletedPlaces.length
       });
     }
     
