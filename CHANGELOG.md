@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.5] - 2025-07-11
 
-### �� バグ修正
+### 🐛 バグ修正
 - **認証初期化前に空プランが上書き保存される問題を修正**: `App.tsx` で `useAuth` の `isInitializing` フラグを確認し、認証が完了してからプランのロードと Firestore リスナー登録を行うように変更。これにより、PC で追加した候補地がモバイルに同期されない不具合を解消。
 
 ### 🔧 技術的改善
