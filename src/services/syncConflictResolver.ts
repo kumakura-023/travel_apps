@@ -194,6 +194,7 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
     let conflicts = 0;
     let additions = 0;
     let sameTimestampConflicts = 0;
+    let positionUpdates = 0;
     
     // リモート地点を基準にマップを構築
     remotePlaces.forEach(place => {
@@ -213,10 +214,24 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
         const remoteTime = remotePlace.updatedAt.getTime();
         const timeDiff = Math.abs(localTime - remoteTime);
         
+        // 位置情報の変更を検知
+        const hasPositionChange = 
+          localPlace.coordinates.lat !== remotePlace.coordinates.lat ||
+          localPlace.coordinates.lng !== remotePlace.coordinates.lng ||
+          localPlace.labelPosition?.lat !== remotePlace.labelPosition?.lat ||
+          localPlace.labelPosition?.lng !== remotePlace.labelPosition?.lng;
+        
         let resolvedPlace: Place;
         if (timeDiff < 500) { // 500ms以内の差は同じとみなす（厳格化）
-          // タイムスタンプが同じ場合はローカルを優先（変更）
-          resolvedPlace = localPlace;
+          // タイムスタンプが同じ場合は位置情報の変更を考慮
+          if (hasPositionChange) {
+            // 位置情報が変更されている場合はローカルを優先
+            resolvedPlace = localPlace;
+            positionUpdates++;
+          } else {
+            // 位置情報が同じ場合はリモートを優先
+            resolvedPlace = remotePlace;
+          }
           sameTimestampConflicts++;
         } else {
           // タイムスタンプが異なる場合は新しい方を採用
@@ -243,6 +258,7 @@ export class DefaultSyncConflictResolver implements SyncConflictResolver {
         conflicts,
         additions,
         sameTimestampConflicts,
+        positionUpdates,
         deletedPlaces: deletedPlaces.length
       });
     }

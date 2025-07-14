@@ -335,7 +335,7 @@ function App() {
         const remoteTimestamp = updated.updatedAt.getTime();
         const cloudSaveTimestamp = lastCloudSaveTimestamp || 0;
         const timeDiff = Math.abs(remoteTimestamp - cloudSaveTimestamp);
-        const isSelfUpdate = timeDiff < 1000; // 1秒以内を自己更新として判定（厳格化）
+        const isSelfUpdate = timeDiff < 2000; // 2秒以内を自己更新として判定（調整）
 
         // 同じタイムスタンプの更新は無視（ただし、初回は処理する）
         if (remoteTimestamp === lastProcessedTimestamp && lastProcessedTimestamp !== 0) {
@@ -353,7 +353,9 @@ function App() {
             timeDiff,
             isSelfUpdate,
             remotePlaces: updated.places.length,
-            remoteLabels: updated.labels.length
+            remoteLabels: updated.labels.length,
+            localPlaces: usePlanStore.getState().plan?.places.length || 0,
+            localLabels: usePlanStore.getState().plan?.labels.length || 0
           });
         }
 
@@ -408,7 +410,8 @@ function App() {
                   resolvedPlaces: resolvedPlan.places.length,
                   originalLabels: currentPlan.labels.length,
                   remoteLabels: updated.labels.length,
-                  resolvedLabels: resolvedPlan.labels.length
+                  resolvedLabels: resolvedPlan.labels.length,
+                  hasChanges: JSON.stringify(currentPlan) !== JSON.stringify(resolvedPlan)
                 });
               }
 
@@ -419,7 +422,8 @@ function App() {
                 resolvedPlaces: resolvedPlan.places.length,
                 originalLabels: currentPlan.labels.length,
                 remoteLabels: updated.labels.length,
-                resolvedLabels: resolvedPlan.labels.length
+                resolvedLabels: resolvedPlan.labels.length,
+                hasChanges: JSON.stringify(currentPlan) !== JSON.stringify(resolvedPlan)
               });
               
               // 解決されたプランをストアに反映

@@ -127,6 +127,7 @@ export class SyncDebugUtils {
     ignoredUpdates: Array<{ reason: string; count: number }>;
     conflictPatterns: Array<{ pattern: string; count: number }>;
     timingIssues: Array<{ issue: string; count: number }>;
+    positionUpdates: Array<{ type: string; count: number }>;
   } {
     const ignores = this.debugLogs.filter(log => log.type === 'ignore');
     const conflicts = this.debugLogs.filter(log => log.type === 'conflict');
@@ -163,10 +164,24 @@ export class SyncDebugUtils {
       timingIssues.push({ issue: '保存直後の受信', count: rapidReceives });
     }
 
+    // 位置情報更新の分析
+    const positionUpdates = [];
+    const immediateSyncs = this.debugLogs.filter(log => 
+      log.type === 'save' && log.data.type === 'immediate_cloud_sync'
+    );
+    
+    if (immediateSyncs.length > 0) {
+      positionUpdates.push({ 
+        type: '即座同期実行', 
+        count: immediateSyncs.length 
+      });
+    }
+
     return {
       ignoredUpdates: ignoredUpdates.map(([reason, count]) => ({ reason, count })),
       conflictPatterns: conflictPatternCounts.map(([pattern, count]) => ({ pattern, count })),
       timingIssues,
+      positionUpdates,
     };
   }
 
@@ -383,6 +398,9 @@ ${patterns.conflictPatterns.map(p => `  - ${p.pattern}: ${p.count}回`).join('\n
 
 タイミング問題:
 ${patterns.timingIssues.map(t => `  - ${t.issue}: ${t.count}回`).join('\n')}
+
+📍 位置情報更新:
+${patterns.positionUpdates.map(p => `  - ${p.type}: ${p.count}回`).join('\n')}
 
 📈 品質評価
 -----------

@@ -58,7 +58,8 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
         console.log('☁️ 即座クラウド同期開始:', { 
           timestamp: saveTimestamp,
           places: plan.places.length,
-          labels: plan.labels.length
+          labels: plan.labels.length,
+          planHash: calculatePlanHash(plan)
         });
       }
       
@@ -67,14 +68,18 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
         places: plan.places.length,
         labels: plan.labels.length,
         totalCost: plan.totalCost,
-        type: 'immediate_cloud_sync'
+        type: 'immediate_cloud_sync',
+        planHash: calculatePlanHash(plan)
       });
       
       await savePlanHybrid(plan, { mode: 'cloud', uid: user.uid });
       setIsSynced(true);
       
       if (import.meta.env.DEV) {
-        console.log('☁️ 即座クラウド同期成功:', { timestamp: saveTimestamp });
+        console.log('☁️ 即座クラウド同期成功:', { 
+          timestamp: saveTimestamp,
+          cloudSaveTimestamp: lastCloudSaveRef.current
+        });
       }
       
       onSave?.(saveTimestamp);
@@ -84,7 +89,7 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     } finally {
       setIsSaving(false);
     }
-  }, [user, onSave]);
+  }, [user, onSave, calculatePlanHash]);
 
   // バッチクラウド同期関数（フォールバック用）
   const batchCloudSync = useCallback(async (plan: TravelPlan) => {
