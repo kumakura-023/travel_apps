@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.22] - 2025-07-14
+
+### 🐛 バグ修正
+- **UI同期**: 候補地の追加・削除操作直後にUIが一時的に元に戻ってしまう問題を修正しました。
+  - クラウド同期処理と同時に、Zustandで管理されているローカルのプラン状態(`planStore`)も即座に更新するように変更しました。
+  - これにより、UIの再描画時に古い状態が参照されることがなくなり、操作が即座にUIに反映されるようになりました。
+
 ## [1.4.21] - 2025-07-14
 
 ### 🐛 バグ修正

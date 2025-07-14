@@ -190,6 +190,7 @@ function App() {
           places: [...currentPlan.places, newPlace],
           updatedAt: new Date(),
         };
+        usePlanStore.getState().setPlan(planToSave);
         saveImmediately(planToSave);
         saveImmediatelyCloud(planToSave);
       }
@@ -222,6 +223,7 @@ function App() {
           places: updatedPlaces,
           updatedAt: new Date(),
         };
+        usePlanStore.getState().setPlan(planToSave);
         saveImmediately(planToSave);
         saveImmediatelyCloud(planToSave);
       }
