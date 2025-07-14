@@ -3,7 +3,6 @@ import {
   getDoc,
   setDoc,
   onSnapshot,
-  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { TravelPlan } from '../types';
@@ -33,19 +32,20 @@ export async function loadActivePlan(uid: string): Promise<TravelPlan | null> {
 }
 
 export async function savePlanCloud(uid: string, plan: TravelPlan) {
-  const payload = serializePlan({ ...plan, updatedAt: new Date() });
+  const clientTimestamp = new Date();
+  const payload = serializePlan({ ...plan, updatedAt: clientTimestamp });
 
   // users/{uid} ドキュメントを upsert して activePlanId を保存
   await setDoc(userDocRef(uid), {
     activePlanId: plan.id,
-    updatedAt: serverTimestamp(),
+    updatedAt: clientTimestamp,
   }, { merge: true });
 
   // plan ドキュメントを upsert
   await setDoc(planDocRef(uid, plan.id), {
     payload,
-    updatedAt: serverTimestamp(),
-    lastSavedAt: new Date().toISOString(), // クライアントタイムスタンプ
+    updatedAt: clientTimestamp,
+    lastSavedAt: clientTimestamp.toISOString(), // クライアントタイムスタンプ
   });
 }
 

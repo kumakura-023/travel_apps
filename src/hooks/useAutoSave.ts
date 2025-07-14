@@ -51,21 +51,25 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     
     setIsSaving(true);
     try {
-      const saveTimestamp = Date.now();
-      lastCloudSaveRef.current = saveTimestamp;
-      lastSavedTimestampRef.current = saveTimestamp;
+      const saveStartTimestamp = Date.now();
+      lastCloudSaveRef.current = saveStartTimestamp;
+      lastSavedTimestampRef.current = saveStartTimestamp;
+      
+      // 保存開始時にタイムスタンプを設定（即座に利用可能にする）
+      cloudSaveTimestampRef.current = saveStartTimestamp;
       
       if (import.meta.env.DEV) {
         console.log('☁️ 即座クラウド同期開始:', { 
-          timestamp: saveTimestamp,
+          saveStartTimestamp,
           places: plan.places.length,
           labels: plan.labels.length,
-          planHash: calculatePlanHash(plan)
+          planHash: calculatePlanHash(plan),
+          cloudSaveTimestampRef: cloudSaveTimestampRef.current
         });
       }
       
       syncDebugUtils.log('save', {
-        timestamp: saveTimestamp,
+        timestamp: saveStartTimestamp,
         places: plan.places.length,
         labels: plan.labels.length,
         totalCost: plan.totalCost,
@@ -76,20 +80,20 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       await savePlanHybrid(plan, { mode: 'cloud', uid: user.uid });
       
       // クラウド保存完了後にタイムスタンプを更新
-      const cloudSaveTimestamp = Date.now();
-      cloudSaveTimestampRef.current = cloudSaveTimestamp;
+      const saveEndTimestamp = Date.now();
+      cloudSaveTimestampRef.current = saveEndTimestamp;
       setIsSynced(true);
       
       if (import.meta.env.DEV) {
         console.log('☁️ 即座クラウド同期成功:', { 
-          saveTimestamp,
-          cloudSaveTimestamp,
-          timeDiff: cloudSaveTimestamp - saveTimestamp,
+          saveStartTimestamp,
+          saveEndTimestamp,
+          timeDiff: saveEndTimestamp - saveStartTimestamp,
           cloudSaveTimestampRef: cloudSaveTimestampRef.current
         });
       }
       
-      onSave?.(cloudSaveTimestamp);
+      onSave?.(saveEndTimestamp);
     } catch (err) {
       console.warn('即座クラウド同期失敗:', err);
       setIsSynced(false);
@@ -104,20 +108,24 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     
     setIsSaving(true);
     try {
-      const saveTimestamp = Date.now();
-      lastCloudSaveRef.current = saveTimestamp;
-      lastSavedTimestampRef.current = saveTimestamp;
+      const saveStartTimestamp = Date.now();
+      lastCloudSaveRef.current = saveStartTimestamp;
+      lastSavedTimestampRef.current = saveStartTimestamp;
+      
+      // 保存開始時にタイムスタンプを設定（即座に利用可能にする）
+      cloudSaveTimestampRef.current = saveStartTimestamp;
       
       if (import.meta.env.DEV) {
         console.log('☁️ バッチクラウド同期開始:', { 
-          timestamp: saveTimestamp,
+          saveStartTimestamp,
           places: plan.places.length,
-          labels: plan.labels.length
+          labels: plan.labels.length,
+          cloudSaveTimestampRef: cloudSaveTimestampRef.current
         });
       }
       
       syncDebugUtils.log('save', {
-        timestamp: saveTimestamp,
+        timestamp: saveStartTimestamp,
         places: plan.places.length,
         labels: plan.labels.length,
         totalCost: plan.totalCost,
@@ -127,20 +135,20 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       await savePlanHybrid(plan, { mode: 'cloud', uid: user.uid });
       
       // クラウド保存完了後にタイムスタンプを更新
-      const cloudSaveTimestamp = Date.now();
-      cloudSaveTimestampRef.current = cloudSaveTimestamp;
+      const saveEndTimestamp = Date.now();
+      cloudSaveTimestampRef.current = saveEndTimestamp;
       setIsSynced(true);
       
       if (import.meta.env.DEV) {
         console.log('☁️ バッチクラウド同期成功:', { 
-          saveTimestamp,
-          cloudSaveTimestamp,
-          timeDiff: cloudSaveTimestamp - saveTimestamp,
+          saveStartTimestamp,
+          saveEndTimestamp,
+          timeDiff: saveEndTimestamp - saveStartTimestamp,
           cloudSaveTimestampRef: cloudSaveTimestampRef.current
         });
       }
       
-      onSave?.(cloudSaveTimestamp);
+      onSave?.(saveEndTimestamp);
     } catch (err) {
       console.warn('バッチクラウド同期失敗:', err);
       setIsSynced(false);
