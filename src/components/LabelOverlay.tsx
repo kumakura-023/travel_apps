@@ -1,4 +1,4 @@
-'''import { OverlayView } from '@react-google-maps/api';
+import { OverlayView } from '@react-google-maps/api';
 import { MapLabel } from '../types';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useLabelsStore } from '../store/labelsStore';
@@ -252,4 +252,3 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     </OverlayView>
   );
 }
-''
