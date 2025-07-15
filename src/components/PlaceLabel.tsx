@@ -185,19 +185,34 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
         >
           {/* delete button */}
           {showControls && (
-            <span
-              className="absolute -top-2 -right-2 w-5 h-5 bg-coral-500 text-white 
-                         caption-1 flex items-center justify-center rounded-full cursor-pointer
-                         hover:bg-coral-600 active:scale-95 transition-all duration-150 ease-ios-default
-                         shadow-elevation-2"
-              style={{ transform: `scale(${Math.min(scale, 1.2)})` }}
-              onClick={(e) => {
-                e.stopPropagation();
-                updatePlace(place.id, { labelHidden: true });
-              }}
-            >
-              ✕
-            </span>
+            <>
+              <span
+                className="absolute -top-2 -left-2 w-5 h-5 bg-blue-500 text-white 
+                           caption-1 flex items-center justify-center rounded-full cursor-pointer
+                           hover:bg-blue-600 active:scale-95 transition-all duration-150 ease-ios-default
+                           shadow-elevation-2"
+                style={{ transform: `scale(${Math.min(scale, 1.2)})` }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditing(true);
+                }}
+              >
+                ✏️
+              </span>
+              <span
+                className="absolute -top-2 -right-2 w-5 h-5 bg-coral-500 text-white 
+                           caption-1 flex items-center justify-center rounded-full cursor-pointer
+                           hover:bg-coral-600 active:scale-95 transition-all duration-150 ease-ios-default
+                           shadow-elevation-2"
+                style={{ transform: `scale(${Math.min(scale, 1.2)})` }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updatePlace(place.id, { labelHidden: true });
+                }}
+              >
+                ✕
+              </span>
+            </>
           )}
           
           {/* label text */}
