@@ -9,6 +9,7 @@ const AuthButton: React.FC = () => {
 
   const handleClick = async () => {
     if (user) {
+      // ログアウトの確認ダイアログなどをここに追加可能
       await signOut();
     } else {
       await signIn();
@@ -18,18 +19,21 @@ const AuthButton: React.FC = () => {
   return (
     <button
       onClick={handleClick}
-      aria-label={user ? 'ログアウト' : 'ログイン'}
-      className="flex items-center justify-center text-system-secondary-label hover:text-coral-500 transition-colors"
+      className="glass-effect flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-system-label hover:bg-gray-100/50 transition-colors duration-150"
+      aria-label={user ? `アカウント: ${user.displayName}` : 'Googleでログイン'}
     >
       {user && user.photoURL ? (
         <img
           src={user.photoURL}
           alt="ユーザーアイコン"
-          className="w-8 h-8 rounded-full"
+          className="w-6 h-6 rounded-full border-2 border-white/50"
         />
       ) : (
-        <FaUserCircle className="w-8 h-8" />
+        <FaUserCircle className="w-6 h-6 text-gray-400" />
       )}
+      <span className="hidden md:inline">
+        {user ? user.displayName || 'アカウント' : 'ログイン'}
+      </span>
     </button>
   );
 };

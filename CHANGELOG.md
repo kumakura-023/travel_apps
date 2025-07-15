@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.39 (2025-07-15)
+
+### ✨ UX改善
+- **ログインUIの改善**: ログインボタンのデザインと配置を見直し、より直感的で分かりやすいUIに修正しました。
+  - **デザイン**: プロジェクトのデザインルールに基づき、アイコンだけの表示から、テキストラベル（「ログイン」またはユーザー名）を含むボタン形式に変更しました。`glass-effect`スタイルを適用し、他のUIとの親和性を高めました。
+  - **配置**: 画面の隅に固定で配置されていたボタンを、右上のナビゲーションコントロール群に統合しました。これにより、UIパーツとしての一体感が生まれ、ユーザーがアカウント関連の操作だと認識しやすくなりました。
+
 ## v1.4.38 (2025-07-15)
 
 ### 🐛 バグ修正
