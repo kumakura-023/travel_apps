@@ -101,19 +101,11 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
           position={place.coordinates}
           mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
         >
-          <div
-            style={{
+          <div style={{
               position: 'absolute',
-              transform: 'translate(-50%, -100%)',
-              bottom: '10px', // Gap above the marker
-              pointerEvents: 'none', // Let clicks pass through the positioning div
-            }}
-          >
-            <div style={{
-              transform: `scale(${scale})`,
+              transform: `translate(-50%, calc(-100% - 10px)) scale(${scale})`,
               transformOrigin: 'center bottom',
-              animation: 'modal-zoom-in 0.3s cubic-bezier(0.19, 0.91, 0.38, 1)',
-              pointerEvents: 'auto', // Enable clicks on the actual content
+              pointerEvents: 'auto',
               background: 'rgba(255, 255, 255, 0.75)',
               backdropFilter: 'blur(20px) saturate(180%)',
               WebkitBackdropFilter: 'blur(20px) saturate(180%)',
@@ -210,7 +202,6 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                 </div>
               </div>
             </div>
-          </div>
         </OverlayView>
       )}
       <Marker
@@ -236,12 +227,6 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
           zIndex: isSelected ? 1000 : 500,
         }}
       />
-      <style>{`
-        @keyframes modal-zoom-in {
-          from { opacity: 0; transform: scale(0.85) translateY(8px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-      `}</style>
     </>
   );
 }

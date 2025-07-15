@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.38 (2025-07-15)
+
+### 🐛 バグ修正
+- **候補地オーバーレイのズーム時位置ずれを完全修正**: 地図の拡大・縮小時に、候補地を示すカスタムオーバーレイが正しい位置からずれてしまう問題を完全に修正しました。CSSの`transform`プロパティの適用方法を改善し、位置決めとスケーリングが互いに干渉しないようにしました。
+  - `transform: translate(-50%, calc(-100% - 10px)) scale(...)` のように、位置指定と拡大・縮小を単一の`transform`プロパティに統合しました。
+  - `transform-origin: 'center bottom'` を指定し、オーバーレイが常に自身の「下端中央」を基点として変形するようにしました。
+  - これにより、ズームレベルに関わらず、オーバーレイは常に地図上の正しい座標にアンカーされ、位置ずれが発生しなくなりました。
+
 ## v1.4.37 (2025-07-15)
 
 ### 🐛 バグ修正 & ♻️ リファクタリング
