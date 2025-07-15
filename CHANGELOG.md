@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.36 (2025-07-15)
+
+### 🐛 バグ修正
+- **アプリケーションクラッシュの修正**: ルート接続機能（2地点間の線描画）で地点を選択する際に、`selectedPlaces`プロパティが存在しないために発生していた`TypeError: Cannot read properties of undefined (reading 'includes')`エラーを修正しました。
+  - `routeConnectionsStore`の状態管理に`selectedPlaces`配列を追加し、地点選択の開始、完了、キャンセル時にこの配列が正しく更新されるようにロジックを修正しました。
+  - これにより、ルート作成時の地点選択機能が正常に動作し、アプリケーションがクラッシュする問題を解消しました。
+
 ## v1.4.35 (2025-07-15)
 
 ### 🐛 バグ修正 & ♻️ リファクタリング

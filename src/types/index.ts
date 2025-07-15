@@ -93,6 +93,7 @@ export interface RouteConnection {
 export interface PlaceSelectionState {
   isSelecting: boolean;
   selectedPlaceId: string | null;
+  selectedPlaces: string[]; // 選択中の地点IDの配列
   selectionMode: 'ctrl-click' | 'long-press' | null;
 }
 

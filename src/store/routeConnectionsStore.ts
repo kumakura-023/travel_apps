@@ -43,6 +43,7 @@ export const useRouteConnectionsStore = create<RouteConnectionsState>((set, get)
     selectionState: {
       isSelecting: false,
       selectedPlaceId: null,
+      selectedPlaces: [],
       selectionMode: null,
     },
 
@@ -150,13 +151,15 @@ export const useRouteConnectionsStore = create<RouteConnectionsState>((set, get)
 
   startSelection: (placeId, method) => {
     console.log('Starting place selection:', { placeId, method });
-    set({
+    set((state) => ({
       selectionState: {
+        ...state.selectionState,
         isSelecting: true,
         selectedPlaceId: placeId,
+        selectedPlaces: [placeId],
         selectionMode: method,
       },
-    });
+    }));
   },
 
   completeSelection: async (destinationPlaceId) => {
@@ -173,6 +176,13 @@ export const useRouteConnectionsStore = create<RouteConnectionsState>((set, get)
       destination: destinationPlaceId 
     });
     
+    set((state) => ({
+      selectionState: {
+        ...state.selectionState,
+        selectedPlaces: [...state.selectionState.selectedPlaces, destinationPlaceId],
+      },
+    }));
+
     // ルートを作成
     await state.createRouteBetweenPlaces(selectedPlaceId, destinationPlaceId);
     
@@ -186,6 +196,7 @@ export const useRouteConnectionsStore = create<RouteConnectionsState>((set, get)
       selectionState: {
         isSelecting: false,
         selectedPlaceId: null,
+        selectedPlaces: [],
         selectionMode: null,
       },
     });
@@ -218,7 +229,7 @@ export const useRouteConnectionsStore = create<RouteConnectionsState>((set, get)
 
   isPlaceSelected: (placeId) => {
     const state = get();
-    return state.selectionState.selectedPlaceId === placeId;
+    return state.selectionState.selectedPlaces.includes(placeId);
   },
   };
 });

@@ -35,7 +35,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
   const { isTouchDevice } = useDeviceDetect();
 
   const color = getCategoryColor(place.category);
-  const isSelected = selectionState.selectedPlaces.includes(place.id);
+  const isSelected = useRouteConnectionsStore((s) => s.isPlaceSelected(place.id));
   const shouldShowOverlay = zoom >= 12;
   const scale = Math.max(0.17, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
 
