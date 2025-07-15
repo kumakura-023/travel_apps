@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.40 (2025-07-15)
+
+### ✨ UX/UI改善
+- **ナビゲーションUIの刷新**: スマートフォン版のナビゲーションUIを全面的に改善し、より洗練された操作性を実現しました。
+  - **スライド式アイコンバー**: 右端のアイコンバーが画面内外にスライドして表示/非表示されるようになりました。これにより、地図の表示領域を最大限に活用できます。
+  - **開閉ボタンの改善**: アイコンバーが隠れている時も、開閉用の矢印ボタンが画面端に表示され、いつでもナビゲーションにアクセスできます。
+  - **ログインアイコンの統合**: ログインボタンをアイコンバーの最上部に統合し、UIパーツを整理しました。これにより、画面上の要素が整理され、より直感的なレイアウトになりました。
+
 ## v1.4.39 (2025-07-15)
 
 ### ✨ UX改善

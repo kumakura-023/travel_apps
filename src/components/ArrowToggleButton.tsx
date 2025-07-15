@@ -1,16 +1,19 @@
 import React from 'react';
-import { useUIStore } from '../store/uiStore';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 
-const ArrowToggleButton = () => {
-  const { isTabNavigationVisible, toggleTabNavigation } = useUIStore();
+interface Props {
+  isOpen: boolean;
+  onClick: () => void;
+}
 
+const ArrowToggleButton: React.FC<Props> = ({ isOpen, onClick }) => {
   return (
     <button
-      onClick={toggleTabNavigation}
-      className="glass-effect-border rounded-full w-10 h-10 transition-transform"
+      onClick={onClick}
+      className="glass-effect-border rounded-full w-10 h-10 flex items-center justify-center text-system-label transition-all duration-200 ease-ios-default hover:bg-gray-100/50 active:scale-90"
+      aria-label={isOpen ? 'ナビゲーションを隠す' : 'ナビゲーションを表示'}
     >
-      {isTabNavigationVisible ? <MdChevronLeft /> : <MdChevronRight />}
+      {isOpen ? <MdChevronRight size={28} /> : <MdChevronLeft size={28} />}
     </button>
   );
 };
