@@ -192,6 +192,7 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
           }}
           onDoubleClick={(e) => {
             e.stopPropagation();
+            e.preventDefault();
             setEditing(true);
           }}
           onMouseDown={handleMouseDown}

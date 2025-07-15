@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.42 (2025-07-15)
+
+### 🐛 バグ修正
+- **地図の拡大バグを修正**: メモ（ラベル）をダブルクリックして編集する際に、背景の地図が一緒に拡大されてしまう問題を修正しました。
+  - `onDoubleClick`イベントハンドラに`e.preventDefault()`を追加し、ダブルクリックイベントに紐づくブラウザのデフォルト動作（地図の拡大）をキャンセルするようにしました。
+
 ## v1.4.41 (2025-07-15)
 
 ### 🐛 バグ修正
