@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
- ## v1.4.34 (2025-07-15)
+## v1.4.35 (2025-07-15)
+
+### 🐛 バグ修正 & ♻️ リファクタリング
+- **候補地オーバーレイのズーム時位置ずれを修正**: 地図の拡大・縮小時に、候補地を示すカスタムオーバーレイ（情報ウィンドウ）が正しい位置からずれてしまう問題を修正しました。UIの見た目は完全に維持したまま、以下の技術的改善を行いました。
+  - **Reactコンポーネントへの移行**: `google.maps.OverlayView`を直接継承し、`innerHTML`へHTML文字列を挿入する旧来の実装を廃止しました。代わりに、`@react-google-maps/api`ライブラリが提供する`<OverlayView>`コンポーネントとJSX記法を用いるモダンな実装に全面的にリファクタリングしました。
+  - **正確な位置計算**: `<OverlayView>`の`getPixelPositionOffset`プロパティを活用し、オーバーレイの描画サイズに基づいて動的に表示位置を計算するように変更しました。これにより、ズームレベルを変更してもオーバーレイは常に正しい位置にアンカーされるようになり、位置ずれの問題が根本的に解決されました。
+  - **保守性の向上**: コードの可読性が向上し、将来的な機能追加や修正が容易になりました。
+
+## v1.4.34 (2025-07-15)
 
 ### ✨ UX改善
 - **メモ配置モードの改善**: メモ配置モード中にマップをクリックした際、メモが1つだけ配置され、自動的に通常モードに戻るように修正しました。これにより、意図しないメモの連続配置を防ぎます。
