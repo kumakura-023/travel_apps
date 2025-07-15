@@ -150,14 +150,15 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
-      // It was a tap
+      // It was a tap, not a long press. Check for double tap.
       const now = Date.now();
       if (now - lastTapTimeRef.current < 300) {
         onEdit(); // Double tap
       }
       lastTapTimeRef.current = now;
     }
-    // Drag/resize end is handled by the global pointerup listener
+    // For drag/resize, the global pointerup listener handles setting mode to 'idle'.
+    // For long press, the mode remains 'editing' until the map is clicked.
   };
 
   const handleResizePointerDown = (e: React.PointerEvent) => {

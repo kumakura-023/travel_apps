@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
- ## v1.4.33 (2025-07-15)
+ ## v1.4.34 (2025-07-15)
+
+### ✨ UX改善
+- **メモ配置モードの改善**: メモ配置モード中にマップをクリックした際、メモが1つだけ配置され、自動的に通常モードに戻るように修正しました。これにより、意図しないメモの連続配置を防ぎます。
+- **スマホ版のメモ選択状態の改善**: スマートフォンでメモを長押しした後、指を離しても選択状態（編集モード）が維持されるように修正しました。選択を解除するには、地図上の何もない領域をタップします。これにより、編集アイコンへのアクセスが容易になりました。
+
+## v1.4.33 (2025-07-15)
 
 ### ✨ UX改善 & バグ修正
 - **メモ（ラベル）操作の全面的な改善と同期機能の回復**:

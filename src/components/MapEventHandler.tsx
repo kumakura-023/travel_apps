@@ -64,8 +64,8 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
     if (labelModeRef.current && e.latLng) {
       console.log('📍 Label mode - adding label');
       addLabel({ text: '', position: { lat: e.latLng.lat(), lng: e.latLng.lng() } });
-      // ラベルモードを維持して連続でメモを追加可能にする
-      // onLabelModeChange(false); // この行をコメントアウト
+      // ラベルを1つ追加したらラベルモードを終了する
+      onLabelModeChange(false);
       return;
     }
 
