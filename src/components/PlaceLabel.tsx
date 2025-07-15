@@ -137,17 +137,34 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
     };
   }, [dragging, map]);
 
-  const handleDragMouseDown = (e: React.MouseEvent) => {
-    if (!map) return;
+  const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setDragging(true);
-    const proj = map.getProjection();
-    if (!proj) return;
-    dragStart.current = {
-      clientX: e.clientX,
-      clientY: e.clientY,
-      world: proj.fromLatLngToPoint(new google.maps.LatLng(labelPos.lat, labelPos.lng)),
+    const clickTime = Date.now();
+    const startX = e.clientX;
+    const startY = e.clientY;
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      const dx = Math.abs(ev.clientX - startX);
+      const dy = Math.abs(ev.clientY - startY);
+      if (dx > 5 || dy > 5) {
+        // Drag start
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        handleDragMouseDown(e);
+      }
     };
+
+    const handleMouseUp = () => {
+      if (Date.now() - clickTime < 200) {
+        // Click
+        setShowControls(true);
+      }
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
   };
 
   return (
@@ -177,42 +194,23 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
             e.stopPropagation();
             setEditing(true);
           }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowControls(true);
-          }}
-          onMouseDown={handleDragMouseDown}
+          onMouseDown={handleMouseDown}
         >
           {/* delete button */}
           {showControls && (
-            <>
-              <span
-                className="absolute -top-2 -left-2 w-5 h-5 bg-blue-500 text-white 
-                           caption-1 flex items-center justify-center rounded-full cursor-pointer
-                           hover:bg-blue-600 active:scale-95 transition-all duration-150 ease-ios-default
-                           shadow-elevation-2"
-                style={{ transform: `scale(${Math.min(scale, 1.2)})` }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditing(true);
-                }}
-              >
-                ✏️
-              </span>
-              <span
-                className="absolute -top-2 -right-2 w-5 h-5 bg-coral-500 text-white 
-                           caption-1 flex items-center justify-center rounded-full cursor-pointer
-                           hover:bg-coral-600 active:scale-95 transition-all duration-150 ease-ios-default
-                           shadow-elevation-2"
-                style={{ transform: `scale(${Math.min(scale, 1.2)})` }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  updatePlace(place.id, { labelHidden: true });
-                }}
-              >
-                ✕
-              </span>
-            </>
+            <span
+              className="absolute -top-2 -right-2 w-5 h-5 bg-coral-500 text-white 
+                         caption-1 flex items-center justify-center rounded-full cursor-pointer
+                         hover:bg-coral-600 active:scale-95 transition-all duration-150 ease-ios-default
+                         shadow-elevation-2"
+              style={{ transform: `scale(${Math.min(scale, 1.2)})` }}
+              onClick={(e) => {
+                e.stopPropagation();
+                updatePlace(place.id, { labelHidden: true });
+              }}
+            >
+              ✕
+            </span>
           )}
           
           {/* label text */}

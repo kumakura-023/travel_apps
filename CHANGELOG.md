@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.41 (2025-07-15)
+
+### 🐛 バグ修正
+- **メモ編集機能の回復**: メモ（ラベル）をダブルクリックしても編集ダイアログが開かない問題を修正しました。
+  - クリック、ダブルクリック、ドラッグの各イベントが互いに干渉しないように、`onMouseDown`イベントの処理ロジックを改善しました。
+  - これにより、マウスの移動距離やクリック時間に基づいてユーザーの意図（クリック、ドラッグ）を正確に判定し、ダブルクリックイベントが確実に発火するようになりました。
+
 ## v1.4.40 (2025-07-15)
 
 ### ✨ UX/UI改善
