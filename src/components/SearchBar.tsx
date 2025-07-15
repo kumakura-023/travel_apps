@@ -9,14 +9,12 @@ import { useDeviceDetect } from '../hooks/useDeviceDetect';
 
 interface Props {
   onPlaceSelected: (lat: number, lng: number) => void;
-  isDesktop: boolean;
   inputRef?: React.RefObject<HTMLInputElement>;
   onClearExternal?: () => void;
 }
 
 export default function SearchBar({
   onPlaceSelected,
-  isDesktop,
   inputRef,
   onClearExternal,
 }: Props) {
