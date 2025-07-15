@@ -48,7 +48,7 @@ export default function MapContainer({ children, showLabelToggle = true, labelMo
           zoom={zoom}
           options={{
             ...mapOptions,
-            gestureHandling: 'greedy',
+            gestureHandling: isMapInteractionEnabled ? 'greedy' : 'none',
             zoomControl: false,
             streetViewControl: false,
             mapTypeControl: false,

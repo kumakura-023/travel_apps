@@ -96,6 +96,19 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     }
   }, [isEditing, map, setMapInteraction]);
 
+  // Add this useEffect for dragging and resizing
+  useEffect(() => {
+    if (isDragging || isResizing) {
+      setMapInteraction(false);
+    } else {
+      // Only re-enable interaction if not in edit mode
+      if (!isEditing) {
+        setMapInteraction(true);
+      }
+    }
+    // No cleanup function needed here as the state is managed declaratively
+  }, [isDragging, isResizing, isEditing, setMapInteraction]);
+
   // Zoom listener
   useEffect(() => {
     if (!map) return;
