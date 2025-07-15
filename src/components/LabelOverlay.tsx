@@ -80,34 +80,26 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     };
   }, [isDragging, isResizing, map, onMove, onResize]);
 
-  // Edit mode and map interaction lock management
+  // Unified map interaction lock management
   useEffect(() => {
+    const isInteractionLocked = isEditing || isDragging || isResizing;
+    setMapInteraction(!isInteractionLocked);
+
+    // If we enter editing mode, set up a one-time click listener on the map
+    // to exit editing mode.
     if (isEditing) {
-      setMapInteraction(false);
       const listener = map?.addListener('click', () => {
         setIsEditing(false);
       });
+
+      // The cleanup function for this effect will run when isEditing, isDragging,
+      // or isResizing changes. We only want to remove the listener.
+      // The map interaction state is declaratively set at the start of the effect.
       return () => {
-        setMapInteraction(true);
         listener?.remove();
       };
-    } else {
-      setMapInteraction(true);
     }
-  }, [isEditing, map, setMapInteraction]);
-
-  // Add this useEffect for dragging and resizing
-  useEffect(() => {
-    if (isDragging || isResizing) {
-      setMapInteraction(false);
-    } else {
-      // Only re-enable interaction if not in edit mode
-      if (!isEditing) {
-        setMapInteraction(true);
-      }
-    }
-    // No cleanup function needed here as the state is managed declaratively
-  }, [isDragging, isResizing, isEditing, setMapInteraction]);
+  }, [isEditing, isDragging, isResizing, map, setMapInteraction]);
 
   // Zoom listener
   useEffect(() => {
