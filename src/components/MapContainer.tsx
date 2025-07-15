@@ -48,6 +48,7 @@ export default function MapContainer({ children, showLabelToggle = true, labelMo
           zoom={zoom}
           options={{
             ...mapOptions,
+            disableDoubleClickZoom: true, // ダブルクリックによるズームを無効化
             gestureHandling: isMapInteractionEnabled ? 'greedy' : 'none',
             zoomControl: false,
             streetViewControl: false,

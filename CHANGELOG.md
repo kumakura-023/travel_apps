@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.43 (2025-07-15)
+
+### 🐛 バグ修正
+- **地図の拡大バグを完全修正**: メモ（ラベル）をダブルクリックした際に、意図せず地図が拡大してしまう問題を、すべてのデバイス（PC、タブレット、スマホ）で完全に修正しました。
+  - **根本原因の解決**: Reactのイベント伝播制御だけでは不十分だったため、地図のネイティブなダブルクリックイベントを直接無効化するアプローチに変更しました。
+  - **実装**: `MapContainer.tsx`の`GoogleMap`コンポーネントに`disableDoubleClickZoom: true`オプションを追加し、地図本体のダブルクリックによるズーム機能を無効にしました。これにより、メモ上のダブルクリックイベントのみが正常に処理され、編集機能が正しく動作するようになりました。
+
 ## v1.4.42 (2025-07-15)
 
 ### 🐛 バグ修正
