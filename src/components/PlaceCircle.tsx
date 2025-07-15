@@ -13,7 +13,6 @@ interface Props {
   zoom?: number;
 }
 
-// Helper functions moved outside for better readability and performance
 const hexToRgb = (hex: string): string => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 0, 0';
@@ -101,22 +100,20 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
         <OverlayView
           position={place.coordinates}
           mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-          getPixelPositionOffset={(offsetWidth, offsetHeight) => {
-            // This function ensures the overlay is positioned correctly relative to the anchor point.
-            // It centers the overlay horizontally and places it above the anchor.
-            return {
-              x: -(offsetWidth / 2),
-              y: -offsetHeight - 10, // 10px gap above the anchor
-            };
-          }}
         >
-          <div style={{
-            transform: `scale(${scale})`,
-            transformOrigin: 'center bottom',
-            animation: 'modal-zoom-in 0.3s cubic-bezier(0.19, 0.91, 0.38, 1)',
-            pointerEvents: 'auto', // Allow clicks on the overlay
-          }}>
+          <div
+            style={{
+              position: 'absolute',
+              transform: 'translate(-50%, -100%)',
+              bottom: '10px', // Gap above the marker
+              pointerEvents: 'none', // Let clicks pass through the positioning div
+            }}
+          >
             <div style={{
+              transform: `scale(${scale})`,
+              transformOrigin: 'center bottom',
+              animation: 'modal-zoom-in 0.3s cubic-bezier(0.19, 0.91, 0.38, 1)',
+              pointerEvents: 'auto', // Enable clicks on the actual content
               background: 'rgba(255, 255, 255, 0.75)',
               backdropFilter: 'blur(20px) saturate(180%)',
               WebkitBackdropFilter: 'blur(20px) saturate(180%)',
