@@ -117,7 +117,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
 
   // --- Event Handlers ---
 
-  """  const handleContainerPointerDown = (e: React.PointerEvent) => {
+  const handleContainerPointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
     interactionStartRef.current = {
       clientX: e.clientX,
@@ -180,7 +180,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
       // If it wasn't a drag or a double-click, it's a single click.
       // For mobile, this does nothing. For desktop, you might want a select state.
     }
-  };""
+  };
 
   const handleResizePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
