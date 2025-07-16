@@ -1,6 +1,6 @@
 {
-  "name": "Travel Planner Map",
-  "short_name": "TravelMap",
+  "name": "VoyageSketch",
+  "short_name": "VoyageSketch",
   "description": "旅行計画に特化したマップWebアプリ。候補地管理から移動時間確認まで一括管理。",
   "start_url": "/",
   "scope": "/",

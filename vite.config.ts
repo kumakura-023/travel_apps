@@ -15,8 +15,8 @@ export default defineConfig(({ command, mode }) => {
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico'],
       manifest: {
-        name: 'Travel Planner Map',
-        short_name: 'TravelMap',
+        name: 'VoyageSketch',
+        short_name: 'VoyageSketch',
         description: '旅行計画に特化したマップWebアプリ',
         theme_color: '#1a73e8',
         background_color: '#ffffff',
