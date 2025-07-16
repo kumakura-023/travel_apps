@@ -35,6 +35,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
 
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTapTimeRef = useRef(0);
+  const isPointerDownRef = useRef(false);
 
   const deleteLabel = useLabelsStore((s) => s.deleteLabel);
 
@@ -74,6 +75,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     };
 
     const handlePointerUp = () => {
+      isPointerDownRef.current = false;
       // Trigger sync on operation end
       if (interactionStartRef.current.moved) {
         if (mode === 'dragging') {
@@ -119,6 +121,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
 
   const handleContainerPointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
+    isPointerDownRef.current = true;
     interactionStartRef.current = {
       clientX: e.clientX,
       clientY: e.clientY,
@@ -138,6 +141,8 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
   };
 
   const handleContainerPointerMove = (e: React.PointerEvent) => {
+    if (!isPointerDownRef.current) return;
+
     if (isMobile) {
       if (longPressTimerRef.current) {
         clearTimeout(longPressTimerRef.current);
@@ -156,6 +161,8 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
   };
 
   const handleContainerPointerUp = (e: React.PointerEvent) => {
+    isPointerDownRef.current = false;
+
     if (longPressTimerRef.current) { // Mobile short tap
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
@@ -184,6 +191,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
 
   const handleResizePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
+    isPointerDownRef.current = true;
     interactionStartRef.current = {
       ...interactionStartRef.current,
       clientX: e.clientX,
