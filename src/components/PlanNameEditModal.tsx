@@ -48,7 +48,6 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
       };
       updatePlan(updatedPlan);
       savePlan(updatedPlan);
-      if (saveImmediatelyCloud) saveImmediatelyCloud(updatedPlan);
       onClose();
     }
   };

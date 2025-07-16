@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.50 (2025-07-16)
+
+### 🐛 バグ修正
+- **プラン名・旅程のクラウド同期**: プラン名や旅程の変更がクラウドに保存されない問題を、イベント駆動アーキテクチャを導入することで根本的に修正しました。
+  - **原因**: プラン名・日付の変更をクラウド同期の責任者である`App.tsx`に通知する仕組みが欠落していました。各編集モーダルが個別に不完全な保存処理を呼び出そうとしていたため、同期が失敗していました。
+  - **修正内容**: 
+    1. `planStore`に、プラン更新を通知する`onPlanUpdated`コールバックを実装しました。
+    2. `App.tsx`がこの通知を監視し、正規のクラウド保存処理を呼び出すように修正しました。
+    3. 各編集モーダルは`planStore`の更新にのみ責任を持つようにし、クラウド保存処理への直接の依存を削除しました。
+  - **効果**: これにより、責務が明確化され、プラン名・日付の変更が確実かつ即座にクラウドへ同期されるようになります。
+
 ## v1.4.49 (2025-07-16)
 
 ### 🐛 バグ修正

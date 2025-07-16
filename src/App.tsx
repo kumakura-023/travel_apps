@@ -315,6 +315,19 @@ function App() {
     });
   }, [plan, saveImmediately, saveImmediatelyCloud]);
 
+  // プラン名・日付更新時の即座同期を設定
+  React.useEffect(() => {
+    const { setOnPlanUpdated } = usePlanStore.getState();
+
+    setOnPlanUpdated((updatedPlan) => {
+      if (import.meta.env.DEV) {
+        console.log('📅 プラン更新検知、即座同期開始:', updatedPlan.name);
+      }
+      saveImmediately(updatedPlan);
+      saveImmediatelyCloud(updatedPlan);
+    });
+  }, [saveImmediately, saveImmediatelyCloud]);
+
   // URL共有からの読み込み & プランロード
   // 認証初期化が完了してからプランをロード
   React.useEffect(() => {
