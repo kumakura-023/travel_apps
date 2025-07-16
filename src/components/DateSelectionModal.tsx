@@ -192,7 +192,7 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
           </div>
 
           {/* 日付グリッド */}
-          <div className="grid grid-cols-7 gap-1 h-[264px]">
+          <div className="grid grid-cols-7 grid-rows-6 gap-1">
             {days.map((date, index) => (
               <div key={index} className="relative">
                 {date && (
