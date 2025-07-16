@@ -105,8 +105,22 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
     setCurrentMonth(newMonth);
   };
 
+  const handleYearChange = (year: number) => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setFullYear(year);
+    setCurrentMonth(newMonth);
+  };
+
+  const handleMonthChange = (month: number) => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(month);
+    setCurrentMonth(newMonth);
+  };
+
   const days = getDaysInMonth(currentMonth);
   const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
+  const years = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 5 + i);
+  const months = Array.from({ length: 12 }, (_, i) => i);
 
   return (
     <div 
