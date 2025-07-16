@@ -573,7 +573,11 @@ export default function PlaceDetailPanel() {
               ) : (
                 <div
                   className="w-full min-h-[6rem] h-auto p-2 rounded cursor-pointer group"
-                  onDoubleClick={() => setMemoEditing(true)}
+                  onDoubleClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setMemoEditing(true);
+                  }}
                   title="ダブルクリックして編集"
                 >
                   <p className="body text-system-secondary-label leading-relaxed whitespace-pre-wrap group-hover:text-system-label transition-colors duration-150">
