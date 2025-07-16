@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.44 (2025-07-16)
+
+### ✨ UX改善
+- **メモ編集機能の改善 (PC/タブレット)**: PCおよびタブレット版において、メモの編集方法をダブルクリック方式に変更しました。
+  - **通常モード**: メモの内容がテキストとして表示されます。
+  - **編集モード**: メモをダブルクリックするとテキストエリアに切り替わり、編集が可能になります。
+  - **操作性の向上**: ホバー時にはカーソルが変わり、編集可能であることが視覚的にわかるようになりました。モバイル版では、従来通り直接テキストエリアをタップして編集できます。
+
+### 🐛 バグ修正
+- **ビルドエラーの修正**: `PlaceDetailPanel.tsx`内で`updatePlace`が二重に宣言されていたため発生していたビルドエラーを修正しました。
+
 ## v1.4.43 (2025-07-15)
 
 ### 🐛 バグ修正
