@@ -21,7 +21,6 @@ import { useBottomSheetStore } from '../store/bottomSheetStore';
 
 export default function PlaceDetailPanel() {
   const { place, setPlace } = useSelectedPlaceStore();
-  const { places, removePlace, updatePlace } = usePlaces();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
