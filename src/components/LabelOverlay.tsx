@@ -238,10 +238,11 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
                          hover:bg-coral-600 active:scale-95 transition-all duration-150 ease-ios-default
                          shadow-elevation-2"
               style={{ transform: `scale(${Math.min(1 / scale, 1.5)})` }}
-              onPointerDown={(e) => {
+              onClick={(e) => {
                 e.stopPropagation();
                 deleteLabel(label.id);
               }}
+              onPointerDown={(e) => e.stopPropagation()}
             >
               ✕
             </button>

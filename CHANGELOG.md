@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.47 (2025-07-16)
+
+### 🐛 バグ修正
+- **地図上のメモ削除機能**: メモ（ラベル）の削除ボタンを2回クリックしないと削除できなかった問題を修正しました。
+  - **原因**: 親要素の複雑なイベント処理（ドラッグ、ダブルクリック判定）と、削除ボタンの`onPointerDown`イベントが競合していました。
+  - **修正内容**: 削除ボタンのイベントを、より確実な`onClick`に変更しました。これにより、他の操作との競合が解消され、1回のクリックで確実にメモが削除されるようになります。
+
 ## v1.4.46 (2025-07-16)
 
 ### 🐛 バグ修正
