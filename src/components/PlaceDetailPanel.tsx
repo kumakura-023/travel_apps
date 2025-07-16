@@ -21,6 +21,7 @@ import { useBottomSheetStore } from '../store/bottomSheetStore';
 
 export default function PlaceDetailPanel() {
   const { place, setPlace } = useSelectedPlaceStore();
+  const { places, removePlace, updatePlace } = usePlaces();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -541,6 +542,23 @@ export default function PlaceDetailPanel() {
 
         {/* 詳細情報セクション */}
         <div className="px-5 pb-5 space-y-4">
+          {/* メモ */}
+          {saved && (
+            <div className="glass-effect rounded-xl p-4">
+              <h3 className="headline font-semibold text-system-label mb-2">メモ</h3>
+              <textarea
+                className="w-full h-24 p-2 border rounded bg-white/50 dark:bg-black/20 border-system-separator/50 focus:ring-2 focus:ring-coral-500 transition-all duration-150"
+                value={savedPlace?.memo || ''}
+                onChange={(e) => {
+                  if (savedPlace) {
+                    updatePlace(savedPlace.id, { memo: e.target.value });
+                  }
+                }}
+                placeholder="メモを追加"
+              />
+            </div>
+          )}
+
           {/* 住所 */}
           {place.formatted_address && (
             <div className="glass-effect rounded-xl p-4">
