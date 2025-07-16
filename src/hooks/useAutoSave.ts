@@ -25,12 +25,11 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     // 軽量なハッシュ計算（IDとタイムスタンプのみ）
     const placeIds = plan.places.map(p => p.id).sort().join(',');
     const labelIds = plan.labels.map(l => l.id).sort().join(',');
-    const planCore = `${plan.name}-${plan.startDate?.toISOString()}-${plan.endDate?.toISOString()}`;
     const placeCount = plan.places.length;
     const labelCount = plan.labels.length;
     const lastUpdate = plan.updatedAt.getTime();
     
-    return `${planCore}:${placeCount}:${labelCount}:${lastUpdate}:${placeIds}:${labelIds}`;
+    return `${placeCount}:${labelCount}:${lastUpdate}:${placeIds}:${labelIds}`;
   }, []);
 
   // 即座ローカル保存関数
