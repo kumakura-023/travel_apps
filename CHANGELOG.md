@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.45 (2025-07-16)
+
+### 🐛 バグ修正
+- **地図上のメモ編集機能 (PC版)**: PC/タブレット版で、地図上のメモ（ラベル）をダブルクリックしても編集が開始されなかった問題を修正しました。
+  - **原因**: PC版ではクリックすると即座にドラッグ移動モードに移行しており、ダブルクリックを判定するロジック自体が存在しませんでした。
+  - **修正内容**: スマートフォン版で実装されていたタイムスタンプベースのダブルクリック判定ロジックをPC/タブレット版にも適用しました。これにより、すべてのデバイスでダブルクリックによるメモ編集が可能になり、操作性が統一されました。
+
 ## v1.4.44 (2025-07-16)
 
 ### ✨ UX改善

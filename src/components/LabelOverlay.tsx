@@ -117,7 +117,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
 
   // --- Event Handlers ---
 
-  const handleContainerPointerDown = (e: React.PointerEvent) => {
+  """  const handleContainerPointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
     interactionStartRef.current = {
       clientX: e.clientX,
@@ -133,33 +133,54 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
         setMode('editing'); // Enter editing mode first
         longPressTimerRef.current = null;
       }, 500);
-    } else {
-      setMode('dragging'); // Desktop starts dragging immediately
     }
+    // No immediate mode change for desktop, wait for move or up
   };
 
   const handleContainerPointerMove = (e: React.PointerEvent) => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-      setMode('dragging'); // If moved before long press timer, start dragging
+    if (isMobile) {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+        setMode('dragging'); // If moved before long press timer, start dragging
+      }
+    } else {
+      // For desktop, if mouse moves after down, start dragging.
+      // A small threshold can prevent accidental drags on click.
+      const dx = Math.abs(e.clientX - interactionStartRef.current.clientX);
+      const dy = Math.abs(e.clientY - interactionStartRef.current.clientY);
+      if (dx > 5 || dy > 5) {
+        setMode('dragging');
+      }
     }
   };
 
-  const handleContainerPointerUp = () => {
-    if (longPressTimerRef.current) {
+  const handleContainerPointerUp = (e: React.PointerEvent) => {
+    if (longPressTimerRef.current) { // Mobile short tap
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
-      // It was a tap, not a long press. Check for double tap.
-      const now = Date.now();
-      if (now - lastTapTimeRef.current < 300) {
-        onEdit(); // Double tap
-      }
-      lastTapTimeRef.current = now;
     }
+
+    // Check for double-click/tap on all devices
+    const now = Date.now();
+    if (now - lastTapTimeRef.current < 300) {
+      if (mode !== 'dragging') { // Prevent edit on drag-end
+        onEdit();
+        lastTapTimeRef.current = 0; // Reset after double-click to prevent triple-click issues
+        return; // Done
+      }
+    }
+    lastTapTimeRef.current = now;
+    
     // For drag/resize, the global pointerup listener handles setting mode to 'idle'.
     // For long press, the mode remains 'editing' until the map is clicked.
-  };
+    if (mode === 'dragging') {
+      // The global handler will set it to idle.
+    } else {
+      // If it wasn't a drag or a double-click, it's a single click.
+      // For mobile, this does nothing. For desktop, you might want a select state.
+    }
+  };""
 
   const handleResizePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
