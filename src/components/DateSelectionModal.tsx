@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePlanStore } from '../store/planStore';
 import { savePlan } from '../services/storageService';
+import { useAutoSave } from '../hooks/useAutoSave';
 
 interface DateSelectionModalProps {
   isOpen: boolean;
@@ -9,9 +10,11 @@ interface DateSelectionModalProps {
 
 const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose }) => {
   const { plan, updatePlan } = usePlanStore();
+  const { saveImmediatelyCloud } = useAutoSave(plan);
   const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(null);
   const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   useEffect(() => {
     if (plan && isOpen) {
@@ -292,4 +295,4 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
   );
 };
 
-export default DateSelectionModal; 
+export default DateSelectionModal;
