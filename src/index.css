@@ -142,11 +142,12 @@ body {
 
   /* iOS風入力フィールド */
   .input {
-    @apply w-full px-4 py-3 bg-system-secondary-background rounded-lg border-0;
-    @apply text-[17px] tracking-[-0.408px] font-system;
-    @apply placeholder-system-tertiary-label transition-all duration-150;
-    @apply focus:outline-none focus:ring-2 focus:ring-coral-500/30 focus:bg-white;
-  }
+  @apply w-full p-3 bg-white/60 dark:bg-black/20 rounded-lg border border-system-separator/50 focus:ring-2 focus:ring-coral-500 focus:outline-none transition-all duration-150;
+}
+
+.select-box {
+  @apply p-2 bg-white/60 dark:bg-black/20 rounded-lg border border-system-separator/50 focus:ring-2 focus:ring-coral-500 focus:outline-none transition-all duration-150;
+}
 
   /* iOS風リストアイテム */
   .list-item {

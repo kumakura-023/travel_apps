@@ -59,6 +59,11 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(new Date(year, month, i));
     }
+
+    // 6週表示に固定するため、残りをnullで埋める
+    while (days.length < 42) {
+      days.push(null);
+    }
     
     return days;
   };
@@ -139,9 +144,22 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
             </svg>
           </button>
           
-          <h3 className="title-3 text-system-label font-semibold">
-            {formatMonth(currentMonth)}
-          </h3>
+          <div className="flex items-center space-x-2">
+            <select 
+              value={currentMonth.getFullYear()} 
+              onChange={(e) => handleYearChange(parseInt(e.target.value))}
+              className="select-box"
+            >
+              {years.map(year => <option key={year} value={year}>{year}年</option>)}
+            </select>
+            <select 
+              value={currentMonth.getMonth()} 
+              onChange={(e) => handleMonthChange(parseInt(e.target.value))}
+              className="select-box"
+            >
+              {months.map(month => <option key={month} value={month}>{month + 1}月</option>)}
+            </select>
+          </div>
           
           <button
             onClick={() => navigateMonth('next')}
