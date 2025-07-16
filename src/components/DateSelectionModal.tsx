@@ -151,33 +151,23 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
         <div className="flex items-center justify-between py-2">
           <button
             onClick={() => navigateMonth('prev')}
-            className="btn-text p-2 rounded-lg hover:bg-gray-100"
+            className="btn-text p-2 rounded-lg hover:bg-gray-100/50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="15,18 9,12 15,6"/>
             </svg>
           </button>
           
-          <div className="flex items-center space-x-2">
-            <select 
-              value={currentMonth.getFullYear()} 
-              onChange={(e) => handleYearChange(parseInt(e.target.value))}
-              className="select-box"
-            >
-              {years.map(year => <option key={year} value={year}>{year}年</option>)}
-            </select>
-            <select 
-              value={currentMonth.getMonth()} 
-              onChange={(e) => handleMonthChange(parseInt(e.target.value))}
-              className="select-box"
-            >
-              {months.map(month => <option key={month} value={month}>{month + 1}月</option>)}
-            </select>
-          </div>
+          <button 
+            onClick={() => setIsPickerOpen(true)}
+            className="title-3 text-system-label font-semibold hover:bg-gray-100/50 px-4 py-1 rounded-lg transition-colors duration-150"
+          >
+            {formatMonth(currentMonth)}
+          </button>
           
           <button
             onClick={() => navigateMonth('next')}
-            className="btn-text p-2 rounded-lg hover:bg-gray-100"
+            className="btn-text p-2 rounded-lg hover:bg-gray-100/50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="9,6 15,12 9,18"/>
@@ -186,7 +176,7 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
         </div>
 
         {/* カレンダー */}
-        <div className="bg-white/50 rounded-xl p-3">
+        <div className="bg-white/50 rounded-xl p-3 relative">
           {/* 曜日ヘッダー */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {weekDays.map((day) => (
@@ -199,7 +189,7 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
           </div>
 
           {/* 日付グリッド */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1 h-[264px]">
             {days.map((date, index) => (
               <div key={index} className="relative">
                 {date && (
@@ -227,6 +217,38 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
               </div>
             ))}
           </div>
+
+          {isPickerOpen && (
+            <div className="absolute inset-0 bg-system-secondary-background/90 backdrop-blur-sm z-10 flex flex-col p-3 rounded-xl animate-modal-fade-in">
+              <div className="flex-1 grid grid-cols-2 gap-3 h-full overflow-hidden">
+                <div className="h-full overflow-y-auto scrollbar-hide space-y-1">
+                  {years.map(year => (
+                    <button 
+                      key={year}
+                      onClick={() => handleYearChange(year)}
+                      className={`w-full py-2 rounded-lg text-center transition-colors duration-150 ${currentMonth.getFullYear() === year ? 'bg-coral-500 text-white font-semibold' : 'hover:bg-white/80'}`}
+                    >
+                      {year}年
+                    </button>
+                  ))}
+                </div>
+                <div className="h-full overflow-y-auto scrollbar-hide space-y-1">
+                  {months.map(month => (
+                    <button 
+                      key={month}
+                      onClick={() => handleMonthChange(month)}
+                      className={`w-full py-2 rounded-lg text-center transition-colors duration-150 ${currentMonth.getMonth() === month ? 'bg-coral-500 text-white font-semibold' : 'hover:bg-white/80'}`}
+                    >
+                      {month + 1}月
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button onClick={() => setIsPickerOpen(false)} className="btn-primary mt-3 py-2.5">
+                完了
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 選択状況表示 */}

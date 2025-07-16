@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.52 (2025-07-16)
+
+### ✨ UX改善
+- **旅程設定カレンダーのUXを向上**:
+  - **高さの固定**: 月の週数（4〜6週）に関わらず、カレンダーが常に同じ高さを保つように修正しました。これにより、UI要素が動くことがなくなり、操作性が安定します。
+  - **年月ジャンプ機能**: 年月を直接選択できるプルダウンメニューを追加し、目的の月へ素早く移動できるようになりました。
+
+### 🐛 バグ修正
+- **旅程設定の不具合修正**: 旅程編集画面を開こうとするとエラーが発生する問題を修正しました。原因は、UI描画に必要な変数が、描画処理の後に定義されていたためです。変数の定義順を修正し、正常に画面が表示されるようにしました。
+
 ## v1.4.51 (2025-07-16)
 
 ### 🐛 バグ修正
