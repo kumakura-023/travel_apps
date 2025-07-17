@@ -125,17 +125,22 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
   const years = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 5 + i);
   const months = Array.from({ length: 12 }, (_, i) => i);
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
     <div 
       className="fixed inset-0 bg-black/60 backdrop-blur-md z-[1000] flex items-center justify-center p-4
                  animate-modal-fade-in"
-      onClick={onClose}
+      onClick={handleBackdropClick}
     >
       <div 
         className="glass-effect rounded-2xl w-full max-w-md p-6 space-y-5 
                    shadow-[0_32px_64px_0_rgba(0,0,0,0.4)] 
                    animate-modal-zoom-in"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
         <div className="flex items-center space-x-3">

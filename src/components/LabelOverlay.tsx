@@ -121,6 +121,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
 
   const handleContainerPointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
+    e.stopPropagation();
     isPointerDownRef.current = true;
     interactionStartRef.current = {
       clientX: e.clientX,
