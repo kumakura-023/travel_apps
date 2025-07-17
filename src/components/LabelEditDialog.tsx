@@ -58,8 +58,8 @@ export default function LabelEditDialog({ label, onSave, onClose }: Props) {
   };
 
   return (
-    <div className="modal-backdrop flex items-center justify-center">
-      <div className="glass-effect rounded-xl w-[320px] p-5 space-y-4 animate-spring">
+    <div className="modal-backdrop flex items-center justify-center" onClick={onClose}>
+      <div className="glass-effect rounded-xl w-[320px] p-5 space-y-4 animate-spring" onClick={(e) => e.stopPropagation()}>
         <h3 className="headline text-center text-system-label">メモ編集</h3>
         <div className="space-y-4 max-h-[70vh] overflow-y-auto scrollbar-hide">
           <label className="block">
