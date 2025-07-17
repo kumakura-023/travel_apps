@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v1.4.53 (2025-07-17)
+
+### ✨ UX改善
+- **プルダウンの視認性向上**: 年月選択のプルダウンがボタンであることが分かりにくい問題を修正しました。デザインルールに沿って枠線とシェブロンアイコンを追加し、クリック可能な要素であることを明確にしました。
+
+### 🐛 バグ修正
+- **カレンダーの操作性改善**: 年月選択ピッカーを開いた後、操作しようとするとすぐに閉じてしまう問題を修正しました。ピッカー内でのクリックが背景に伝播しないようにし、安定した操作を可能にしました。
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

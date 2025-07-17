@@ -225,7 +225,7 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
           </div>
 
           {isPickerOpen && (
-            <div className="absolute inset-0 bg-system-secondary-background/90 backdrop-blur-sm z-10 flex flex-col p-3 rounded-xl animate-modal-fade-in">
+            <div className="absolute inset-0 bg-system-secondary-background/90 backdrop-blur-sm z-10 flex flex-col p-3 rounded-xl animate-modal-fade-in" onClick={(e) => e.stopPropagation()}>
               <div className="flex-1 grid grid-cols-2 gap-3 h-full overflow-hidden">
                 <div className="h-full overflow-y-auto scrollbar-hide space-y-1">
                   {years.map(year => (
