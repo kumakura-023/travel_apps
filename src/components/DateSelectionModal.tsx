@@ -161,11 +161,14 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
             </svg>
           </button>
           
-          <button 
-            onClick={() => setIsPickerOpen(true)}
-            className="title-3 text-system-label font-semibold hover:bg-gray-100/50 px-4 py-1 rounded-lg transition-colors duration-150"
+          <button
+            onClick={() => setIsPickerOpen(!isPickerOpen)}
+            className="flex items-center justify-center space-x-2 title-3 text-system-label font-semibold bg-white/50 hover:bg-gray-100/50 px-4 py-2 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-coral-500/50 border border-system-separator"
           >
-            {formatMonth(currentMonth)}
+            <span>{formatMonth(currentMonth)}</span>
+            <svg className={`w-5 h-5 text-system-secondary-label transition-transform duration-200 ${isPickerOpen ? 'transform rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
           </button>
           
           <button
