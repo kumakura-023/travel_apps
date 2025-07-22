@@ -22,7 +22,7 @@ const AppMenu: React.FC = () => {
     }
 
     try {
-      const functions = getFunctions();
+      const functions = getFunctions(undefined, 'asia-northeast1');
       const inviteUserToPlan = httpsCallable(functions, 'inviteUserToPlan');
       const result = await inviteUserToPlan({ planId: plan.id, email });
       

@@ -6,13 +6,14 @@ import { v4 as uuidv4 } from 'uuid';
 admin.initializeApp();
 
 const db = admin.firestore();
+const REGION = 'asia-northeast1';
 
 interface InviteData {
   planId: string;
   email: string;
 }
 
-export const inviteUserToPlan = onCall(async (request) => {
+export const inviteUserToPlan = onCall({ region: REGION }, async (request) => {
   // 1. Authentication Check
   if (!request.auth) {
     throw new HttpsError(
@@ -108,7 +109,7 @@ export const inviteUserToPlan = onCall(async (request) => {
  * オーナー/編集者のみ実行可
  * 既存のinviteTokenがあればそれを返し、なければ新規生成
  */
-export const generateInviteToken = onCall(async (request) => {
+export const generateInviteToken = onCall({ region: REGION }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', '認証が必要です');
   }
@@ -140,7 +141,7 @@ export const generateInviteToken = onCall(async (request) => {
  * URL招待トークン受理API
  * トークンから該当プランを検索し、認証済みユーザーをmembersに追加
  */
-export const acceptInviteToken = onCall(async (request) => {
+export const acceptInviteToken = onCall({ region: REGION }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', '認証が必要です');
   }

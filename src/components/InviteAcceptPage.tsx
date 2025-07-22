@@ -25,7 +25,7 @@ const InviteAcceptPage: React.FC = () => {
       setStatus('pending');
       setMessage('プランに参加しています...');
       try {
-        const functions = getFunctions();
+        const functions = getFunctions(undefined, 'asia-northeast1');
         const acceptInviteToken = httpsCallable(functions, 'acceptInviteToken');
         const result = await acceptInviteToken({ token });
         const data = result.data as { success?: boolean; alreadyMember?: boolean; planId?: string };
