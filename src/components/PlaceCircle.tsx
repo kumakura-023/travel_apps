@@ -115,7 +115,10 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
               overflow: 'hidden',
               fontFamily: '-apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, \'Noto Sans JP\', sans-serif',
               minWidth: '240px',
-            }}>
+            }}
+            onClick={(e) => e.stopPropagation()} // オーバーレイ全体でイベント伝播を停止
+            onMouseDown={(e) => e.stopPropagation()} // マウスダウンでも伝播を停止
+            >
               {/* Header */}
               <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -140,6 +143,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                 </div>
                 <button
                   onClick={handleDelete}
+                  onMouseDown={(e) => e.stopPropagation()} // マウスダウンでも伝播を停止
                   style={{
                     width: '28px', height: '28px', background: 'rgba(239, 68, 68, 0.9)',
                     color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer',
@@ -163,7 +167,10 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                     margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px',
                     background: 'rgba(255, 107, 114, 0.08)', padding: '8px 12px',
                     borderRadius: '8px', borderLeft: '3px solid #FF6B72',
-                  }}>
+                  }}
+                  onClick={(e) => e.stopPropagation()} // コンテナ全体でイベント伝播を停止
+                  onMouseDown={(e) => e.stopPropagation()} // マウスダウンでも伝播を停止
+                  >
                     <span style={{ fontSize: '12px', color: '#FF6B72' }}>📅</span>
                     <label style={{ fontSize: '14px', color: '#FF6B72', fontWeight: 500, marginRight: '4px' }}>
                       訪問日:
@@ -172,10 +179,13 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                       value={place.scheduledDay || ''}
                       onChange={handleScheduledDayChange}
                       onClick={(e) => e.stopPropagation()} // Prevent map click
+                      onMouseDown={(e) => e.stopPropagation()} // マウスダウンでも伝播を停止
+                      onFocus={(e) => e.stopPropagation()} // フォーカス時も伝播を停止
                       style={{
                         padding: '4px 8px', border: '1px solid rgba(255, 107, 114, 0.3)',
                         borderRadius: '6px', background: 'white', color: '#FF6B72',
                         fontSize: '13px', fontWeight: 500, cursor: 'pointer',
+                        pointerEvents: 'auto', // 明示的にポインターイベントを有効化
                       }}
                     >
                       <option value="">未設定</option>
@@ -193,10 +203,10 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-                  <button onClick={handleSetOrigin} style={{ flex: 1, padding: '8px 12px', background: 'rgba(34, 197, 94, 0.9)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <button onClick={handleSetOrigin} onMouseDown={(e) => e.stopPropagation()} style={{ flex: 1, padding: '8px 12px', background: 'rgba(34, 197, 94, 0.9)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '11px' }}>🚀</span> 出発地
                   </button>
-                  <button onClick={handleSetDestination} style={{ flex: 1, padding: '8px 12px', background: 'rgba(255, 107, 107, 0.9)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <button onClick={handleSetDestination} onMouseDown={(e) => e.stopPropagation()} style={{ flex: 1, padding: '8px 12px', background: 'rgba(255, 107, 107, 0.9)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '11px' }}>🎯</span> 目的地
                   </button>
                 </div>
