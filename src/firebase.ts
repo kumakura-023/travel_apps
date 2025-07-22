@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { enableIndexedDbPersistence, getFirestore } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FB_API_KEY as string,
@@ -15,6 +16,9 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+// デフォルトはasia-northeast1 (環境変数で上書き可能)
+const functionsRegion = (import.meta.env.VITE_FB_FUNCTIONS_REGION as string) || 'asia-northeast1';
+export const functions = getFunctions(app, functionsRegion);
 
 // オフラインキャッシュを有効化（エラーは無視）
 if (typeof window !== 'undefined') {

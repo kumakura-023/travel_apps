@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 import ModalPortal from './ModalPortal';
 
 interface InviteUrlModalProps {
@@ -20,7 +21,6 @@ const InviteUrlModal: React.FC<InviteUrlModalProps> = ({ isOpen, onClose, planId
     setError(null);
     setCopied(false);
     try {
-      const functions = getFunctions();
       const generateInviteToken = httpsCallable(functions, 'generateInviteToken');
       const result = await generateInviteToken({ planId });
       const data = result.data as { inviteToken: string };

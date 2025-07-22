@@ -1,9 +1,14 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { setGlobalOptions } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { v4 as uuidv4 } from 'uuid';
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
+setGlobalOptions({
+  region: process.env.FUNCTIONS_REGION || 'us-central1',
+  cors: true,
+});
 
 const db = admin.firestore();
 
