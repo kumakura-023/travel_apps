@@ -28,12 +28,12 @@ const AuthButton: React.FC = () => {
   };
 
   const handleShare = () => {
-    handleMenuClose();
-    setShareModalOpen(true);
+    setMenuOpen(false);
+    setTimeout(() => setShareModalOpen(true), 0);
   };
   const handleInviteUrl = () => {
-    handleMenuClose();
-    setInviteUrlModalOpen(true);
+    setMenuOpen(false);
+    setTimeout(() => setInviteUrlModalOpen(true), 0);
   };
 
   // メニュー外クリックで閉じる
@@ -97,7 +97,10 @@ const AuthButton: React.FC = () => {
         isOpen={shareModalOpen}
         onClose={() => setShareModalOpen(false)}
         onShare={() => {}}
-        onInviteUrlClick={handleInviteUrl}
+        onInviteUrlClick={() => {
+          setShareModalOpen(false);
+          setTimeout(() => setInviteUrlModalOpen(true), 0);
+        }}
       />
       <InviteUrlModal
         isOpen={inviteUrlModalOpen}
