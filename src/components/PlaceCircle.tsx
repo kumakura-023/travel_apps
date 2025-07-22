@@ -183,7 +183,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                       onFocus={(e) => e.stopPropagation()} // フォーカス時も伝播を停止
                       style={{
                         padding: '4px 8px', border: '1px solid rgba(255, 107, 114, 0.3)',
-                        borderRadius: '6px', background: 'white', color: '#FF6B72',
+                        borderRadius: '6px', background: 'white', color: 'rgba(0, 0, 0, 0.85)',
                         fontSize: '13px', fontWeight: 500, cursor: 'pointer',
                         pointerEvents: 'auto', // 明示的にポインターイベントを有効化
                       }}
