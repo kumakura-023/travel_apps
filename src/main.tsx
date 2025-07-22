@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import './index.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import InviteAcceptPage from './components/InviteAcceptPage';
 
 // Service Worker登録（本番環境のみ）
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
@@ -53,7 +55,12 @@ window.addEventListener('appinstalled', () => {
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <App />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/invite/:token" element={<InviteAcceptPage />} />
+          <Route path="/*" element={<App />} />
+        </Routes>
+      </BrowserRouter>
     </ErrorBoundary>
   </React.StrictMode>,
 ); 

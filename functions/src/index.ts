@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
+import { v4 as uuidv4 } from 'uuid';
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -100,4 +101,73 @@ export const inviteUserToPlan = onCall(async (request) => {
         "An unexpected error occurred.",
     );
   }
+});
+
+/**
+ * URL招待用トークン生成API
+ * オーナー/編集者のみ実行可
+ * 既存のinviteTokenがあればそれを返し、なければ新規生成
+ */
+export const generateInviteToken = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', '認証が必要です');
+  }
+  const uid = request.auth.uid;
+  const { planId } = request.data as { planId: string };
+  if (!planId) {
+    throw new HttpsError('invalid-argument', 'planIdが必要です');
+  }
+  const planRef = db.collection('plans').doc(planId);
+  const planSnap = await planRef.get();
+  if (!planSnap.exists) {
+    throw new HttpsError('not-found', 'プランが存在しません');
+  }
+  const planData = planSnap.data();
+  const members = planData.members || {};
+  const role = members[uid]?.role;
+  if (role !== 'owner' && role !== 'editor') {
+    throw new HttpsError('permission-denied', '招待権限がありません');
+  }
+  let inviteToken = planData.inviteToken;
+  if (!inviteToken) {
+    inviteToken = uuidv4();
+    await planRef.update({ inviteToken });
+  }
+  return { inviteToken };
+});
+
+/**
+ * URL招待トークン受理API
+ * トークンから該当プランを検索し、認証済みユーザーをmembersに追加
+ */
+export const acceptInviteToken = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', '認証が必要です');
+  }
+  const uid = request.auth.uid;
+  const { token } = request.data as { token: string };
+  if (!token) {
+    throw new HttpsError('invalid-argument', 'tokenが必要です');
+  }
+  // inviteTokenでプランを検索
+  const plansSnap = await db.collection('plans').where('inviteToken', '==', token).get();
+  if (plansSnap.empty) {
+    throw new HttpsError('not-found', '有効な招待トークンが見つかりません');
+  }
+  const planDoc = plansSnap.docs[0];
+  const planData = planDoc.data();
+  if (!planData) {
+    throw new HttpsError('internal', 'プランデータが取得できません');
+  }
+  const members = planData.members || {};
+  if (members[uid]) {
+    return { alreadyMember: true, planId: planDoc.id };
+  }
+  await planDoc.ref.update({
+    [`members.${uid}`]: {
+      role: 'editor',
+      joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+  });
+  return { success: true, planId: planDoc.id };
 });

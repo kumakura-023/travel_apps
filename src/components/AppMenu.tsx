@@ -4,11 +4,13 @@ import Settings from './Settings';
 import SharePlanModal from './SharePlanModal';
 import { usePlanStore } from '../store/planStore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import InviteUrlModal from './InviteUrlModal';
 
 const AppMenu: React.FC = () => {
   const { isDesktop } = useDeviceDetect();
   const [open, setOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [inviteUrlModalOpen, setInviteUrlModalOpen] = useState(false);
   const { plan } = usePlanStore();
 
   const toggleMenu = () => setOpen(!open);
@@ -34,6 +36,11 @@ const AppMenu: React.FC = () => {
       console.error('Error sharing plan:', error);
       alert(`招待に失敗しました: ${error.message}`);
     }
+  };
+
+  const handleInviteUrlClick = () => {
+    setShareModalOpen(false);
+    setInviteUrlModalOpen(true);
   };
 
   // メニューサイズ
@@ -114,7 +121,9 @@ const AppMenu: React.FC = () => {
         isOpen={shareModalOpen} 
         onClose={() => setShareModalOpen(false)} 
         onShare={handleShare} 
+        onInviteUrlClick={handleInviteUrlClick}
       />
+      <InviteUrlModal isOpen={inviteUrlModalOpen} onClose={() => setInviteUrlModalOpen(false)} planId={plan?.id} />
     </>
   );
 };

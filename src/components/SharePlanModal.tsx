@@ -4,9 +4,10 @@ interface SharePlanModalProps {
   isOpen: boolean;
   onClose: () => void;
   onShare: (email: string) => void;
+  onInviteUrlClick: () => void;
 }
 
-const SharePlanModal: React.FC<SharePlanModalProps> = ({ isOpen, onClose, onShare }) => {
+const SharePlanModal: React.FC<SharePlanModalProps> = ({ isOpen, onClose, onShare, onInviteUrlClick }) => {
   const [email, setEmail] = useState('');
 
   if (!isOpen) return null;
@@ -55,19 +56,28 @@ const SharePlanModal: React.FC<SharePlanModalProps> = ({ isOpen, onClose, onShar
         </div>
 
         {/* Buttons */}
-        <div className="flex justify-end space-x-3 pt-4 border-t border-white/20">
+        <div className="flex justify-between mt-6 space-x-2">
           <button 
-            className="btn-text text-system-secondary-label hover:text-system-label" 
+            className="btn-text text-system-secondary-label hover:text-system-label flex-1" 
             onClick={onClose}
           >
             キャンセル
           </button>
           <button 
-            className="btn-primary min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed" 
+            className="btn-primary min-w-[100px] flex-1 disabled:opacity-50 disabled:cursor-not-allowed" 
             onClick={handleShare}
             disabled={!email}
           >
             招待する
+          </button>
+        </div>
+        <div className="mt-4 text-center">
+          <button
+            className="btn-system w-full"
+            onClick={onInviteUrlClick}
+            type="button"
+          >
+            <span className="body">URLで招待</span>
           </button>
         </div>
       </div>
