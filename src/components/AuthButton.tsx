@@ -14,12 +14,14 @@ const AuthButton: React.FC = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [inviteUrlModalOpen, setInviteUrlModalOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const handleMenuToggle = () => setMenuOpen((v) => !v);
   const handleMenuClose = () => setMenuOpen(false);
 
-  const handleLoginLogout = async () => {
-    handleMenuClose();
+  const handleLoginLogout = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMenuOpen(false);
     if (user) {
       await signOut();
     } else {
@@ -27,11 +29,13 @@ const AuthButton: React.FC = () => {
     }
   };
 
-  const handleShare = () => {
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setMenuOpen(false);
     setTimeout(() => setShareModalOpen(true), 0);
   };
-  const handleInviteUrl = () => {
+  const handleInviteUrl = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setMenuOpen(false);
     setTimeout(() => setInviteUrlModalOpen(true), 0);
   };
@@ -40,7 +44,10 @@ const AuthButton: React.FC = () => {
   React.useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {
-      if (!btnRef.current?.contains(e.target as Node)) {
+      if (
+        !btnRef.current?.contains(e.target as Node) &&
+        !menuRef.current?.contains(e.target as Node)
+      ) {
         setMenuOpen(false);
       }
     };
@@ -50,49 +57,55 @@ const AuthButton: React.FC = () => {
 
   return (
     <>
-      <button
-        ref={btnRef}
-        onClick={handleMenuToggle}
-        className="glass-effect flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-system-label hover:bg-gray-100/50 transition-colors duration-150"
-        aria-label={user ? `アカウント: ${user.displayName}` : 'Googleでログイン'}
-      >
-        {user && user.photoURL ? (
-          <img
-            src={user.photoURL}
-            alt="ユーザーアイコン"
-            className="w-6 h-6 rounded-full border-2 border-white/50"
-          />
-        ) : (
-          <FaUserCircle className="w-6 h-6 text-gray-400" />
+      <div className="relative">
+        <button
+          ref={btnRef}
+          onClick={handleMenuToggle}
+          className="glass-effect flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-system-label hover:bg-gray-100/50 transition-colors duration-150"
+          aria-label={user ? `アカウント: ${user.displayName}` : 'Googleでログイン'}
+        >
+          {user && user.photoURL ? (
+            <img
+              src={user.photoURL}
+              alt="ユーザーアイコン"
+              className="w-6 h-6 rounded-full border-2 border-white/50"
+            />
+          ) : (
+            <FaUserCircle className="w-6 h-6 text-gray-400" />
+          )}
+          <span className="hidden md:inline">
+            {user ? user.displayName || 'アカウント' : 'ログイン'}
+          </span>
+        </button>
+        {menuOpen && (
+          <div
+            ref={menuRef}
+            className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg z-[2000] py-2 border border-gray-200"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="w-full text-left px-4 py-3 hover:bg-gray-100 text-system-label"
+              onClick={handleLoginLogout}
+            >
+              {user ? 'ログアウト' : 'Googleでログイン'}
+            </button>
+            <button
+              className="w-full text-left px-4 py-3 hover:bg-gray-100 text-system-label"
+              onClick={handleShare}
+              disabled={!plan}
+            >
+              ほかのアカウントを招待
+            </button>
+            <button
+              className="w-full text-left px-4 py-3 hover:bg-gray-100 text-system-label"
+              onClick={handleInviteUrl}
+              disabled={!plan}
+            >
+              URLで招待
+            </button>
+          </div>
         )}
-        <span className="hidden md:inline">
-          {user ? user.displayName || 'アカウント' : 'ログイン'}
-        </span>
-      </button>
-      {menuOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg z-[2000] py-2 border border-gray-200">
-          <button
-            className="w-full text-left px-4 py-3 hover:bg-gray-100 text-system-label"
-            onClick={handleLoginLogout}
-          >
-            {user ? 'ログアウト' : 'Googleでログイン'}
-          </button>
-          <button
-            className="w-full text-left px-4 py-3 hover:bg-gray-100 text-system-label"
-            onClick={handleShare}
-            disabled={!plan}
-          >
-            ほかのアカウントを招待
-          </button>
-          <button
-            className="w-full text-left px-4 py-3 hover:bg-gray-100 text-system-label"
-            onClick={handleInviteUrl}
-            disabled={!plan}
-          >
-            URLで招待
-          </button>
-        </div>
-      )}
+      </div>
       <SharePlanModal
         isOpen={shareModalOpen}
         onClose={() => setShareModalOpen(false)}
