@@ -58,7 +58,7 @@ const InviteUrlModal: React.FC<InviteUrlModalProps> = ({ isOpen, onClose, planId
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000] flex justify-center items-center p-4 animate-modal-fade-in" onClick={onClose}>
-      <div className="glass-effect rounded-xl w-full max-w-md min-w-[280px] mx-auto p-6 md:p-8 space-y-6 shadow-elevation-5 animate-modal-zoom-in flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="glass-effect rounded-xl w-auto max-w-md min-w-[280px] mx-auto p-6 md:p-8 space-y-6 shadow-elevation-5 animate-modal-zoom-in flex flex-col" onClick={e => e.stopPropagation()}>
         {/* ヘッダー */}
         <div className="modal-header mb-4 flex items-center space-x-3">
           <div className="modal-header-icon">
@@ -78,14 +78,23 @@ const InviteUrlModal: React.FC<InviteUrlModalProps> = ({ isOpen, onClose, planId
             <div className="text-center text-system-secondary-label">生成中...</div>
           ) : inviteUrl ? (
             <div className="flex flex-col items-center space-y-2">
-              <input type="text" value={inviteUrl} readOnly className="input text-center" />
+              <input type="text" value={inviteUrl} readOnly className="input text-center" onClick={e => (e.currentTarget as HTMLInputElement).select()} />
             </div>
           ) : null}
         </div>
         {/* ボタン */}
         <div className="flex flex-row justify-end gap-3 pt-6">
           <button className="btn-text" onClick={onClose}>閉じる</button>
-          <button className="btn-primary min-w-[100px]" onClick={handleCopy} disabled={!inviteUrl}>
+          <button className="btn-primary min-w-[100px]" onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(inviteUrl);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            } catch (err) {
+              setCopied(false);
+              alert('コピーに失敗しました');
+            }
+          }} disabled={!inviteUrl}>
             {copied ? 'コピーしました！' : 'URLをコピー'}
           </button>
         </div>
