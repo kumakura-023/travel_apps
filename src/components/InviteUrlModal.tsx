@@ -57,8 +57,8 @@ const InviteUrlModal: React.FC<InviteUrlModalProps> = ({ isOpen, onClose, planId
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000] flex items-center justify-center p-4 animate-modal-fade-in" onClick={onClose}>
-      <div className="glass-effect rounded-xl w-[90vw] max-w-md min-w-[280px] p-6 md:p-8 space-y-6 shadow-elevation-5 animate-modal-zoom-in flex flex-col" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000] flex justify-center items-center p-4 animate-modal-fade-in" onClick={onClose}>
+      <div className="glass-effect rounded-xl w-full max-w-md min-w-[280px] mx-auto p-6 md:p-8 space-y-6 shadow-elevation-5 animate-modal-zoom-in flex flex-col" onClick={e => e.stopPropagation()}>
         {/* ヘッダー */}
         <div className="modal-header mb-4 flex items-center space-x-3">
           <div className="modal-header-icon">
