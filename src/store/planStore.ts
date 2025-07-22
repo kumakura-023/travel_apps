@@ -1,32 +1,70 @@
 import { create } from 'zustand';
 import { TravelPlan } from '../types';
+import { listenPlan } from '../services/planCloudService';
+import { Unsubscribe } from 'firebase/firestore';
 
 interface PlanState {
   plan: TravelPlan | null;
-  setPlan: (plan: TravelPlan) => void;
+  activePlanId: string | null;
+  isLoading: boolean;
+  error: string | null;
+  unsubscribe: Unsubscribe | null;
+  setPlan: (plan: TravelPlan | null) => void;
   updatePlan: (update: Partial<TravelPlan>) => void;
-  onPlanUpdated: (plan: TravelPlan) => void;
-  setOnPlanUpdated: (callback: (plan: TravelPlan) => void) => void;
+  listenToPlan: (planId: string) => void;
+  unsubscribeFromPlan: () => void;
 }
 
-let onPlanUpdatedCallback: (plan: TravelPlan) => void = () => {};
-
-export const usePlanStore = create<PlanState>((set) => ({
+export const usePlanStore = create<PlanState>((set, get) => ({
   plan: null,
-  setPlan: (plan) => set({ plan }),
+  activePlanId: null,
+  isLoading: true,
+  error: null,
+  unsubscribe: null,
+
+  setPlan: (plan) => set({ plan, isLoading: false, error: null }),
+
   updatePlan: (update) =>
     set((state) => {
       if (state.plan) {
         const updatedPlan = { ...state.plan, ...update, updatedAt: new Date() };
-        onPlanUpdatedCallback(updatedPlan);
+        // Note: The actual save to the cloud should be handled by a separate mechanism,
+        // like a useAutoSave hook, to prevent Zustand from having side effects.
         return { plan: updatedPlan };
       }
       return {};
     }),
-  onPlanUpdated: (plan) => {
-    onPlanUpdatedCallback(plan);
+
+  listenToPlan: (planId) => {
+    const { unsubscribe, activePlanId } = get();
+    if (unsubscribe && activePlanId === planId) {
+      // Already listening to this plan
+      return;
+    }
+
+    // If listening to another plan, unsubscribe first
+    if (unsubscribe) {
+      unsubscribe();
+    }
+
+    set({ isLoading: true, activePlanId: planId });
+
+    const newUnsubscribe = listenPlan(planId, (plan) => {
+      if (plan) {
+        set({ plan, isLoading: false, error: null });
+      } else {
+        set({ plan: null, isLoading: false, error: `Plan with ID ${planId} not found or permission denied.` });
+      }
+    });
+
+    set({ unsubscribe: newUnsubscribe });
   },
-  setOnPlanUpdated: (callback) => {
-    onPlanUpdatedCallback = callback;
+
+  unsubscribeFromPlan: () => {
+    const { unsubscribe } = get();
+    if (unsubscribe) {
+      unsubscribe();
+    }
+    set({ plan: null, activePlanId: null, unsubscribe: null });
   },
 })); 

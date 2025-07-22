@@ -1,12 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import Settings from './Settings';
+import SharePlanModal from './SharePlanModal';
+import { usePlanStore } from '../store/planStore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const AppMenu: React.FC = () => {
   const { isDesktop } = useDeviceDetect();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const { plan } = usePlanStore();
 
   const toggleMenu = () => setOpen(!open);
+
+  const handleShare = async (email: string) => {
+    if (!plan) {
+      alert('アクティブなプランがありません。');
+      return;
+    }
+
+    try {
+      const functions = getFunctions();
+      const inviteUserToPlan = httpsCallable(functions, 'inviteUserToPlan');
+      const result = await inviteUserToPlan({ planId: plan.id, email });
+      
+      const data = result.data as { success: boolean; message: string };
+      if (data.success) {
+        alert(data.message);
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error: any) {
+      console.error('Error sharing plan:', error);
+      alert(`招待に失敗しました: ${error.message}`);
+    }
+  };
 
   // メニューサイズ
   const width = 280;
@@ -60,10 +88,33 @@ const AppMenu: React.FC = () => {
           left: 0,
         }}
       >
-        <div className="p-4">
+        <div className="p-4 space-y-4">
+          {/* Share Button */}
+          <button 
+            className="btn-system w-full"
+            onClick={() => setShareModalOpen(true)}
+            disabled={!plan} // Disable if no active plan
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6.002l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.368a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                </svg>
+              </div>
+              <span className="body">プランを共有</span>
+            </div>
+            <svg className="w-5 h-5 text-system-tertiary-label" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
           <Settings />
         </div>
       </div>
+      <SharePlanModal 
+        isOpen={shareModalOpen} 
+        onClose={() => setShareModalOpen(false)} 
+        onShare={handleShare} 
+      />
     </>
   );
 };
