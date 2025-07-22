@@ -141,6 +141,7 @@ const DateSelectionModal: React.FC<DateSelectionModalProps> = ({ isOpen, onClose
         className="glass-effect rounded-2xl w-full max-w-md p-6 space-y-5 
                    shadow-[0_32px_64px_0_rgba(0,0,0,0.4)] 
                    animate-modal-zoom-in"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
         <div className="flex items-center space-x-3">
