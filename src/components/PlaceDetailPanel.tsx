@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { FiX, FiTrash2, FiBookmark, FiSearch, FiChevronLeft, FiChevronRight, FiCalendar, FiChevronUp, FiChevronDown } from 'react-icons/fi';
-import { MdDirections } from 'react-icons/md';
+import { FiX, FiTrash2 } from 'react-icons/fi';
 import useMediaQuery from '../hooks/useMediaQuery';
 import { useBottomSheet } from '../hooks/useBottomSheet';
 import { usePullToRefreshPrevention } from '../hooks/usePullToRefreshPrevention';
@@ -16,7 +15,9 @@ import { classifyCategory } from '../utils/categoryClassifier';
 import { getCategoryPath, getCategoryColor, getCategoryDisplayName } from '../utils/categoryIcons';
 import { estimateCost } from '../utils/estimateCost';
 import ImageCarouselModal from './ImageCarouselModal';
-import DaySelector from './DaySelector';
+import ImageGallery from './placeDetail/ImageGallery';
+import PlaceActions from './placeDetail/PlaceActions';
+import MemoEditor from './placeDetail/MemoEditor';
 import { useBottomSheetStore } from '../store/bottomSheetStore';
 
 export default function PlaceDetailPanel() {
@@ -24,7 +25,6 @@ export default function PlaceDetailPanel() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [memoEditing, setMemoEditing] = useState(false);
 
   const { deletePlace, addPlace, updatePlace } = usePlacesStore((s) => ({ 
     deletePlace: s.deletePlace, 
@@ -35,7 +35,6 @@ export default function PlaceDetailPanel() {
   const { plan } = usePlanStore();
   const { setSelectedOrigin, setSelectedDestination, openRouteSearch } = useRouteSearchStore();
   const { map } = useGoogleMaps();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomSheetRootRef = useRef<HTMLDivElement>(null);
 
   // ブレークポイント
@@ -190,20 +189,6 @@ export default function PlaceDetailPanel() {
     });
   };
 
-  const scrollImages = (direction: 'left' | 'right') => {
-    if (!scrollContainerRef.current) return;
-
-    const container = scrollContainerRef.current;
-    const scrollAmount = 140;
-    const newScrollLeft = direction === 'left' 
-      ? container.scrollLeft - scrollAmount 
-      : container.scrollLeft + scrollAmount;
-
-    container.scrollTo({
-      left: newScrollLeft,
-      behavior: 'smooth'
-    });
-  };
 
   const handleImageClick = (index: number) => {
     setSelectedImageIndex(index);
@@ -441,156 +426,22 @@ export default function PlaceDetailPanel() {
 
         {/* アクションボタンセクション */}
         <div className="px-5 pb-5">
-          <div className="glass-effect rounded-xl p-4 space-y-4">
-            {/* ルート検索ボタン */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={handleRouteFromHere}
-                className="flex flex-col items-center justify-center p-4 
-                           bg-teal-500/10 hover:bg-teal-500/20 
-                           border border-teal-500/20 rounded-lg 
-                           transition-all duration-150 ease-ios-default
-                           hover:shadow-elevation-2 active:scale-95"
-                title="ここから出発"
-              >
-                <MdDirections size={24} className="text-teal-500 mb-2" />
-                <span className="subheadline font-medium text-teal-600">ここから出発</span>
-              </button>
-              
-              <button
-                onClick={handleRouteToHere}
-                className="flex flex-col items-center justify-center p-4 
-                           bg-coral-500/10 hover:bg-coral-500/20 
-                           border border-coral-500/20 rounded-lg 
-                           transition-all duration-150 ease-ios-default
-                           hover:shadow-elevation-2 active:scale-95"
-                title="ここに向かう"
-              >
-                <MdDirections size={24} className="text-coral-500 mb-2 transform rotate-180" />
-                <span className="subheadline font-medium text-coral-600">ここに向かう</span>
-              </button>
-            </div>
-            
-            {/* セカンダリアクション */}
-            <div className="flex items-center justify-center space-x-8 pt-2">
-              {/* 保存ボタン */}
-              <button
-                onClick={handleSavePlace}
-                className="flex flex-col items-center justify-center p-2 group"
-                title={saved ? '保存済み' : '保存'}
-              >
-                <div
-                  className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 
-                             transition-all duration-200 ease-ios-default ${
-                    saved
-                      ? 'border-coral-500 bg-coral-500 shadow-coral-glow'
-                      : 'border-system-secondary-label/30 group-hover:border-coral-500 group-hover:bg-coral-500 group-active:bg-coral-600'
-                  }`}
-                >
-                  <FiBookmark
-                    size={20}
-                    className={`transition-colors duration-200 ${
-                      saved
-                        ? 'text-white'
-                        : 'text-system-secondary-label group-hover:text-white group-active:text-white'
-                    }`}
-                  />
-                </div>
-                <span className="caption-1 text-system-secondary-label">
-                  {saved ? '保存済み' : '保存'}
-                </span>
-              </button>
-              
-              {/* 付近検索ボタン */}
-              <button
-                onClick={handleNearbySearch}
-                className="flex flex-col items-center justify-center p-2 group"
-                title="付近を検索"
-              >
-                <div className="w-12 h-12 rounded-full border-2 border-system-secondary-label/30 
-                               flex items-center justify-center mb-2 
-                               transition-all duration-200 ease-ios-default 
-                               group-hover:border-teal-500 group-hover:bg-teal-500 
-                               group-active:bg-teal-600">
-                  <FiSearch size={20} className="text-system-secondary-label 
-                                                 group-hover:text-white group-active:text-white 
-                                                 transition-colors duration-200" />
-                </div>
-                <span className="caption-1 text-system-secondary-label">付近を検索</span>
-              </button>
-            </div>
-            
-            {/* 訪問日設定（保存済み候補地の場合のみ表示） */}
-            {saved && plan && (
-              <div className="pt-4 border-t border-system-separator/30 mt-4">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="w-6 h-6 text-coral-500 flex-shrink-0">
-                    <FiCalendar size={18} />
-                  </div>
-                  <span className="subheadline font-medium text-system-label">訪問日設定</span>
-                </div>
-                <DaySelector
-                  selectedDay={savedPlace?.scheduledDay}
-                  onDayChange={handleScheduledDayChange}
-                  maxDays={plan && plan.endDate ? Math.ceil((plan.endDate.getTime() - plan.startDate!.getTime()) / (1000 * 60 * 60 * 24)) + 1 : 7}
-                  className="w-full"
-                />
-              </div>
-            )}
-          </div>
+          <PlaceActions
+            saved={saved}
+            savedPlace={savedPlace}
+            plan={plan}
+            onRouteFromHere={handleRouteFromHere}
+            onRouteToHere={handleRouteToHere}
+            onSavePlace={handleSavePlace}
+            onNearbySearch={handleNearbySearch}
+            onDayChange={handleScheduledDayChange}
+          />
         </div>
 
         {/* 詳細情報セクション */}
         <div className="px-5 pb-5 space-y-4">
           {/* メモ */}
-          {saved && (
-            <div className="glass-effect rounded-xl p-4">
-              <h3 className="headline font-semibold text-system-label mb-2">メモ</h3>
-              {isMobile ? (
-                <textarea
-                  className="w-full h-24 p-2 border rounded bg-white/50 dark:bg-black/20 border-system-separator/50 focus:ring-2 focus:ring-coral-500 transition-all duration-150"
-                  value={savedPlace?.memo || ''}
-                  onChange={(e) => {
-                    if (savedPlace) {
-                      updatePlace(savedPlace.id, { memo: e.target.value });
-                    }
-                  }}
-                  placeholder="メモを追加"
-                />
-              ) : memoEditing ? (
-                <textarea
-                  className="w-full h-24 p-2 border rounded bg-white/50 dark:bg-black/20 border-system-separator/50 focus:ring-2 focus:ring-coral-500 transition-all duration-150"
-                  value={savedPlace?.memo || ''}
-                  onChange={(e) => {
-                    if (savedPlace) {
-                      updatePlace(savedPlace.id, { memo: e.target.value });
-                    }
-                  }}
-                  onBlur={() => setMemoEditing(false)}
-                  placeholder="メモを追加"
-                  autoFocus
-                />
-              ) : (
-                <div
-                  className="w-full min-h-[6rem] h-auto p-2 rounded cursor-pointer group"
-                  onDoubleClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setMemoEditing(true);
-                  }}
-                  title="ダブルクリックして編集"
-                >
-                  <p className="body text-system-secondary-label leading-relaxed whitespace-pre-wrap group-hover:text-system-label transition-colors duration-150">
-                    {savedPlace?.memo ? (
-                      savedPlace.memo
-                    ) : (
-                      <span className="text-system-tertiary-label group-hover:text-system-secondary-label">ダブルクリックしてメモを編集</span>
-                    )}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          <MemoEditor saved={saved} savedPlace={savedPlace} isMobile={isMobile} updatePlace={updatePlace} />
 
           {/* 住所 */}
           {place.formatted_address && (
@@ -628,82 +479,7 @@ export default function PlaceDetailPanel() {
 
           {/* 画像ギャラリー */}
           {photos.length > 1 && (
-            <div className="glass-effect rounded-xl p-4">
-              <h3 className="headline font-semibold text-system-label mb-3">写真</h3>
-              <div className="relative group">
-                {/* ナビゲーションボタン */}
-                <button
-                  onClick={() => scrollImages('left')}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 
-                             w-8 h-8 glass-effect rounded-full shadow-elevation-2 
-                             flex items-center justify-center 
-                             opacity-0 group-hover:opacity-100 
-                             transition-all duration-200 ease-ios-default
-                             hover:shadow-elevation-3 hover:scale-105"
-                  aria-label="前の写真"
-                >
-                  <FiChevronLeft size={16} className="text-system-label" />
-                </button>
-                
-                <button
-                  onClick={() => scrollImages('right')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 
-                             w-8 h-8 glass-effect rounded-full shadow-elevation-2 
-                             flex items-center justify-center 
-                             opacity-0 group-hover:opacity-100 
-                             transition-all duration-200 ease-ios-default
-                             hover:shadow-elevation-3 hover:scale-105"
-                  aria-label="次の写真"
-                >
-                  <FiChevronRight size={16} className="text-system-label" />
-                </button>
-                
-                <div 
-                  ref={scrollContainerRef}
-                  className="flex overflow-x-auto scrollbar-hide space-x-3 pb-2"
-                >
-                  {photos.map((photo, index) => (
-                    <div key={index} className="flex-shrink-0">
-                      <div 
-                        className="relative group cursor-pointer"
-                        onClick={() => handleImageClick(index)}
-                      >
-                        <img
-                          src={typeof photo === 'string' ? photo : photo.getUrl({ maxWidth: 400, maxHeight: 300 })}
-                          alt={`${place.name} - 写真 ${index + 1}`}
-                          className="w-32 h-24 object-cover rounded-lg shadow-elevation-2 
-                                     transition-transform duration-200 group-hover:scale-105 
-                                     group-active:scale-95"
-                        />
-                        {/* 拡大アイコン */}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 
-                                       transition-all duration-200 flex items-center justify-center 
-                                       rounded-lg">
-                          <div className="w-6 h-6 glass-effect border border-white/50 rounded-full 
-                                         flex items-center justify-center opacity-0 group-hover:opacity-100 
-                                         transition-opacity duration-200">
-                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* グラデーションヒント */}
-                <div className="absolute right-0 top-0 bottom-2 w-8 
-                               bg-gradient-to-l from-white via-white/80 to-transparent 
-                               pointer-events-none md:hidden rounded-r-xl" />
-              </div>
-              
-              {/* 操作ヒント */}
-              <p className="caption-2 text-system-tertiary-label text-center mt-3">
-                {isMobile ? 'スワイプして他の写真を見る' : 'ホバーして矢印ボタンで写真を切り替え'}
-              </p>
-            </div>
+            <ImageGallery photos={photos} placeName={place.name || ''} onImageClick={handleImageClick} isMobile={isMobile} />
           )}
         </div>
         

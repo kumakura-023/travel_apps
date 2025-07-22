@@ -1,13 +1,12 @@
 import { MdMap, MdAccessTime, MdList, MdEditNote } from 'react-icons/md';
 import AuthButton from './AuthButton';
+import { useLabelModeStore } from '../store/labelModeStore';
 
 export type TabKey = 'map' | 'travelTime' | 'list';
 
 interface Props {
   active: TabKey;
   onChange: (tab: TabKey) => void;
-  labelMode?: boolean;
-  onLabelModeToggle?: () => void;
   isVisible: boolean;
 }
 
@@ -17,7 +16,8 @@ const tabs: { key: TabKey; icon: React.ReactNode; label: string }[] = [
   { key: 'list', icon: <MdList size={24} />, label: 'リスト' },
 ];
 
-const TabNavigation: React.FC<Props> = ({ active, onChange, labelMode = false, onLabelModeToggle, isVisible }) => {
+const TabNavigation: React.FC<Props> = ({ active, onChange, isVisible }) => {
+  const { labelMode, toggleLabelMode } = useLabelModeStore();
   return (
     <nav className={`glass-effect-border rounded-xl flex flex-col items-center py-3 z-40 transition-all duration-300 ease-ios-default ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
       <AuthButton />
@@ -41,22 +41,20 @@ const TabNavigation: React.FC<Props> = ({ active, onChange, labelMode = false, o
       
       <div className="w-8 h-px bg-system-separator my-2" />
       
-      {onLabelModeToggle && (
-        <button
-          className={`flex flex-col items-center justify-center w-full h-16 rounded-lg mx-1 my-1 group transition-all duration-150 ease-ios-default hover:scale-105 active:scale-95 ${
-            labelMode 
-              ? 'text-white bg-teal-500 border border-teal-400/30' 
-              : 'text-system-secondary-label hover:text-teal-500 hover:bg-white/10'
-          }`}
-          onClick={onLabelModeToggle}
-          title={labelMode ? 'メモ配置を終了' : 'メモを追加'}
-        >
-          <MdEditNote size={24} />
-          <span className="caption-2 mt-1 select-none font-medium">
-            {labelMode ? '配置中' : 'メモ'}
-          </span>
-        </button>
-      )}
+      <button
+        className={`flex flex-col items-center justify-center w-full h-16 rounded-lg mx-1 my-1 group transition-all duration-150 ease-ios-default hover:scale-105 active:scale-95 ${
+          labelMode
+            ? 'text-white bg-teal-500 border border-teal-400/30'
+            : 'text-system-secondary-label hover:text-teal-500 hover:bg-white/10'
+        }`}
+        onClick={toggleLabelMode}
+        title={labelMode ? 'メモ配置を終了' : 'メモを追加'}
+      >
+        <MdEditNote size={24} />
+        <span className="caption-2 mt-1 select-none font-medium">
+          {labelMode ? '配置中' : 'メモ'}
+        </span>
+      </button>
     </nav>
   );
 };

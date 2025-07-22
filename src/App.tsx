@@ -20,20 +20,21 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useSelectedPlaceStore } from './store/placeStore';
 import { useTravelTimeStore } from './store/travelTimeStore';
 import PlaceList from './components/PlaceList';
-import { loadPlanFromUrl } from './utils/shareUtils';
 import { usePlacesStore } from './store/placesStore';
 import { useLabelsStore } from './store/labelsStore';
+import { useLabelModeStore } from './store/labelModeStore';
 import PlanNameDisplay from './components/PlanNameDisplay';
 import { usePlanStore } from './store/planStore';
-import { getActivePlan, createEmptyPlan, setActivePlan, loadActivePlanHybrid } from './services/storageService';
 import { useAuth } from './hooks/useAuth';
 import { useAutoSave } from './hooks/useAutoSave';
+import { usePlanLoad } from './hooks/usePlanLoad';
+import { usePlanSyncEvents } from './hooks/usePlanSyncEvents';
+import { useRealtimePlanListener } from './hooks/useRealtimePlanListener';
 import AuthButton from './components/AuthButton';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 import SyncTestButton from './components/SyncTestButton';
 import SyncDebugButton from './components/SyncDebugButton';
 import { syncDebugUtils } from './utils/syncDebugUtils';
-import { TravelPlan } from './types';
 import SharePlanModal from './components/SharePlanModal';
 
 // LoadScript用のライブラリを定数として定義
@@ -122,25 +123,19 @@ function App() {
   // Tab navigation state
   const [activeTab, setActiveTab] = React.useState<TabKey>('map');
   
-  // Label mode state
-  const [labelMode, setLabelMode] = React.useState(false);
-
-  // ラベルモードのトグル機能
-  const handleLabelModeToggle = useCallback(() => {
-    setLabelMode(prev => !prev);
-  }, []);
+  const { labelMode } = useLabelModeStore();
 
   // ESCキーでラベルモードを終了
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && labelMode) {
-        setLabelMode(false);
+      if (e.key === 'Escape' && useLabelModeStore.getState().labelMode) {
+        useLabelModeStore.getState().toggleLabelMode();
       }
     };
-    
+
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [labelMode]);
+  }, []);
   
   // Route search store
   const { 
@@ -176,342 +171,18 @@ function App() {
   // 自動保存フックを使用
   const { setIsRemoteUpdateInProgress, saveImmediately, saveImmediatelyCloud, lastCloudSaveTimestamp } = useAutoSave(plan, updateLastSavedTimestamp);
 
-  // 候補地追加時の即座同期を設定
-  React.useEffect(() => {
-    const { setOnPlaceAdded } = usePlacesStore.getState();
-    
-    setOnPlaceAdded((newPlace) => {
-      if (import.meta.env.DEV) {
-        console.log('🚀 候補地追加検知、即座同期開始:', newPlace.name);
-      }
-      
-      const currentPlan = usePlanStore.getState().plan;
-      if (currentPlan) {
-        const planToSave: TravelPlan = {
-          ...currentPlan,
-          places: [...currentPlan.places, newPlace],
-          updatedAt: new Date(),
-        };
-        usePlanStore.getState().setPlan(planToSave);
-        saveImmediately(planToSave);
-        saveImmediatelyCloud(planToSave);
-      }
-      
-      // デバッグログを記録
-      syncDebugUtils.log('save', {
-        type: 'immediate_sync',
-        reason: 'place_added',
-        placeName: newPlace.name,
-        placeId: newPlace.id,
-        timestamp: Date.now()
-      });
-    });
-  }, [plan, saveImmediately, saveImmediatelyCloud]);
+  usePlanSyncEvents(plan, saveImmediately, saveImmediatelyCloud);
 
-  // 候補地削除時の即座同期を設定
-  React.useEffect(() => {
-    const { setOnPlaceDeleted } = usePlacesStore.getState();
-    
-    setOnPlaceDeleted((updatedPlaces) => {
-      if (import.meta.env.DEV) {
-        console.log('🗑️ 候補地削除検知、即座同期開始:');
-      }
-      
-      // 最新のプランを取得し、placesを更新して保存
-      const currentPlan = usePlanStore.getState().plan;
-      if (currentPlan) {
-        const planToSave: TravelPlan = {
-          ...currentPlan,
-          places: updatedPlaces,
-          updatedAt: new Date(),
-        };
-        usePlanStore.getState().setPlan(planToSave);
-        saveImmediately(planToSave);
-        saveImmediatelyCloud(planToSave);
-      }
-      
-      // デバッグログを記録
-      syncDebugUtils.log('save', {
-        type: 'immediate_sync',
-        reason: 'place_deleted',
-        timestamp: Date.now()
-      });
-    });
-  }, [plan, saveImmediately, saveImmediatelyCloud]);
+  usePlanLoad(user, isInitializing);
 
-  // ラベル追加時のローカル状態更新
-  React.useEffect(() => {
-    const { setOnLabelAdded } = useLabelsStore.getState();
-    
-    setOnLabelAdded((newLabel) => {
-      if (import.meta.env.DEV) {
-        console.log('📝 ラベル追加検知（ローカルのみ）:', newLabel.text);
-      }
-      
-      const currentPlan = usePlanStore.getState().plan;
-      if (currentPlan) {
-        const planToSave: TravelPlan = {
-          ...currentPlan,
-          labels: [...currentPlan.labels, newLabel],
-          updatedAt: new Date(),
-        };
-        usePlanStore.getState().setPlan(planToSave);
-        // saveImmediately(planToSave); // 初回保存はしない
-      }
-    });
-  }, []);
-
-  // ラベル更新時の即座同期を設定
-  React.useEffect(() => {
-    const { setOnLabelUpdated } = useLabelsStore.getState();
-
-    setOnLabelUpdated((updatedLabel, updatedLabels) => {
-      if (import.meta.env.DEV) {
-        console.log('📝 ラベル更新検知、同期開始:', updatedLabel);
-      }
-
-      const currentPlan = usePlanStore.getState().plan;
-      if (currentPlan) {
-        const planToSave: TravelPlan = {
-          ...currentPlan,
-          labels: updatedLabels,
-          updatedAt: new Date(),
-        };
-        usePlanStore.getState().setPlan(planToSave);
-        
-        // 'synced' ステータスのラベルのみクラウド同期
-        if (updatedLabel.status === 'synced') {
-          saveImmediately(planToSave);
-          saveImmediatelyCloud(planToSave);
-        }
-      }
-    });
-  }, [plan, saveImmediately, saveImmediatelyCloud]);
-
-  // ラベル削除時の即座同期を設定
-  React.useEffect(() => {
-    const { setOnLabelDeleted } = useLabelsStore.getState();
-    
-    setOnLabelDeleted((updatedLabels) => {
-      if (import.meta.env.DEV) {
-        console.log('🗑️ ラベル削除検知、即座同期開始:');
-      }
-      
-      const currentPlan = usePlanStore.getState().plan;
-      if (currentPlan) {
-        const planToSave: TravelPlan = {
-          ...currentPlan,
-          labels: updatedLabels,
-          updatedAt: new Date(),
-        };
-        usePlanStore.getState().setPlan(planToSave);
-        saveImmediately(planToSave);
-        saveImmediatelyCloud(planToSave);
-      }
-      
-      syncDebugUtils.log('save', {
-        type: 'immediate_sync',
-        reason: 'label_deleted',
-        timestamp: Date.now()
-      });
-    });
-  }, [plan, saveImmediately, saveImmediatelyCloud]);
-
-  // URL共有からの読み込み & プランロード
-  // 認証初期化が完了してからプランをロード
-  React.useEffect(() => {
-    if (isInitializing) return; // 認証判定待ち
-    (async () => {
-      const planFromUrl = loadPlanFromUrl();
-      if (planFromUrl) {
-        usePlacesStore.setState({ places: planFromUrl.places });
-        useLabelsStore.setState({ labels: planFromUrl.labels });
-        usePlanStore.getState().setPlan(planFromUrl);
-        return;
-      }
-
-      const current = usePlanStore.getState().plan;
-      if (current) return;
-
-      // cloud or local load
-      let loaded: TravelPlan | null = null;
-      if (navigator.onLine && user) {
-        loaded = await loadActivePlanHybrid({ mode: 'cloud', uid: user.uid });
-      }
-      if (!loaded) {
-        loaded = getActivePlan() || createEmptyPlan();
-      }
-
-      if (loaded) {
-        usePlanStore.getState().setPlan(loaded);
-        // 追加: ストアへ地点とラベルを同期
-        usePlacesStore.setState({ places: loaded.places });
-        useLabelsStore.setState({ labels: loaded.labels });
-        setActivePlan(loaded.id);
-      }
-    })();
-  }, [user, isInitializing]);
-
-  // リアルタイムリスナー
-  // 認証初期化が完了してからリアルタイムリスナーを登録
-  React.useEffect(() => {
-    if (isInitializing) return;
-    if (!user) return;
-    const plan = usePlanStore.getState().plan;
-    if (!plan) return;
-
-    let unsub: () => void;
-    let lastProcessedTimestamp = 0; // 最後に処理したタイムスタンプ
-    let processingTimeout: ReturnType<typeof setTimeout> | null = null;
-
-    (async () => {
-      const { listenPlan } = await import('./services/planCloudService');
-      const { createSyncConflictResolver } = await import('./services/syncConflictResolver');
-      
-      const conflictResolver = createSyncConflictResolver();
-      
-      unsub = listenPlan(plan.id, (updated) => {
-        if (!updated) return;
-        const remoteTimestamp = updated.updatedAt.getTime();
-        // 現在のクラウド保存タイムスタンプを取得
-        const currentCloudSaveTimestamp = lastCloudSaveTimestamp || 0;
-        const timeDiff = Math.abs(remoteTimestamp - currentCloudSaveTimestamp);
-        const isSelfUpdate = timeDiff < 3000; // 3秒以内を自己更新として判定（延長）
-
-        // 同じタイムスタンプの更新は無視（ただし、初回は処理する）
-        if (remoteTimestamp === lastProcessedTimestamp && lastProcessedTimestamp !== 0) {
-          if (import.meta.env.DEV) {
-            console.log('🔄 同じタイムスタンプのため無視:', remoteTimestamp);
-          }
-          return;
-        }
-
-        // 開発時のみ詳細ログ
-        if (import.meta.env.DEV) {
-          console.log('🔄 Firebase更新を受信:', {
-            remoteTimestamp,
-            currentCloudSaveTimestamp,
-            timeDiff,
-            isSelfUpdate,
-            remotePlaces: updated.places.length,
-            remoteLabels: updated.labels.length,
-            localPlaces: usePlanStore.getState().plan?.places.length || 0,
-            localLabels: usePlanStore.getState().plan?.labels.length || 0,
-            lastCloudSaveTimestampValue: lastCloudSaveTimestamp,
-            cloudSaveTimestampRef: 'N/A' // フック内の値は直接アクセスできない
-          });
-        }
-
-        // デバッグログを記録
-        if (isSelfUpdate) {
-          syncDebugUtils.log('ignore', {
-            reason: '自己更新',
-            remoteTimestamp,
-            cloudSaveTimestamp: currentCloudSaveTimestamp,
-            timeDiff
-          });
-          if (import.meta.env.DEV) {
-            console.log('🔄 自己更新のため無視');
-          }
-          return;
-        }
-
-        // 他デバイスからの更新として記録
-        syncDebugUtils.log('receive', {
-          remoteTimestamp,
-          cloudSaveTimestamp: currentCloudSaveTimestamp,
-          timeDiff,
-          remotePlaces: updated.places.length,
-          remoteLabels: updated.labels.length
-        });
-
-        // 処理中のタイムアウトをクリア
-        if (processingTimeout) {
-          clearTimeout(processingTimeout);
-        }
-
-        // リモート更新中フラグを設定
-        setIsRemoteUpdateInProgress(true);
-
-        // 処理を遅延させて連続更新をバッチ処理
-        processingTimeout = setTimeout(() => {
-          try {
-            // 競合解決を実行
-            const currentPlan = usePlanStore.getState().plan;
-            if (currentPlan) {
-              const resolvedPlan = conflictResolver.resolveConflict(
-                currentPlan,
-                updated,
-                currentPlan.updatedAt,
-                updated.updatedAt
-              );
-              
-              if (import.meta.env.DEV) {
-                console.log('🔄 競合解決完了:', {
-                  originalPlaces: currentPlan.places.length,
-                  remotePlaces: updated.places.length,
-                  resolvedPlaces: resolvedPlan.places.length,
-                  originalLabels: currentPlan.labels.length,
-                  remoteLabels: updated.labels.length,
-                  resolvedLabels: resolvedPlan.labels.length,
-                  hasChanges: JSON.stringify(currentPlan) !== JSON.stringify(resolvedPlan)
-                });
-              }
-
-              // 競合解決ログを記録
-              syncDebugUtils.log('conflict', {
-                originalPlaces: currentPlan.places.length,
-                remotePlaces: updated.places.length,
-                resolvedPlaces: resolvedPlan.places.length,
-                originalLabels: currentPlan.labels.length,
-                remoteLabels: updated.labels.length,
-                resolvedLabels: resolvedPlan.labels.length,
-                hasChanges: JSON.stringify(currentPlan) !== JSON.stringify(resolvedPlan)
-              });
-              
-              // 解決されたプランをストアに反映
-              // 競合解決後のタイムスタンプは更新しない（無限ループ防止）
-              usePlanStore.getState().setPlan(resolvedPlan);
-              usePlacesStore.setState({ places: resolvedPlan.places });
-              useLabelsStore.setState({ labels: resolvedPlan.labels });
-            } else {
-              // ローカルプランがない場合はリモートを採用
-              usePlanStore.getState().setPlan(updated);
-              usePlacesStore.setState({ places: updated.places });
-              useLabelsStore.setState({ labels: updated.labels });
-            }
-
-            lastProcessedTimestamp = remoteTimestamp;
-          } finally {
-            // リモート更新中フラグを解除（遅延を短縮）
-            setTimeout(() => {
-              setIsRemoteUpdateInProgress(false);
-              if (import.meta.env.DEV) {
-                console.log('🔄 リモート更新完了、自動保存を再開');
-              }
-            }, 300); // 200msから300msに延長
-          }
-        }, 100); // 100ms遅延でバッチ処理
-
-      });
-    })();
-
-    return () => {
-      if (unsub) unsub();
-      if (processingTimeout) {
-        clearTimeout(processingTimeout);
-      }
-    };
-  }, [user, planId, isInitializing, lastCloudSaveTimestamp]);
+  useRealtimePlanListener(user, isInitializing, lastCloudSaveTimestamp, setIsRemoteUpdateInProgress);
 
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>
       {/* Navigation */}
-      <TabNavigationWrapper 
+      <TabNavigationWrapper
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        labelMode={labelMode}
-        onLabelModeToggle={handleLabelModeToggle}
       />
 
 
@@ -529,10 +200,8 @@ function App() {
       {/* 地点選択中のバナー */}
       <SelectionBanner />
       
-      <Map 
-        showLabelToggle={false} 
-        labelMode={labelMode}
-        onLabelModeChange={setLabelMode}
+      <Map
+        showLabelToggle={false}
       />
       
       {/* リスト表示タブ */}
