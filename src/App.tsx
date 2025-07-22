@@ -506,22 +506,6 @@ function App() {
 
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>
-      {/* 画面中央上部に「プランを共有」ボタンを常時表示 */}
-      <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[1001]">
-        <button
-          className="btn-primary px-6 py-3 rounded-full shadow-lg text-lg"
-          onClick={() => setShareModalOpen(true)}
-          disabled={!plan}
-        >
-          プランを共有
-        </button>
-      </div>
-      <SharePlanModal
-        isOpen={shareModalOpen}
-        onClose={() => setShareModalOpen(false)}
-        onShare={() => {}}
-        onInviteUrlClick={() => {}}
-      />
       {/* Navigation */}
       <TabNavigationWrapper 
         activeTab={activeTab}
