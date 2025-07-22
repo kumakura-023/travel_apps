@@ -34,6 +34,7 @@ import SyncTestButton from './components/SyncTestButton';
 import SyncDebugButton from './components/SyncDebugButton';
 import { syncDebugUtils } from './utils/syncDebugUtils';
 import { TravelPlan } from './types';
+import SharePlanModal from './components/SharePlanModal';
 
 // LoadScript用のライブラリを定数として定義
 const LIBRARIES: ('places')[] = ['places'];
@@ -67,6 +68,8 @@ function App() {
   // チュートリアル・ヘルプ関連のstate
   const [showTutorial, setShowTutorial] = useState(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const { plan } = usePlanStore();
 
   const focusSearch = useCallback(() => {
     searchRef.current?.focus();
@@ -171,7 +174,6 @@ function App() {
   }, []);
 
   // 自動保存フックを使用
-  const plan = usePlanStore((s) => s.plan);
   const { setIsRemoteUpdateInProgress, saveImmediately, saveImmediatelyCloud, lastCloudSaveTimestamp } = useAutoSave(plan, updateLastSavedTimestamp);
 
   // 候補地追加時の即座同期を設定
@@ -504,6 +506,22 @@ function App() {
 
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>
+      {/* 画面中央上部に「プランを共有」ボタンを常時表示 */}
+      <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[1001]">
+        <button
+          className="btn-primary px-6 py-3 rounded-full shadow-lg text-lg"
+          onClick={() => setShareModalOpen(true)}
+          disabled={!plan}
+        >
+          プランを共有
+        </button>
+      </div>
+      <SharePlanModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        onShare={() => {}}
+        onInviteUrlClick={() => {}}
+      />
       {/* Navigation */}
       <TabNavigationWrapper 
         activeTab={activeTab}
