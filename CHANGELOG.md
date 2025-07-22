@@ -1,3 +1,9 @@
+## [v1.5.1] - 2024-05-XX
+### 修正
+- ログイン時に候補地やプラン名などのUIが表示されない不具合を修正
+  - Firestoreのplansコレクションで、membersフィールドにユーザー自身のUIDが存在しない場合でも、ownerIdが一致すればプランを取得できるように修正
+  - さらに、members[uid]が存在しない場合は自動で追加することで、既存データも正常に読み込めるよう対応
+  
 ## v1.5.0 (2025-07-22)
 
 ### ✨ 新機能
@@ -1271,3 +1277,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### その他
 
 - ESLint / TypeScript ビルドに通過するよう型定義を調整 
+

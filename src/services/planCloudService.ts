@@ -25,17 +25,37 @@ export async function loadActivePlan(uid: string): Promise<TravelPlan | null> {
   const { activePlanId } = userSnap.data() as { activePlanId?: string };
   if (!activePlanId) return null;
 
-  const planSnap = await getDoc(planDocRef(activePlanId));
+  const planRef = planDocRef(activePlanId);
+  const planSnap = await getDoc(planRef);
   if (!planSnap.exists()) return null;
 
   const data = planSnap.data();
-  // Check if the user is a member of the plan
-  if (!data.members || !data.members[uid]) {
-    console.warn('User is not a member of the active plan');
-    return null;
+  // --- 修正: members[uid]がなくてもownerId===uidなら取得OK、かつmembers[uid]がなければ追加 ---
+  let shouldUpdateMembers = false;
+  let members = data.members || {};
+  if (!members[uid]) {
+    if (data.ownerId === uid) {
+      // オーナー自身ならmembersに追加
+      members = {
+        ...members,
+        [uid]: { role: 'owner', joinedAt: new Date() },
+      };
+      shouldUpdateMembers = true;
+    } else {
+      // オーナーでもメンバーでもなければnull
+      console.warn('User is not a member or owner of the active plan');
+      return null;
+    }
+  }
+  // 必要ならmembersをFirestoreに反映
+  if (shouldUpdateMembers) {
+    await setDoc(planRef, { members }, { merge: true });
   }
 
-  return deserializePlan(data.payload as string);
+  const plan = deserializePlan(data.payload as string);
+  plan.ownerId = data.ownerId;
+  plan.members = members;
+  return plan;
 }
 
 export async function savePlanCloud(uid: string, plan: TravelPlan) {

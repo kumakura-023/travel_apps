@@ -47,6 +47,8 @@ export interface TravelPlan {
   labels: MapLabel[]; // 付箋データ
   endDate: Date | null;
   startDate: Date | null;
+  ownerId?: string;
+  members?: Record<string, { role: string; joinedAt: Date }>;
 }
 
 export interface MapLabel {
