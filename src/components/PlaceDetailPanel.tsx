@@ -220,20 +220,29 @@ export default function PlaceDetailPanel() {
   };
 
   const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // イベントの伝播を停止するハンドラ
+    const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+
     if (isDesktop) {
       return (
-        <div className="fixed left-0 top-0 bottom-0 w-[540px] 
-                        glass-effect shadow-elevation-5 border-r border-system-separator
-                        z-40 overflow-y-auto">
+        <div 
+          className="fixed left-0 top-0 bottom-0 w-[540px] 
+                     glass-effect shadow-elevation-5 border-r border-system-separator
+                     z-40 overflow-y-auto"
+          onClick={stopPropagation}
+        >
           {children}
         </div>
       );
     }
     if (isTablet) {
       return (
-        <div className="fixed left-0 top-0 bottom-0 w-[min(540px,50vw)] 
-                        glass-effect shadow-elevation-5 border-r border-system-separator
-                        z-40 overflow-y-auto">
+        <div 
+          className="fixed left-0 top-0 bottom-0 w-[min(540px,50vw)] 
+                     glass-effect shadow-elevation-5 border-r border-system-separator
+                     z-40 overflow-y-auto"
+          onClick={stopPropagation}
+        >
           {children}
         </div>
       );
@@ -250,6 +259,7 @@ export default function PlaceDetailPanel() {
                    border-t border-system-separator z-50 flex flex-col touch-pan-y overscroll-y-contain
                    transition-transform duration-300 ease-out"
         style={bottomSheet.style}
+        onClick={stopPropagation}
       >
          {/* スワイプハンドルと閉じるボタン */}
          <div
@@ -257,7 +267,10 @@ export default function PlaceDetailPanel() {
            role="separator"
            aria-orientation="vertical"
            tabIndex={0}
-           onClick={bottomSheet.handleToggle}
+           onClick={(e) => {
+             e.stopPropagation(); // 親のonClickをトリガーしないようにする
+             bottomSheet.handleToggle();
+           }}
            onKeyDown={(e) => {
              if (e.code === 'Space' || e.key === ' ') {
                e.preventDefault();
@@ -278,7 +291,10 @@ export default function PlaceDetailPanel() {
            <div className="w-8"></div> {/* スペーサー */}
            <div className="w-10 h-1 bg-system-secondary-label/40 rounded-full" />
            <button
-             onClick={handleClosePanel}
+             onClick={(e) => {
+               e.stopPropagation(); // 親のonClickをトリガーしないようにする
+               handleClosePanel();
+             }}
              className="w-8 h-8 flex items-center justify-center 
                         text-system-secondary-label hover:text-coral-500
                         transition-colors duration-150"
