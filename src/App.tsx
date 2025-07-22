@@ -381,7 +381,8 @@ function App() {
       
       const conflictResolver = createSyncConflictResolver();
       
-      unsub = listenPlan(user.uid, plan.id, (updated) => {
+      unsub = listenPlan(plan.id, (updated) => {
+        if (!updated) return;
         const remoteTimestamp = updated.updatedAt.getTime();
         // 現在のクラウド保存タイムスタンプを取得
         const currentCloudSaveTimestamp = lastCloudSaveTimestamp || 0;
