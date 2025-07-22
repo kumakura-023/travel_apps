@@ -13,18 +13,14 @@ import MapContainer from './MapContainer';
 interface Props {
   children?: React.ReactNode;
   showLabelToggle?: boolean;
-  labelMode?: boolean;
-  onLabelModeChange?: (mode: boolean) => void;
 }
 
-export default function Map({ children, showLabelToggle = true, labelMode = false, onLabelModeChange }: Props) {
+export default function Map({ children, showLabelToggle = true }: Props) {
   return (
-    <MapContainer 
+    <MapContainer
       showLabelToggle={showLabelToggle}
-      labelMode={labelMode}
-      onLabelModeChange={onLabelModeChange}
     >
       {children}
     </MapContainer>
   );
-} 
+}

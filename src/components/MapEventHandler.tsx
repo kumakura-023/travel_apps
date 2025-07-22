@@ -15,12 +15,11 @@ import { estimateCost } from '../utils/estimateCost';
  * 単一責任: 地図上のクリック、POI選択、起点選択などのイベント処理のみ
  */
 
-interface MapEventHandlerProps {
-  labelMode: boolean;
-  onLabelModeChange: (mode: boolean) => void;
-}
+interface MapEventHandlerProps {}
+import { useLabelModeStore } from '../store/labelModeStore';
 
-export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEventHandlerProps) {
+export default function MapEventHandler({}: MapEventHandlerProps) {
+  const { labelMode, toggleLabelMode } = useLabelModeStore();
   const { map, panTo } = useGoogleMaps();
   const labelModeRef = useRef(false);
   
@@ -65,7 +64,7 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
       console.log('📍 Label mode - adding label');
       addLabel({ text: '', position: { lat: e.latLng.lat(), lng: e.latLng.lng() } });
       // ラベルを1つ追加したらラベルモードを終了する
-      onLabelModeChange(false);
+      toggleLabelMode();
       return;
     }
 
@@ -210,7 +209,7 @@ export default function MapEventHandler({ labelMode, onLabelModeChange }: MapEve
         }
       },
     );
-  }, [map, panTo, onLabelModeChange, addLabel, setPlace, selectPointFromMap]);
+  }, [map, panTo, toggleLabelMode, addLabel, setPlace, selectPointFromMap]);
 
   // イベントリスナーの登録（確実にイベントをキャッチ）
   useEffect(() => {

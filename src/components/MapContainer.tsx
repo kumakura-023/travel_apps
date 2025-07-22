@@ -19,11 +19,9 @@ import { useUIStore } from '../store/uiStore';
 interface MapContainerProps {
   children?: React.ReactNode;
   showLabelToggle?: boolean;
-  labelMode?: boolean;
-  onLabelModeChange?: (mode: boolean) => void;
 }
 
-export default function MapContainer({ children, showLabelToggle = true, labelMode = false, onLabelModeChange }: MapContainerProps) {
+export default function MapContainer({ children, showLabelToggle = true }: MapContainerProps) {
   const { setMap } = useGoogleMaps();
   const [zoom, setZoom] = useState(14);
   const isMapInteractionEnabled = useUIStore((s) => s.isMapInteractionEnabled);
@@ -58,16 +56,11 @@ export default function MapContainer({ children, showLabelToggle = true, labelMo
           onLoad={handleMapLoad}
         >
           {/* イベント処理コンポーネント（UIを持たない） */}
-          <MapEventHandler 
-            labelMode={labelMode} 
-            onLabelModeChange={onLabelModeChange || (() => {})} 
-          />
+          <MapEventHandler />
           
           {/* オーバーレイ管理コンポーネント */}
-          <MapOverlayManager 
-            zoom={zoom} 
-            labelMode={labelMode}
-            onLabelModeChange={onLabelModeChange || (() => {})}
+          <MapOverlayManager
+            zoom={zoom}
             showLabelToggle={showLabelToggle}
           >
             {children}

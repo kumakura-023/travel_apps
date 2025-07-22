@@ -28,18 +28,14 @@ import PlaceMarkerCluster from './PlaceMarkerCluster';
 
 interface MapOverlayManagerProps {
   zoom: number;
-  labelMode: boolean;
-  onLabelModeChange: (mode: boolean) => void;
   showLabelToggle?: boolean;
   children?: React.ReactNode;
 }
 
-export default function MapOverlayManager({ 
-  zoom, 
-  labelMode, 
-  onLabelModeChange, 
+export default function MapOverlayManager({
+  zoom,
   showLabelToggle = true,
-  children 
+  children
 }: MapOverlayManagerProps) {
   const [editing, setEditing] = useState<MapLabel | null>(null);
   

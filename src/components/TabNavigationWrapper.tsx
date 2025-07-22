@@ -6,22 +6,18 @@ import { useDeviceDetect } from '../hooks/useDeviceDetect';
 interface WrapperProps {
   activeTab: TabKey;
   onTabChange: (tab: TabKey) => void;
-  labelMode: boolean;
-  onLabelModeToggle: () => void;
 }
 
-const TabNavigationWrapper: React.FC<WrapperProps> = ({ activeTab, onTabChange, labelMode, onLabelModeToggle }) => {
+const TabNavigationWrapper: React.FC<WrapperProps> = ({ activeTab, onTabChange }) => {
   const [isOpen, setIsOpen] = useState(true);
   const { isDesktop } = useDeviceDetect();
 
   if (isDesktop) {
     return (
       <div className="fixed top-1/2 right-4 -translate-y-1/2 z-50">
-        <TabNavigation 
+        <TabNavigation
           active={activeTab}
           onChange={onTabChange}
-          labelMode={labelMode}
-          onLabelModeToggle={onLabelModeToggle}
           isVisible={true}
         />
       </div>
@@ -31,11 +27,9 @@ const TabNavigationWrapper: React.FC<WrapperProps> = ({ activeTab, onTabChange, 
   return (
     <div className="fixed top-1/2 right-0 -translate-y-1/2 flex items-center z-50">
       <div style={{ transition: 'transform 0.3s ease-in-out', transform: isOpen ? 'translateX(0)' : 'translateX(calc(100% + 16px))' }}>
-        <TabNavigation 
+        <TabNavigation
           active={activeTab}
           onChange={onTabChange}
-          labelMode={labelMode}
-          onLabelModeToggle={onLabelModeToggle}
           isVisible={true}
         />
       </div>
