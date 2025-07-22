@@ -3,7 +3,8 @@ import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import Settings from './Settings';
 import SharePlanModal from './SharePlanModal';
 import { usePlanStore } from '../store/planStore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 import InviteUrlModal from './InviteUrlModal';
 
 const AppMenu: React.FC = () => {
@@ -22,7 +23,6 @@ const AppMenu: React.FC = () => {
     }
 
     try {
-      const functions = getFunctions();
       const inviteUserToPlan = httpsCallable(functions, 'inviteUserToPlan');
       const result = await inviteUserToPlan({ planId: plan.id, email });
       

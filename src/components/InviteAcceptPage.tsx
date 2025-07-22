@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 
 const InviteAcceptPage: React.FC = () => {
@@ -25,7 +26,6 @@ const InviteAcceptPage: React.FC = () => {
       setStatus('pending');
       setMessage('プランに参加しています...');
       try {
-        const functions = getFunctions();
         const acceptInviteToken = httpsCallable(functions, 'acceptInviteToken');
         const result = await acceptInviteToken({ token });
         const data = result.data as { success?: boolean; alreadyMember?: boolean; planId?: string };
