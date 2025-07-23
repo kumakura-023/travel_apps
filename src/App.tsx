@@ -36,6 +36,7 @@ import SyncTestButton from './components/SyncTestButton';
 import SyncDebugButton from './components/SyncDebugButton';
 import { syncDebugUtils } from './utils/syncDebugUtils';
 import SharePlanModal from './components/SharePlanModal';
+import ExternalBrowserPrompt from './components/ExternalBrowserPrompt';
 
 // LoadScript用のライブラリを定数として定義
 const LIBRARIES: ('places')[] = ['places'];
@@ -236,6 +237,9 @@ function App() {
 
       {/* クラウド同期インジケータ */}
       <SyncStatusIndicator onSave={updateLastSavedTimestamp} />
+
+      {/* アプリ内ブラウザでログインできない場合の案内 */}
+      <ExternalBrowserPrompt />
 
       
     </LoadScript>

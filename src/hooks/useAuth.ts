@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { create } from 'zustand';
 import { auth } from '../firebase';
+import { useBrowserPromptStore } from '../store/browserPromptStore';
 
 // アプリ内ブラウザを検出する関数
 const isInAppBrowser = (): boolean => {
@@ -39,16 +40,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: (user) => set({ user }),
   signIn: async () => {
     const provider = new GoogleAuthProvider();
-    
-    // アプリ内ブラウザの場合はリダイレクト方式を使用
+
     if (isInAppBrowser()) {
-      console.log('アプリ内ブラウザを検出: リダイレクト認証を使用');
-      await signInWithRedirect(auth, provider);
-    } else {
-      // 通常のブラウザの場合はリダイレクト方式を使用（ポップアップの問題を回避）
-      console.log('通常のブラウザ: リダイレクト認証を使用');
-      await signInWithRedirect(auth, provider);
+      console.log('アプリ内ブラウザを検出: 外部ブラウザ案内を表示');
+      useBrowserPromptStore.getState().setShowExternalBrowserPrompt(true);
+      return;
     }
+
+    // 通常のブラウザではリダイレクト方式を使用（ポップアップの問題を回避）
+    console.log('通常のブラウザ: リダイレクト認証を使用');
+    await signInWithRedirect(auth, provider);
   },
   signOut: async () => {
     await firebaseSignOut(auth);
