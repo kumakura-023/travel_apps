@@ -12,6 +12,8 @@ import { create } from 'zustand';
 import { auth } from '../firebase';
 import { useBrowserPromptStore } from '../store/browserPromptStore';
 
+const INVITE_TOKEN_KEY = 'pending_invite_token';
+
 // アプリ内ブラウザを検出する関数
 export const isInAppBrowser = (): boolean => {
   const ua = navigator.userAgent.toLowerCase();
@@ -104,6 +106,17 @@ export function useAuth() {
     const unsub = onAuthStateChanged(auth, (u: User | null) => {
       setUser(u);
       useAuthStore.setState({ isInitializing: false });
+
+      // If an invite token is stored and we're not already on the invite page,
+      // redirect so the invitation can be processed after authentication.
+      const pendingToken = u ? localStorage.getItem(INVITE_TOKEN_KEY) : null;
+      if (
+        u &&
+        pendingToken &&
+        !window.location.pathname.startsWith('/invite/')
+      ) {
+        window.location.assign(`/invite/${pendingToken}`);
+      }
     });
 
     // 初回起動時にリダイレクト結果を処理
