@@ -2,12 +2,28 @@ import { useEffect } from 'react';
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   User,
 } from 'firebase/auth';
 import { create } from 'zustand';
 import { auth } from '../firebase';
+
+// アプリ内ブラウザを検出する関数
+const isInAppBrowser = (): boolean => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  return (
+    userAgent.includes('line') ||
+    userAgent.includes('instagram') ||
+    userAgent.includes('facebook') ||
+    userAgent.includes('twitter') ||
+    userAgent.includes('whatsapp') ||
+    userAgent.includes('telegram') ||
+    userAgent.includes('kakao') ||
+    userAgent.includes('wechat')
+  );
+};
 
 interface AuthState {
   user: User | null;
@@ -23,7 +39,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: (user) => set({ user }),
   signIn: async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    
+    // アプリ内ブラウザの場合はリダイレクト方式を使用
+    if (isInAppBrowser()) {
+      console.log('アプリ内ブラウザを検出: リダイレクト認証を使用');
+      await signInWithRedirect(auth, provider);
+    } else {
+      // 通常のブラウザの場合はリダイレクト方式を使用（ポップアップの問題を回避）
+      console.log('通常のブラウザ: リダイレクト認証を使用');
+      await signInWithRedirect(auth, provider);
+    }
   },
   signOut: async () => {
     await firebaseSignOut(auth);
@@ -37,10 +62,27 @@ export function useAuth() {
   const isInitializing = useAuthStore((s) => s.isInitializing);
 
   useEffect(() => {
+    // リダイレクト結果を処理
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          console.log('リダイレクト認証成功:', result.user.email);
+        }
+      } catch (error) {
+        console.error('リダイレクト認証エラー:', error);
+      }
+    };
+
+    // 認証状態の監視
     const unsub = onAuthStateChanged(auth, (u: User | null) => {
       setUser(u);
       useAuthStore.setState({ isInitializing: false });
     });
+
+    // 初回起動時にリダイレクト結果を処理
+    handleRedirectResult();
+
     return () => unsub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
