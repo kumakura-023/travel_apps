@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth, useAuthStore, isInAppBrowser } from '../hooks/useAuth';
 import { usePlanStore } from '../store/planStore';
 import { usePlacesStore } from '../store/placesStore';
 import { useLabelsStore } from '../store/labelsStore';
+import { useBrowserPromptStore } from '../store/browserPromptStore';
 import { setActivePlan } from '../services/storageService';
 import ExternalBrowserPrompt from './ExternalBrowserPrompt';
 
@@ -89,6 +90,10 @@ const InviteAcceptPage: React.FC = () => {
   }, [user, isInitializing, token]);
 
   const handleLogin = async () => {
+    if (isInAppBrowser()) {
+      useBrowserPromptStore.getState().setShowExternalBrowserPrompt(true);
+      return;
+    }
     await signIn();
   };
 

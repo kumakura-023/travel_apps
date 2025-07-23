@@ -12,7 +12,7 @@ import { auth } from '../firebase';
 import { useBrowserPromptStore } from '../store/browserPromptStore';
 
 // アプリ内ブラウザを検出する関数
-const isInAppBrowser = (): boolean => {
+export const isInAppBrowser = (): boolean => {
   const userAgent = navigator.userAgent.toLowerCase();
   return (
     userAgent.includes('line') ||

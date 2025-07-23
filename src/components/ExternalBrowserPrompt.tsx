@@ -10,6 +10,21 @@ const ExternalBrowserPrompt: React.FC = () => {
   const handleClose = () => setShowExternalBrowserPrompt(false);
   const currentUrl = window.location.href;
 
+  // 外部ブラウザで開く処理
+  const handleOpenExternal = () => {
+    const ua = navigator.userAgent.toLowerCase();
+    // iOS Safari
+    if (/iphone|ipad|ipod/.test(ua)) {
+      window.location.href = currentUrl.replace(/^http:/, 'https:'); // Safariで開く
+    } else if (/android/.test(ua)) {
+      // Android Chrome
+      window.open(currentUrl, '_blank');
+    } else {
+      // PCやその他は新しいタブで開く
+      window.open(currentUrl, '_blank');
+    }
+  };
+
   return (
     <ModalPortal>
       <div
@@ -33,7 +48,10 @@ const ExternalBrowserPrompt: React.FC = () => {
               onClick={(e) => (e.currentTarget as HTMLInputElement).select()}
             />
           </div>
-          <div className="flex justify-end pt-6">
+          <div className="flex justify-end pt-6 gap-3">
+            <button className="btn-system min-w-[120px]" onClick={handleOpenExternal}>
+              外部ブラウザで開く
+            </button>
             <button className="btn-primary min-w-[100px]" onClick={handleClose}>
               閉じる
             </button>
