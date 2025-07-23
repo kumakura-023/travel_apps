@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
-import { useAuth, useAuthStore, isInAppBrowser } from '../hooks/useAuth';
+import { useAuth, isInAppBrowser } from '../hooks/useAuth';
 import { usePlanStore } from '../store/planStore';
 import { usePlacesStore } from '../store/placesStore';
 import { useLabelsStore } from '../store/labelsStore';
@@ -10,8 +10,11 @@ import { useBrowserPromptStore } from '../store/browserPromptStore';
 import { setActivePlan } from '../services/storageService';
 import ExternalBrowserPrompt from './ExternalBrowserPrompt';
 
+const INVITE_TOKEN_KEY = 'pending_invite_token';
+
 const InviteAcceptPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
+  const storedToken = token || localStorage.getItem(INVITE_TOKEN_KEY) || undefined;
   const navigate = useNavigate();
   const { user, isInitializing, signIn } = useAuth();
   const [status, setStatus] = useState<'pending' | 'success' | 'error' | 'already' | 'auth'>('pending');
@@ -19,7 +22,7 @@ const InviteAcceptPage: React.FC = () => {
 
   useEffect(() => {
     if (isInitializing) return;
-    if (!token) {
+    if (!storedToken) {
       setStatus('error');
       setMessage('招待トークンが無効です');
       return;
@@ -33,7 +36,7 @@ const InviteAcceptPage: React.FC = () => {
       setMessage('プランに参加しています...');
       try {
         const acceptInviteToken = httpsCallable(functions, 'acceptInviteToken');
-        const result = await acceptInviteToken({ token });
+        const result = await acceptInviteToken({ token: storedToken });
         const data = result.data as { success?: boolean; alreadyMember?: boolean; planId?: string };
         
         if (data.alreadyMember || data.success) {
@@ -75,24 +78,30 @@ const InviteAcceptPage: React.FC = () => {
             }
           }
           
+          localStorage.removeItem(INVITE_TOKEN_KEY);
           setTimeout(() => navigate('/', { replace: true }), 2000);
         } else {
           setStatus('error');
           setMessage('参加処理に失敗しました');
+          localStorage.removeItem(INVITE_TOKEN_KEY);
         }
       } catch (e: any) {
         setStatus('error');
         setMessage(e.message || '参加処理に失敗しました');
+        localStorage.removeItem(INVITE_TOKEN_KEY);
       }
     };
     accept();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isInitializing, token]);
+  }, [user, isInitializing, storedToken]);
 
   const handleLogin = async () => {
     if (isInAppBrowser()) {
       useBrowserPromptStore.getState().setShowExternalBrowserPrompt(true);
       return;
+    }
+    if (token) {
+      localStorage.setItem(INVITE_TOKEN_KEY, token);
     }
     await signIn();
   };
