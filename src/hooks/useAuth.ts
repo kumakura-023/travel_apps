@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
+  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   signOut as firebaseSignOut,
@@ -59,15 +60,20 @@ export const useAuthStore = create<AuthState>((set) => ({
       return;
     }
 
-    // 通常のブラウザではリダイレクト方式を使用（ポップアップの問題を回避）
-    console.log('通常のブラウザ: リダイレクト認証を使用');
+    console.log('通常のブラウザ: ポップアップ認証を試行');
     try {
-      await signInWithRedirect(auth, provider);
+      await signInWithPopup(auth, provider);
     } catch (error) {
-      console.error('リダイレクト認証開始に失敗:', error);
-      // 何らかの理由でリダイレクトが開始できなかった場合も
-      // 外部ブラウザで開き直すよう案内する
-      useBrowserPromptStore.getState().setShowExternalBrowserPrompt(true);
+      console.error('ポップアップ認証失敗:', error);
+      console.log('リダイレクト認証へフォールバック');
+      try {
+        await signInWithRedirect(auth, provider);
+      } catch (redirectError) {
+        console.error('リダイレクト認証開始に失敗:', redirectError);
+        // 何らかの理由でリダイレクトが開始できなかった場合も
+        // 外部ブラウザで開き直すよう案内する
+        useBrowserPromptStore.getState().setShowExternalBrowserPrompt(true);
+      }
     }
   },
   signOut: async () => {
