@@ -123,6 +123,9 @@ export const generateInviteToken = onCall(async (request) => {
     throw new HttpsError('not-found', 'プランが存在しません');
   }
   const planData = planSnap.data();
+  if (!planData) {
+    throw new HttpsError('internal', 'プランデータが取得できません');
+  }
   const members = planData.members || {};
   const role = members[uid]?.role;
   if (role !== 'owner' && role !== 'editor') {
