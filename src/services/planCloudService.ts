@@ -58,6 +58,31 @@ export async function loadActivePlan(uid: string): Promise<TravelPlan | null> {
   return plan;
 }
 
+/**
+ * 指定されたプランIDのプランを強制的に読み込む
+ * 招待参加後に使用する
+ */
+export async function loadPlanById(uid: string, planId: string): Promise<TravelPlan | null> {
+  const planRef = planDocRef(planId);
+  const planSnap = await getDoc(planRef);
+  if (!planSnap.exists()) return null;
+
+  const data = planSnap.data();
+  if (!data) return null;
+
+  // ユーザーがメンバーまたはオーナーかチェック
+  const members = data.members || {};
+  if (!members[uid] && data.ownerId !== uid) {
+    console.warn('User is not a member or owner of the plan');
+    return null;
+  }
+
+  const plan = deserializePlan(data.payload as string);
+  plan.ownerId = data.ownerId;
+  plan.members = members;
+  return plan;
+}
+
 export async function savePlanCloud(uid: string, plan: TravelPlan) {
   const clientTimestamp = new Date();
   const payload = serializePlan({ ...plan, updatedAt: clientTimestamp });

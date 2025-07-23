@@ -4,6 +4,8 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { usePlanStore } from '../store/planStore';
+import { usePlacesStore } from '../store/placesStore';
+import { useLabelsStore } from '../store/labelsStore';
 import { setActivePlan } from '../services/storageService';
 
 const InviteAcceptPage: React.FC = () => {
@@ -31,19 +33,46 @@ const InviteAcceptPage: React.FC = () => {
         const acceptInviteToken = httpsCallable(functions, 'acceptInviteToken');
         const result = await acceptInviteToken({ token });
         const data = result.data as { success?: boolean; alreadyMember?: boolean; planId?: string };
-        if (data.alreadyMember) {
-          setStatus('already');
-          setMessage('すでにこのプランのメンバーです。');
+        
+        if (data.alreadyMember || data.success) {
+          setStatus(data.alreadyMember ? 'already' : 'success');
+          setMessage(data.alreadyMember ? 'すでにこのプランのメンバーです。' : 'プランに参加しました！');
+          
+          // プランストアの状態をクリア
           usePlanStore.getState().unsubscribeFromPlan();
           usePlanStore.getState().setPlan(null);
-          setActivePlan(data.planId ?? null);
-          setTimeout(() => navigate('/', { replace: true }), 2000);
-        } else if (data.success) {
-          setStatus('success');
-          setMessage('プランに参加しました！');
-          usePlanStore.getState().unsubscribeFromPlan();
-          usePlanStore.getState().setPlan(null);
-          setActivePlan(data.planId ?? null);
+          usePlacesStore.setState({ places: [] });
+          useLabelsStore.setState({ labels: [] });
+          
+          // アクティブプランを設定
+          if (data.planId) {
+            setActivePlan(data.planId);
+            
+            // 新しいプランを読み込む
+            try {
+              const { loadPlanById } = await import('../services/planCloudService');
+              const loadedPlan = await loadPlanById(user.uid, data.planId);
+              if (loadedPlan) {
+                if (import.meta.env.DEV) {
+                  console.log('🎉 招待参加後プラン読み込み成功:', {
+                    planId: loadedPlan.id,
+                    planName: loadedPlan.name,
+                    placesCount: loadedPlan.places.length,
+                    labelsCount: loadedPlan.labels.length,
+                    members: loadedPlan.members
+                  });
+                }
+                usePlanStore.getState().setPlan(loadedPlan);
+                usePlacesStore.setState({ places: loadedPlan.places });
+                useLabelsStore.setState({ labels: loadedPlan.labels });
+              } else {
+                console.error('プランの読み込みに失敗: プランが見つかりません');
+              }
+            } catch (error) {
+              console.error('プランの読み込みに失敗しました:', error);
+            }
+          }
+          
           setTimeout(() => navigate('/', { replace: true }), 2000);
         } else {
           setStatus('error');
@@ -73,9 +102,15 @@ const InviteAcceptPage: React.FC = () => {
             <button className="btn-primary w-full" onClick={handleLogin}>Googleでログイン</button>
           </>
         )}
-        {status === 'success' && <div className="text-green-600 font-bold">{message}</div>}
-        {status === 'already' && <div className="text-blue-600 font-bold">{message}</div>}
-        {status === 'error' && <div className="text-red-500 font-bold">{message}</div>}
+        {status === 'success' && (
+          <div className="text-system-secondary-label">{message}</div>
+        )}
+        {status === 'already' && (
+          <div className="text-system-secondary-label">{message}</div>
+        )}
+        {status === 'error' && (
+          <div className="text-system-secondary-label text-red-500">{message}</div>
+        )}
       </div>
     </div>
   );
