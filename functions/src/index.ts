@@ -172,5 +172,10 @@ export const acceptInviteToken = onCall(async (request) => {
       joinedAt: admin.firestore.FieldValue.serverTimestamp(),
     },
   });
+  // 参加ユーザーの activePlanId を更新
+  await db.collection('users').doc(uid).set({
+    activePlanId: planDoc.id,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
   return { success: true, planId: planDoc.id };
 });
