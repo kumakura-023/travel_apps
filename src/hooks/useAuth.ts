@@ -13,20 +13,24 @@ import { useBrowserPromptStore } from '../store/browserPromptStore';
 
 // アプリ内ブラウザを検出する関数
 export const isInAppBrowser = (): boolean => {
-  const userAgent = navigator.userAgent.toLowerCase();
-  return (
-    userAgent.includes('line') ||
-    userAgent.includes('instagram') ||
-    userAgent.includes('facebook') ||
-    userAgent.includes('fbav') ||
-    userAgent.includes('fban') ||
-    userAgent.includes('fb_iab') ||
-    userAgent.includes('twitter') ||
-    userAgent.includes('whatsapp') ||
-    userAgent.includes('telegram') ||
-    userAgent.includes('kakao') ||
-    userAgent.includes('wechat')
-  );
+  const ua = navigator.userAgent.toLowerCase();
+
+  // 各種SNSアプリの埋め込みブラウザを判定
+  const keywords = [
+    'line',
+    'instagram',
+    'facebook',
+    'fbav',
+    'fban',
+    'fb_iab',
+    'twitter',
+    'whatsapp',
+    'telegram',
+    'kakao',
+    'wechat'
+  ];
+
+  return keywords.some((kw) => ua.includes(kw));
 };
 
 interface AuthState {
