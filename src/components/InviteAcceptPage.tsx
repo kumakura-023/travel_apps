@@ -7,6 +7,7 @@ import { usePlanStore } from '../store/planStore';
 import { usePlacesStore } from '../store/placesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { setActivePlan } from '../services/storageService';
+import ExternalBrowserPrompt from './ExternalBrowserPrompt';
 
 const InviteAcceptPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -92,8 +93,9 @@ const InviteAcceptPage: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-white z-[2000]">
-      <div className="glass-effect rounded-2xl max-w-md w-full p-8 shadow-lg text-center space-y-6">
+    <>
+      <div className="fixed inset-0 flex items-center justify-center bg-white z-[2000]">
+        <div className="glass-effect rounded-2xl max-w-md w-full p-8 shadow-lg text-center space-y-6">
         <h2 className="headline text-system-label">プランに参加</h2>
         {status === 'pending' && <div className="text-system-secondary-label">{message || '処理中...'}</div>}
         {status === 'auth' && (
@@ -111,8 +113,10 @@ const InviteAcceptPage: React.FC = () => {
         {status === 'error' && (
           <div className="text-system-secondary-label text-red-500">{message}</div>
         )}
+        </div>
       </div>
-    </div>
+      <ExternalBrowserPrompt />
+    </>
   );
 };
 
