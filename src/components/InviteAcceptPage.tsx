@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
+import { usePlanStore } from '../store/planStore';
+import { setActivePlan } from '../services/storageService';
 
 const InviteAcceptPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -32,10 +34,16 @@ const InviteAcceptPage: React.FC = () => {
         if (data.alreadyMember) {
           setStatus('already');
           setMessage('すでにこのプランのメンバーです。');
+          usePlanStore.getState().unsubscribeFromPlan();
+          usePlanStore.getState().setPlan(null);
+          setActivePlan(data.planId ?? null);
           setTimeout(() => navigate('/', { replace: true }), 2000);
         } else if (data.success) {
           setStatus('success');
           setMessage('プランに参加しました！');
+          usePlanStore.getState().unsubscribeFromPlan();
+          usePlanStore.getState().setPlan(null);
+          setActivePlan(data.planId ?? null);
           setTimeout(() => navigate('/', { replace: true }), 2000);
         } else {
           setStatus('error');
