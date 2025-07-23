@@ -13,20 +13,29 @@ import { useBrowserPromptStore } from '../store/browserPromptStore';
 
 // アプリ内ブラウザを検出する関数
 export const isInAppBrowser = (): boolean => {
-  const userAgent = navigator.userAgent.toLowerCase();
-  return (
-    userAgent.includes('line') ||
-    userAgent.includes('instagram') ||
-    userAgent.includes('facebook') ||
-    userAgent.includes('fbav') ||
-    userAgent.includes('fban') ||
-    userAgent.includes('fb_iab') ||
-    userAgent.includes('twitter') ||
-    userAgent.includes('whatsapp') ||
-    userAgent.includes('telegram') ||
-    userAgent.includes('kakao') ||
-    userAgent.includes('wechat')
-  );
+  const ua = navigator.userAgent.toLowerCase();
+
+  // 代表的なSNS系アプリのUA片と一般的なWebView判定を組み合わせる
+  const knownApps =
+    ua.includes('line') ||
+    ua.includes('instagram') ||
+    ua.includes('facebook') ||
+    ua.includes('fbav') ||
+    ua.includes('fban') ||
+    ua.includes('fb_iab') ||
+    ua.includes('twitter') ||
+    ua.includes('whatsapp') ||
+    ua.includes('telegram') ||
+    ua.includes('kakao') ||
+    ua.includes('wechat');
+
+  // Android WebView は `wv` を含むことが多い
+  const isAndroidWebView = /android/.test(ua) && ua.includes('wv');
+
+  // iOS のWebViewは Safari を含まない UA になるケースが多い
+  const isIOSWebView = /iphone|ipad|ipod/.test(ua) && !ua.includes('safari');
+
+  return knownApps || isAndroidWebView || isIOSWebView;
 };
 
 interface AuthState {
