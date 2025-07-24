@@ -32,5 +32,18 @@ export function serializePlan(plan: TravelPlan): string {
 }
 
 export function deserializePlan(json: string): TravelPlan {
-  return JSON.parse(json, dateReviver) as TravelPlan;
-} 
+  const plan = JSON.parse(json, dateReviver) as TravelPlan;
+
+  // CHANGELOG [1.4.24] 参照: 過去バージョンでは MapLabel の位置情報が
+  // { lat: number, lng: number } として保存されていた。旧データを
+  // 読み込んだ際に正しい `position` オブジェクトへ変換する。
+  plan.labels?.forEach((label: any) => {
+    if (!label.position && label.lat !== undefined && label.lng !== undefined) {
+      label.position = { lat: label.lat, lng: label.lng };
+    }
+    delete label.lat;
+    delete label.lng;
+  });
+
+  return plan;
+}

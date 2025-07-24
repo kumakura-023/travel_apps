@@ -27,6 +27,15 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
   setOnLabelDeleted: (callback) => set({ onLabelDeleted: callback }),
   addLabel: (partial) =>
     set((s) => {
+      // CHANGELOG [1.4.24] 参照: 不正な `lat`/`lng` フィールドを許容し、
+      // `position` へ正規化する。
+      const { lat, lng, ...rest } = partial as any;
+      const position =
+        partial.position ??
+        (lat !== undefined && lng !== undefined
+          ? { lat, lng }
+          : undefined);
+
       const newLabel = {
         width: 120,
         height: 40,
@@ -34,7 +43,8 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
         fontSize: 14,
         fontFamily: 'sans-serif',
         status: 'new', // 新規作成時は'new'ステータス
-        ...partial,
+        ...rest,
+        position,
         id: uuidv4(),
         createdAt: new Date(),
         updatedAt: new Date(),
