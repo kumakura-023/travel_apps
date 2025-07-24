@@ -82,9 +82,19 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
             // onMove is already called during move, but we can call it one last time if needed
         } else if (mode === 'resizing') {
             // onResize is also called during resize
+            // On mobile, end editing mode after resize operation
+            if (isMobile) {
+              setMode('idle');
+              return;
+            }
         }
       }
-      setMode('idle');
+      
+      // For non-mobile or non-resize operations, always set to idle
+      if (!isMobile || mode !== 'editing') {
+        setMode('idle');
+      }
+      // For mobile editing mode without resize/drag, keep editing mode active
     };
 
     if (isInteracting) {
@@ -98,7 +108,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     if (mode === 'editing') {
       mapClickListener = map?.addListener('click', () => {
         setMode('idle');
-      });
+      }) || null;
     }
 
     return () => {
@@ -181,12 +191,15 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     lastTapTimeRef.current = now;
     
     // For drag/resize, the global pointerup listener handles setting mode to 'idle'.
-    // For long press, the mode remains 'editing' until the map is clicked.
+    // For long press editing mode on mobile, keep the mode as 'editing' to maintain button visibility
     if (mode === 'dragging') {
       // The global handler will set it to idle.
+    } else if (mode === 'editing' && isMobile) {
+      // Keep editing mode active on mobile to maintain button accessibility
+      // Mode will be reset to 'idle' only when map is clicked (handled in useEffect)
     } else {
       // If it wasn't a drag or a double-click, it's a single click.
-      // For mobile, this does nothing. For desktop, you might want a select state.
+      // For desktop, you might want a select state.
     }
   };
 
@@ -238,10 +251,17 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
                          caption-1 flex items-center justify-center rounded-full cursor-pointer
                          hover:bg-coral-600 active:scale-95 transition-all duration-150 ease-ios-default
                          shadow-elevation-2"
-              style={{ transform: `scale(${Math.min(1 / scale, 1.5)})` }}
+              style={{ 
+                transform: `scale(${Math.min(1 / scale, 1.5)})`,
+                // Expand touch area on mobile for better accessibility
+                padding: isMobile ? '4px' : '0px',
+                minWidth: isMobile ? '44px' : 'auto',
+                minHeight: isMobile ? '44px' : 'auto'
+              }}
               onClick={(e) => {
                 e.stopPropagation();
                 deleteLabel(label.id);
+                // No need to reset mode as the label will be unmounted
               }}
               onPointerDown={(e) => e.stopPropagation()}
             >
@@ -252,7 +272,13 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
                          cursor-se-resize rounded-full hover:bg-teal-600 transition-colors 
                          duration-150 ease-ios-default shadow-elevation-1"
               onPointerDown={handleResizePointerDown}
-              style={{ transform: `scale(${Math.min(1 / scale, 1.5)})` }}
+              style={{ 
+                transform: `scale(${Math.min(1 / scale, 1.5)})`,
+                // Expand touch area on mobile for better accessibility
+                padding: isMobile ? '4px' : '0px',
+                minWidth: isMobile ? '44px' : 'auto',
+                minHeight: isMobile ? '44px' : 'auto'
+              }}
             />
           </>
         )}
