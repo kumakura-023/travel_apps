@@ -19,6 +19,8 @@ import ImageGallery from './placeDetail/ImageGallery';
 import PlaceActions from './placeDetail/PlaceActions';
 import MemoEditor from './placeDetail/MemoEditor';
 import { useBottomSheetStore } from '../store/bottomSheetStore';
+import { useAutoSave } from '../hooks/useAutoSave';
+import { SyncOperationType } from '../types/SyncTypes';
 
 export default function PlaceDetailPanel() {
   const { place, setPlace } = useSelectedPlaceStore();
@@ -35,6 +37,7 @@ export default function PlaceDetailPanel() {
   const { plan } = usePlanStore();
   const { setSelectedOrigin, setSelectedDestination, openRouteSearch } = useRouteSearchStore();
   const { map } = useGoogleMaps();
+  const { saveWithSyncManager } = useAutoSave(plan);
   const bottomSheetRootRef = useRef<HTMLDivElement>(null);
 
   // ブレークポイント
@@ -198,6 +201,31 @@ export default function PlaceDetailPanel() {
   const handleScheduledDayChange = (day: number | undefined) => {
     if (!savedPlace) return;
     updatePlace(savedPlace.id, { scheduledDay: day });
+  };
+
+  const handleMemoChange = (id: string, memo: string, operationType: SyncOperationType) => {
+    // 既存のplace状態を取得
+    const currentPlace = savedPlaces.find(p => p.id === id);
+    if (currentPlace && plan) {      
+      const updatedPlace = { ...currentPlace, memo };
+      // ローカル状態を更新（即座反映用）
+      updatePlace(id, { memo });
+      
+      // プランの候補地一覧を更新
+      const updatedPlaces = plan.places.map(p => p.id === id ? updatedPlace : p);
+      const updatedPlan = {
+        ...plan,
+        places: updatedPlaces,
+        updatedAt: new Date()
+      };
+      
+      // 新しい同期システムでプランを更新
+      if (operationType === 'memo_updated') {
+        saveWithSyncManager(updatedPlan, 'memo_updated');
+      } else {
+        saveWithSyncManager(updatedPlan, 'place_updated');
+      }
+    }
   };
 
   const handleClosePanel = () => {
@@ -441,7 +469,13 @@ export default function PlaceDetailPanel() {
         {/* 詳細情報セクション */}
         <div className="px-5 pb-5 space-y-4">
           {/* メモ */}
-          <MemoEditor saved={saved} savedPlace={savedPlace} isMobile={isMobile} updatePlace={updatePlace} />
+          <MemoEditor 
+            saved={saved} 
+            savedPlace={savedPlace} 
+            isMobile={isMobile} 
+            updatePlace={updatePlace} 
+            onMemoChange={handleMemoChange}
+          />
 
           {/* 住所 */}
           {place.formatted_address && (

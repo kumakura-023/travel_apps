@@ -1,15 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Place } from '../../types';
+import { SyncOperationType } from '../../types/SyncTypes';
 
 interface Props {
   saved: boolean;
   savedPlace?: Place;
   isMobile: boolean;
   updatePlace: (id: string, update: Partial<Place>) => void;
+  onMemoChange?: (id: string, memo: string, operationType: SyncOperationType) => void;
 }
 
-export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace }: Props) {
+export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace, onMemoChange }: Props) {
   const [editing, setEditing] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastValueRef = useRef<string>('');
+
+  // デバウンス付きメモ更新関数
+  const debouncedMemoUpdate = useCallback((id: string, memo: string) => {
+    // 既存のタイマーをクリア
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      if (import.meta.env.DEV) {
+        console.log(`📝 メモエディター: タイマークリア`, new Date().toLocaleTimeString());
+      }
+    }
+
+    // 即座にローカル状態を更新（UI応答性維持）
+    updatePlace(id, { memo });
+
+    // 値が変更された場合のみデバウンス処理を実行
+    if (memo !== lastValueRef.current) {
+      lastValueRef.current = memo;
+      
+      if (import.meta.env.DEV) {
+        console.log(`📝 メモエディター: デバウンス設定 (300ms)`, new Date().toLocaleTimeString());
+      }
+      
+      // デバウンスタイマーを設定（300ms後に同期実行）
+      debounceTimerRef.current = setTimeout(() => {
+        if (import.meta.env.DEV) {
+          console.log(`📝 メモエディター: 同期実行`, new Date().toLocaleTimeString());
+        }
+        if (onMemoChange) {
+          onMemoChange(id, memo, 'memo_updated');
+        }
+      }, 300);
+    }
+  }, [updatePlace, onMemoChange]);
+
+  // コンポーネントアンマウント時にタイマーをクリア
+  React.useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   if (!saved) return null;
 
@@ -22,7 +68,7 @@ export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace }:
           value={savedPlace?.memo || ''}
           onChange={(e) => {
             if (savedPlace) {
-              updatePlace(savedPlace.id, { memo: e.target.value });
+              debouncedMemoUpdate(savedPlace.id, e.target.value);
             }
           }}
           placeholder="メモを追加"
@@ -33,7 +79,7 @@ export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace }:
           value={savedPlace?.memo || ''}
           onChange={(e) => {
             if (savedPlace) {
-              updatePlace(savedPlace.id, { memo: e.target.value });
+              debouncedMemoUpdate(savedPlace.id, e.target.value);
             }
           }}
           onBlur={() => setEditing(false)}

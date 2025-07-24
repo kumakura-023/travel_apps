@@ -8,7 +8,8 @@ import { syncDebugUtils } from '../utils/syncDebugUtils';
 export function usePlanSyncEvents(
   plan: TravelPlan | null,
   saveImmediately: (plan: TravelPlan) => void,
-  saveImmediatelyCloud: (plan: TravelPlan) => void
+  saveImmediatelyCloud: (plan: TravelPlan) => void,
+  saveWithSyncManager?: (plan: TravelPlan, operationType?: 'place_added' | 'place_deleted' | 'place_updated' | 'memo_updated') => void
 ) {
   useEffect(() => {
     const { setOnPlaceAdded } = usePlacesStore.getState();
@@ -24,8 +25,13 @@ export function usePlanSyncEvents(
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
-        saveImmediately(planToSave);
-        saveImmediatelyCloud(planToSave);
+        // 新しい同期システムがある場合はそれを使用、なければ従来の方法
+        if (saveWithSyncManager) {
+          saveWithSyncManager(planToSave, 'place_added');
+        } else {
+          saveImmediately(planToSave);
+          saveImmediatelyCloud(planToSave);
+        }
       }
       syncDebugUtils.log('save', {
         type: 'immediate_sync',
@@ -35,7 +41,7 @@ export function usePlanSyncEvents(
         timestamp: Date.now()
       });
     });
-  }, [plan, saveImmediately, saveImmediatelyCloud]);
+  }, [plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager]);
 
   useEffect(() => {
     const { setOnPlaceDeleted } = usePlacesStore.getState();
@@ -51,8 +57,13 @@ export function usePlanSyncEvents(
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
-        saveImmediately(planToSave);
-        saveImmediatelyCloud(planToSave);
+        // 新しい同期システムがある場合はそれを使用、なければ従来の方法
+        if (saveWithSyncManager) {
+          saveWithSyncManager(planToSave, 'place_deleted');
+        } else {
+          saveImmediately(planToSave);
+          saveImmediatelyCloud(planToSave);
+        }
       }
       syncDebugUtils.log('save', {
         type: 'immediate_sync',
@@ -60,7 +71,7 @@ export function usePlanSyncEvents(
         timestamp: Date.now()
       });
     });
-  }, [plan, saveImmediately, saveImmediatelyCloud]);
+  }, [plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager]);
 
   useEffect(() => {
     const { setOnLabelAdded } = useLabelsStore.getState();
@@ -95,12 +106,17 @@ export function usePlanSyncEvents(
         };
         usePlanStore.getState().setPlan(planToSave);
         if (updatedLabel.status === 'synced') {
-          saveImmediately(planToSave);
-          saveImmediatelyCloud(planToSave);
+          // 新しい同期システムがある場合はそれを使用、なければ従来の方法
+          if (saveWithSyncManager) {
+            saveWithSyncManager(planToSave, 'place_updated');
+          } else {
+            saveImmediately(planToSave);
+            saveImmediatelyCloud(planToSave);
+          }
         }
       }
     });
-  }, [plan, saveImmediately, saveImmediatelyCloud]);
+  }, [plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager]);
 
   useEffect(() => {
     const { setOnLabelDeleted } = useLabelsStore.getState();
@@ -116,8 +132,13 @@ export function usePlanSyncEvents(
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
-        saveImmediately(planToSave);
-        saveImmediatelyCloud(planToSave);
+        // 新しい同期システムがある場合はそれを使用、なければ従来の方法
+        if (saveWithSyncManager) {
+          saveWithSyncManager(planToSave, 'place_updated');
+        } else {
+          saveImmediately(planToSave);
+          saveImmediatelyCloud(planToSave);
+        }
       }
       syncDebugUtils.log('save', {
         type: 'immediate_sync',
@@ -125,5 +146,5 @@ export function usePlanSyncEvents(
         timestamp: Date.now()
       });
     });
-  }, [plan, saveImmediately, saveImmediatelyCloud]);
+  }, [plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager]);
 }

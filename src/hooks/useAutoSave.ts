@@ -3,12 +3,15 @@ import { TravelPlan } from '../types';
 import { savePlanHybrid } from '../services/storageService';
 import { useAuthStore } from './useAuth';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
+import { SyncManager } from '../services/SyncManager';
+import { SyncContext } from '../types/SyncTypes';
 
 /**
  * TravelPlanの変更を監視するカスタムフック
- * イベントベース同期方式を採用
+ * 階層化された同期システムを採用
  */
 export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number) => void) {
+  const syncManagerRef = useRef<SyncManager>(new SyncManager());
   const [isSaving, setIsSaving] = useState(false);
   const [isSynced, setIsSynced] = useState(false);
   const [isRemoteUpdateInProgress, setIsRemoteUpdateInProgress] = useState(false);
@@ -32,7 +35,15 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     return `${placeCount}:${labelCount}:${lastUpdate}:${placeIds}:${labelIds}`;
   }, []);
 
-  // 即座ローカル保存関数
+  // 同期コンテキストを取得
+  const getSyncContext = useCallback((): SyncContext => ({
+    isOnline: navigator.onLine,
+    hasUser: !!user,
+    isRemoteUpdateInProgress,
+    lastSyncTimestamp: lastSavedTimestampRef.current
+  }), [user, isRemoteUpdateInProgress]);
+
+  // 即座ローカル保存関数（互換性のため保持）
   const saveImmediately = useCallback(async (plan: TravelPlan) => {
     try {
       await savePlanHybrid(plan, { mode: 'local' });
@@ -44,6 +55,12 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       console.error('即座ローカル保存失敗:', error);
     }
   }, []);
+
+  // 新しい同期システム経由の保存関数
+  const saveWithSyncManager = useCallback(async (plan: TravelPlan, operationType: 'place_updated' | 'memo_updated' = 'place_updated') => {
+    const context = getSyncContext();
+    await syncManagerRef.current.queueOperation(operationType, plan, context);
+  }, [getSyncContext]);
 
   // 即座クラウド同期関数（イベントベース）
   const saveImmediatelyCloud = useCallback(async (plan: TravelPlan) => {
@@ -209,5 +226,7 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     lastCloudSaveTimestamp: cloudSaveTimestampRef.current, // 独立管理されたクラウド保存タイムスタンプを返す
     saveImmediately, // 外部から即座保存を呼び出せるように公開
     saveImmediatelyCloud, // 外部から即座クラウド同期を呼び出せるように公開
+    saveWithSyncManager, // 新しい同期システム経由の保存
+    syncManager: syncManagerRef.current, // 同期マネージャーへのアクセス
   };
 } 
