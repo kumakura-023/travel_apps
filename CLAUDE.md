@@ -1,6 +1,7 @@
 CLAUDE.md
 このファイルは、このリポジトリでClaude Code (claude.ai/code) と作業する際のガイダンスを提供します。
 
+
 基本設定
 言語: 日本語で回答します
 バージョン管理: version_rule.mdを参照して適切なバージョンでchangelogに修正内容を追記します
