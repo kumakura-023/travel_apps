@@ -85,7 +85,9 @@ export class SyncManager {
         type: operation.type,
         mode: operation.mode,
         priority: operation.priority,
-        queueSize: this.operationQueue.size
+        queueSize: this.operationQueue.size,
+        operationId: operation.id,
+        timestamp: new Date().toLocaleTimeString()
       });
     }
 
@@ -220,7 +222,12 @@ export class SyncManager {
 
     const timer = setTimeout(async () => {
       if (import.meta.env.DEV) {
-        console.log(`🚀 デバウンス実行:`, operation.type, new Date().toLocaleTimeString());
+        console.log(`🚀 デバウンス実行:`, {
+          type: operation.type,
+          operationId: operation.id,
+          timestamp: new Date().toLocaleTimeString(),
+          elapsedTime: `${Date.now() - operation.timestamp}ms`
+        });
       }
 
       try {
@@ -289,7 +296,8 @@ export class SyncManager {
         operation: operation.type,
         priority: operation.priority,
         timestamp: saveStartTimestamp,
-        writeCount: this.writeHistory.length
+        writeCount: this.writeHistory.length,
+        isDebounced: operation.mode === 'debounced'
       });
     }
 
@@ -307,7 +315,9 @@ export class SyncManager {
       if (import.meta.env.DEV) {
         console.log(`☁️ クラウド同期完了 [${operation.mode}]:`, {
           operation: operation.type,
-          timeDiff: saveEndTimestamp - saveStartTimestamp
+          timeDiff: saveEndTimestamp - saveStartTimestamp,
+          saveEndTimestamp,
+          isDebounced: operation.mode === 'debounced'
         });
       }
     } catch (error: any) {

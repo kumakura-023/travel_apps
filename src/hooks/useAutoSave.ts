@@ -49,9 +49,28 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
   const getSelfUpdateFlag = useCallback((): boolean => {
     // 現在書き込み中、または最近書き込みが完了した場合は自己更新として扱う
     const now = Date.now();
+    // Firebaseの更新通知は遅延することがあるため、より長い期間を設定
     const recentlyCompleted = lastWriteCompletedRef.current > 0 && 
-                             (now - lastWriteCompletedRef.current) < 1000; // 1秒以内
-    return isWritingToCloudRef.current || recentlyCompleted;
+                             (now - lastWriteCompletedRef.current) < 3000; // 3秒以内に延長
+    
+    // クラウド保存タイムスタンプとの差も確認（より厳密な判定）
+    const recentCloudSave = cloudSaveTimestampRef.current > 0 && 
+                           (now - cloudSaveTimestampRef.current) < 3000; // 3秒以内
+    
+    if (import.meta.env.DEV && (recentlyCompleted || recentCloudSave)) {
+      console.log('🔍 自己更新フラグ判定:', {
+        isWritingToCloud: isWritingToCloudRef.current,
+        recentlyCompleted,
+        recentCloudSave,
+        lastWriteCompleted: lastWriteCompletedRef.current,
+        cloudSaveTimestamp: cloudSaveTimestampRef.current,
+        now,
+        timeSinceWrite: now - lastWriteCompletedRef.current,
+        timeSinceCloudSave: now - cloudSaveTimestampRef.current
+      });
+    }
+    
+    return isWritingToCloudRef.current || recentlyCompleted || recentCloudSave;
   }, []);
 
   // 即座ローカル保存関数（互換性のため保持）

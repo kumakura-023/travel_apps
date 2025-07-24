@@ -33,16 +33,16 @@ export function useRealtimePlanListener(
         if (!updated) return;
         const remoteTimestamp = updated.updatedAt.getTime();
         
-        // フラグベースの自己更新判定（タイムスタンプ差による判定を廃止）
+        // フラグベースの自己更新判定
         const isSelfUpdate = onSelfUpdateFlag ? onSelfUpdateFlag() : false;
         
-        // フォールバック: フラグが無い場合は既存のタイムスタンプ判定を使用（より厳格化）
+        // フォールバック: フラグが無い場合は既存のタイムスタンプ判定を使用
         let fallbackSelfUpdate = false;
         if (!onSelfUpdateFlag && lastCloudSaveTimestamp) {
           const currentCloudSaveTimestamp = lastCloudSaveTimestamp || 0;
           const timeDiff = Math.abs(remoteTimestamp - currentCloudSaveTimestamp);
-          // 自己更新判定をさらに厳格化（500ms以内のみ）
-          fallbackSelfUpdate = timeDiff < 500;
+          // 自己更新判定を緩和（3000ms以内）- Firebaseの遅延に対応
+          fallbackSelfUpdate = timeDiff < 3000;
         }
         
         const finalIsSelfUpdate = isSelfUpdate || fallbackSelfUpdate;
@@ -66,10 +66,12 @@ export function useRealtimePlanListener(
             isSelfUpdateFlag: isSelfUpdate,
             fallbackSelfUpdate,
             finalIsSelfUpdate,
+            timeDiff: lastCloudSaveTimestamp ? Math.abs(remoteTimestamp - lastCloudSaveTimestamp) : null,
             remotePlaces: updated.places.length,
             remoteLabels: updated.labels.length,
             localPlaces: usePlanStore.getState().plan?.places.length || 0,
-            localLabels: usePlanStore.getState().plan?.labels.length || 0
+            localLabels: usePlanStore.getState().plan?.labels.length || 0,
+            hasOnSelfUpdateFlag: !!onSelfUpdateFlag
           });
         }
 

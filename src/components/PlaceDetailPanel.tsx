@@ -206,7 +206,16 @@ export default function PlaceDetailPanel() {
   const handleMemoChange = (id: string, memo: string, operationType: SyncOperationType) => {
     // 既存のplace状態を取得
     const currentPlace = savedPlaces.find(p => p.id === id);
-    if (currentPlace && plan) {      
+    if (currentPlace && plan) {
+      if (import.meta.env.DEV) {
+        console.log(`📝 PlaceDetailPanel: メモ変更処理開始`, {
+          placeId: id,
+          operationType,
+          memoLength: memo.length,
+          timestamp: new Date().toLocaleTimeString()
+        });
+      }
+      
       const updatedPlace = { ...currentPlace, memo };
       // ローカル状態を更新（即座反映用）
       updatePlace(id, { memo });
