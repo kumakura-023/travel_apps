@@ -21,6 +21,8 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
   const lastLocalSaveRef = useRef<number>(0); // 最後のローカル保存時刻
   const lastCloudSaveRef = useRef<number>(0); // 最後のクラウド保存時刻
   const cloudSaveTimestampRef = useRef<number>(0); // クラウド保存タイムスタンプ（独立管理）
+  const isWritingToCloudRef = useRef<boolean>(false); // クラウド書き込み中フラグ
+  const lastWriteCompletedRef = useRef<number>(0); // 最後の書き込み完了時刻
   const user = useAuthStore((s) => s.user);
 
   // プランのハッシュを計算（変更検知用）- 最適化版
@@ -42,6 +44,15 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     isRemoteUpdateInProgress,
     lastSyncTimestamp: lastSavedTimestampRef.current
   }), [user, isRemoteUpdateInProgress]);
+  
+  // 自己更新フラグを取得するコールバック（改善版）
+  const getSelfUpdateFlag = useCallback((): boolean => {
+    // 現在書き込み中、または最近書き込みが完了した場合は自己更新として扱う
+    const now = Date.now();
+    const recentlyCompleted = lastWriteCompletedRef.current > 0 && 
+                             (now - lastWriteCompletedRef.current) < 1000; // 1秒以内
+    return isWritingToCloudRef.current || recentlyCompleted;
+  }, []);
 
   // 即座ローカル保存関数（互換性のため保持）
   const saveImmediately = useCallback(async (plan: TravelPlan) => {
@@ -66,7 +77,18 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
   const saveImmediatelyCloud = useCallback(async (plan: TravelPlan) => {
     if (!navigator.onLine || !user) return;
     
+    // SyncManagerの緊急停止フラグをチェック
+    const syncStatus = syncManagerRef.current.getSyncStatus();
+    if (syncStatus.emergencyStopFlag) {
+      if (import.meta.env.DEV) {
+        console.log('🚨 緊急停止中のためクラウド同期をスキップ');
+      }
+      return;
+    }
+    
     setIsSaving(true);
+    isWritingToCloudRef.current = true; // 書き込み開始フラグをセット
+    
     try {
       const saveStartTimestamp = Date.now();
       lastCloudSaveRef.current = saveStartTimestamp;
@@ -111,19 +133,53 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       }
       
       onSave?.(saveEndTimestamp);
-    } catch (err) {
+    } catch (err: any) {
       console.warn('即座クラウド同期失敗:', err);
+      
+      // FirebaseエラーをSyncManagerに通知
+      const errorMessage = err?.message || err?.toString() || '';
+      const isQuotaError = errorMessage.includes('quota') || 
+                          errorMessage.includes('limit') ||
+                          errorMessage.includes('too many requests');
+      
+      if (isQuotaError) {
+        if (import.meta.env.DEV) {
+          console.error('🚨 Firebaseクォータエラー検知 - SyncManagerで緊急停止をトリガー');
+        }
+        // SyncManagerにエラーを通知して緊急停止をトリガー
+        // ここではhandleFirebaseErrorを直接呼べないので、ダミーの同期操作でエラーを発生させる
+        try {
+          const context = getSyncContext();
+          await syncManagerRef.current.queueOperation('memo_updated', plan, context);
+        } catch {
+          // 無視 - 既にSyncManager側でエラーハンドリングが動作する
+        }
+      }
+      
       setIsSynced(false);
     } finally {
       setIsSaving(false);
+      lastWriteCompletedRef.current = Date.now(); // 書き込み完了時刻を記録
+      isWritingToCloudRef.current = false; // 書き込み終了フラグをリセット
     }
-  }, [user, onSave, calculatePlanHash]);
+  }, [user, onSave, calculatePlanHash, getSyncContext]);
 
   // バッチクラウド同期関数（フォールバック用）
   const batchCloudSync = useCallback(async (plan: TravelPlan) => {
     if (!navigator.onLine || !user) return;
     
+    // SyncManagerの緊急停止フラグをチェック
+    const syncStatus = syncManagerRef.current.getSyncStatus();
+    if (syncStatus.emergencyStopFlag) {
+      if (import.meta.env.DEV) {
+        console.log('🚨 緊急停止中のためバッチ同期をスキップ');
+      }
+      return;
+    }
+    
     setIsSaving(true);
+    isWritingToCloudRef.current = true; // 書き込み開始フラグをセット
+    
     try {
       const saveStartTimestamp = Date.now();
       lastCloudSaveRef.current = saveStartTimestamp;
@@ -166,11 +222,26 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       }
       
       onSave?.(saveEndTimestamp);
-    } catch (err) {
+    } catch (err: any) {
       console.warn('バッチクラウド同期失敗:', err);
+      
+      // FirebaseエラーをSyncManagerに通知
+      const errorMessage = err?.message || err?.toString() || '';
+      const isQuotaError = errorMessage.includes('quota') || 
+                          errorMessage.includes('limit') ||
+                          errorMessage.includes('too many requests');
+      
+      if (isQuotaError) {
+        if (import.meta.env.DEV) {
+          console.error('🚨 Firebaseクォータエラー検知 - SyncManagerで緊急停止をトリガー');
+        }
+      }
+      
       setIsSynced(false);
     } finally {
       setIsSaving(false);
+      lastWriteCompletedRef.current = Date.now(); // 書き込み完了時刻を記録
+      isWritingToCloudRef.current = false; // 書き込み終了フラグをリセット
     }
   }, [user, onSave]);
 
@@ -200,6 +271,22 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       return;
     }
     
+    // 書き込みが最近完了した場合はスキップ（自己更新ループ防止）
+    const now = Date.now();
+    if (lastWriteCompletedRef.current > 0 && (now - lastWriteCompletedRef.current) < 500) {
+      if (import.meta.env.DEV) {
+        console.log('🔄 プラン変更検知 - 最近の書き込み完了のためスキップ');
+      }
+      return;
+    }
+    
+    // プランのハッシュを計算して実際に変更があるか確認
+    const currentHash = calculatePlanHash(plan);
+    if (currentHash === lastPlanHashRef.current) {
+      return; // 変更がない場合はスキップ
+    }
+    lastPlanHashRef.current = currentHash;
+    
     // 変更回数をカウント
     changeCountRef.current++;
     
@@ -211,11 +298,12 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       console.log('🔄 プラン変更検知:', {
         places: plan.places.length,
         labels: plan.labels.length,
-        changeCount: changeCountRef.current
+        changeCount: changeCountRef.current,
+        hash: currentHash
       });
     }
 
-  }, [plan, isRemoteUpdateInProgress, saveImmediately]);
+  }, [plan, isRemoteUpdateInProgress, saveImmediately, calculatePlanHash]);
 
   return {
     isSaving,
@@ -228,5 +316,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     saveImmediatelyCloud, // 外部から即座クラウド同期を呼び出せるように公開
     saveWithSyncManager, // 新しい同期システム経由の保存
     syncManager: syncManagerRef.current, // 同期マネージャーへのアクセス
+    getSelfUpdateFlag, // 自己更新フラグを取得するコールバック
   };
 } 

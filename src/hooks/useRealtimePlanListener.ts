@@ -8,7 +8,8 @@ export function useRealtimePlanListener(
   user: any,
   isInitializing: boolean,
   lastCloudSaveTimestamp: number | null,
-  setIsRemoteUpdateInProgress: (flag: boolean) => void
+  setIsRemoteUpdateInProgress: (flag: boolean) => void,
+  onSelfUpdateFlag?: () => boolean // 自己更新フラグを取得するコールバック
 ) {
   const planId = usePlanStore((s) => s.plan?.id);
 
@@ -31,10 +32,20 @@ export function useRealtimePlanListener(
       unsub = listenPlan(plan.id, (updated) => {
         if (!updated) return;
         const remoteTimestamp = updated.updatedAt.getTime();
-        const currentCloudSaveTimestamp = lastCloudSaveTimestamp || 0;
-        const timeDiff = Math.abs(remoteTimestamp - currentCloudSaveTimestamp);
-        // 自己更新判定を厓格化（1秒以内の差のみ自己更新として認識）
-        const isSelfUpdate = timeDiff < 1000;
+        
+        // フラグベースの自己更新判定（タイムスタンプ差による判定を廃止）
+        const isSelfUpdate = onSelfUpdateFlag ? onSelfUpdateFlag() : false;
+        
+        // フォールバック: フラグが無い場合は既存のタイムスタンプ判定を使用（より厳格化）
+        let fallbackSelfUpdate = false;
+        if (!onSelfUpdateFlag && lastCloudSaveTimestamp) {
+          const currentCloudSaveTimestamp = lastCloudSaveTimestamp || 0;
+          const timeDiff = Math.abs(remoteTimestamp - currentCloudSaveTimestamp);
+          // 自己更新判定をさらに厳格化（500ms以内のみ）
+          fallbackSelfUpdate = timeDiff < 500;
+        }
+        
+        const finalIsSelfUpdate = isSelfUpdate || fallbackSelfUpdate;
 
         // 同じタイムスタンプの重複処理を防止
         if (remoteTimestamp === lastProcessedTimestamp && lastProcessedTimestamp !== 0) {
@@ -51,35 +62,36 @@ export function useRealtimePlanListener(
         if (import.meta.env.DEV) {
           console.log('🔄 Firebase更新を受信:', {
             remoteTimestamp,
-            currentCloudSaveTimestamp,
-            timeDiff,
-            isSelfUpdate,
+            lastCloudSaveTimestamp,
+            isSelfUpdateFlag: isSelfUpdate,
+            fallbackSelfUpdate,
+            finalIsSelfUpdate,
             remotePlaces: updated.places.length,
             remoteLabels: updated.labels.length,
             localPlaces: usePlanStore.getState().plan?.places.length || 0,
-            localLabels: usePlanStore.getState().plan?.labels.length || 0,
-            lastCloudSaveTimestampValue: lastCloudSaveTimestamp,
-            cloudSaveTimestampRef: 'N/A'
+            localLabels: usePlanStore.getState().plan?.labels.length || 0
           });
         }
 
-        if (isSelfUpdate) {
+        if (finalIsSelfUpdate) {
           syncDebugUtils.log('ignore', {
             reason: '自己更新',
             remoteTimestamp,
-            cloudSaveTimestamp: currentCloudSaveTimestamp,
-            timeDiff
+            cloudSaveTimestamp: lastCloudSaveTimestamp || 0,
+            flagBased: isSelfUpdate,
+            fallbackBased: fallbackSelfUpdate
           });
           if (import.meta.env.DEV) {
-            console.log('🔄 自己更新のため無視');
+            console.log('🔄 自己更新のため無視 (flag:', isSelfUpdate, ', fallback:', fallbackSelfUpdate, ')');
           }
           return;
         }
 
         syncDebugUtils.log('receive', {
           remoteTimestamp,
-          cloudSaveTimestamp: currentCloudSaveTimestamp,
-          timeDiff,
+          cloudSaveTimestamp: lastCloudSaveTimestamp || 0,
+          flagBased: isSelfUpdate,
+          fallbackBased: fallbackSelfUpdate,
           remotePlaces: updated.places.length,
           remoteLabels: updated.labels.length
         });
@@ -145,12 +157,13 @@ export function useRealtimePlanListener(
 
             lastProcessedTimestamp = remoteTimestamp;
           } finally {
+            // リモート更新完了後、少し長めに待機してからフラグをリセット
             setTimeout(() => {
               setIsRemoteUpdateInProgress(false);
               if (import.meta.env.DEV) {
                 console.log('🔄 リモート更新完了、自動保存を再開');
               }
-            }, 300);
+            }, 1000); // 300msから1000msに変更
           }
         }, 100);
 

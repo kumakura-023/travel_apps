@@ -12,16 +12,36 @@ export class SyncManager {
   private operationQueue: Map<string, SyncOperation> = new Map();
   private debounceTimers: Map<SyncOperationType, NodeJS.Timeout> = new Map();
   private isProcessing = false;
+  
+  // 書き込み頻度制限機能
+  private writeHistory: number[] = [];
+  private maxWritesPerMinute: number = 20; // 10から20に増加
+  private writeIntervalMs: number = 60000; // 1分
+  private pendingWriteQueue: Array<{
+    operation: SyncOperation,
+    plan: TravelPlan,
+    context: SyncContext,
+    timestamp: number
+  }> = [];
+  private emergencyStopFlag = false;
+  private consecutiveErrorCount = 0;
+  private maxConsecutiveErrors = 3;
 
   constructor(config?: Partial<SyncConfig>) {
     this.config = {
-      debounceDelay: 300,
+      debounceDelay: 1000,
       batchSize: 10,
       retryLimit: 3,
       criticalOperations: ['place_added', 'place_deleted'],
       debouncedOperations: ['memo_updated', 'place_updated'],
       ...config
     };
+    
+    // 定期的に書き込み履歴をクリーンアップ
+    setInterval(() => {
+      this.cleanupWriteHistory();
+      this.processPendingWrites();
+    }, 10000); // 10秒ごと
   }
 
   /**
@@ -33,6 +53,14 @@ export class SyncManager {
     context: SyncContext,
     data?: any
   ): Promise<void> {
+    // 緊急停止フラグがセットされている場合は処理を停止
+    if (this.emergencyStopFlag) {
+      if (import.meta.env.DEV) {
+        console.log('🚨 緊急停止中のため同期をスキップ:', type);
+      }
+      return;
+    }
+    
     // リモート更新中は同期を停止
     if (context.isRemoteUpdateInProgress) {
       if (import.meta.env.DEV) {
@@ -61,6 +89,12 @@ export class SyncManager {
       });
     }
 
+    // 書き込み頻度制限チェック
+    if (!this.canWriteNow()) {
+      this.queuePendingWrite(operation, plan, context);
+      return;
+    }
+    
     await this.processOperation(operation, plan, context);
   }
 
@@ -177,6 +211,12 @@ export class SyncManager {
     if (import.meta.env.DEV) {
       console.log(`⏰ デバウンスタイマー設定 (${this.config.debounceDelay}ms):`, operation.type, new Date().toLocaleTimeString());
     }
+    
+    // 既存の操作と統合（重複回避）
+    const existingOps = Array.from(this.operationQueue.values()).filter(
+      op => op.type === operation.type && op.mode === 'debounced'
+    );
+    existingOps.forEach(op => this.operationQueue.delete(op.id));
 
     const timer = setTimeout(async () => {
       if (import.meta.env.DEV) {
@@ -240,27 +280,39 @@ export class SyncManager {
     context: SyncContext
   ): Promise<void> {
     const saveStartTimestamp = Date.now();
+    
+    // 書き込み履歴に追加
+    this.recordWrite(saveStartTimestamp);
 
     if (import.meta.env.DEV) {
       console.log(`☁️ クラウド同期開始 [${operation.mode}]:`, {
         operation: operation.type,
         priority: operation.priority,
-        timestamp: saveStartTimestamp
+        timestamp: saveStartTimestamp,
+        writeCount: this.writeHistory.length
       });
     }
 
-    // ユーザーIDをcontextから取得する必要があるため、
-    // 実際の実装では追加の引数が必要
-    // ここでは既存のsavePlanHybridを使用
-    await savePlanHybrid(plan, { mode: 'cloud' });
+    try {
+      // ユーザーIDをcontextから取得する必要があるため、
+      // 実際の実装では追加の引数が必要
+      // ここでは既存のsavePlanHybridを使用
+      await savePlanHybrid(plan, { mode: 'cloud' });
+      
+      // 成功時はエラーカウンターをリセット
+      this.consecutiveErrorCount = 0;
 
-    const saveEndTimestamp = Date.now();
+      const saveEndTimestamp = Date.now();
 
-    if (import.meta.env.DEV) {
-      console.log(`☁️ クラウド同期完了 [${operation.mode}]:`, {
-        operation: operation.type,
-        timeDiff: saveEndTimestamp - saveStartTimestamp
-      });
+      if (import.meta.env.DEV) {
+        console.log(`☁️ クラウド同期完了 [${operation.mode}]:`, {
+          operation: operation.type,
+          timeDiff: saveEndTimestamp - saveStartTimestamp
+        });
+      }
+    } catch (error: any) {
+      this.handleFirebaseError(error);
+      throw error; // エラーを再スローして上位のエラーハンドリングに任せる
     }
   }
 
@@ -307,13 +359,166 @@ export class SyncManager {
   }
 
   /**
+   * 書き込み可能かチェック
+   */
+  private canWriteNow(): boolean {
+    this.cleanupWriteHistory();
+    return this.writeHistory.length < this.maxWritesPerMinute && !this.emergencyStopFlag;
+  }
+  
+  /**
+   * 書き込み履歴を記録
+   */
+  private recordWrite(timestamp: number): void {
+    this.writeHistory.push(timestamp);
+    this.cleanupWriteHistory();
+  }
+  
+  /**
+   * 古い書き込み履歴をクリーンアップ
+   */
+  private cleanupWriteHistory(): void {
+    const now = Date.now();
+    this.writeHistory = this.writeHistory.filter(timestamp => 
+      now - timestamp < this.writeIntervalMs
+    );
+  }
+  
+  /**
+   * 制限超過時のキューへの追加
+   */
+  private queuePendingWrite(
+    operation: SyncOperation,
+    plan: TravelPlan,
+    context: SyncContext
+  ): void {
+    const queueItem = {
+      operation,
+      plan,
+      context,
+      timestamp: Date.now()
+    };
+    
+    this.pendingWriteQueue.push(queueItem);
+    
+    if (import.meta.env.DEV) {
+      console.log('⏰ 書き込み制限のためキューに追加:', {
+        operation: operation.type,
+        queueSize: this.pendingWriteQueue.length,
+        writeCount: this.writeHistory.length
+      });
+    }
+  }
+  
+  /**
+   * キューに保存された書き込みを処理
+   */
+  private async processPendingWrites(): Promise<void> {
+    if (this.emergencyStopFlag || this.pendingWriteQueue.length === 0) {
+      return;
+    }
+    
+    const processableCount = Math.min(
+      this.maxWritesPerMinute - this.writeHistory.length,
+      this.pendingWriteQueue.length
+    );
+    
+    if (processableCount <= 0) {
+      return;
+    }
+    
+    const itemsToProcess = this.pendingWriteQueue.splice(0, processableCount);
+    
+    if (import.meta.env.DEV && itemsToProcess.length > 0) {
+      console.log('⏰ キューから書き込み処理:', {
+        processedCount: itemsToProcess.length,
+        remainingQueue: this.pendingWriteQueue.length
+      });
+    }
+    
+    for (const item of itemsToProcess) {
+      try {
+        await this.processOperation(item.operation, item.plan, item.context);
+      } catch (error) {
+        console.error('キューからの書き込み処理失敗:', error);
+      }
+    }
+  }
+  
+  /**
+   * Firebaseエラーのハンドリング
+   */
+  private handleFirebaseError(error: any): void {
+    this.consecutiveErrorCount++;
+    
+    const errorMessage = error?.message || error?.toString() || '';
+    const isQuotaError = errorMessage.includes('quota') || 
+                        errorMessage.includes('limit') ||
+                        errorMessage.includes('too many requests') ||
+                        errorMessage.includes('resource-exhausted') ||
+                        errorMessage.includes('Write stream exhausted');
+    
+    if (import.meta.env.DEV) {
+      console.error('🚨 Firebaseエラー検知:', {
+        error: errorMessage,
+        consecutiveErrors: this.consecutiveErrorCount,
+        isQuotaError
+      });
+    }
+    
+    // クォータエラーまたは連続エラーが多い場合は緊急停止
+    if (isQuotaError || this.consecutiveErrorCount >= this.maxConsecutiveErrors) {
+      this.activateEmergencyStop();
+    }
+  }
+  
+  /**
+   * 緊急停止モードを有効化
+   */
+  private activateEmergencyStop(): void {
+    this.emergencyStopFlag = true;
+    
+    if (import.meta.env.DEV) {
+      console.error('🚨 緊急停止モード有効化');
+    }
+    
+    // 1分後に自動で停止モードを解除（エラー回復を早める）
+    setTimeout(() => {
+      this.deactivateEmergencyStop();
+    }, 60 * 1000);
+  }
+  
+  /**
+   * 緊急停止モードを解除
+   */
+  private deactivateEmergencyStop(): void {
+    this.emergencyStopFlag = false;
+    this.consecutiveErrorCount = 0;
+    
+    if (import.meta.env.DEV) {
+      console.log('✅ 緊急停止モード解除');
+    }
+  }
+  
+  /**
+   * 緊急停止モードを手動で解除（デバッグ用）
+   */
+  public resetEmergencyStop(): void {
+    this.deactivateEmergencyStop();
+  }
+
+  /**
    * 同期状況の取得
    */
   getSyncStatus() {
     return {
       queueSize: this.operationQueue.size,
       pendingDebounces: this.debounceTimers.size,
-      isProcessing: this.isProcessing
+      isProcessing: this.isProcessing,
+      writeHistory: this.writeHistory.length,
+      pendingWriteQueue: this.pendingWriteQueue.length,
+      emergencyStopFlag: this.emergencyStopFlag,
+      consecutiveErrorCount: this.consecutiveErrorCount
     };
   }
 }

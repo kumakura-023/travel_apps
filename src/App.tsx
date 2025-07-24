@@ -170,13 +170,13 @@ function App() {
   }, []);
 
   // 自動保存フックを使用
-  const { setIsRemoteUpdateInProgress, saveImmediately, saveImmediatelyCloud, lastCloudSaveTimestamp } = useAutoSave(plan, updateLastSavedTimestamp);
+  const { setIsRemoteUpdateInProgress, saveImmediately, saveImmediatelyCloud, lastCloudSaveTimestamp, getSelfUpdateFlag } = useAutoSave(plan, updateLastSavedTimestamp);
 
   usePlanSyncEvents(plan, saveImmediately, saveImmediatelyCloud);
 
   usePlanLoad(user, isInitializing);
 
-  useRealtimePlanListener(user, isInitializing, lastCloudSaveTimestamp, setIsRemoteUpdateInProgress);
+  useRealtimePlanListener(user, isInitializing, lastCloudSaveTimestamp, setIsRemoteUpdateInProgress, getSelfUpdateFlag);
 
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>
