@@ -76,6 +76,8 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
 
     const handlePointerUp = () => {
       isPointerDownRef.current = false;
+      setMapInteraction(true);
+      setGlobalScrollLock(false);
       // Trigger sync on operation end
       if (interactionStartRef.current.moved) {
         if (mode === 'dragging') {
@@ -121,7 +123,8 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
 
   const handleContainerPointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
-    e.stopPropagation();
+    setMapInteraction(false);
+    setGlobalScrollLock(true);
     isPointerDownRef.current = true;
     interactionStartRef.current = {
       clientX: e.clientX,
@@ -142,6 +145,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
   };
 
   const handleContainerPointerMove = (e: React.PointerEvent) => {
+    e.preventDefault();
     if (!isPointerDownRef.current) return;
 
     if (isMobile) {
@@ -162,6 +166,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
   };
 
   const handleContainerPointerUp = (e: React.PointerEvent) => {
+    e.preventDefault();
     isPointerDownRef.current = false;
 
     if (longPressTimerRef.current) { // Mobile short tap
@@ -225,6 +230,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
           width: label.width * scale,
           height: label.height * scale,
           pointerEvents: 'auto',
+          touchAction: 'none',
           transform: 'translate(-50%, -50%)',
         }}
         onPointerDown={handleContainerPointerDown}
