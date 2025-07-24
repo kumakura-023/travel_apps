@@ -33,14 +33,20 @@ export function useRealtimePlanListener(
         const remoteTimestamp = updated.updatedAt.getTime();
         const currentCloudSaveTimestamp = lastCloudSaveTimestamp || 0;
         const timeDiff = Math.abs(remoteTimestamp - currentCloudSaveTimestamp);
-        const isSelfUpdate = timeDiff < 3000;
+        // 自己更新判定を厓格化（1秒以内の差のみ自己更新として認識）
+        const isSelfUpdate = timeDiff < 1000;
 
+        // 同じタイムスタンプの重複処理を防止
         if (remoteTimestamp === lastProcessedTimestamp && lastProcessedTimestamp !== 0) {
           if (import.meta.env.DEV) {
             console.log('🔄 同じタイムスタンプのため無視:', remoteTimestamp);
           }
           return;
         }
+        
+        // リモート更新処理中の場合は新しい更新を無視
+        const currentPlan = usePlanStore.getState().plan;
+        if (!currentPlan) return;
 
         if (import.meta.env.DEV) {
           console.log('🔄 Firebase更新を受信:', {
@@ -88,6 +94,17 @@ export function useRealtimePlanListener(
           try {
             const currentPlan = usePlanStore.getState().plan;
             if (currentPlan) {
+              // データが同じ場合は競合解決をスキップ
+              const currentDataHash = JSON.stringify({places: currentPlan.places, labels: currentPlan.labels});
+              const remoteDataHash = JSON.stringify({places: updated.places, labels: updated.labels});
+              
+              if (currentDataHash === remoteDataHash) {
+                if (import.meta.env.DEV) {
+                  console.log('🔄 データが同じのため競合解決をスキップ');
+                }
+                return;
+              }
+              
               const resolvedPlan = conflictResolver.resolveConflict(
                 currentPlan,
                 updated,

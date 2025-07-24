@@ -10,11 +10,22 @@ export class SyncDebugUtils {
     type: 'save' | 'receive' | 'conflict' | 'ignore' | 'delete';
     data: any;
   }> = [];
+  private lastReceiveLogTime = 0;
+  private receiveLogThrottle = 1000; // 1秒に1回のみログ出力
 
   /**
    * デバッグログを記録
    */
   log(type: 'save' | 'receive' | 'conflict' | 'ignore' | 'delete', data: any) {
+    // RECEIVEログの出力頻度制限
+    if (type === 'receive') {
+      const now = Date.now();
+      if (now - this.lastReceiveLogTime < this.receiveLogThrottle) {
+        return; // スロットリング中はログを出力しない
+      }
+      this.lastReceiveLogTime = now;
+    }
+    
     const logEntry = {
       timestamp: Date.now(),
       type,

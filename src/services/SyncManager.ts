@@ -33,6 +33,13 @@ export class SyncManager {
     context: SyncContext,
     data?: any
   ): Promise<void> {
+    // リモート更新中は同期を停止
+    if (context.isRemoteUpdateInProgress) {
+      if (import.meta.env.DEV) {
+        console.log('🚫 リモート更新中のため同期をスキップ:', type);
+      }
+      return;
+    }
     const operation: SyncOperation = {
       id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type,
