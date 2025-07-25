@@ -42,7 +42,8 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     isOnline: navigator.onLine,
     hasUser: !!user,
     isRemoteUpdateInProgress,
-    lastSyncTimestamp: lastSavedTimestampRef.current
+    lastSyncTimestamp: lastSavedTimestampRef.current,
+    uid: user?.uid
   }), [user, isRemoteUpdateInProgress]);
   
   // 自己更新フラグを取得するコールバック（改善版）

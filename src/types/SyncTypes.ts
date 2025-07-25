@@ -40,4 +40,5 @@ export interface SyncContext {
   hasUser: boolean;
   isRemoteUpdateInProgress: boolean;
   lastSyncTimestamp: number;
+  uid?: string;
 }

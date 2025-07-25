@@ -147,4 +147,42 @@ PlaceDetailPanel.tsxとMemoEditor.tsxを連携させて編集中の同期抑制�
 
 これにより、新しい同期システムが正しく動作し、メモ編集時の過剰な同期が解消される。
 
+### 新たなエラーの修正
+
+メモ同期の無限ループは解消されたが、新たに「uid is required for cloud save」エラーが発生。
+
+#### エラー内容
+- ラベル移動時にクラウド同期でエラー
+- ユーザーが未ログイン状態でクラウド保存を試みている
+- `syncToCloud`メソッドでuidが必要だが提供されていない
+
+#### 調査開始
+1. storageServiceのsavePlanHybrid関数を確認
+2. SyncManagerでのuid処理を確認
+3. 適切なエラーハンドリングを実装
+
+#### uidエラーの修正実施
+
+1. **問題の原因**
+   - SyncManagerの`syncToCloud`メソッドで`savePlanHybrid`を呼び出す際にuidが渡されていなかった
+   - SyncContextにuidが含まれていなかった
+
+2. **修正内容**
+   
+   a. **SyncTypes.ts**
+   - SyncContextインターフェースに`uid?: string`を追加
+   
+   b. **useAutoSave.ts**  
+   - `getSyncContext`関数でuser?.uidをcontextに含めるよう修正
+   
+   c. **SyncManager.ts**
+   - `syncToCloud`メソッドでcontext.uidをsavePlanHybridに渡すよう修正
+   - uidがない場合はエラーをスローするように改善
+   - 各同期処理でcontext.uidの存在チェックを追加
+
+3. **改善効果**
+   - 未ログイン状態でのクラウド同期エラーを防止
+   - 適切なエラーメッセージの表示
+   - 不要なクラウド同期の試行を回避
+
 ---

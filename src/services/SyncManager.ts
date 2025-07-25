@@ -173,7 +173,7 @@ export class SyncManager {
       await savePlanHybrid(plan, { mode: 'local' });
       
       // クラウド同期（即座）
-      if (context.isOnline && context.hasUser && !context.isRemoteUpdateInProgress) {
+      if (context.isOnline && context.hasUser && context.uid && !context.isRemoteUpdateInProgress) {
         await this.syncToCloud(operation, plan, context);
       }
 
@@ -240,7 +240,7 @@ export class SyncManager {
       }
 
       try {
-        if (context.isOnline && context.hasUser && !context.isRemoteUpdateInProgress) {
+        if (context.isOnline && context.hasUser && context.uid && !context.isRemoteUpdateInProgress) {
           await this.syncToCloud(operation, plan, context);
         }
 
@@ -280,7 +280,7 @@ export class SyncManager {
 
     // バッチ処理は後で実装
     // 現在は即座処理として代替
-    if (context.isOnline && context.hasUser && !context.isRemoteUpdateInProgress) {
+    if (context.isOnline && context.hasUser && context.uid && !context.isRemoteUpdateInProgress) {
       await this.syncToCloud(operation, plan, context);
     }
 
@@ -311,10 +311,12 @@ export class SyncManager {
     }
 
     try {
-      // ユーザーIDをcontextから取得する必要があるため、
-      // 実際の実装では追加の引数が必要
-      // ここでは既存のsavePlanHybridを使用
-      await savePlanHybrid(plan, { mode: 'cloud' });
+      // contextからuidを取得してクラウド保存
+      if (!context.uid) {
+        throw new Error('uid is required for cloud save');
+      }
+      
+      await savePlanHybrid(plan, { mode: 'cloud', uid: context.uid });
       
       // 成功時はエラーカウンターをリセット
       this.consecutiveErrorCount = 0;
