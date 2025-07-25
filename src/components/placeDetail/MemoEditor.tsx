@@ -48,11 +48,7 @@ export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace, o
     if (import.meta.env.DEV) {
       console.log(`📝 メモエディター: 編集開始`, new Date().toLocaleTimeString());
     }
-    // 編集開始を通知
-    if (savedPlace && onMemoChange) {
-      onMemoChange(savedPlace.id, savedPlace.memo || '', 'memo_updated', true);
-    }
-  }, [savedPlace, onMemoChange]);
+  }, []);
 
   // savedPlaceが変更された時に最後の保存値を更新
   React.useEffect(() => {

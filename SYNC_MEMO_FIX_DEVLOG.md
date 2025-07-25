@@ -113,4 +113,38 @@ PlaceDetailPanel.tsxとMemoEditor.tsxを連携させて編集中の同期抑制�
    - フォーカスアウト時に同期が1回実行される
    - 30秒のデバウンスタイマーが設定される
 
+### 問題の再調査
+
+修正後も同期処理が改善されないとのことなので、問題を再調査。
+
+#### 調査内容
+
+1. MemoEditorの修正内容を再確認
+2. PlaceDetailPanelの同期処理フローを確認
+3. useAutoSaveフックの動作を確認
+4. 他の場所で同期処理が呼ばれていないか確認
+
+#### 根本原因の発見と修正
+
+1. **App.tsxの問題**
+   - `usePlanSyncEvents`に`saveWithSyncManager`が渡されていなかった
+   - そのため、従来の`saveImmediately`と`saveImmediatelyCloud`が使われていた
+   - これにより、新しい同期システムのデバウンス設定が適用されていなかった
+
+2. **MemoEditorの余分な同期呼び出し**
+   - onFocus時に`onMemoChange`を呼び出していた
+   - これが不要な同期処理を引き起こしていた
+
+#### 追加修正内容
+
+1. **App.tsx**
+   - `useAutoSave`から`saveWithSyncManager`を取得
+   - `usePlanSyncEvents`に第4引数として渡すよう修正
+
+2. **MemoEditor.tsx**
+   - `handleEditStart`から`onMemoChange`呼び出しを削除
+   - 編集開始時の不要な同期を防止
+
+これにより、新しい同期システムが正しく動作し、メモ編集時の過剰な同期が解消される。
+
 ---

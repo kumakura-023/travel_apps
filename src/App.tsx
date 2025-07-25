@@ -170,9 +170,9 @@ function App() {
   }, []);
 
   // 自動保存フックを使用
-  const { setIsRemoteUpdateInProgress, saveImmediately, saveImmediatelyCloud, lastCloudSaveTimestamp, getSelfUpdateFlag } = useAutoSave(plan, updateLastSavedTimestamp);
+  const { setIsRemoteUpdateInProgress, saveImmediately, saveImmediatelyCloud, lastCloudSaveTimestamp, getSelfUpdateFlag, saveWithSyncManager } = useAutoSave(plan, updateLastSavedTimestamp);
 
-  usePlanSyncEvents(plan, saveImmediately, saveImmediatelyCloud);
+  usePlanSyncEvents(plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager);
 
   usePlanLoad(user, isInitializing);
 
