@@ -7,55 +7,57 @@ interface Props {
   savedPlace?: Place;
   isMobile: boolean;
   updatePlace: (id: string, update: Partial<Place>) => void;
-  onMemoChange?: (id: string, memo: string, operationType: SyncOperationType) => void;
+  onMemoChange?: (id: string, memo: string, operationType: SyncOperationType, isEditing?: boolean) => void;
 }
 
 export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace, onMemoChange }: Props) {
   const [editing, setEditing] = useState(false);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastValueRef = useRef<string>('');
+  const [isEditing, setIsEditing] = useState(false);
+  const lastSavedValueRef = useRef<string>(savedPlace?.memo || '');
 
-  // デバウンス付きメモ更新関数
-  const debouncedMemoUpdate = useCallback((id: string, memo: string) => {
-    // 既存のタイマーをクリア
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-      if (import.meta.env.DEV) {
-        console.log(`📝 メモエディター: タイマークリア`, new Date().toLocaleTimeString());
-      }
-    }
-
+  // メモの値が変更された時の処理（同期なし、ローカル更新のみ）
+  const handleMemoChange = useCallback((id: string, memo: string) => {
     // 即座にローカル状態を更新（UI応答性維持）
     updatePlace(id, { memo });
+  }, [updatePlace]);
 
-    // 値が変更された場合のみデバウンス処理を実行
-    if (memo !== lastValueRef.current) {
-      lastValueRef.current = memo;
-      
+  // メモ編集が完了した時の処理（フォーカスアウト時）
+  const handleMemoBlur = useCallback((id: string, memo: string) => {
+    setIsEditing(false);
+    
+    // 値が実際に変更された場合のみ同期を実行
+    if (memo !== lastSavedValueRef.current && onMemoChange) {
       if (import.meta.env.DEV) {
-        console.log(`📝 メモエディター: デバウンス設定 (300ms)`, new Date().toLocaleTimeString());
+        console.log(`📝 メモエディター: 編集完了、同期実行`, {
+          oldValue: lastSavedValueRef.current,
+          newValue: memo,
+          timestamp: new Date().toLocaleTimeString()
+        });
       }
-      
-      // デバウンスタイマーを設定（300ms後に同期実行）
-      debounceTimerRef.current = setTimeout(() => {
-        if (import.meta.env.DEV) {
-          console.log(`📝 メモエディター: 同期実行`, new Date().toLocaleTimeString());
-        }
-        if (onMemoChange) {
-          onMemoChange(id, memo, 'memo_updated');
-        }
-      }, 300);
+      lastSavedValueRef.current = memo;
+      onMemoChange(id, memo, 'memo_updated', false);
+    } else if (onMemoChange) {
+      // 値が変更されていなくても編集終了を通知
+      onMemoChange(id, memo, 'memo_updated', false);
     }
-  }, [updatePlace, onMemoChange]);
+  }, [onMemoChange]);
 
-  // コンポーネントアンマウント時にタイマーをクリア
+  // 編集開始時の処理
+  const handleEditStart = useCallback(() => {
+    setIsEditing(true);
+    if (import.meta.env.DEV) {
+      console.log(`📝 メモエディター: 編集開始`, new Date().toLocaleTimeString());
+    }
+    // 編集開始を通知
+    if (savedPlace && onMemoChange) {
+      onMemoChange(savedPlace.id, savedPlace.memo || '', 'memo_updated', true);
+    }
+  }, [savedPlace, onMemoChange]);
+
+  // savedPlaceが変更された時に最後の保存値を更新
   React.useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
+    lastSavedValueRef.current = savedPlace?.memo || '';
+  }, [savedPlace?.memo]);
 
   if (!saved) return null;
 
@@ -68,7 +70,13 @@ export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace, o
           value={savedPlace?.memo || ''}
           onChange={(e) => {
             if (savedPlace) {
-              debouncedMemoUpdate(savedPlace.id, e.target.value);
+              handleMemoChange(savedPlace.id, e.target.value);
+            }
+          }}
+          onFocus={handleEditStart}
+          onBlur={(e) => {
+            if (savedPlace) {
+              handleMemoBlur(savedPlace.id, e.target.value);
             }
           }}
           placeholder="メモを追加"
@@ -79,10 +87,16 @@ export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace, o
           value={savedPlace?.memo || ''}
           onChange={(e) => {
             if (savedPlace) {
-              debouncedMemoUpdate(savedPlace.id, e.target.value);
+              handleMemoChange(savedPlace.id, e.target.value);
             }
           }}
-          onBlur={() => setEditing(false)}
+          onFocus={handleEditStart}
+          onBlur={(e) => {
+            setEditing(false);
+            if (savedPlace) {
+              handleMemoBlur(savedPlace.id, e.target.value);
+            }
+          }}
           placeholder="メモを追加"
           autoFocus
         />

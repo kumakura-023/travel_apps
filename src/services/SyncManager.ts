@@ -34,6 +34,12 @@ export class SyncManager {
       retryLimit: 3,
       criticalOperations: ['place_added', 'place_deleted'],
       debouncedOperations: ['memo_updated', 'place_updated'],
+      operationDebounceDelays: {
+        memo_updated: 30000, // メモ更新は30秒のデバウンス
+        place_updated: 1000,
+        label_updated: 1000,
+        plan_updated: 1000
+      },
       ...config
     };
     
@@ -209,9 +215,12 @@ export class SyncManager {
       console.warn('ローカル保存失敗:', error);
     }
 
+    // 操作タイプ別のデバウンス時間を取得
+    const debounceDelay = this.config.operationDebounceDelays?.[operation.type] || this.config.debounceDelay;
+    
     // デバウンスタイマーを設定
     if (import.meta.env.DEV) {
-      console.log(`⏰ デバウンスタイマー設定 (${this.config.debounceDelay}ms):`, operation.type, new Date().toLocaleTimeString());
+      console.log(`⏰ デバウンスタイマー設定 (${debounceDelay}ms):`, operation.type, new Date().toLocaleTimeString());
     }
     
     // 既存の操作と統合（重複回避）
@@ -242,14 +251,14 @@ export class SyncManager {
           type: 'debounced_sync',
           operation: operation.type,
           timestamp: operation.timestamp,
-          delay: this.config.debounceDelay,
+          delay: debounceDelay,
           success: true
         });
 
       } catch (error) {
         await this.handleSyncError(operation, plan, context, error);
       }
-    }, this.config.debounceDelay);
+    }, debounceDelay);
 
     this.debounceTimers.set(operation.type, timer);
   }

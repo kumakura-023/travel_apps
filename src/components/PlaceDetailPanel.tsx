@@ -27,6 +27,7 @@ export default function PlaceDetailPanel() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isMemoEditing, setIsMemoEditing] = useState(false);
 
   const { deletePlace, addPlace, updatePlace } = usePlacesStore((s) => ({ 
     deletePlace: s.deletePlace, 
@@ -203,14 +204,20 @@ export default function PlaceDetailPanel() {
     updatePlace(savedPlace.id, { scheduledDay: day });
   };
 
-  const handleMemoChange = (id: string, memo: string, operationType: SyncOperationType) => {
+  const handleMemoChange = (id: string, memo: string, operationType: SyncOperationType, isEditing?: boolean) => {
+    // 編集状態を更新
+    if (isEditing !== undefined) {
+      setIsMemoEditing(isEditing);
+    }
+    
     // 既存のplace状態を取得
     const currentPlace = savedPlaces.find(p => p.id === id);
     if (currentPlace && plan) {
       if (import.meta.env.DEV) {
-        console.log(`📝 PlaceDetailPanel: メモ変更処理開始`, {
+        console.log(`📝 PlaceDetailPanel: メモ変更処理`, {
           placeId: id,
           operationType,
+          isEditing,
           memoLength: memo.length,
           timestamp: new Date().toLocaleTimeString()
         });
@@ -220,19 +227,22 @@ export default function PlaceDetailPanel() {
       // ローカル状態を更新（即座反映用）
       updatePlace(id, { memo });
       
-      // プランの候補地一覧を更新
-      const updatedPlaces = plan.places.map(p => p.id === id ? updatedPlace : p);
-      const updatedPlan = {
-        ...plan,
-        places: updatedPlaces,
-        updatedAt: new Date()
-      };
-      
-      // 新しい同期システムでプランを更新
-      if (operationType === 'memo_updated') {
-        saveWithSyncManager(updatedPlan, 'memo_updated');
-      } else {
-        saveWithSyncManager(updatedPlan, 'place_updated');
+      // 編集中でない場合のみ同期を実行
+      if (!isEditing) {
+        // プランの候補地一覧を更新
+        const updatedPlaces = plan.places.map(p => p.id === id ? updatedPlace : p);
+        const updatedPlan = {
+          ...plan,
+          places: updatedPlaces,
+          updatedAt: new Date()
+        };
+        
+        // 新しい同期システムでプランを更新
+        if (operationType === 'memo_updated') {
+          saveWithSyncManager(updatedPlan, 'memo_updated');
+        } else {
+          saveWithSyncManager(updatedPlan, 'place_updated');
+        }
       }
     }
   };

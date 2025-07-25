@@ -32,6 +32,7 @@ export interface SyncConfig {
   retryLimit: number;
   criticalOperations: SyncOperationType[];
   debouncedOperations: SyncOperationType[];
+  operationDebounceDelays?: Partial<Record<SyncOperationType, number>>;
 }
 
 export interface SyncContext {
