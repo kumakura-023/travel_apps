@@ -38,7 +38,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
   const isSelected = selectionState.selectedPlaces.includes(place.id);
   const shouldShowOverlay = zoom >= 12;
   const shouldShowSimpleOverlay = zoom <= 10 && zoom >= 6; // ズーム6〜10で簡易オーバーレイを表示
-  const scale = Math.max(0.17, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
+  const scale = Math.max(0.34, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();

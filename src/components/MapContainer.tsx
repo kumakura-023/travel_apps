@@ -32,6 +32,12 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
   // 地図の読み込み完了時のハンドラー
   const handleMapLoad = (map: google.maps.Map) => {
     setMap(map);
+    
+    // 保存されたズームレベルがある場合は明示的に設定
+    if (savedState?.zoom) {
+      map.setZoom(savedState.zoom);
+    }
+    
     setZoom(map.getZoom() ?? 14);
     
     // ズーム変更の監視

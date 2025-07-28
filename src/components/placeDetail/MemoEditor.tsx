@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Place } from '../../types';
 import { SyncOperationType } from '../../types/SyncTypes';
+import { FiTrash2, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
 
 interface Props {
   saved: boolean;
@@ -13,6 +14,7 @@ interface Props {
 export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace, onMemoChange }: Props) {
   const [editing, setEditing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const lastSavedValueRef = useRef<string>(savedPlace?.memo || '');
 
   // メモの値が変更された時の処理（同期なし、ローカル更新のみ）
@@ -59,7 +61,34 @@ export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace, o
 
   return (
     <div className="glass-effect rounded-xl p-4">
-      <h3 className="headline font-semibold text-system-label mb-2">メモ</h3>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="headline font-semibold text-system-label">メモ</h3>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="p-1.5 hover:bg-system-gray-6 rounded-lg transition-colors duration-150"
+            style={{ minWidth: '32px', minHeight: '32px' }}
+            aria-label={isExpanded ? '縮小' : '拡大'}
+          >
+            {isExpanded ? <FiMinimize2 className="w-3 h-3" /> : <FiMaximize2 className="w-3 h-3" />}
+          </button>
+          <button
+            onClick={() => {
+              if (savedPlace) {
+                updatePlace(savedPlace.id, { memo: '' });
+                if (onMemoChange) {
+                  onMemoChange(savedPlace.id, '', 'memo_updated', false);
+                }
+              }
+            }}
+            className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg transition-colors duration-150"
+            style={{ minWidth: '32px', minHeight: '32px' }}
+            aria-label="メモを削除"
+          >
+            <FiTrash2 className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
       {isMobile ? (
         <textarea
           className={`w-full ${isExpanded ? 'h-48' : 'h-24'} p-2 border rounded bg-white/50 dark:bg-black/20 border-system-separator/50 focus:ring-2 focus:ring-coral-500 transition-all duration-150`}
