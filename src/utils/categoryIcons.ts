@@ -64,4 +64,17 @@ export function getCategoryDisplayName(category: PlaceCategory): string {
     other: 'その他',
   };
   return displayNameMap[category];
+}
+
+// カテゴリの絵文字を取得
+export function getCategoryEmoji(category: PlaceCategory): string {
+  const emojiMap: Record<PlaceCategory, string> = {
+    hotel: '🏨',
+    restaurant: '🍽️',
+    sightseeing: '🎯',
+    shopping: '🛍️',
+    transport: '🚉',
+    other: '📍',
+  };
+  return emojiMap[category];
 } 

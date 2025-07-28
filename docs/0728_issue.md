@@ -49,3 +49,8 @@ index-ChLh2yuA.js:3829 Uncaught error: ReferenceError: isExpanded is not defined
         at map.js:60:42
     ・MapLabelOverlayの削除/サイズ変更ボタンがスマホ版においてデフォルトで非表示になっていますが、pc版と同様に常にボタンを表示するようにしてください。
     ・v1,v2からリロード後、もしくはアプリ再起動後、最後に表示していたエリアから再開するという機能を実装しようとしていますが機能しません。問題を特定してください。
+
+    修正内容　v4
+    ・簡易オーバーレイ（PlaceSimpleOverlay）のUIを改善。travel_app\document\rule\design_rule.mdを参考にしてください。
+    ・PlaceDetailOverlayのサイズがズームレベルを下げた時に文字がつぶれてしまうので、PlaceDetailOverlayのサイズがスケーリングする現状のズーム閾値を超えたら簡易オーバーレイに切り替わるようにしてください。
+    ・スマホ版のMapLabelOverlayの削除/サイズ表示ボタンが大きすぎます。PlaceDetailOverlayの削除ボタンの比率と同じくらいにしてください。また、PC版の削除/サイズ変更ボタンがmapのズームレベルが小さくなるほど大きくなっていて、あべこべです。ズームレベルが変わってもメモの書き込みスペースに対しての比率が変わらないように調節してください。

@@ -597,3 +597,140 @@ v1、v2から実装を試みている「最後に表示していたエリアか�
   - 開発環境でのコンソールログ追加
   - より高速な状態保存のためデバウンス時間を調整
 - **効果**: 地図の最後の表示位置とズームレベルが確実に復元される
+
+### ✅ タスク12: PlaceSimpleOverlayのUI改善
+- **実装ファイル**:
+  - `src/components/PlaceSimpleOverlay.tsx`
+  - `src/utils/categoryIcons.ts` (getCategoryEmoji関数追加)
+- **変更内容**:
+  - Apple風のガラスモーフィズム効果を適用
+  - カテゴリアイコンをバッジ風に表示（20px円形、影付き）
+  - フォント設定をSF Pro相当に変更
+  - 角丸を12px（iOS風）に調整
+  - 繊細な影とボーダーでエッジを強調
+- **効果**: design_rule.mdに準拠した洗練されたUI
+
+### ✅ タスク13: PlaceDetailOverlayの表示切り替え改善
+- **実装ファイル**: `src/components/PlaceCircle.tsx` (39-40行目)
+- **変更内容**:
+  - 詳細オーバーレイ表示閾値を12から13に変更
+  - 簡易オーバーレイ表示範囲を6-10から6-12に拡大
+  - ズーム11での表示ギャップを解消
+- **実装コード**:
+  ```typescript
+  const shouldShowOverlay = zoom >= 13; // より高いズームレベルで詳細表示
+  const shouldShowSimpleOverlay = zoom < 13 && zoom >= 6; // 簡易表示の範囲を拡大
+  ```
+
+### ✅ タスク14: MapLabelOverlayのボタンサイズ調整
+- **実装ファイル**: `src/components/LabelOverlay.tsx`
+- **変更内容**:
+  - スマホ版ボタンサイズを44pxから28pxに縮小
+  - PC版ボタンサイズを24pxに設定
+  - スケーリングロジックを改善（最小0.8、最大1.0）
+  - メモ領域に対する比率を一定に保つ
+- **効果**: ボタンがメモ領域に対して適切なサイズで表示される
+
+## タスク12: PlaceSimpleOverlayのUI改善
+
+### 目的
+簡易オーバーレイ（PlaceSimpleOverlay）のUIをdesign_rule.mdのデザイン原則に従って改善する。
+
+### 実装手順
+
+1. **design_rule.mdの確認**
+   - ファイル: `document/rule/design_rule.md`
+   - デザイン原則とUIガイドラインを確認
+
+2. **PlaceSimpleOverlay.tsxの改善**
+   - ファイル: `src/components/PlaceSimpleOverlay.tsx`
+   - 改善点:
+     - Apple風のデザイン言語に準拠
+     - 視認性の向上（フォントサイズ、コントラスト）
+     - モーションとアニメーションの追加
+     - レスポンシブ対応の強化
+
+3. **スタイル改善内容**
+   ```typescript
+   // 改善例
+   - 背景: より洗練されたブラー効果
+   - 影: 多層的なボックスシャドウ
+   - タイポグラフィ: SF Pro相当のフォント設定
+   - 色彩: システムカラーの活用
+   ```
+
+## タスク13: PlaceDetailOverlayの表示切り替え改善
+
+### 目的
+PlaceDetailOverlayがズームレベルを下げた時に文字がつぶれる問題を解決し、適切なタイミングで簡易オーバーレイに切り替える。
+
+### 実装手順
+
+1. **現在の閾値確認**
+   - ファイル: `src/components/PlaceCircle.tsx`
+   - 現在の切り替え閾値を確認（shouldShowOverlay, shouldShowSimpleOverlay）
+
+2. **閾値の調整**
+   ```typescript
+   // 現在
+   const shouldShowOverlay = zoom >= 12;
+   const shouldShowSimpleOverlay = zoom <= 10 && zoom >= 6;
+   
+   // 改善案
+   const shouldShowDetailOverlay = zoom >= 13; // より高いズームレベルで詳細表示
+   const shouldShowSimpleOverlay = zoom < 13 && zoom >= 6; // 簡易表示の範囲を拡大
+   ```
+
+3. **スケーリングの改善**
+   - PlaceDetailOverlayの最小スケールを調整
+   - 文字の可読性を確保
+
+## タスク14: MapLabelOverlayのボタンサイズ調整
+
+### 目的
+スマホ版のMapLabelOverlayのボタンサイズを適切に調整し、ズームレベルに応じたスケーリング問題を修正する。
+
+### 実装手順
+
+1. **LabelOverlay.tsxの修正**
+   - ファイル: `src/components/LabelOverlay.tsx`
+   - スマホ版のボタンサイズをPlaceDetailOverlayと同等に調整
+   - PC版のボタンスケーリングロジックを修正
+
+2. **ボタンサイズの調整**
+   ```typescript
+   // スマホ版
+   - 現在: 44px × 44px（大きすぎる）
+   - 目標: 28px × 28px（PlaceDetailOverlayと同等）
+   
+   // PC版のスケーリング
+   - 問題: ズームレベルが小さくなるとボタンが大きくなる
+   - 解決: メモ領域に対する比率を一定に保つ
+   ```
+
+3. **レスポンシブ対応**
+   - タッチターゲットの最小サイズを確保（28px以上）
+   - デバイスに応じた適切なサイズ設定
+
+## 実装の優先順位
+
+1. **タスク13**（表示切り替え改善）- 可読性に直接影響
+2. **タスク12**（SimpleOverlay UI改善）- ユーザー体験の向上
+3. **タスク14**（ボタンサイズ調整）- UIの一貫性
+
+## テスト項目
+
+### タスク12のテスト
+- [ ] PlaceSimpleOverlayがdesign_rule.mdの原則に準拠している
+- [ ] アニメーション効果が適切に動作する
+- [ ] 各種デバイスで視認性が確保されている
+
+### タスク13のテスト
+- [ ] ズームレベル12以下で簡易オーバーレイが表示される
+- [ ] ズームレベル13以上で詳細オーバーレイが表示される
+- [ ] 切り替え時に文字がつぶれない
+
+### タスク14のテスト
+- [ ] スマホ版のボタンサイズが適切（28px程度）
+- [ ] PC版でズームレベルに関わらずボタン比率が一定
+- [ ] タッチ操作が正常に動作する

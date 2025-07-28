@@ -1,5 +1,6 @@
 import React from 'react';
 import { Place } from '../types';
+import { getCategoryColor, getCategoryDisplayName, getCategoryEmoji } from '../utils/categoryIcons';
 
 interface PlaceSimpleOverlayProps {
   place: Place;
@@ -11,6 +12,10 @@ interface PlaceSimpleOverlayProps {
  * カテゴリアイコンと場所の名前のみを表示
  */
 export const PlaceSimpleOverlay: React.FC<PlaceSimpleOverlayProps> = ({ place, position }) => {
+  const categoryColor = getCategoryColor(place.category);
+  const categoryEmoji = getCategoryEmoji(place.category);
+  const categoryName = getCategoryDisplayName(place.category);
+  
   return (
     <div
       style={{
@@ -18,34 +23,69 @@ export const PlaceSimpleOverlay: React.FC<PlaceSimpleOverlayProps> = ({ place, p
         left: `${position.x}px`,
         top: `${position.y}px`,
         transform: 'translate(-50%, -100%)',
-        background: 'rgba(255, 255, 255, 0.95)',
-        padding: '4px 8px',
-        borderRadius: '4px',
-        fontSize: '12px',
-        fontWeight: 'bold',
-        whiteSpace: 'nowrap',
+        // Apple風のガラスモーフィズム効果
+        background: 'rgba(255, 255, 255, 0.72)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        // 洗練された角丸とパディング
+        padding: '8px 12px',
+        borderRadius: '12px', // iOS風の角丸
+        // Apple風の繊細な影
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 20px rgba(0, 0, 0, 0.08)',
+        // 細いボーダーでエッジを強調
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        // インタラクション無効化
         pointerEvents: 'none',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(0, 0, 0, 0.1)',
+        // アニメーション対応
+        transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        // Apple風のフォント設定
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", sans-serif',
       }}
     >
+      {/* カテゴリ情報 */}
       <div style={{ 
-        color: place.category?.color || '#4ECDC4',
         display: 'flex',
         alignItems: 'center',
-        gap: '4px',
-        marginBottom: '2px'
+        gap: '6px',
+        marginBottom: '4px'
       }}>
-        <span style={{ fontSize: '14px' }}>{place.category?.icon || '📍'}</span>
-        <span style={{ fontSize: '11px', opacity: 0.8 }}>{place.category?.name || '場所'}</span>
+        {/* カテゴリアイコン（バッジ風） */}
+        <div style={{
+          width: '20px',
+          height: '20px',
+          background: categoryColor,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '11px',
+          color: 'white',
+          boxShadow: `0 2px 8px ${categoryColor}33`,
+          flexShrink: 0,
+        }}>
+          {categoryEmoji}
+        </div>
+        {/* カテゴリ名 */}
+        <span style={{ 
+          fontSize: '11px',
+          color: categoryColor,
+          fontWeight: 600,
+          letterSpacing: '-0.078px', // caption-1相当
+          opacity: 0.9,
+        }}>
+          {categoryName}
+        </span>
       </div>
+      {/* 場所の名前 */}
       <div style={{ 
-        color: '#333',
+        color: 'rgba(0, 0, 0, 0.85)', // system-label相当
         fontSize: '13px',
-        maxWidth: '150px',
+        fontWeight: 500,
+        letterSpacing: '-0.078px', // footnote相当
+        maxWidth: '180px',
         overflow: 'hidden',
-        textOverflow: 'ellipsis'
+        textOverflow: 'ellipsis',
+        lineHeight: '16px',
       }}>
         {place.name}
       </div>

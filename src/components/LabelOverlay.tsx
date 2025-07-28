@@ -253,16 +253,19 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
         {controlsVisible && (
           <>
             <button
-              className="absolute -top-3 -right-3 w-6 h-6 bg-coral-500 text-white 
+              className="bg-coral-500 text-white 
                          caption-1 flex items-center justify-center rounded-full cursor-pointer
                          hover:bg-coral-600 active:scale-95 transition-all duration-150 ease-ios-default
                          shadow-elevation-2"
               style={{ 
-                transform: `scale(${Math.min(1 / scale, 1.5)})`,
-                // Expand touch area on mobile for better accessibility
-                padding: isMobile ? '4px' : '0px',
-                minWidth: isMobile ? '44px' : 'auto',
-                minHeight: isMobile ? '44px' : 'auto'
+                position: 'absolute',
+                top: '-10px',
+                right: '-10px',
+                width: isMobile ? '28px' : '24px',
+                height: isMobile ? '28px' : '24px',
+                // メモ領域に対する比率を一定に保つ
+                transform: `scale(${Math.max(0.8, Math.min(1, 1 / scale))})`,
+                transformOrigin: 'center',
               }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -274,16 +277,19 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
               ✕
             </button>
             <div
-              className="absolute -bottom-3 -right-3 w-6 h-6 bg-teal-500 
+              className="bg-teal-500 
                          cursor-se-resize rounded-full hover:bg-teal-600 transition-colors 
                          duration-150 ease-ios-default shadow-elevation-1"
               onPointerDown={handleResizePointerDown}
               style={{ 
-                transform: `scale(${Math.min(1 / scale, 1.5)})`,
-                // Expand touch area on mobile for better accessibility
-                padding: isMobile ? '4px' : '0px',
-                minWidth: isMobile ? '44px' : 'auto',
-                minHeight: isMobile ? '44px' : 'auto'
+                position: 'absolute',
+                bottom: '-10px',
+                right: '-10px',
+                width: isMobile ? '28px' : '24px',
+                height: isMobile ? '28px' : '24px',
+                // メモ領域に対する比率を一定に保つ
+                transform: `scale(${Math.max(0.8, Math.min(1, 1 / scale))})`,
+                transformOrigin: 'center',
               }}
             />
           </>
