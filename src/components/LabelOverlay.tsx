@@ -132,6 +132,10 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
   const handleContainerPointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
     e.stopPropagation();
+    
+    // リサイズ中はメモの移動を開始しない
+    if (mode === 'resizing') return;
+    
     isPointerDownRef.current = true;
     interactionStartRef.current = {
       clientX: e.clientX,
@@ -153,6 +157,9 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
 
   const handleContainerPointerMove = (e: React.PointerEvent) => {
     if (!isPointerDownRef.current) return;
+    
+    // リサイズ中はメモの移動を開始しない
+    if (mode === 'resizing') return;
 
     if (isMobile) {
       if (longPressTimerRef.current) {
@@ -281,6 +288,18 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
                          cursor-se-resize rounded-full hover:bg-teal-600 transition-colors 
                          duration-150 ease-ios-default shadow-elevation-1"
               onPointerDown={handleResizePointerDown}
+              onTouchStart={(e) => {
+                e.preventDefault(); // スクロールを防止
+                e.stopPropagation();
+                // タッチイベントをポインターイベントとして処理
+                const touch = e.touches[0];
+                const pointerEvent = {
+                  clientX: touch.clientX,
+                  clientY: touch.clientY,
+                  stopPropagation: () => e.stopPropagation(),
+                } as React.PointerEvent;
+                handleResizePointerDown(pointerEvent);
+              }}
               style={{ 
                 position: 'absolute',
                 bottom: '-10px',
@@ -290,6 +309,8 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
                 // メモ領域に対する比率を一定に保つ
                 transform: `scale(${Math.max(0.8, Math.min(1, 1 / scale))})`,
                 transformOrigin: 'center',
+                // タッチ操作を無効化してスクロールを防止
+                touchAction: 'none',
               }}
             />
           </>

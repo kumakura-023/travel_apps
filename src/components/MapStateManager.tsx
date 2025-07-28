@@ -3,7 +3,7 @@ import { useSelectedPlaceStore } from '../store/placeStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import useMediaQuery from '../hooks/useMediaQuery';
-import { loadMapState, saveMapState } from '../services/storageService';
+import { loadMapState, saveMapState, loadLastActionPosition } from '../services/storageService';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 
 /**
@@ -83,10 +83,25 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
     ]
   }), [isDesktopViewport]);
 
-  // 地図の中心位置（デフォルトは東京駅、保存された位置があればそれを使用）
+  // 地図の中心位置（優先順位: 最後の操作位置 > 保存された地図状態 > 東京駅）
   const center = useMemo<google.maps.LatLngLiteral>(() => {
+    // 最後の操作位置を優先
+    const lastAction = loadLastActionPosition();
+    if (lastAction?.position) {
+      if (import.meta.env.DEV) {
+        console.log('最後の操作位置から復元:', lastAction.position);
+      }
+      return lastAction.position;
+    }
+    
+    // 次に保存された地図状態
     const savedState = loadMapState();
-    return savedState?.center || { lat: 35.681236, lng: 139.767125 };
+    if (savedState?.center) {
+      return savedState.center;
+    }
+    
+    // デフォルトは東京駅
+    return { lat: 35.681236, lng: 139.767125 };
   }, []);
 
   // 地図の状態変更を監視して保存

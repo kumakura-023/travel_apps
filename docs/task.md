@@ -734,3 +734,148 @@ PlaceDetailOverlayがズームレベルを下げた時に文字がつぶれる�
 - [ ] スマホ版のボタンサイズが適切（28px程度）
 - [ ] PC版でズームレベルに関わらずボタン比率が一定
 - [ ] タッチ操作が正常に動作する
+
+## タスク15: メモサイズ変更時のドラッグ操作改善
+
+### 目的
+PC版において、サイズ変更ボタンをドラッグしている最中にメモエリアにカーソルが干渉すると、メモの移動操作に切り替わってしまう問題を修正する。
+
+### 実装手順
+
+1. **LabelOverlay.tsxの状態管理追加**
+   - ファイル: `src/components/LabelOverlay.tsx`
+   - リサイズ中の状態を管理するステートを追加
+   ```typescript
+   const [isResizing, setIsResizing] = useState(false);
+   ```
+
+2. **リサイズハンドラーの改善**
+   - リサイズ開始時に`isResizing`をtrueに設定
+   - リサイズ終了時に`isResizing`をfalseに設定
+   - `isResizing`がtrueの間はメモの移動を無効化
+
+3. **イベント処理の優先順位**
+   - リサイズ中はメモエリアのドラッグイベントを無視
+   - リサイズボタンのイベントを優先処理
+
+## タスク16: スマホ版メモサイズ変更時のスクロール防止
+
+### 目的
+スマホ版でメモのサイズ変更をしようとすると、サイト全体がスクロールされてしまう問題を修正する。
+
+### 実装手順
+
+1. **タッチイベントの制御**
+   - ファイル: `src/components/LabelOverlay.tsx`
+   - リサイズボタンのタッチイベントで`preventDefault()`を呼び出し
+
+2. **タッチ操作の最適化**
+   ```typescript
+   // リサイズボタンのタッチイベント
+   onTouchStart={(e) => {
+     e.preventDefault(); // スクロールを防止
+     e.stopPropagation();
+     // リサイズ開始処理
+   }}
+   ```
+
+3. **CSS改善**
+   - `touch-action: none;`をリサイズボタンに適用
+   - リサイズ中は`overscroll-behavior: contain;`を設定
+
+## タスク17: 最後の操作位置からの起動機能
+
+### 目的
+最後に閲覧していたエリアからの復帰機能の代替案として、最後に追加したメモまたは候補地の位置から再開する機能を実装する。
+
+### 実装手順
+
+1. **storageService.tsの拡張**
+   - ファイル: `src/services/storageService.ts`
+   - 最後の操作位置を保存する関数を追加
+   ```typescript
+   const LAST_ACTION_POSITION_KEY = 'last_action_position';
+   
+   export function saveLastActionPosition(position: google.maps.LatLngLiteral) {
+     const data = {
+       position,
+       timestamp: new Date().toISOString()
+     };
+     localStorage.setItem(LAST_ACTION_POSITION_KEY, JSON.stringify(data));
+   }
+   
+   export function loadLastActionPosition() {
+     const saved = localStorage.getItem(LAST_ACTION_POSITION_KEY);
+     if (!saved) return null;
+     try {
+       return JSON.parse(saved);
+     } catch (e) {
+       return null;
+     }
+   }
+   ```
+
+2. **候補地追加時のトリガー**
+   - PlaceCircleコンポーネントで候補地追加時に位置を保存
+   - usePlacesStore内のaddPlace関数で位置を記録
+
+3. **メモ追加時のトリガー**
+   - LabelOverlayコンポーネントでメモ追加・編集時に位置を保存
+   - useLabelStore内のaddLabel/updateLabel関数で位置を記録
+
+4. **初期表示の改善**
+   - MapStateManagerで最後の操作位置を優先的に読み込み
+   - 操作位置がない場合は現在の地図状態復元にフォールバック
+
+## 実装の優先順位
+
+1. **タスク15**（ドラッグ操作改善）- 操作性に直接影響
+2. **タスク16**（スクロール防止）- スマホUXの重要な問題
+3. **タスク17**（最後の操作位置）- 代替案としての機能追加
+
+## テスト項目
+
+### タスク15のテスト
+- [ ] リサイズボタンドラッグ中にメモエリアに触れても移動しない
+- [ ] リサイズ完了後は通常のメモ移動が可能
+- [ ] リサイズ操作が正常に動作する
+
+### タスク16のテスト
+- [ ] スマホでリサイズ時にページがスクロールしない
+- [ ] リサイズ操作が正常に動作する
+- [ ] 他のスクロール操作に影響がない
+
+### タスク17のテスト
+- [ ] 候補地追加後、リロードするとその位置から開始
+- [ ] メモ追加後、リロードするとその位置から開始
+- [ ] 操作履歴がない場合は東京駅周辺から開始
+
+## 実装完了報告（追加分2）
+
+### ✅ タスク15: メモサイズ変更時のドラッグ操作改善
+- **実装ファイル**: `src/components/LabelOverlay.tsx`
+- **変更内容**:
+  - handleContainerPointerDownにリサイズ中チェックを追加
+  - handleContainerPointerMoveにリサイズ中チェックを追加
+  - リサイズ中（mode === 'resizing'）はメモの移動を開始しない
+- **効果**: リサイズボタンドラッグ中にメモエリアに触れても移動しない
+
+### ✅ タスク16: スマホ版メモサイズ変更時のスクロール防止
+- **実装ファイル**: `src/components/LabelOverlay.tsx`
+- **変更内容**:
+  - リサイズボタンにonTouchStartイベントハンドラーを追加
+  - e.preventDefault()でスクロールを防止
+  - touchAction: 'none'をスタイルに追加
+- **効果**: スマホでリサイズ時にページがスクロールしない
+
+### ✅ タスク17: 最後の操作位置からの起動機能
+- **実装ファイル**:
+  - `src/services/storageService.ts` (saveLastActionPosition/loadLastActionPosition関数追加)
+  - `src/store/placesStore.ts` (addPlace時に位置保存)
+  - `src/store/labelsStore.ts` (addLabel時に位置保存)
+  - `src/components/MapStateManager.tsx` (初期位置の優先順位変更)
+- **変更内容**:
+  - 最後の操作位置を保存・読み込む関数を実装
+  - 候補地・メモ追加時に自動的に位置を保存
+  - 地図初期化時の優先順位: 最後の操作位置 > 保存された地図状態 > 東京駅
+- **効果**: 最後に追加したメモ/候補地の位置から再開できる

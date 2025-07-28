@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { MapLabel } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
+import { saveLastActionPosition } from '../services/storageService';
 
 interface LabelsState {
   labels: MapLabel[];
@@ -46,6 +47,11 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
 
       if (s.onLabelAdded) {
         s.onLabelAdded(newLabel);
+      }
+      
+      // 最後の操作位置を保存
+      if (newLabel.position) {
+        saveLastActionPosition(newLabel.position);
       }
 
       return newState;

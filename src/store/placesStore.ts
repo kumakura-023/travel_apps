@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Place } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
+import { saveLastActionPosition } from '../services/storageService';
 
 interface PlacesState {
   places: Place[];
@@ -51,6 +52,9 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
       if (state.onPlaceAdded) {
         state.onPlaceAdded(newPlace);
       }
+      
+      // 最後の操作位置を保存
+      saveLastActionPosition(newPlace.coordinates);
 
       return newState;
     }),

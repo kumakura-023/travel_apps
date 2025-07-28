@@ -164,6 +164,7 @@ export async function loadActivePlanHybrid(
 
 // 地図の状態保存機能
 const MAP_STATE_KEY = 'map_last_state';
+const LAST_ACTION_POSITION_KEY = 'last_action_position';
 
 export interface MapState {
   center: { lat: number; lng: number };
@@ -217,6 +218,49 @@ export function loadMapState(): MapState | null {
     return state;
   } catch (e) {
     console.error('地図の状態読み込みエラー:', e);
+    return null;
+  }
+}
+
+/**
+ * 最後の操作位置を保存
+ */
+export function saveLastActionPosition(position: google.maps.LatLngLiteral) {
+  const data = {
+    position,
+    timestamp: new Date().toISOString()
+  };
+  localStorage.setItem(LAST_ACTION_POSITION_KEY, JSON.stringify(data));
+  
+  if (import.meta.env.DEV) {
+    console.log('最後の操作位置を保存:', {
+      position,
+      timestamp: new Date().toLocaleTimeString()
+    });
+  }
+}
+
+/**
+ * 最後の操作位置を読み込み
+ */
+export function loadLastActionPosition(): { position: google.maps.LatLngLiteral; timestamp: string } | null {
+  const saved = localStorage.getItem(LAST_ACTION_POSITION_KEY);
+  if (!saved) {
+    if (import.meta.env.DEV) {
+      console.log('保存された操作位置なし');
+    }
+    return null;
+  }
+  try {
+    const data = JSON.parse(saved);
+    
+    if (import.meta.env.DEV) {
+      console.log('最後の操作位置を読み込み:', data);
+    }
+    
+    return data;
+  } catch (e) {
+    console.error('操作位置読み込みエラー:', e);
     return null;
   }
 } 
