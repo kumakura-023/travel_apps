@@ -879,3 +879,84 @@ PC版において、サイズ変更ボタンをドラッグしている最中に
   - 候補地・メモ追加時に自動的に位置を保存
   - 地図初期化時の優先順位: 最後の操作位置 > 保存された地図状態 > 東京駅
 - **効果**: 最後に追加したメモ/候補地の位置から再開できる
+
+## タスク18: 最後の操作位置の共有機能
+
+### 目的
+最後の操作位置をプランに参加しているユーザー全員で共有し、誰かが追加した最後の候補地・メモの位置からアプリが立ち上がるようにする。
+
+### 実装手順
+
+1. **Firestoreのデータ構造拡張**
+   - プランドキュメントに最後の操作位置フィールドを追加
+   ```typescript
+   interface Plan {
+     // 既存のフィールド
+     lastActionPosition?: {
+       position: {
+         lat: number;
+         lng: number;
+       };
+       timestamp: Timestamp;
+       userId: string;
+       actionType: 'place' | 'label';
+     };
+   }
+   ```
+
+2. **リアルタイム同期の実装**
+   - ファイル: `src/store/planStore.ts`
+   - 最後の操作位置をFirestoreに保存する関数を追加
+   ```typescript
+   updateLastActionPosition: async (position: google.maps.LatLngLiteral, actionType: 'place' | 'label') => {
+     const { plan, user } = get();
+     if (!plan || !user) return;
+     
+     const planRef = doc(db, 'plans', plan.id);
+     await updateDoc(planRef, {
+       lastActionPosition: {
+         position,
+         timestamp: serverTimestamp(),
+         userId: user.uid,
+         actionType
+       }
+     });
+   };
+   ```
+
+3. **候補地・メモ追加時の連携**
+   - `src/store/placesStore.ts`のaddPlace関数を修正
+   - `src/store/labelsStore.ts`のaddLabel関数を修正
+   - 追加時にplanStoreのupdateLastActionPositionを呼び出し
+
+4. **初期表示の改善**
+   - `src/components/MapStateManager.tsx`を修正
+   - Firestoreから最後の操作位置を読み込み
+   - 優先順位:
+     1. Firestoreの共有された最後の操作位置
+     2. ローカルの最後の操作位置
+     3. 保存された地図状態
+     4. デフォルト（東京駅）
+
+5. **リアルタイム更新の対応**
+   - planStoreでlastActionPositionの変更を監視
+   - 他のユーザーが操作した場合の通知機能（オプション）
+
+## 実装の優先順位
+
+1. **タスク18**（操作位置の共有）- コラボレーション機能の強化
+
+## テスト項目
+
+### タスク18のテスト
+- [ ] ユーザーAが候補地を追加後、ユーザーBがリロードするとその位置から開始
+- [ ] ユーザーAがメモを追加後、ユーザーBがリロードするとその位置から開始
+- [ ] Firestoreに最後の操作位置が正しく保存される
+- [ ] タイムスタンプとユーザーIDが正しく記録される
+- [ ] オフライン時もローカルの最後の操作位置にフォールバック
+
+## 注意事項
+
+- Firestore Rulesの更新が必要（lastActionPositionフィールドの書き込み権限）
+- 複数ユーザーが同時に操作した場合の競合状態を考慮
+- パフォーマンスへの影響を最小限に（必要に応じてデバウンス）
