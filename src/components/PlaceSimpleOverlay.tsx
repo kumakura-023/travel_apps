@@ -27,9 +27,9 @@ export const PlaceSimpleOverlay: React.FC<PlaceSimpleOverlayProps> = ({ place, p
         background: 'rgba(255, 255, 255, 0.72)',
         backdropFilter: 'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        // 洗練された角丸とパディング
-        padding: '8px 12px',
-        borderRadius: '12px', // iOS風の角丸
+        // 洗練された角丸とパディング（横長デザイン用）
+        padding: '6px 10px',
+        borderRadius: '10px', // iOS風の角丸
         // Apple風の繊細な影
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 20px rgba(0, 0, 0, 0.08)',
         // 細いボーダーでエッジを強調
@@ -42,52 +42,60 @@ export const PlaceSimpleOverlay: React.FC<PlaceSimpleOverlayProps> = ({ place, p
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", sans-serif',
       }}
     >
-      {/* カテゴリ情報 */}
+      {/* 横長レイアウト */}
       <div style={{ 
         display: 'flex',
         alignItems: 'center',
-        gap: '6px',
-        marginBottom: '4px'
+        gap: '8px',
       }}>
         {/* カテゴリアイコン（バッジ風） */}
         <div style={{
-          width: '20px',
-          height: '20px',
+          width: '24px',
+          height: '24px',
           background: categoryColor,
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '11px',
+          fontSize: '12px',
           color: 'white',
           boxShadow: `0 2px 8px ${categoryColor}33`,
           flexShrink: 0,
         }}>
           {categoryEmoji}
         </div>
-        {/* カテゴリ名 */}
-        <span style={{ 
-          fontSize: '11px',
-          color: categoryColor,
-          fontWeight: 600,
-          letterSpacing: '-0.078px', // caption-1相当
-          opacity: 0.9,
+        {/* テキスト情報 */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2px',
+          minWidth: 0, // テキストの省略を有効にする
         }}>
-          {categoryName}
-        </span>
-      </div>
-      {/* 場所の名前 */}
-      <div style={{ 
-        color: 'rgba(0, 0, 0, 0.85)', // system-label相当
-        fontSize: '13px',
-        fontWeight: 500,
-        letterSpacing: '-0.078px', // footnote相当
-        maxWidth: '180px',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        lineHeight: '16px',
-      }}>
-        {place.name}
+          {/* カテゴリ名 */}
+          <span style={{ 
+            fontSize: '10px',
+            color: categoryColor,
+            fontWeight: 600,
+            letterSpacing: '-0.078px',
+            opacity: 0.9,
+            lineHeight: '12px',
+          }}>
+            {categoryName}
+          </span>
+          {/* 場所の名前 */}
+          <div style={{ 
+            color: 'rgba(0, 0, 0, 0.85)',
+            fontSize: '12px',
+            fontWeight: 500,
+            letterSpacing: '-0.078px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            lineHeight: '14px',
+          }}>
+            {place.name}
+          </div>
+        </div>
       </div>
     </div>
   );
