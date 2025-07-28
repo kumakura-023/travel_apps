@@ -221,7 +221,13 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
 
   if (currentZoom < MIN_ZOOM_VISIBLE) return null;
 
-  const controlsVisible = mode === 'editing' || !isMobile;
+  // positionが未定義の場合はレンダリングしない
+  if (!label.position || typeof label.position.lat !== 'number' || typeof label.position.lng !== 'number') {
+    console.error('LabelOverlay: Invalid position', label);
+    return null;
+  }
+
+  const controlsVisible = true; // 常にボタンを表示
 
   return (
     <OverlayView position={label.position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>

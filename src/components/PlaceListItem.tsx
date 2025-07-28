@@ -40,12 +40,11 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
 
   const createLinkedMemo = () => {
     if (newMemoText.trim()) {
-      const newLabel = addLabel(
-        newMemoText.trim(),
-        place.coordinates,
-        14
-      );
-      updateLabel(newLabel.id, { linkedPlaceId: place.id });
+      addLabel({
+        text: newMemoText.trim(),
+        position: place.coordinates,
+        linkedPlaceId: place.id
+      });
       setNewMemoText('');
       setShowMemoPanel(false);
     }

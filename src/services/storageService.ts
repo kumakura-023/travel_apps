@@ -181,6 +181,14 @@ export function saveMapState(center: google.maps.LatLngLiteral, zoom: number) {
     lastUpdated: new Date()
   };
   localStorage.setItem(MAP_STATE_KEY, JSON.stringify(state));
+  
+  if (import.meta.env.DEV) {
+    console.log('地図の状態を保存:', {
+      center,
+      zoom,
+      timestamp: new Date().toLocaleTimeString()
+    });
+  }
 }
 
 /**
@@ -188,10 +196,24 @@ export function saveMapState(center: google.maps.LatLngLiteral, zoom: number) {
  */
 export function loadMapState(): MapState | null {
   const saved = localStorage.getItem(MAP_STATE_KEY);
-  if (!saved) return null;
+  if (!saved) {
+    if (import.meta.env.DEV) {
+      console.log('保存された地図の状態なし');
+    }
+    return null;
+  }
   try {
     const state = JSON.parse(saved);
     state.lastUpdated = new Date(state.lastUpdated);
+    
+    if (import.meta.env.DEV) {
+      console.log('地図の状態を読み込み:', {
+        center: state.center,
+        zoom: state.zoom,
+        lastUpdated: state.lastUpdated
+      });
+    }
+    
     return state;
   } catch (e) {
     console.error('地図の状態読み込みエラー:', e);

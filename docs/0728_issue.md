@@ -33,3 +33,19 @@ index-ChLh2yuA.js:3829 Uncaught error: ReferenceError: isExpanded is not defined
     at Ii (vendor-DWvC8KHc.js:32:36511)
     at pt (vendor-DWvC8KHc.js:30:3258)
     at vendor-DWvC8KHc.js:32:34060 Object
+
+    修正内容 v3
+    各UIの名称は/UI_name.mdを確認してください。
+    ・PlaceList内のLinkedMemoを追加しようとするとコンソールエラーが出ます。修正をお願いします。
+        maps-CYOiytW-.js:35 Uncaught TypeError: Cannot read properties of undefined (reading 'lat')
+        at ar (maps-CYOiytW-.js:35:39000)
+        at ur (maps-CYOiytW-.js:35:39169)
+        at Ms (maps-CYOiytW-.js:35:39773)
+        at ye.onPositionElement (maps-CYOiytW-.js:35:43036)
+        at _.Kr.draw (maps-CYOiytW-.js:35:43496)
+        at Mva.draw (overlay.js:5:344)
+        at Nva.Ih (overlay.js:5:571)
+        at xua (map.js:60:469)
+        at map.js:60:42
+    ・MapLabelOverlayの削除/サイズ変更ボタンがスマホ版においてデフォルトで非表示になっていますが、pc版と同様に常にボタンを表示するようにしてください。
+    ・v1,v2からリロード後、もしくはアプリ再起動後、最後に表示していたエリアから再開するという機能を実装しようとしていますが機能しません。問題を特定してください。

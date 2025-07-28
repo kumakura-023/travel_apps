@@ -33,9 +33,24 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
   const handleMapLoad = (map: google.maps.Map) => {
     setMap(map);
     
-    // 保存されたズームレベルがある場合は明示的に設定
-    if (savedState?.zoom) {
-      map.setZoom(savedState.zoom);
+    // 保存された状態がある場合は明示的に設定
+    if (savedState) {
+      // 中心位置を設定
+      if (savedState.center) {
+        map.setCenter(savedState.center);
+      }
+      // ズームレベルを設定
+      if (savedState.zoom) {
+        map.setZoom(savedState.zoom);
+      }
+      
+      if (import.meta.env.DEV) {
+        console.log('地図の初期状態を復元:', {
+          center: savedState.center,
+          zoom: savedState.zoom,
+          lastUpdated: savedState.lastUpdated
+        });
+      }
     }
     
     setZoom(map.getZoom() ?? 14);

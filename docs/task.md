@@ -432,3 +432,168 @@
 - [ ] 候補地追加時にエラーが発生しない
 - [ ] メモエディターが正常に表示される
 - [ ] すべての機能が正常に動作する
+
+## タスク9: LinkedMemoDisplay追加時のエラー修正
+
+### 目的
+PlaceList内でLinkedMemo（リンクメモ）を追加しようとした際に発生する「Cannot read properties of undefined (reading 'lat')」エラーを修正する。
+
+### エラー詳細
+```
+maps-CYOiytW-.js:35 Uncaught TypeError: Cannot read properties of undefined (reading 'lat')
+    at ar (maps-CYOiytW-.js:35:39000)
+    at ur (maps-CYOiytW-.js:35:39169)
+    at Ms (maps-CYOiytW-.js:35:39773)
+    at ye.onPositionElement (maps-CYOiytW-.js:35:43036)
+    at _.Kr.draw (maps-CYOiytW-.js:35:43496)
+    at Mva.draw (overlay.js:5:344)
+    at Nva.Ih (overlay.js:5:571)
+```
+
+### 実装手順
+
+1. **エラー発生箇所の特定**
+   - PlaceListItemコンポーネントでLinkedMemoDisplay関連の処理を確認
+   - MapLabelのposition座標が未定義の可能性を調査
+
+2. **座標値の検証追加**
+   - MapLabelのpositionが存在することを確認
+   - undefinedの場合のフォールバック処理を実装
+
+## タスク10: MapLabelOverlayのモバイル版ボタン表示
+
+### 目的
+MapLabelOverlay（地図上のメモオーバーレイ）の削除・サイズ変更ボタンがスマホ版でデフォルト非表示になっている問題を修正し、PC版と同様に常時表示する。
+
+### 実装手順
+
+1. **LabelOverlay.tsxの修正**
+   - ファイル: `src/components/LabelOverlay.tsx`
+   - hover時のみ表示する処理を削除
+   - ボタンを常時表示に変更
+   - タッチデバイス対応の確認
+
+2. **スタイル調整**
+   - モバイルでのタッチターゲットサイズ確保（最小44px）
+   - 視認性の確保
+
+## タスク11: 最後の閲覧エリア機能の根本的修正
+
+### 目的
+v1、v2から実装を試みている「最後に表示していたエリアから再開する」機能が動作しない問題を特定し、修正する。
+
+### 問題の可能性
+
+1. **地図の初期化タイミング**
+   - GoogleMapコンポーネントの初期化が保存された状態の適用より後に発生
+   - centerプロパティが初期化後に上書きされている
+
+2. **状態の保存タイミング**
+   - 地図の状態変更イベントが正しく発火していない
+   - デバウンスが効きすぎて保存されない
+
+3. **状態の読み込み**
+   - localStorageから正しく読み込めていない
+   - 型変換エラー
+
+### 実装手順
+
+1. **デバッグログの追加**
+   - saveMapState実行時のログ
+   - loadMapState実行時のログ
+   - 地図初期化時のログ
+
+2. **初期化処理の見直し**
+   - MapContainerのhandleMapLoadで明示的にsetCenter/setZoomを呼び出す
+   - 初期化完了後に保存された状態を適用
+
+3. **イベントリスナーの確認**
+   - center_changed、zoom_changedイベントが正しく登録されているか
+   - デバウンス時間を短くして検証（1000ms → 500ms）
+
+## 実装の優先順位
+
+1. **タスク8**（isExpandedエラー） - 既に修正済みの可能性
+2. **タスク9**（LinkedMemoエラー） - アプリケーション機能に影響
+3. **タスク11**（最後の位置復元） - 主要機能の修正
+4. **タスク5**（PlaceCircleオーバーレイサイズ） - 既に修正済みの可能性
+5. **タスク10**（MapLabelOverlayボタン） - UI改善
+6. **タスク6**（メモボタンサイズ） - 既に修正済みの可能性
+7. **タスク7**（最後の位置機能） - タスク11と重複
+
+## テスト項目
+
+### タスク9のテスト
+- [ ] LinkedMemoを追加してもエラーが発生しない
+- [ ] MapLabelの座標が正しく設定される
+- [ ] リンクメモが正常に表示される
+
+### タスク10のテスト
+- [ ] スマホでMapLabelOverlayの削除ボタンが表示される
+- [ ] スマホでMapLabelOverlayのリサイズボタンが表示される
+- [ ] タッチ操作で各ボタンが正常に動作する
+
+### タスク11のテスト
+- [ ] 地図を移動・ズーム変更後、ページをリロード
+- [ ] リロード後、最後の位置とズームレベルで地図が表示される
+- [ ] コンソールログで保存・読み込みが確認できる
+- [ ] 初回起動時は東京駅周辺が表示される
+
+## 実装完了報告（追加分）
+
+### ✅ タスク5: 候補地オーバーレイのサイズ再調整
+- **実装ファイル**: `src/components/PlaceCircle.tsx` (41行目)
+- **変更内容**: スケール計算の下限値を0.17から0.34に変更（2倍）
+- **実装コード**: `const scale = Math.max(0.34, Math.min(0.67, Math.pow(2, zoom - 14) / 3));`
+
+### ✅ タスク6・8: スマホ版メモエディターのボタン追加とエラー修正
+- **実装ファイル**: `src/components/placeDetail/MemoEditor.tsx`
+- **変更内容**:
+  - `isExpanded`ステートを追加（初期値: false）
+  - 削除・リサイズボタンを実装（32px × 32px）
+  - FiTrash2、FiMaximize2、FiMinimize2アイコンを使用
+  - アイコンサイズをw-3 h-3に調整
+- **効果**: スマホでもメモの削除・サイズ変更が可能に
+
+### ✅ タスク7: 最後の閲覧エリア機能の修正
+- **実装ファイル**: `src/components/MapContainer.tsx`
+- **変更内容**: 地図読み込み時に保存されたズームレベルを明示的に適用
+- **実装コード**: 
+  ```typescript
+  if (savedState?.zoom) {
+    map.setZoom(savedState.zoom);
+  }
+  ```
+
+### ✅ タスク9: LinkedMemoDisplay追加時のエラー修正
+- **実装ファイル**:
+  - `src/components/PlaceListItem.tsx` (41-51行目)
+  - `src/components/LabelOverlay.tsx` (224-228行目)
+- **変更内容**:
+  - PlaceListItemの`addLabel`呼び出しを修正（引数をオブジェクト形式に変更）
+  - LabelOverlayにposition検証を追加
+- **実装詳細**:
+  - `addLabel`関数の引数を正しいオブジェクト形式に修正
+  - positionが未定義の場合のエラーハンドリング追加
+- **効果**: LinkedMemo追加時の「Cannot read properties of undefined (reading 'lat')」エラーが解消
+
+### ✅ タスク10: MapLabelOverlayのモバイル版ボタン表示
+- **実装ファイル**: `src/components/LabelOverlay.tsx` (230行目)
+- **変更内容**: `controlsVisible`を常にtrueに設定
+- **実装コード**: `const controlsVisible = true; // 常にボタンを表示`
+- **効果**: モバイルデバイスでも削除・リサイズボタンが常時表示される
+
+### ✅ タスク11: 最後の閲覧エリア機能の根本的修正
+- **実装ファイル**:
+  - `src/components/MapContainer.tsx` (33-62行目)
+  - `src/services/storageService.ts` (185-191行目、209-215行目)
+  - `src/components/MapStateManager.tsx` (117行目)
+- **変更内容**:
+  - MapContainerのhandleMapLoad内で中心位置も明示的に設定
+  - デバッグログを追加して保存・読み込みの動作を可視化
+  - デバウンス時間を1秒から0.5秒に短縮
+- **実装詳細**:
+  - 地図読み込み時に`map.setCenter()`と`map.setZoom()`を明示的に呼び出し
+  - 開発環境でのコンソールログ追加
+  - より高速な状態保存のためデバウンス時間を調整
+- **効果**: 地図の最後の表示位置とズームレベルが確実に復元される

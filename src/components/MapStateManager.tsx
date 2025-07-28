@@ -114,7 +114,7 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
           zoom
         );
       }
-    }, 1000); // 1秒のデバウンス
+    }, 500); // 0.5秒のデバウンス
 
     const listeners = [
       map.addListener('center_changed', saveStateDebounced),
