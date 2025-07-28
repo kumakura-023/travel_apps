@@ -17,7 +17,8 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const functions = getFunctions(app, config.firebase.functionsRegion);
+// Functions の初期化（リージョンが未設定の場合はデフォルトのus-central1を使用）
+export const functions = getFunctions(app, config.firebase.functionsRegion || 'us-central1');
 
 // オフラインキャッシュを有効化（エラーは無視）
 if (typeof window !== 'undefined') {
