@@ -37,14 +37,16 @@ import SyncDebugButton from './components/SyncDebugButton';
 import { syncDebugUtils } from './utils/syncDebugUtils';
 import SharePlanModal from './components/SharePlanModal';
 import ExternalBrowserPrompt from './components/ExternalBrowserPrompt';
+import { config, validateEnvironment } from './config/environment';
 
 // LoadScript用のライブラリを定数として定義
 const LIBRARIES: ('places')[] = ['places'];
 
+// 環境変数の検証
+validateEnvironment();
+
 function App() {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
-  
-  console.log('App loaded, API Key:', apiKey ? 'Set' : 'Not set');
+  const apiKey = config.googleMapsApiKey;
   
   if (!apiKey) {
     return (

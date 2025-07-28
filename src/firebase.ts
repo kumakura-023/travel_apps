@@ -2,28 +2,26 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { enableIndexedDbPersistence, getFirestore } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
+import { config } from './config/environment';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FB_API_KEY as string,
-  authDomain: import.meta.env.VITE_FB_AUTH_DOMAIN as string,
-  projectId: import.meta.env.VITE_FB_PROJECT_ID as string,
-  storageBucket: import.meta.env.VITE_FB_STORAGE_BUCKET as string,
-  messagingSenderId: import.meta.env.VITE_FB_MSG_SENDER_ID as string,
-  appId: import.meta.env.VITE_FB_APP_ID as string,
+  apiKey: config.firebase.apiKey,
+  authDomain: config.firebase.authDomain,
+  projectId: config.firebase.projectId,
+  storageBucket: config.firebase.storageBucket,
+  messagingSenderId: config.firebase.messagingSenderId,
+  appId: config.firebase.appId,
 };
 
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-const functionsRegion = (import.meta.env.VITE_FB_FUNCTIONS_REGION as string) || undefined;
-export const functions = getFunctions(app, functionsRegion);
+export const functions = getFunctions(app, config.firebase.functionsRegion);
 
 // オフラインキャッシュを有効化（エラーは無視）
 if (typeof window !== 'undefined') {
   enableIndexedDbPersistence(db).catch(() => {
     // すでに有効化済み、または複数タブ競合などのケースは無視
   });
-} 
-
-console.log('Firebase Config 👉', firebaseConfig);
+}

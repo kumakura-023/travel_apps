@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self'; 
+                   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com; 
+                   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
+                   img-src 'self' data: https: blob:; 
+                   font-src 'self' https://fonts.gstatic.com; 
+                   connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com;
+                   frame-src 'self' https://*.firebaseapp.com;">
+    
     <!-- SEO メタタグ -->
     <meta name="description" content="旅行計画に特化したマップWebアプリ。Google Mapsで候補地管理、移動時間確認、ルート検索が可能です。" />
     <meta name="keywords" content="旅行計画,地図,Google Maps,ルート検索,移動時間,候補地管理" />
