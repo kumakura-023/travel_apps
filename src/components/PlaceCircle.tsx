@@ -36,8 +36,8 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
 
   const color = getCategoryColor(place.category);
   const isSelected = selectionState.selectedPlaces.includes(place.id);
-  const shouldShowOverlay = zoom >= 13; // より高いズームレベルで詳細表示
-  const shouldShowSimpleOverlay = zoom < 13 && zoom >= 6; // 簡易表示の範囲を拡大
+  const shouldShowOverlay = zoom >= 15; // より高いズームレベルで詳細表示
+  const shouldShowSimpleOverlay = zoom < 15 && zoom >= 6; // 簡易表示の範囲を拡大
   const scale = Math.max(0.34, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
 
   const handleDelete = (e: React.MouseEvent) => {
