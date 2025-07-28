@@ -160,4 +160,41 @@ export async function loadActivePlanHybrid(
     return loadActivePlan(options.uid);
   }
   return getActivePlan();
+}
+
+// 地図の状態保存機能
+const MAP_STATE_KEY = 'map_last_state';
+
+export interface MapState {
+  center: { lat: number; lng: number };
+  zoom: number;
+  lastUpdated: Date;
+}
+
+/**
+ * 地図の現在の状態（位置とズームレベル）を保存
+ */
+export function saveMapState(center: google.maps.LatLngLiteral, zoom: number) {
+  const state: MapState = {
+    center,
+    zoom,
+    lastUpdated: new Date()
+  };
+  localStorage.setItem(MAP_STATE_KEY, JSON.stringify(state));
+}
+
+/**
+ * 保存された地図の状態を読み込み
+ */
+export function loadMapState(): MapState | null {
+  const saved = localStorage.getItem(MAP_STATE_KEY);
+  if (!saved) return null;
+  try {
+    const state = JSON.parse(saved);
+    state.lastUpdated = new Date(state.lastUpdated);
+    return state;
+  } catch (e) {
+    console.error('地図の状態読み込みエラー:', e);
+    return null;
+  }
 } 

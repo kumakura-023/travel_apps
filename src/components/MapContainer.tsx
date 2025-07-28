@@ -5,6 +5,7 @@ import MapStateManager from './MapStateManager';
 import MapEventHandler from './MapEventHandler';
 import MapOverlayManager from './MapOverlayManager';
 import { useUIStore } from '../store/uiStore';
+import { loadMapState } from '../services/storageService';
 
 /**
  * 地図コンテナコンポーネント
@@ -23,7 +24,9 @@ interface MapContainerProps {
 
 export default function MapContainer({ children, showLabelToggle = true }: MapContainerProps) {
   const { setMap } = useGoogleMaps();
-  const [zoom, setZoom] = useState(14);
+  // 保存されたズームレベルがあればそれを使用、なければデフォルトの14
+  const savedState = loadMapState();
+  const [zoom, setZoom] = useState(savedState?.zoom || 14);
   const isMapInteractionEnabled = useUIStore((s) => s.isMapInteractionEnabled);
 
   // 地図の読み込み完了時のハンドラー

@@ -16,8 +16,8 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
   const overlayRef = useRef<google.maps.OverlayView | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
-  // ズーム比率に応じたスケール計算
-  const scale = Math.max(0.17, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
+  // ズーム比率に応じたスケール計算（下限値を2倍に変更）
+  const scale = Math.max(0.34, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
   const shouldShowOverlay = zoom >= 12;
 
   // ルート中点での情報オーバーレイ表示

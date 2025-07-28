@@ -7,6 +7,7 @@ import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import { getCategoryColor, getCategoryDisplayName } from '../utils/categoryIcons';
+import { PlaceSimpleOverlay } from './PlaceSimpleOverlay';
 
 interface Props {
   place: Place;
@@ -36,6 +37,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
   const color = getCategoryColor(place.category);
   const isSelected = selectionState.selectedPlaces.includes(place.id);
   const shouldShowOverlay = zoom >= 12;
+  const shouldShowSimpleOverlay = zoom <= 10 && zoom >= 6; // ズーム6〜10で簡易オーバーレイを表示
   const scale = Math.max(0.17, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -96,6 +98,16 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
           zIndex: 50,
         }}
       />
+      {/* 簡易オーバーレイ（ズーム6〜10） */}
+      {shouldShowSimpleOverlay && (
+        <OverlayView
+          position={place.coordinates}
+          mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+        >
+          <PlaceSimpleOverlay place={place} position={{ x: 0, y: 0 }} />
+        </OverlayView>
+      )}
+      {/* 詳細オーバーレイ（ズーム12以上） */}
       {shouldShowOverlay && (
         <OverlayView
           position={place.coordinates}

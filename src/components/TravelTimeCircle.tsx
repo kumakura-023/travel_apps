@@ -27,8 +27,8 @@ export default function TravelTimeCircle({ circle, zoom = 14 }: Props) {
   const color = getTravelModeColor(circle.mode);
   const isActive = activeCircleId === circle.id;
 
-  // ズーム比率に応じたスケール計算（最大サイズを1/3に縮小）
-  const scale = Math.max(0.17, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
+  // ズーム比率に応じたスケール計算（最大サイズを1/3に縮小、下限値を2倍に変更）
+  const scale = Math.max(0.34, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
   const shouldShowOverlay = zoom >= 12 && isActive;
 
   // 円を作成・更新

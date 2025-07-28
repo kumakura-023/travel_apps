@@ -62,7 +62,7 @@ export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace, o
       <h3 className="headline font-semibold text-system-label mb-2">メモ</h3>
       {isMobile ? (
         <textarea
-          className="w-full h-24 p-2 border rounded bg-white/50 dark:bg-black/20 border-system-separator/50 focus:ring-2 focus:ring-coral-500 transition-all duration-150"
+          className={`w-full ${isExpanded ? 'h-48' : 'h-24'} p-2 border rounded bg-white/50 dark:bg-black/20 border-system-separator/50 focus:ring-2 focus:ring-coral-500 transition-all duration-150`}
           value={savedPlace?.memo || ''}
           onChange={(e) => {
             if (savedPlace) {
@@ -79,7 +79,7 @@ export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace, o
         />
       ) : editing ? (
         <textarea
-          className="w-full h-24 p-2 border rounded bg-white/50 dark:bg-black/20 border-system-separator/50 focus:ring-2 focus:ring-coral-500 transition-all duration-150"
+          className={`w-full ${isExpanded ? 'h-48' : 'h-24'} p-2 border rounded bg-white/50 dark:bg-black/20 border-system-separator/50 focus:ring-2 focus:ring-coral-500 transition-all duration-150`}
           value={savedPlace?.memo || ''}
           onChange={(e) => {
             if (savedPlace) {
@@ -98,7 +98,7 @@ export default function MemoEditor({ saved, savedPlace, isMobile, updatePlace, o
         />
       ) : (
         <div
-          className="w-full min-h-[6rem] h-auto p-2 rounded cursor-pointer group"
+          className={`w-full ${isExpanded ? 'min-h-[12rem]' : 'min-h-[6rem]'} h-auto p-2 rounded cursor-pointer group`}
           onDoubleClick={(e) => {
             e.preventDefault();
             e.stopPropagation();

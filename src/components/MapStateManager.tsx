@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useSelectedPlaceStore } from '../store/placeStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import useMediaQuery from '../hooks/useMediaQuery';
+import { loadMapState, saveMapState } from '../services/storageService';
+import { useGoogleMaps } from '../hooks/useGoogleMaps';
 
 /**
  * 地図の状態管理を担当するコンポーネント
@@ -24,6 +26,7 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
   const { selectionMode, isRouteSearchOpen } = useRouteSearchStore();
   const { selectingOrigin } = useTravelTimeMode();
   const isDesktopViewport = useMediaQuery('(min-width: 1024px)');
+  const { map } = useGoogleMaps();
 
   // コンテナスタイルの計算
   const containerStyle = useMemo(() => {
@@ -80,11 +83,48 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
     ]
   }), [isDesktopViewport]);
 
-  // 地図の中心位置（東京駅）
-  const center = useMemo<google.maps.LatLngLiteral>(
-    () => ({ lat: 35.681236, lng: 139.767125 }),
-    []
-  );
+  // 地図の中心位置（デフォルトは東京駅、保存された位置があればそれを使用）
+  const center = useMemo<google.maps.LatLngLiteral>(() => {
+    const savedState = loadMapState();
+    return savedState?.center || { lat: 35.681236, lng: 139.767125 };
+  }, []);
+
+  // 地図の状態変更を監視して保存
+  useEffect(() => {
+    if (!map) return;
+
+    // デバウンス関数
+    function debounce<T extends (...args: any[]) => any>(
+      func: T,
+      wait: number
+    ): (...args: Parameters<T>) => void {
+      let timeout: NodeJS.Timeout;
+      return (...args: Parameters<T>) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+      };
+    }
+
+    const saveStateDebounced = debounce(() => {
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      if (center && zoom) {
+        saveMapState(
+          { lat: center.lat(), lng: center.lng() },
+          zoom
+        );
+      }
+    }, 1000); // 1秒のデバウンス
+
+    const listeners = [
+      map.addListener('center_changed', saveStateDebounced),
+      map.addListener('zoom_changed', saveStateDebounced)
+    ];
+
+    return () => {
+      listeners.forEach(listener => listener.remove());
+    };
+  }, [map]);
 
   const mapState: MapState = {
     containerStyle,
