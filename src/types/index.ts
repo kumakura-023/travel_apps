@@ -49,6 +49,15 @@ export interface TravelPlan {
   startDate: Date | null;
   ownerId?: string;
   members?: Record<string, { role: string; joinedAt: Date }>;
+  lastActionPosition?: {
+    position: {
+      lat: number;
+      lng: number;
+    };
+    timestamp: Date;
+    userId: string;
+    actionType: 'place' | 'label';
+  };
 }
 
 export interface MapLabel {

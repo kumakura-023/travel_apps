@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { TravelPlan } from '../types';
 import { listenPlan } from '../services/planCloudService';
-import { Unsubscribe } from 'firebase/firestore';
+import { Unsubscribe, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db, auth } from '../firebase';
 
 interface PlanState {
   plan: TravelPlan | null;
@@ -13,6 +14,7 @@ interface PlanState {
   updatePlan: (update: Partial<TravelPlan>) => void;
   listenToPlan: (planId: string) => void;
   unsubscribeFromPlan: () => void;
+  updateLastActionPosition: (position: google.maps.LatLngLiteral, actionType: 'place' | 'label') => Promise<void>;
 }
 
 export const usePlanStore = create<PlanState>((set, get) => ({
@@ -66,5 +68,34 @@ export const usePlanStore = create<PlanState>((set, get) => ({
       unsubscribe();
     }
     set({ plan: null, activePlanId: null, unsubscribe: null });
+  },
+
+  updateLastActionPosition: async (position: google.maps.LatLngLiteral, actionType: 'place' | 'label') => {
+    const { plan } = get();
+    const user = auth.currentUser;
+    
+    if (!plan || !user) {
+      console.error('[planStore] Cannot update last action position: plan or user is null');
+      return;
+    }
+    
+    try {
+      console.log('[planStore] Updating last action position:', { position, actionType, planId: plan.id });
+      
+      const planRef = doc(db, 'plans', plan.id);
+      await updateDoc(planRef, {
+        lastActionPosition: {
+          position,
+          timestamp: serverTimestamp(),
+          userId: user.uid,
+          actionType
+        }
+      });
+      
+      console.log('[planStore] Last action position updated successfully');
+    } catch (error) {
+      console.error('[planStore] Error updating last action position:', error);
+      throw error;
+    }
   },
 })); 

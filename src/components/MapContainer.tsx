@@ -1,11 +1,12 @@
 import { GoogleMap } from '@react-google-maps/api';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import MapStateManager from './MapStateManager';
 import MapEventHandler from './MapEventHandler';
 import MapOverlayManager from './MapOverlayManager';
 import { useUIStore } from '../store/uiStore';
 import { loadMapState } from '../services/storageService';
+import { usePlanStore } from '../store/planStore';
 
 /**
  * 地図コンテナコンポーネント
@@ -23,11 +24,12 @@ interface MapContainerProps {
 }
 
 export default function MapContainer({ children, showLabelToggle = true }: MapContainerProps) {
-  const { setMap } = useGoogleMaps();
+  const { setMap, map } = useGoogleMaps();
   // 保存されたズームレベルがあればそれを使用、なければデフォルトの14
   const savedState = loadMapState();
   const [zoom, setZoom] = useState(savedState?.zoom || 14);
   const isMapInteractionEnabled = useUIStore((s) => s.isMapInteractionEnabled);
+  const { plan } = usePlanStore();
 
   // 地図の読み込み完了時のハンドラー
   const handleMapLoad = (map: google.maps.Map) => {
@@ -60,6 +62,16 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
       setZoom(map.getZoom() ?? 14);
     });
   };
+  
+  // planのlastActionPositionが変更されたら地図を移動
+  useEffect(() => {
+    if (map && plan?.lastActionPosition?.position) {
+      if (import.meta.env.DEV) {
+        console.log('[MapContainer] Firestoreの最後の操作位置に地図を移動:', plan.lastActionPosition.position);
+      }
+      map.panTo(plan.lastActionPosition.position);
+    }
+  }, [map, plan?.lastActionPosition]);
 
   return (
     <MapStateManager>

@@ -1054,3 +1054,81 @@ Refused to load the script 'https://apis.google.com/js/api.js?onload=__iframefcb
   - Firebase Authのリダイレクト処理に必要なドメインを追加
   - セキュリティを維持しつつ必要最小限のドメインのみ許可
 - **効果**: Googleログイン時のCSPエラーが解消され、全デバイスでログイン可能に
+
+## タスク20: 最後の操作位置記憶・共有機能の修正
+
+### 目的
+タスク18で実装した「プラン参加者全員に最後に追加された候補地・メモを記憶し、アプリ更新時・立ち上げ時に記憶した地点でmapが開かれる」機能が確認できない問題を特定し、修正する。
+
+### 問題の可能性
+
+1. **Firestoreへの保存が実行されていない**
+   - planStoreのupdateLastActionPosition関数が呼び出されていない
+   - Firestore RulesでlastActionPositionフィールドの書き込みが許可されていない
+   - エラーが発生しているが捕捉されていない
+
+2. **初期読み込みの問題**
+   - MapStateManagerでFirestoreからのデータ読み込みが完了する前に地図が初期化されている
+   - planのロードが完了していない
+   - 非同期処理のタイミング問題
+
+3. **データ構造の不一致**
+   - 保存時と読み込み時のデータ構造が異なる
+   - Firestoreのタイムスタンプ型の扱い
+
+### 実装手順
+
+1. **デバッグログの追加**
+   - updateLastActionPosition実行時のログ
+   - Firestoreへの保存成功・失敗のログ
+   - 初期読み込み時のログ
+
+2. **Firestore Rulesの確認**
+   ```javascript
+   // plans/{planId}のwrite権限を確認
+   allow write: if request.auth != null && 
+                   request.auth.uid in resource.data.memberIds;
+   ```
+
+3. **エラーハンドリングの追加**
+   - try-catchブロックで例外を捕捉
+   - エラー時のフォールバック処理
+
+4. **非同期処理の改善**
+   - planのロード完了を待ってから位置復元
+   - Promiseチェーンの適切な処理
+
+### 実装の優先順位
+
+1. **タスク20**（最後の位置共有機能）- 主要機能の修正
+
+### テスト項目
+
+- [ ] 候補地追加時にコンソールログで保存処理が確認できる
+- [ ] FirestoreコンソールでlastActionPositionフィールドが更新される
+- [ ] 別ユーザーでリロード時に最後の位置から開始する
+- [ ] エラーが発生した場合、適切にログが出力される
+
+## 実装完了報告（追加分4）
+
+### ✅ タスク20: 最後の操作位置記憶・共有機能の修正
+- **実装ファイル**:
+  - `src/types/index.ts` (52-60行目): TravelPlan型にlastActionPositionフィールドを追加
+  - `src/store/planStore.ts` (4-5行目、17行目、73-100行目): updateLastActionPosition関数を実装
+  - `src/store/placesStore.ts` (6行目、61-63行目): 候補地追加時にupdateLastActionPositionを呼び出し
+  - `src/store/labelsStore.ts` (6行目、58-60行目): メモ追加時にupdateLastActionPositionを呼び出し
+  - `src/components/MapStateManager.tsx` (8行目、31行目、89-121行目): Firestoreの最後の操作位置を優先的に読み込み
+  - `src/components/MapContainer.tsx` (9行目、32行目、67-74行目): planの変更を監視して地図位置を更新
+- **変更内容**:
+  - タスク18の実装が完全に行われていなかったため、全体を実装
+  - TravelPlan型にlastActionPositionフィールドを追加（position、timestamp、userId、actionType）
+  - planStoreにupdateLastActionPosition関数を追加（Firestoreへの保存処理）
+  - placesStoreとlabelsStoreで追加時にFirestoreへ位置を保存
+  - MapStateManagerで初期位置の優先順位を設定（Firestore > ローカル > 保存された地図状態 > デフォルト）
+  - MapContainerでplanのlastActionPositionが変更されたら地図を移動
+- **実装詳細**:
+  - デバッグログを多数追加して動作を可視化
+  - エラーハンドリングをtry-catchで実装
+  - 非同期処理は適切にPromiseとして処理
+  - Firestore Rulesは既存の更新権限で問題なし（メンバーは更新可能）
+- **効果**: プラン参加者全員で最後に追加された候補地・メモの位置を共有し、アプリ起動時にその位置から開始

@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Place } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
 import { saveLastActionPosition } from '../services/storageService';
+import { usePlanStore } from './planStore';
 
 interface PlacesState {
   places: Place[];
@@ -53,8 +54,13 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
         state.onPlaceAdded(newPlace);
       }
       
-      // 最後の操作位置を保存
+      // 最後の操作位置を保存（ローカル）
       saveLastActionPosition(newPlace.coordinates);
+      
+      // Firestoreに最後の操作位置を保存
+      usePlanStore.getState().updateLastActionPosition(newPlace.coordinates, 'place').catch(error => {
+        console.error('[placesStore] Failed to update last action position:', error);
+      });
 
       return newState;
     }),

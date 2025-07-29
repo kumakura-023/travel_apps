@@ -5,6 +5,7 @@ import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import useMediaQuery from '../hooks/useMediaQuery';
 import { loadMapState, saveMapState, loadLastActionPosition } from '../services/storageService';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
+import { usePlanStore } from '../store/planStore';
 
 /**
  * 地図の状態管理を担当するコンポーネント
@@ -27,6 +28,7 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
   const { selectingOrigin } = useTravelTimeMode();
   const isDesktopViewport = useMediaQuery('(min-width: 1024px)');
   const { map } = useGoogleMaps();
+  const { plan } = usePlanStore();
 
   // コンテナスタイルの計算
   const containerStyle = useMemo(() => {
@@ -83,13 +85,21 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
     ]
   }), [isDesktopViewport]);
 
-  // 地図の中心位置（優先順位: 最後の操作位置 > 保存された地図状態 > 東京駅）
+  // 地図の中心位置（優先順位: Firestoreの最後の操作位置 > ローカルの最後の操作位置 > 保存された地図状態 > 東京駅）
   const center = useMemo<google.maps.LatLngLiteral>(() => {
-    // 最後の操作位置を優先
+    // Firestoreの最後の操作位置を優先
+    if (plan?.lastActionPosition?.position) {
+      if (import.meta.env.DEV) {
+        console.log('[MapStateManager] Firestoreの最後の操作位置から復元:', plan.lastActionPosition.position);
+      }
+      return plan.lastActionPosition.position;
+    }
+    
+    // ローカルの最後の操作位置
     const lastAction = loadLastActionPosition();
     if (lastAction?.position) {
       if (import.meta.env.DEV) {
-        console.log('最後の操作位置から復元:', lastAction.position);
+        console.log('[MapStateManager] ローカルの最後の操作位置から復元:', lastAction.position);
       }
       return lastAction.position;
     }
@@ -97,12 +107,18 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
     // 次に保存された地図状態
     const savedState = loadMapState();
     if (savedState?.center) {
+      if (import.meta.env.DEV) {
+        console.log('[MapStateManager] 保存された地図状態から復元:', savedState.center);
+      }
       return savedState.center;
     }
     
     // デフォルトは東京駅
+    if (import.meta.env.DEV) {
+      console.log('[MapStateManager] デフォルト位置（東京駅）を使用');
+    }
     return { lat: 35.681236, lng: 139.767125 };
-  }, []);
+  }, [plan]);
 
   // 地図の状態変更を監視して保存
   useEffect(() => {

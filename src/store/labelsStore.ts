@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { MapLabel } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
 import { saveLastActionPosition } from '../services/storageService';
+import { usePlanStore } from './planStore';
 
 interface LabelsState {
   labels: MapLabel[];
@@ -49,9 +50,14 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
         s.onLabelAdded(newLabel);
       }
       
-      // 最後の操作位置を保存
+      // 最後の操作位置を保存（ローカル）
       if (newLabel.position) {
         saveLastActionPosition(newLabel.position);
+        
+        // Firestoreに最後の操作位置を保存
+        usePlanStore.getState().updateLastActionPosition(newLabel.position, 'label').catch(error => {
+          console.error('[labelsStore] Failed to update last action position:', error);
+        });
       }
 
       return newState;
