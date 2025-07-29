@@ -61,17 +61,11 @@ export class SyncManager {
   ): Promise<void> {
     // 緊急停止フラグがセットされている場合は処理を停止
     if (this.emergencyStopFlag) {
-      if (import.meta.env.DEV) {
-        console.log('🚨 緊急停止中のため同期をスキップ:', type);
-      }
       return;
     }
     
     // リモート更新中は同期を停止
     if (context.isRemoteUpdateInProgress) {
-      if (import.meta.env.DEV) {
-        console.log('🚫 リモート更新中のため同期をスキップ:', type);
-      }
       return;
     }
     const operation: SyncOperation = {
@@ -86,16 +80,6 @@ export class SyncManager {
 
     this.operationQueue.set(operation.id, operation);
 
-    if (import.meta.env.DEV) {
-      console.log(`🔄 同期操作キューイング:`, {
-        type: operation.type,
-        mode: operation.mode,
-        priority: operation.priority,
-        queueSize: this.operationQueue.size,
-        operationId: operation.id,
-        timestamp: new Date().toLocaleTimeString()
-      });
-    }
 
     // 書き込み頻度制限チェック
     if (!this.canWriteNow()) {
@@ -203,9 +187,6 @@ export class SyncManager {
     const existingTimer = this.debounceTimers.get(operation.type);
     if (existingTimer) {
       clearTimeout(existingTimer);
-      if (import.meta.env.DEV) {
-        console.log(`⏰ デバウンスタイマークリア:`, operation.type);
-      }
     }
 
     // ローカル保存は即座実行
@@ -219,9 +200,6 @@ export class SyncManager {
     const debounceDelay = this.config.operationDebounceDelays?.[operation.type] || this.config.debounceDelay;
     
     // デバウンスタイマーを設定
-    if (import.meta.env.DEV) {
-      console.log(`⏰ デバウンスタイマー設定 (${debounceDelay}ms):`, operation.type, new Date().toLocaleTimeString());
-    }
     
     // 既存の操作と統合（重複回避）
     const existingOps = Array.from(this.operationQueue.values()).filter(
@@ -230,14 +208,6 @@ export class SyncManager {
     existingOps.forEach(op => this.operationQueue.delete(op.id));
 
     const timer = setTimeout(async () => {
-      if (import.meta.env.DEV) {
-        console.log(`🚀 デバウンス実行:`, {
-          type: operation.type,
-          operationId: operation.id,
-          timestamp: new Date().toLocaleTimeString(),
-          elapsedTime: `${Date.now() - operation.timestamp}ms`
-        });
-      }
 
       try {
         if (context.isOnline && context.hasUser && context.uid && !context.isRemoteUpdateInProgress) {
@@ -300,15 +270,6 @@ export class SyncManager {
     // 書き込み履歴に追加
     this.recordWrite(saveStartTimestamp);
 
-    if (import.meta.env.DEV) {
-      console.log(`☁️ クラウド同期開始 [${operation.mode}]:`, {
-        operation: operation.type,
-        priority: operation.priority,
-        timestamp: saveStartTimestamp,
-        writeCount: this.writeHistory.length,
-        isDebounced: operation.mode === 'debounced'
-      });
-    }
 
     try {
       // contextからuidを取得してクラウド保存
@@ -323,14 +284,6 @@ export class SyncManager {
 
       const saveEndTimestamp = Date.now();
 
-      if (import.meta.env.DEV) {
-        console.log(`☁️ クラウド同期完了 [${operation.mode}]:`, {
-          operation: operation.type,
-          timeDiff: saveEndTimestamp - saveStartTimestamp,
-          saveEndTimestamp,
-          isDebounced: operation.mode === 'debounced'
-        });
-      }
     } catch (error: any) {
       this.handleFirebaseError(error);
       throw error; // エラーを再スローして上位のエラーハンドリングに任せる
@@ -422,13 +375,6 @@ export class SyncManager {
     
     this.pendingWriteQueue.push(queueItem);
     
-    if (import.meta.env.DEV) {
-      console.log('⏰ 書き込み制限のためキューに追加:', {
-        operation: operation.type,
-        queueSize: this.pendingWriteQueue.length,
-        writeCount: this.writeHistory.length
-      });
-    }
   }
   
   /**
@@ -450,12 +396,6 @@ export class SyncManager {
     
     const itemsToProcess = this.pendingWriteQueue.splice(0, processableCount);
     
-    if (import.meta.env.DEV && itemsToProcess.length > 0) {
-      console.log('⏰ キューから書き込み処理:', {
-        processedCount: itemsToProcess.length,
-        remainingQueue: this.pendingWriteQueue.length
-      });
-    }
     
     for (const item of itemsToProcess) {
       try {
@@ -479,13 +419,6 @@ export class SyncManager {
                         errorMessage.includes('resource-exhausted') ||
                         errorMessage.includes('Write stream exhausted');
     
-    if (import.meta.env.DEV) {
-      console.error('🚨 Firebaseエラー検知:', {
-        error: errorMessage,
-        consecutiveErrors: this.consecutiveErrorCount,
-        isQuotaError
-      });
-    }
     
     // クォータエラーまたは連続エラーが多い場合は緊急停止
     if (isQuotaError || this.consecutiveErrorCount >= this.maxConsecutiveErrors) {
@@ -499,9 +432,6 @@ export class SyncManager {
   private activateEmergencyStop(): void {
     this.emergencyStopFlag = true;
     
-    if (import.meta.env.DEV) {
-      console.error('🚨 緊急停止モード有効化');
-    }
     
     // 1分後に自動で停止モードを解除（エラー回復を早める）
     setTimeout(() => {
@@ -516,9 +446,6 @@ export class SyncManager {
     this.emergencyStopFlag = false;
     this.consecutiveErrorCount = 0;
     
-    if (import.meta.env.DEV) {
-      console.log('✅ 緊急停止モード解除');
-    }
   }
   
   /**

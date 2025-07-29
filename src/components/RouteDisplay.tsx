@@ -24,7 +24,6 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
   useEffect(() => {
     if (!map || !shouldShowOverlay) {
       if (overlayRef.current) {
-        console.log(`Removing overlay for route ${route.id} (not showing overlay)`);
         overlayRef.current.setMap(null);
         overlayRef.current = null;
       }
@@ -33,7 +32,6 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
 
     // 既存のオーバーレイがあれば削除
     if (overlayRef.current) {
-      console.log(`Removing existing overlay for route ${route.id}`);
       overlayRef.current.setMap(null);
     }
 
@@ -208,7 +206,6 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
     overlayRef.current = overlay;
 
     return () => {
-      console.log(`Cleanup overlay for route ${route.id}`);
       if (overlayRef.current) {
         overlayRef.current.setMap(null);
         overlayRef.current = null;
@@ -219,45 +216,36 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
   // コンポーネントがアンマウントされるときのクリーンアップ
   useEffect(() => {
     return () => {
-      console.log(`RouteDisplay unmount cleanup for route ${route.id}`);
       if (overlayRef.current) {
         overlayRef.current.setMap(null);
         overlayRef.current = null;
-        console.log(`Overlay cleaned up for route ${route.id}`);
       }
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setMap(null);
         directionsRendererRef.current = null;
-        console.log(`DirectionsRenderer cleaned up for route ${route.id}`);
       }
     };
   }, [route.id]);
 
   const handleDelete = () => {
-    console.log(`=== ROUTE DELETE BUTTON CLICKED ===`);
-    console.log(`Target route ID: ${route.id}`);
     
     try {
       // オーバーレイを削除
       if (overlayRef.current) {
-        console.log(`Removing overlay for route ${route.id}`);
         overlayRef.current.setMap(null);
         overlayRef.current = null;
       }
       
       // DirectionsRendererを削除
       if (directionsRendererRef.current) {
-        console.log(`Removing DirectionsRenderer for route ${route.id}`);
         directionsRendererRef.current.setMap(null);
         directionsRendererRef.current = null;
       }
       
       // ストアから削除
       removeRoute(route.id);
-      console.log(`Route removed from store: ${route.id}`);
       
     } catch (error) {
-      console.error(`Error in route handleDelete:`, error);
     }
   };
 
@@ -330,14 +318,9 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
   useEffect(() => {
     if (!map) return;
 
-    console.log(`Creating DirectionsRenderer for route ${route.id}`);
-    console.log(`Route type: ${isSearchRoute ? 'Search Route' : 'Candidate Route'}`);
-    console.log(`International route: ${isInternationalRoute}`);
-    console.log(`preserveViewport: ${directionsOptions.preserveViewport}`);
     
     // 既存のDirectionsRendererがあれば削除
     if (directionsRendererRef.current) {
-      console.log(`Removing existing DirectionsRenderer for route ${route.id}`);
       directionsRendererRef.current.setMap(null);
     }
 
@@ -345,37 +328,23 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
       // 新しいDirectionsRendererを作成
       const directionsRenderer = new google.maps.DirectionsRenderer(directionsOptions);
       
-      console.log(`Setting map for DirectionsRenderer (route ${route.id})`);
       directionsRenderer.setMap(map);
       
-      console.log(`Setting directions for route ${route.id}`, {
-        hasRoutes: route.route?.routes?.length > 0,
-        routesCount: route.route?.routes?.length || 0,
-        originCoords: route.originCoordinates,
-        destCoords: route.destinationCoordinates
-      });
       
       directionsRenderer.setDirections(route.route);
       directionsRendererRef.current = directionsRenderer;
       
-      console.log(`✅ DirectionsRenderer successfully created for route ${route.id}`);
       
     } catch (error) {
-      console.error(`❌ Error creating DirectionsRenderer for route ${route.id}:`, error);
-      console.error('Route data:', route);
-      console.error('Directions options:', directionsOptions);
     }
 
     // クリーンアップ関数
     return () => {
-      console.log(`Cleanup DirectionsRenderer for route ${route.id}`);
       if (directionsRendererRef.current) {
         try {
           directionsRendererRef.current.setMap(null);
           directionsRendererRef.current = null;
-          console.log(`✅ DirectionsRenderer cleaned up for route ${route.id}`);
         } catch (error) {
-          console.error(`❌ Error cleaning up DirectionsRenderer for route ${route.id}:`, error);
         }
       }
     };
