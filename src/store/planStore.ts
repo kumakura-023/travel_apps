@@ -75,24 +75,52 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     const user = auth.currentUser;
     
     if (!plan || !user) {
-      console.error('[planStore] Cannot update last action position: plan or user is null');
+      console.error('[planStore] Cannot update last action position: plan or user is null', {
+        hasPlan: !!plan,
+        hasUser: !!user,
+        planId: plan?.id
+      });
       return;
     }
     
     try {
-      console.log('[planStore] Updating last action position:', { position, actionType, planId: plan.id });
+      console.log('[planStore] Updating last action position:', { 
+        position, 
+        actionType, 
+        planId: plan.id,
+        userId: user.uid,
+        timestamp: new Date().toISOString()
+      });
       
       const planRef = doc(db, 'plans', plan.id);
-      await updateDoc(planRef, {
+      const updateData = {
         lastActionPosition: {
           position,
           timestamp: serverTimestamp(),
           userId: user.uid,
           actionType
         }
-      });
+      };
       
-      console.log('[planStore] Last action position updated successfully');
+      console.log('[planStore] Update data to be sent:', updateData);
+      
+      await updateDoc(planRef, updateData);
+      
+      console.log('[planStore] Last action position updated successfully in Firestore');
+      
+      // ローカルのplanオブジェクトも更新（即座に反映させるため）
+      set((state) => ({
+        plan: state.plan ? {
+          ...state.plan,
+          lastActionPosition: {
+            position,
+            timestamp: new Date(),
+            userId: user.uid,
+            actionType
+          }
+        } : null
+      }));
+      
     } catch (error) {
       console.error('[planStore] Error updating last action position:', error);
       throw error;

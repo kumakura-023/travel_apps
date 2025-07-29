@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useSelectedPlaceStore } from '../store/placeStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
@@ -27,7 +27,17 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
   const { selectingOrigin } = useTravelTimeMode();
   const isDesktopViewport = useMediaQuery('(min-width: 1024px)');
   const { map } = useGoogleMaps();
-  const { plan } = usePlanStore();
+  const { plan, isLoading } = usePlanStore();
+  
+  // デバッグ: planの状態をログ出力
+  if (import.meta.env.DEV) {
+    console.log('[MapStateManager] Current state:', {
+      planId: plan?.id,
+      isLoading,
+      hasLastActionPosition: !!plan?.lastActionPosition,
+      lastActionPosition: plan?.lastActionPosition
+    });
+  }
 
   // コンテナスタイルの計算
   const containerStyle = useMemo(() => {
@@ -84,9 +94,20 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
     ]
   }), [isDesktopViewport]);
 
-  // 地図の中心位置（優先順位: Firestoreのプラン共有位置 > デフォルト位置）
-  const center = useMemo<google.maps.LatLngLiteral>(() => {
-    // Firestoreのプラン共有位置を最優先（これが唯一の共有位置）
+  // デフォルトの中心位置（東京駅）
+  const DEFAULT_CENTER = { lat: 35.681236, lng: 139.767125 };
+  
+  // 地図の中心位置を管理（planの読み込みを待つため）
+  const [center, setCenter] = useState<google.maps.LatLngLiteral>(DEFAULT_CENTER);
+  const [centerInitialized, setCenterInitialized] = useState(false);
+  
+  // planが読み込まれたら、lastActionPositionから中心位置を設定
+  useEffect(() => {
+    // すでに初期化済みの場合はスキップ（重複実行を防ぐ）
+    if (centerInitialized && !plan?.lastActionPosition?.position) {
+      return;
+    }
+    
     if (plan?.lastActionPosition?.position) {
       if (import.meta.env.DEV) {
         console.log('[MapStateManager] プラン共有位置から復元:', {
@@ -96,17 +117,17 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
           timestamp: plan.lastActionPosition.timestamp
         });
       }
-      return plan.lastActionPosition.position;
+      setCenter(plan.lastActionPosition.position);
+      setCenterInitialized(true);
+    } else if (!isLoading && !centerInitialized) {
+      // planの読み込みが完了したが、lastActionPositionがない場合
+      if (import.meta.env.DEV) {
+        console.log('[MapStateManager] プラン共有位置がないため、デフォルト位置（東京駅）を使用');
+      }
+      setCenter(DEFAULT_CENTER);
+      setCenterInitialized(true);
     }
-    
-    // ローカルストレージは使用しない（個人の位置は共有しない）
-    if (import.meta.env.DEV) {
-      console.log('[MapStateManager] プラン共有位置がないため、デフォルト位置（東京駅）を使用');
-    }
-    
-    // デフォルトは東京駅
-    return { lat: 35.681236, lng: 139.767125 };
-  }, [plan?.lastActionPosition]);
+  }, [plan?.lastActionPosition, isLoading, centerInitialized]);
 
   // 個人の地図状態保存は無効化（プラン共有位置のみを使用）
   // useEffect(() => {

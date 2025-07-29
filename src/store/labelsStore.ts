@@ -54,9 +54,19 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
         // saveLastActionPosition(newLabel.position);
         
         // Firestoreに最後の操作位置を保存（プラン共有）
-        usePlanStore.getState().updateLastActionPosition(newLabel.position, 'label').catch(error => {
-          console.error('[labelsStore] Failed to update last action position:', error);
+        console.log('[labelsStore] Saving last action position for new label:', {
+          labelId: newLabel.id,
+          labelText: newLabel.text,
+          position: newLabel.position
         });
+        
+        usePlanStore.getState().updateLastActionPosition(newLabel.position, 'label')
+          .then(() => {
+            console.log('[labelsStore] Last action position saved successfully');
+          })
+          .catch(error => {
+            console.error('[labelsStore] Failed to update last action position:', error);
+          });
       }
 
       return newState;

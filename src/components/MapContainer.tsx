@@ -35,7 +35,23 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
     
     // 個人の保存状態は使用しない（プラン共有位置のみを使用）
     if (import.meta.env.DEV) {
-      console.log('[MapContainer] 地図の初期化完了（個人の保存状態は使用しない）');
+      console.log('[MapContainer] 地図の初期化完了', {
+        planId: plan?.id,
+        hasLastActionPosition: !!plan?.lastActionPosition,
+        lastActionPosition: plan?.lastActionPosition
+      });
+    }
+    
+    // プランの最後の操作位置があれば、地図を移動
+    if (plan?.lastActionPosition?.position) {
+      if (import.meta.env.DEV) {
+        console.log('[MapContainer] 初期化時に最後の操作位置に移動:', plan.lastActionPosition.position);
+      }
+      // 少し遅延を入れて確実に移動
+      setTimeout(() => {
+        map.panTo(plan.lastActionPosition.position);
+        map.setZoom(15); // 適切なズームレベルに設定
+      }, 100);
     }
     
     setZoom(map.getZoom() ?? 14);
@@ -50,11 +66,23 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
   useEffect(() => {
     if (map && plan?.lastActionPosition?.position) {
       if (import.meta.env.DEV) {
-        console.log('[MapContainer] Firestoreの最後の操作位置に地図を移動:', plan.lastActionPosition.position);
+        console.log('[MapContainer] Firestoreの最後の操作位置に地図を移動:', {
+          position: plan.lastActionPosition.position,
+          actionType: plan.lastActionPosition.actionType,
+          userId: plan.lastActionPosition.userId,
+          mapReady: !!map
+        });
       }
+      
+      // 地図の中心を移動
       map.panTo(plan.lastActionPosition.position);
+      
+      // ズームレベルも適切に設定
+      if (map.getZoom() < 14) {
+        map.setZoom(15);
+      }
     }
-  }, [map, plan?.lastActionPosition]);
+  }, [map, plan?.lastActionPosition?.position?.lat, plan?.lastActionPosition?.position?.lng]);
 
   return (
     <MapStateManager>

@@ -57,9 +57,19 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
       // saveLastActionPosition(newPlace.coordinates);
       
       // Firestoreに最後の操作位置を保存（プラン共有）
-      usePlanStore.getState().updateLastActionPosition(newPlace.coordinates, 'place').catch(error => {
-        console.error('[placesStore] Failed to update last action position:', error);
+      console.log('[placesStore] Saving last action position for new place:', {
+        placeId: newPlace.id,
+        placeName: newPlace.name,
+        coordinates: newPlace.coordinates
       });
+      
+      usePlanStore.getState().updateLastActionPosition(newPlace.coordinates, 'place')
+        .then(() => {
+          console.log('[placesStore] Last action position saved successfully');
+        })
+        .catch(error => {
+          console.error('[placesStore] Failed to update last action position:', error);
+        });
 
       return newState;
     }),

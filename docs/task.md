@@ -3,6 +3,10 @@
 ## 概要
 このドキュメントは、0728_issue.mdで報告された4つの課題を解決するための詳細な実装手順です。各タスクは独立して実行可能で、AIエージェントが順次実行できるように構成されています。
 
+##絶対ルール
+保守性の高いコードを書くこと。
+単一責任原則を死守すること。
+
 ## タスク1: マップ縮小時のオーバーレイサイズ調整
 
 ### 目的
@@ -1397,3 +1401,102 @@ Refused to load the script 'https://apis.google.com/js/api.js?onload=__iframefcb
 - [ ] updatedAtフィールドが正しく更新されることを確認
 - [ ] Firestoreコンソールでデータの変更を確認
 - [ ] ネットワークタブでFirestoreのリアルタイム通信を確認
+
+## タスク24: 最後の操作位置共有機能の再修正
+
+### 目的
+タスク20で実装した「プラン参加者全員に最後に追加された候補地・メモを記憶し、アプリ更新時・立ち上げ時に記憶した地点でmapが開かれる」機能が動作していない問題を再度修正する。
+
+### 問題の詳細
+- タスク20、21で実装・修正を行ったが、依然として機能が動作していない
+- プラン参加者間で最後の操作位置が共有されない
+- アプリ起動時に最後の操作位置から開始しない
+
+### 原因の可能性
+
+1. **Firestoreデータの読み込みタイミング**
+   - MapStateManagerでplanデータが読み込まれる前に初期化処理が実行されている
+   - 非同期処理の競合状態が発生している
+
+2. **lastActionPositionフィールドの問題**
+   - Firestoreにデータが正しく保存されていない
+   - データ型の不一致（特にタイムスタンプ）
+   - フィールドが存在しない、またはnull
+
+3. **地図の初期化処理**
+   - MapContainerでの位置設定が上書きされている
+   - 初期化時のデフォルト位置が優先されている
+
+4. **ストアの連携問題**
+   - planStoreとMapStateManagerの連携が不十分
+   - 状態変更の通知が伝播していない
+
+### 実装手順
+
+1. **デバッグの強化**
+   ```typescript
+   // MapStateManagerでの詳細ログ
+   console.log('[MapStateManager] Plan data:', plan);
+   console.log('[MapStateManager] lastActionPosition:', plan?.lastActionPosition);
+   console.log('[MapStateManager] Initial position decision:', {
+     hasLastAction: !!plan?.lastActionPosition?.position,
+     position: plan?.lastActionPosition?.position || DEFAULT_CENTER
+   });
+   ```
+
+2. **Firestoreデータの検証**
+   - Firestoreコンソールで実際のデータ構造を確認
+   - lastActionPositionフィールドの存在と形式を確認
+   ```typescript
+   // placesStore/labelsStoreでの保存時ログ
+   console.log('[Store] Saving lastActionPosition:', {
+     position,
+     timestamp: new Date().toISOString(),
+     userId: user.uid
+   });
+   ```
+
+3. **初期化順序の修正**
+   - planのロード完了を確実に待つ
+   ```typescript
+   // MapStateManagerの初期化を改善
+   useEffect(() => {
+     if (!plan || !plan.id) {
+       console.log('[MapStateManager] Waiting for plan data...');
+       return;
+     }
+     
+     // planが確実に読み込まれてから初期化
+     initializeMapPosition();
+   }, [plan?.id, plan?.lastActionPosition]);
+   ```
+
+4. **地図位置の強制更新**
+   - MapContainerで位置を明示的に設定
+   ```typescript
+   // 地図が準備できたら位置を再設定
+   useEffect(() => {
+     if (map && plan?.lastActionPosition?.position) {
+       console.log('[MapContainer] Forcing position update');
+       map.panTo(plan.lastActionPosition.position);
+       map.setZoom(15);
+     }
+   }, [map, plan?.lastActionPosition]);
+   ```
+
+5. **フォールバック処理の実装**
+   - lastActionPositionが無効な場合の処理
+   - デフォルト位置への適切なフォールバック
+
+### 実装の優先順位
+
+1. **タスク24**（最後の操作位置共有の再修正）- 主要機能の完全動作のため必須
+
+### テスト項目
+
+- [ ] FirestoreコンソールでlastActionPositionフィールドの存在を確認
+- [ ] コンソールログで読み込みタイミングを確認
+- [ ] ユーザーAが候補地追加 → Firestoreにposition保存を確認
+- [ ] ユーザーBがリロード → コンソールで位置読み込みを確認
+- [ ] 実際に最後の操作位置から地図が開始することを確認
+- [ ] planが存在しない場合のエラーハンドリング確認
