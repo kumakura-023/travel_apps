@@ -96,14 +96,20 @@ export async function savePlanCloud(uid: string, plan: TravelPlan) {
   const planSnap = await getDoc(planRef);
   const existingMembers = planSnap.exists() ? planSnap.data().members : {};
 
+  // Extract member IDs for querying
+  const allMembers = {
+    ...existingMembers,
+    [uid]: { role: 'owner', joinedAt: clientTimestamp }, // Ensure current user is a member
+  };
+  const memberIds = Object.keys(allMembers);
+
   // Upsert the plan document
   batch.set(planRef, {
     payload,
+    name: plan.name, // プラン名も保存
     ownerId: plan.ownerId || uid, // Set owner if not already set
-    members: {
-      ...existingMembers,
-      [uid]: { role: 'owner', joinedAt: clientTimestamp }, // Ensure current user is a member
-    },
+    members: allMembers,
+    memberIds, // クエリ用のメンバーIDリスト
     updatedAt: clientTimestamp,
     lastSavedAt: clientTimestamp.toISOString(),
   }, { merge: true });
@@ -132,6 +138,14 @@ export function listenPlan(
     // Add metadata to the plan object
     plan.ownerId = data.ownerId;
     plan.members = data.members;
+    // Firestoreのnameフィールドがあれば優先的に使用
+    if (data.name) {
+      plan.name = data.name;
+    }
+    // lastActionPositionも追加
+    if (data.lastActionPosition) {
+      plan.lastActionPosition = data.lastActionPosition;
+    }
     cb(plan);
   });
 }
