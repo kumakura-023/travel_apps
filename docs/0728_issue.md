@@ -63,3 +63,9 @@ index-ChLh2yuA.js:3829 Uncaught error: ReferenceError: isExpanded is not defined
 
     修正内容 v6
     ・v5の修正で、最後の操作を記録しましたがこれを、プランに参加しているユーザ全員に共有したいです。つまり、誰かが追加した最後の候補地・メモからアプリが立ち上がるようにしたいです。
+
+    修正内容v7
+
+
+
+    
