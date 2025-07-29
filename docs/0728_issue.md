@@ -66,6 +66,44 @@ index-ChLh2yuA.js:3829 Uncaught error: ReferenceError: isExpanded is not defined
 
     修正内容v7
 
+    全てのデバイスでgoogleログインができません。pc版でコンソールを確認したところ以下のエラーがありました。
+    index-CDAkFli6.js:3370 Refused to load the script 'https://apis.google.com/js/api.js?onload=__iframefcb405710' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
 
+(anonymous) @ index-CDAkFli6.js:3370
+loadJS @ index-CDAkFli6.js:3370
+Rb @ index-CDAkFli6.js:2755
+Sw.Promise.catch.Fi @ index-CDAkFli6.js:3265
+Sw @ index-CDAkFli6.js:3265
+Rw @ index-CDAkFli6.js:3265
+Mw @ index-CDAkFli6.js:3280
+initAndGetManager @ index-CDAkFli6.js:3325
+_initialize @ index-CDAkFli6.js:3325
+(anonymous) @ index-CDAkFli6.js:3160
+execute @ index-CDAkFli6.js:3160
+execute @ index-CDAkFli6.js:3190
+await in execute
+bg @ index-CDAkFli6.js:3205
+tryRedirectSignIn @ index-CDAkFli6.js:2740
+initializeCurrentUser @ index-CDAkFli6.js:2740
+await in initializeCurrentUser
+(anonymous) @ index-CDAkFli6.js:2740
+Promise.then
+queue @ index-CDAkFli6.js:2740
+_initializeWithPersistence @ index-CDAkFli6.js:2740
+Nb @ index-CDAkFli6.js:2770
+(anonymous) @ index-CDAkFli6.js:3355
+getOrInitializeService @ index-CDAkFli6.js:170
+initialize @ index-CDAkFli6.js:170
+Pb @ index-CDAkFli6.js:2770
+eE @ index-CDAkFli6.js:3370
+(anonymous) @ index-CDAkFli6.js:3475Understand this error
+voyagesketch.vercel.app/:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">Understand this warning
+index-CDAkFli6.js:3856 PWA install prompt available
+voyagesketch.vercel.app/:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+index-CDAkFli6.js:3696 リダイレクト認証エラー: FirebaseError: Firebase: Error (auth/internal-error).
+    at Jl (index-CDAkFli6.js:2365:783)
+    at bt (index-CDAkFli6.js:2365:68)
+    at r.onerror (index-CDAkFli6.js:3370:1023)
 
-    
+    このエラーを解決してください。
+

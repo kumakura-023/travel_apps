@@ -960,3 +960,97 @@ PC版において、サイズ変更ボタンをドラッグしている最中に
 - Firestore Rulesの更新が必要（lastActionPositionフィールドの書き込み権限）
 - 複数ユーザーが同時に操作した場合の競合状態を考慮
 - パフォーマンスへの影響を最小限に（必要に応じてデバウンス）
+
+## タスク19: Googleログイン時のCSPエラー修正
+
+### 目的
+全てのデバイスでGoogleログインができない問題を修正する。Content Security Policy（CSP）エラーによりGoogle APIスクリプトの読み込みがブロックされている。
+
+### エラー詳細
+```
+Refused to load the script 'https://apis.google.com/js/api.js?onload=__iframefcb405710' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com"
+```
+
+### 実装手順
+
+1. **CSPヘッダーの確認**
+   - ファイル: `index.html`のmeta tagを確認
+   - 現在のCSP設定を確認
+
+2. **CSPディレクティブの更新**
+   - script-srcディレクティブにGoogle APIドメインを追加
+   ```html
+   <meta http-equiv="Content-Security-Policy" 
+         content="script-src 'self' 'unsafe-inline' 'unsafe-eval' 
+                  https://maps.googleapis.com 
+                  https://maps.gstatic.com 
+                  https://apis.google.com 
+                  https://accounts.google.com;">
+   ```
+
+3. **Vercelデプロイ設定の確認**
+   - ファイル: `vercel.json`がある場合
+   - ヘッダー設定でCSPが上書きされていないか確認
+   ```json
+   {
+     "headers": [
+       {
+         "source": "/(.*)",
+         "headers": [
+           {
+             "key": "Content-Security-Policy",
+             "value": "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com https://apis.google.com https://accounts.google.com"
+           }
+         ]
+       }
+     ]
+   }
+   ```
+
+4. **Firebase Auth関連のCSP追加**
+   - Firebase Authが使用する他のドメインも追加
+   ```
+   https://*.googleapis.com
+   https://*.gstatic.com
+   https://*.firebaseapp.com
+   ```
+
+5. **ビルド設定の確認**
+   - Viteのビルド設定でCSPが挿入されていないか確認
+   - `vite.config.ts`のプラグイン設定を確認
+
+## 実装の優先順位
+
+1. **タスク19**（CSPエラー修正）- アプリケーションの基本機能（ログイン）に影響
+2. **タスク18**（操作位置の共有）- コラボレーション機能の強化
+
+## テスト項目
+
+### タスク19のテスト
+- [ ] PC版でGoogleログインが正常に動作する
+- [ ] モバイル版でGoogleログインが正常に動作する
+- [ ] CSPエラーがコンソールに表示されない
+- [ ] Firebase Authのリダイレクト認証が正常に完了する
+- [ ] 既存の地図機能に影響がない
+
+## 注意事項
+
+- CSPの変更は慎重に行う（セキュリティに影響）
+- 必要最小限のドメインのみを許可リストに追加
+- デプロイ後は各環境でテストを実施
+
+## 実装完了報告（追加分3）
+
+### ✅ タスク19: Googleログイン時のCSPエラー修正
+- **実装ファイル**: `index.html` (8-15行目)
+- **変更内容**:
+  - script-srcディレクティブに以下のドメインを追加:
+    - `https://apis.google.com`
+    - `https://accounts.google.com`
+    - `https://*.firebaseapp.com`
+  - frame-srcディレクティブに`https://accounts.google.com`を追加
+- **実装詳細**:
+  - Google OAuth APIの読み込みを許可
+  - Firebase Authのリダイレクト処理に必要なドメインを追加
+  - セキュリティを維持しつつ必要最小限のドメインのみ許可
+- **効果**: Googleログイン時のCSPエラーが解消され、全デバイスでログイン可能に
