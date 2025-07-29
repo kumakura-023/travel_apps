@@ -24,10 +24,13 @@ const PlanList: React.FC<PlanListProps> = ({ onSelect }) => {
 
   React.useEffect(() => {
     if (user) {
+      // デバッグ用にユーザー情報を保存
+      (window as any).currentUser = user;
       startListening(user);
     }
     return () => {
       stopListening();
+      (window as any).currentUser = null;
     };
   }, [user]);
 

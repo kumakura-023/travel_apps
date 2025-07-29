@@ -5,6 +5,7 @@ import {
   onSnapshot,
   collection,
   writeBatch,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { TravelPlan } from '../types';
@@ -110,7 +111,7 @@ export async function savePlanCloud(uid: string, plan: TravelPlan) {
     ownerId: plan.ownerId || uid, // Set owner if not already set
     members: allMembers,
     memberIds, // クエリ用のメンバーIDリスト
-    updatedAt: clientTimestamp,
+    updatedAt: serverTimestamp(), // サーバータイムスタンプを使用
     lastSavedAt: clientTimestamp.toISOString(),
   }, { merge: true });
 

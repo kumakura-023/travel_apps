@@ -36,6 +36,8 @@ export function listenUserPlans(
   console.log('[planListService] Starting to listen for user plans:', user.uid);
   
   const plansRef = collection(db, 'plans');
+  // 注意: このクエリにはFirestoreの複合インデックスが必要です
+  // memberIds (array-contains) + updatedAt (desc)
   const q = query(
     plansRef,
     where('memberIds', 'array-contains', user.uid),
@@ -46,6 +48,15 @@ export function listenUserPlans(
     q,
     (snapshot) => {
       console.log('[planListService] Received plans snapshot:', snapshot.size, 'plans');
+      
+      // 変更内容を詳細にログ出力
+      snapshot.docChanges().forEach((change) => {
+        console.log('[planListService] Document change:', {
+          type: change.type,
+          id: change.doc.id,
+          data: change.doc.data()
+        });
+      });
       
       const plans: PlanListItem[] = [];
       snapshot.forEach((doc) => {
@@ -82,6 +93,16 @@ export function listenUserPlans(
     },
     (error) => {
       console.error('[planListService] Error listening to plans:', error);
+      
+      // Firestoreインデックスエラーの場合は詳細なメッセージを表示
+      if (error.code === 'failed-precondition' && error.message.includes('index')) {
+        console.error('[planListService] Firestore index required. Please create the composite index for:', {
+          collection: 'plans',
+          fields: ['memberIds', 'updatedAt DESC']
+        });
+        console.error('[planListService] You can create the index by visiting the URL in the error message or Firebase Console');
+      }
+      
       if (onError) {
         onError(error);
       }

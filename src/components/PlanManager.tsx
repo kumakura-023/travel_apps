@@ -9,6 +9,7 @@ import { usePlanStore } from '../store/planStore';
 import { createNewPlan, deletePlanFromCloud } from '../services/planListService';
 import { serializePlan } from '../utils/planSerializer';
 import { useAuth } from '../hooks/useAuth';
+import { usePlanListStore } from '../store/planListStore';
 
 const PlanManager: React.FC = () => {
   const { plan, setPlan: setPlanStore, updatePlan } = usePlanStore();
@@ -26,6 +27,12 @@ const PlanManager: React.FC = () => {
       const planId = await createNewPlan(user, newPlan.name, payload);
       // 作成したプランをリッスンする
       usePlanStore.getState().listenToPlan(planId);
+      
+      // プラン一覧を手動でリフレッシュ（念のため）
+      setTimeout(() => {
+        console.log('[PlanManager] Refreshing plan list after creation');
+        usePlanListStore.getState().refreshPlans();
+      }, 500);
     } catch (error) {
       console.error('[PlanManager] Failed to create new plan:', error);
       alert('プランの作成に失敗しました');
@@ -64,6 +71,12 @@ const PlanManager: React.FC = () => {
       const planId = await createNewPlan(user, duplicatedPlan.name, payload);
       // 複製したプランをリッスンする
       usePlanStore.getState().listenToPlan(planId);
+      
+      // プラン一覧を手動でリフレッシュ（念のため）
+      setTimeout(() => {
+        console.log('[PlanManager] Refreshing plan list after duplication');
+        usePlanListStore.getState().refreshPlans();
+      }, 500);
     } catch (error) {
       console.error('[PlanManager] Failed to duplicate plan:', error);
       alert('プランの複製に失敗しました');

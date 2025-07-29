@@ -1286,3 +1286,114 @@ Refused to load the script 'https://apis.google.com/js/api.js?onload=__iframefcb
 - [ ] デバイスAで新規プランを追加 → デバイスBの一覧に即座に表示
 - [ ] 両デバイスで同時に操作しても正常に同期
 - [ ] オフライン→オンライン復帰時に最新状態に同期
+
+## 実装完了報告（追加分6）
+
+### ✅ タスク22: プラン名変更・削除・追加の同期問題修正
+- **実装ファイル**:
+  - `src/services/planListService.ts` (新規作成): Firestoreからプラン一覧をリアルタイムで取得するサービス
+  - `src/store/planListStore.ts` (新規作成): プラン一覧の状態管理ストア
+  - `src/components/PlanList.tsx` (全面改修): Firestore対応、リアルタイム同期、インライン編集機能追加
+  - `src/components/PlanManager.tsx` (改修): 新規作成・複製・削除をFirestore対応に変更
+  - `src/services/planCloudService.ts` (99-115行目、141-148行目): memberIdsフィールドとnameフィールドの同期を追加
+- **変更内容**:
+  - プラン一覧をFirestoreからリアルタイムで取得（onSnapshotリスナー使用）
+  - プラン名のインライン編集機能を実装（Enter確定、Escapeキャンセル）
+  - プランの作成・削除・複製をすべてFirestore経由に変更
+  - memberIdsフィールドを追加してクエリ性能を改善
+  - Firestoreのnameフィールドを優先的に使用するよう修正
+- **実装詳細**:
+  - `listenUserPlans`関数: where('memberIds', 'array-contains', user.uid)でユーザーが参加しているプランをリアルタイム監視
+  - `updatePlanName`関数: プラン名の更新をFirestoreに即座に反映
+  - `deletePlanFromCloud`関数: プランの削除処理
+  - `createNewPlan`関数: 新規プラン作成（memberIds配列を含む）
+  - PlanListコンポーネント: ホバー時に編集・削除ボタンを表示
+  - デバッグログを多数追加して動作を可視化
+- **効果**: 
+  - 同一アカウントで複数デバイスにログインしている場合、すべてのデバイスで以下が即座に同期される：
+    - プラン名の変更
+    - プランの削除
+    - 新規プランの追加
+  - リアルタイム同期により、手動でのリロードが不要
+
+## タスク23: プラン追加・名称変更時の同期トリガー修正
+
+### 目的
+タスク22で実装したプラン同期機能において、プラン追加・名称変更時に他のデバイスへの変更が反映されない問題を修正する。候補地追加時には同期が動作することから、プラン一覧のリスナー設定またはFirestoreへの更新方法に問題があると考えられる。
+
+### 問題の詳細
+- プラン追加時: デバイスAで新規プラン作成 → デバイスBに表示されない
+- プラン名変更時: デバイスAでプラン名変更 → デバイスBに反映されない
+- 候補地追加時: デバイスAで候補地追加 → デバイスBに反映される（正常動作）
+
+### 原因の分析
+
+1. **プラン一覧のリスナー問題**
+   - planListService.tsのlistenUserPlansリスナーが正しく動作していない可能性
+   - memberIds配列の更新タイミングの問題
+   - Firestoreのクエリが適切に設定されていない
+
+2. **更新時のタイムスタンプ問題**
+   - updatedAtフィールドが更新されていない
+   - Firestoreのサーバータイムスタンプが正しく設定されていない
+
+3. **ストアの状態管理問題**
+   - planListStoreとplanStoreの連携不足
+   - 更新通知が適切に伝播されていない
+
+### 実装手順
+
+1. **デバッグログの追加**
+   - planListService.tsのリスナー内にログを追加
+   - Firestore更新時の成功・失敗をログ出力
+   ```typescript
+   // リスナー内でのログ
+   console.log('[PlanList] Snapshot received:', snapshot.docChanges());
+   ```
+
+2. **プラン作成時の修正**
+   - createNewPlan関数でupdatedAtフィールドを確実に設定
+   - memberIds配列が正しく設定されているか確認
+   ```typescript
+   const planData = {
+     name: planName,
+     memberIds: [user.uid], // 必須
+     updatedAt: serverTimestamp(), // 必須
+     createdAt: serverTimestamp()
+   };
+   ```
+
+3. **プラン名更新時の修正**
+   - updatePlanName関数でupdatedAtを更新
+   ```typescript
+   await updateDoc(planRef, {
+     name: newName,
+     updatedAt: serverTimestamp() // トリガーとして重要
+   });
+   ```
+
+4. **リスナーのクエリ改善**
+   - orderByを追加して変更を確実に検出
+   ```typescript
+   const q = query(
+     collection(db, 'plans'),
+     where('memberIds', 'array-contains', user.uid),
+     orderBy('updatedAt', 'desc') // 変更検出を改善
+   );
+   ```
+
+5. **強制リフレッシュメカニズム**
+   - プラン操作後に一覧を再取得する関数を追加
+   - 一時的な回避策として実装
+
+### 実装の優先順位
+
+1. **タスク23**（同期トリガー修正）- タスク22の機能を完全に動作させるために必須
+
+### テスト項目
+
+- [ ] デバイスAでプラン追加 → デバイスBのコンソールにログが出力される
+- [ ] デバイスAでプラン名変更 → デバイスBに即座に反映される
+- [ ] updatedAtフィールドが正しく更新されることを確認
+- [ ] Firestoreコンソールでデータの変更を確認
+- [ ] ネットワークタブでFirestoreのリアルタイム通信を確認
