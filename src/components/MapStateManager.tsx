@@ -1,9 +1,8 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useSelectedPlaceStore } from '../store/placeStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import useMediaQuery from '../hooks/useMediaQuery';
-import { loadMapState, saveMapState, loadLastActionPosition } from '../services/storageService';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { usePlanStore } from '../store/planStore';
 
@@ -85,77 +84,35 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
     ]
   }), [isDesktopViewport]);
 
-  // 地図の中心位置（優先順位: Firestoreの最後の操作位置 > ローカルの最後の操作位置 > 保存された地図状態 > 東京駅）
+  // 地図の中心位置（優先順位: Firestoreのプラン共有位置 > デフォルト位置）
   const center = useMemo<google.maps.LatLngLiteral>(() => {
-    // Firestoreの最後の操作位置を優先
+    // Firestoreのプラン共有位置を最優先（これが唯一の共有位置）
     if (plan?.lastActionPosition?.position) {
       if (import.meta.env.DEV) {
-        console.log('[MapStateManager] Firestoreの最後の操作位置から復元:', plan.lastActionPosition.position);
+        console.log('[MapStateManager] プラン共有位置から復元:', {
+          position: plan.lastActionPosition.position,
+          userId: plan.lastActionPosition.userId,
+          actionType: plan.lastActionPosition.actionType,
+          timestamp: plan.lastActionPosition.timestamp
+        });
       }
       return plan.lastActionPosition.position;
     }
     
-    // ローカルの最後の操作位置
-    const lastAction = loadLastActionPosition();
-    if (lastAction?.position) {
-      if (import.meta.env.DEV) {
-        console.log('[MapStateManager] ローカルの最後の操作位置から復元:', lastAction.position);
-      }
-      return lastAction.position;
-    }
-    
-    // 次に保存された地図状態
-    const savedState = loadMapState();
-    if (savedState?.center) {
-      if (import.meta.env.DEV) {
-        console.log('[MapStateManager] 保存された地図状態から復元:', savedState.center);
-      }
-      return savedState.center;
+    // ローカルストレージは使用しない（個人の位置は共有しない）
+    if (import.meta.env.DEV) {
+      console.log('[MapStateManager] プラン共有位置がないため、デフォルト位置（東京駅）を使用');
     }
     
     // デフォルトは東京駅
-    if (import.meta.env.DEV) {
-      console.log('[MapStateManager] デフォルト位置（東京駅）を使用');
-    }
     return { lat: 35.681236, lng: 139.767125 };
-  }, [plan]);
+  }, [plan?.lastActionPosition]);
 
-  // 地図の状態変更を監視して保存
-  useEffect(() => {
-    if (!map) return;
-
-    // デバウンス関数
-    function debounce<T extends (...args: any[]) => any>(
-      func: T,
-      wait: number
-    ): (...args: Parameters<T>) => void {
-      let timeout: NodeJS.Timeout;
-      return (...args: Parameters<T>) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), wait);
-      };
-    }
-
-    const saveStateDebounced = debounce(() => {
-      const center = map.getCenter();
-      const zoom = map.getZoom();
-      if (center && zoom) {
-        saveMapState(
-          { lat: center.lat(), lng: center.lng() },
-          zoom
-        );
-      }
-    }, 500); // 0.5秒のデバウンス
-
-    const listeners = [
-      map.addListener('center_changed', saveStateDebounced),
-      map.addListener('zoom_changed', saveStateDebounced)
-    ];
-
-    return () => {
-      listeners.forEach(listener => listener.remove());
-    };
-  }, [map]);
+  // 個人の地図状態保存は無効化（プラン共有位置のみを使用）
+  // useEffect(() => {
+  //   if (!map) return;
+  //   // ローカルストレージへの保存は行わない
+  // }, [map]);
 
   const mapState: MapState = {
     containerStyle,

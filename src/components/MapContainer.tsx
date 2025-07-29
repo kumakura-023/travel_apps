@@ -5,7 +5,6 @@ import MapStateManager from './MapStateManager';
 import MapEventHandler from './MapEventHandler';
 import MapOverlayManager from './MapOverlayManager';
 import { useUIStore } from '../store/uiStore';
-import { loadMapState } from '../services/storageService';
 import { usePlanStore } from '../store/planStore';
 
 /**
@@ -25,9 +24,8 @@ interface MapContainerProps {
 
 export default function MapContainer({ children, showLabelToggle = true }: MapContainerProps) {
   const { setMap, map } = useGoogleMaps();
-  // 保存されたズームレベルがあればそれを使用、なければデフォルトの14
-  const savedState = loadMapState();
-  const [zoom, setZoom] = useState(savedState?.zoom || 14);
+  // デフォルトのズームレベル（個人の保存状態は使用しない）
+  const [zoom, setZoom] = useState(14);
   const isMapInteractionEnabled = useUIStore((s) => s.isMapInteractionEnabled);
   const { plan } = usePlanStore();
 
@@ -35,24 +33,9 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
   const handleMapLoad = (map: google.maps.Map) => {
     setMap(map);
     
-    // 保存された状態がある場合は明示的に設定
-    if (savedState) {
-      // 中心位置を設定
-      if (savedState.center) {
-        map.setCenter(savedState.center);
-      }
-      // ズームレベルを設定
-      if (savedState.zoom) {
-        map.setZoom(savedState.zoom);
-      }
-      
-      if (import.meta.env.DEV) {
-        console.log('地図の初期状態を復元:', {
-          center: savedState.center,
-          zoom: savedState.zoom,
-          lastUpdated: savedState.lastUpdated
-        });
-      }
+    // 個人の保存状態は使用しない（プラン共有位置のみを使用）
+    if (import.meta.env.DEV) {
+      console.log('[MapContainer] 地図の初期化完了（個人の保存状態は使用しない）');
     }
     
     setZoom(map.getZoom() ?? 14);

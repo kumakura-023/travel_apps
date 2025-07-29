@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Place } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
-import { saveLastActionPosition } from '../services/storageService';
 import { usePlanStore } from './planStore';
 
 interface PlacesState {
@@ -54,10 +53,10 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
         state.onPlaceAdded(newPlace);
       }
       
-      // 最後の操作位置を保存（ローカル）
-      saveLastActionPosition(newPlace.coordinates);
+      // ローカルストレージへの保存は無効化（プラン共有位置のみを使用）
+      // saveLastActionPosition(newPlace.coordinates);
       
-      // Firestoreに最後の操作位置を保存
+      // Firestoreに最後の操作位置を保存（プラン共有）
       usePlanStore.getState().updateLastActionPosition(newPlace.coordinates, 'place').catch(error => {
         console.error('[placesStore] Failed to update last action position:', error);
       });
