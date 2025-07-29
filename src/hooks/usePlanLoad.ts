@@ -30,7 +30,11 @@ export function usePlanLoad(user: any, isInitializing: boolean) {
       }
 
       if (loaded) {
-        usePlanStore.getState().setPlan(loaded);
+        // 重要: setPlanではなくlistenToPlanを使ってFirestoreのリアルタイム監視を開始
+        console.log('[usePlanLoad] Starting to listen to plan:', loaded.id);
+        usePlanStore.getState().listenToPlan(loaded.id);
+        
+        // 初期データも設定（listenToPlanの結果が来るまでの間）
         usePlacesStore.setState({ places: loaded.places });
         useLabelsStore.setState({ labels: loaded.labels });
         setActivePlan(loaded.id);

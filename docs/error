@@ -1,0 +1,284 @@
+[2025-07-29T07:47:16.845Z]  @firebase/firestore: Firestore (10.14.1): enableIndexedDbPersistence() will be deprecated in the future, you can use `FirestoreSettings.cache` instead.
+fy @ index-D1GsdPgs.js:196
+warn @ index-D1GsdPgs.js:196
+Wn @ index-D1GsdPgs.js:413
+vx @ index-D1GsdPgs.js:2121
+(anonymous) @ index-D1GsdPgs.js:3471Understand this warning
+index-D1GsdPgs.js:3475 RouteConnectionsStore initialized
+index-D1GsdPgs.js:3856 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://voyagesketch.vercel.app/', …}
+voyagesketch.vercel.app/:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">Understand this warning
+index-D1GsdPgs.js:3856 PWA install prompt available
+voyagesketch.vercel.app/:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+places.js:76 As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers. Please use google.maps.places.PlaceAutocompleteElement instead. At this time, google.maps.places.Autocomplete is not scheduled to be discontinued, but google.maps.places.PlaceAutocompleteElement is recommended over google.maps.places.Autocomplete. While google.maps.places.Autocomplete will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.Autocomplete will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide.
+CF @ places.js:76
+componentDidMount @ maps-CYOiytW-.js:35
+Mi @ vendor-DWvC8KHc.js:32
+Fa @ vendor-DWvC8KHc.js:32
+nd @ vendor-DWvC8KHc.js:32
+id @ vendor-DWvC8KHc.js:32
+yt @ vendor-DWvC8KHc.js:32
+ja @ vendor-DWvC8KHc.js:32
+E @ vendor-DWvC8KHc.js:17
+un @ vendor-DWvC8KHc.js:17Understand this warning
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: false null
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+places.js:843 As of March 1st, 2025, google.maps.places.PlacesService is not available to new customers. Please use google.maps.places.Place instead. At this time, google.maps.places.PlacesService is not scheduled to be discontinued, but google.maps.places.Place is recommended over google.maps.places.PlacesService. While google.maps.places.PlacesService will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.PlacesService will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide.
+QG @ places.js:843
+R @ index-D1GsdPgs.js:3665
+(anonymous) @ maps-CYOiytW-.js:35
+hi @ vendor-DWvC8KHc.js:30
+Mi @ vendor-DWvC8KHc.js:32
+Fa @ vendor-DWvC8KHc.js:32
+nd @ vendor-DWvC8KHc.js:32
+id @ vendor-DWvC8KHc.js:32
+yt @ vendor-DWvC8KHc.js:32
+Ii @ vendor-DWvC8KHc.js:32
+pt @ vendor-DWvC8KHc.js:30
+id @ vendor-DWvC8KHc.js:32
+yt @ vendor-DWvC8KHc.js:32
+ja @ vendor-DWvC8KHc.js:32
+E @ vendor-DWvC8KHc.js:17
+un @ vendor-DWvC8KHc.js:17Understand this warning
+index-D1GsdPgs.js:1 🔧 useGoogleMaps.setMap called with: _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:1 ✅ Map state updated, should trigger re-renders
+index-D1GsdPgs.js:1 🔄 Syncing map state with global instance
+index-D1GsdPgs.js:3471 ✅ MapEventHandler mounted
+index-D1GsdPgs.js:3471 🔧 useEffect for click listeners triggered
+index-D1GsdPgs.js:3471 🔧 Map exists: false
+index-D1GsdPgs.js:3471 🔧 Map object: null
+index-D1GsdPgs.js:3471 ❌ No map instance - returning early
+2index-D1GsdPgs.js:1 🔄 Syncing map state with global instance
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: false null
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: true _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index-D1GsdPgs.js:3471 🔧 useEffect for click listeners triggered
+index-D1GsdPgs.js:3471 🔧 Map exists: true
+index-D1GsdPgs.js:3471 🔧 Map object: _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3471 ✅ MapEventHandler: Registering ALL click listeners
+index-D1GsdPgs.js:3471 Current selectionMode: null
+index-D1GsdPgs.js:3471 Map instance: _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3471 Map bounds changed
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: true _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: true _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: true _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+main.js:182 As of February 21st, 2024, google.maps.Marker is deprecated. Please use google.maps.marker.AdvancedMarkerElement instead. At this time, google.maps.Marker is not scheduled to be discontinued, but google.maps.marker.AdvancedMarkerElement is recommended over google.maps.Marker. While google.maps.Marker will continue to receive bug fixes for any major regressions, existing bugs in google.maps.Marker will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/deprecations for additional details and https://developers.google.com/maps/documentation/javascript/advanced-markers/migration for the migration guide.
+_.mo @ main.js:182
+(anonymous) @ maps-CYOiytW-.js:17
+$t @ maps-CYOiytW-.js:9
+a @ maps-CYOiytW-.js:9
+(anonymous) @ maps-CYOiytW-.js:9
+(anonymous) @ maps-CYOiytW-.js:9
+componentDidMount @ maps-CYOiytW-.js:17
+Mi @ vendor-DWvC8KHc.js:32
+Fa @ vendor-DWvC8KHc.js:32
+nd @ vendor-DWvC8KHc.js:32
+id @ vendor-DWvC8KHc.js:32
+yt @ vendor-DWvC8KHc.js:32
+Ii @ vendor-DWvC8KHc.js:32
+pt @ vendor-DWvC8KHc.js:30
+(anonymous) @ vendor-DWvC8KHc.js:32
+setTimeout
+Ya @ index-D1GsdPgs.js:2015
+next @ index-D1GsdPgs.js:2015
+oa @ index-D1GsdPgs.js:1970
+X_ @ index-D1GsdPgs.js:1970
+K_ @ index-D1GsdPgs.js:1970
+Ys @ index-D1GsdPgs.js:1985
+await in Ys
+fm @ index-D1GsdPgs.js:1985
+await in fm
+(anonymous) @ index-D1GsdPgs.js:1907
+V_ @ index-D1GsdPgs.js:1907
+await in V_
+onNext @ index-D1GsdPgs.js:1876
+(anonymous) @ index-D1GsdPgs.js:1876
+(anonymous) @ index-D1GsdPgs.js:1876
+(anonymous) @ index-D1GsdPgs.js:2120
+(anonymous) @ index-D1GsdPgs.js:2120
+Promise.then
+gu @ index-D1GsdPgs.js:2120
+enqueue @ index-D1GsdPgs.js:2120
+enqueueAndForget @ index-D1GsdPgs.js:2120
+(anonymous) @ index-D1GsdPgs.js:1876
+(anonymous) @ index-D1GsdPgs.js:1876
+bo @ index-D1GsdPgs.js:1786
+(anonymous) @ index-D1GsdPgs.js:1801
+(anonymous) @ index-D1GsdPgs.js:1801
+ri @ index-D1GsdPgs.js:360
+et @ index-D1GsdPgs.js:360
+lr.ta @ index-D1GsdPgs.js:368
+ta @ index-D1GsdPgs.js:365
+Ht.Y @ index-D1GsdPgs.js:364
+Ht.ca @ index-D1GsdPgs.js:364
+ri @ index-D1GsdPgs.js:360
+et @ index-D1GsdPgs.js:360
+Xc @ index-D1GsdPgs.js:367
+n.bb @ index-D1GsdPgs.js:367
+n.Ea @ index-D1GsdPgs.js:367
+ss @ index-D1GsdPgs.js:366
+n.Pa @ index-D1GsdPgs.js:365
+Promise.then
+Hc @ index-D1GsdPgs.js:365
+n.Pa @ index-D1GsdPgs.js:365
+Promise.then
+Hc @ index-D1GsdPgs.js:365
+n.Pa @ index-D1GsdPgs.js:365
+Promise.then
+Hc @ index-D1GsdPgs.js:365
+n.Pa @ index-D1GsdPgs.js:365
+Promise.then
+Hc @ index-D1GsdPgs.js:365
+n.Pa @ index-D1GsdPgs.js:365
+Promise.then
+Hc @ index-D1GsdPgs.js:365
+n.Sa @ index-D1GsdPgs.js:365
+Promise.then
+n.send @ index-D1GsdPgs.js:365
+n.ea @ index-D1GsdPgs.js:367
+Dc @ index-D1GsdPgs.js:364
+ou @ index-D1GsdPgs.js:368
+n.Fa @ index-D1GsdPgs.js:368
+le @ index-D1GsdPgs.js:360
+Promise.then
+_e @ index-D1GsdPgs.js:360
+iu @ index-D1GsdPgs.js:368
+ta @ index-D1GsdPgs.js:365
+Ht.Y @ index-D1GsdPgs.js:364
+Ht.ca @ index-D1GsdPgs.js:364
+ri @ index-D1GsdPgs.js:360
+et @ index-D1GsdPgs.js:360
+Xc @ index-D1GsdPgs.js:367
+n.bb @ index-D1GsdPgs.js:367
+n.Ea @ index-D1GsdPgs.js:367
+ss @ index-D1GsdPgs.js:366
+n.Pa @ index-D1GsdPgs.js:365
+Promise.then
+Hc @ index-D1GsdPgs.js:365
+n.Sa @ index-D1GsdPgs.js:365
+Promise.then
+n.send @ index-D1GsdPgs.js:365
+n.ea @ index-D1GsdPgs.js:367
+Dc @ index-D1GsdPgs.js:364
+Zo @ index-D1GsdPgs.js:364
+n.Ga @ index-D1GsdPgs.js:368
+le @ index-D1GsdPgs.js:360
+Promise.then
+_e @ index-D1GsdPgs.js:360
+gi @ index-D1GsdPgs.js:368
+n.connect @ index-D1GsdPgs.js:368
+lt.m @ index-D1GsdPgs.js:368
+Io @ index-D1GsdPgs.js:1801
+send @ index-D1GsdPgs.js:1786
+a_ @ index-D1GsdPgs.js:1876
+A_ @ index-D1GsdPgs.js:1876
+jl @ index-D1GsdPgs.js:1907
+(anonymous) @ index-D1GsdPgs.js:1907
+M_ @ index-D1GsdPgs.js:1907
+(anonymous) @ index-D1GsdPgs.js:1876
+(anonymous) @ index-D1GsdPgs.js:1876
+(anonymous) @ index-D1GsdPgs.js:2120
+(anonymous) @ index-D1GsdPgs.js:2120
+Promise.then
+gu @ index-D1GsdPgs.js:2120
+enqueue @ index-D1GsdPgs.js:2120
+enqueueAndForget @ index-D1GsdPgs.js:2120
+(anonymous) @ index-D1GsdPgs.js:1876
+(anonymous) @ index-D1GsdPgs.js:1876
+wo @ index-D1GsdPgs.js:1786
+(anonymous) @ index-D1GsdPgs.js:1801
+setTimeout
+Bo @ index-D1GsdPgs.js:1801
+T_ @ index-D1GsdPgs.js:1876
+P_ @ index-D1GsdPgs.js:1876
+(anonymous) @ index-D1GsdPgs.js:1876
+Promise.then
+auth @ index-D1GsdPgs.js:1876
+start @ index-D1GsdPgs.js:1876
+Vl @ index-D1GsdPgs.js:1907
+tm @ index-D1GsdPgs.js:1907
+hm @ index-D1GsdPgs.js:1985
+await in hm
+X_ @ index-D1GsdPgs.js:1985
+am @ index-D1GsdPgs.js:1970
+(anonymous) @ index-D1GsdPgs.js:2030
+(anonymous) @ index-D1GsdPgs.js:2030
+await in (anonymous)
+(anonymous) @ index-D1GsdPgs.js:2120
+(anonymous) @ index-D1GsdPgs.js:2120
+Promise.then
+gu @ index-D1GsdPgs.js:2120
+enqueue @ index-D1GsdPgs.js:2120
+enqueueAndForget @ index-D1GsdPgs.js:2120
+mx @ index-D1GsdPgs.js:2030
+ro @ index-D1GsdPgs.js:2286
+oE @ index-D1GsdPgs.js:3471
+II @ index-D1GsdPgs.js:3696
+await in II
+(anonymous) @ index-D1GsdPgs.js:3829
+(anonymous) @ index-D1GsdPgs.js:3829
+ol @ vendor-DWvC8KHc.js:32
+Xt @ vendor-DWvC8KHc.js:32
+id @ vendor-DWvC8KHc.js:32
+yt @ vendor-DWvC8KHc.js:32
+Ii @ vendor-DWvC8KHc.js:32
+pt @ vendor-DWvC8KHc.js:30
+(anonymous) @ vendor-DWvC8KHc.js:32
+setTimeout
+(anonymous) @ index-D1GsdPgs.js:3066
+_send @ index-D1GsdPgs.js:3066
+notifyServiceWorker @ index-D1GsdPgs.js:3111
+(anonymous) @ index-D1GsdPgs.js:3111
+await in (anonymous)
+_withPendingWrite @ index-D1GsdPgs.js:3111
+_set @ index-D1GsdPgs.js:3111
+setCurrentUser @ index-D1GsdPgs.js:2646
+directlySetCurrentUser @ index-D1GsdPgs.js:2736
+reloadAndSetCurrentUserOrClear @ index-D1GsdPgs.js:2736
+await in reloadAndSetCurrentUserOrClear
+initializeCurrentUser @ index-D1GsdPgs.js:2736
+await in initializeCurrentUser
+(anonymous) @ index-D1GsdPgs.js:2736
+Promise.then
+queue @ index-D1GsdPgs.js:2736
+_initializeWithPersistence @ index-D1GsdPgs.js:2736
+db @ index-D1GsdPgs.js:2766
+(anonymous) @ index-D1GsdPgs.js:3351
+getOrInitializeService @ index-D1GsdPgs.js:166
+initialize @ index-D1GsdPgs.js:166
+ub @ index-D1GsdPgs.js:2766
+Mw @ index-D1GsdPgs.js:3366
+(anonymous) @ index-D1GsdPgs.js:3471Understand this warning
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: true _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: true _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index-D1GsdPgs.js:3471 Map bounds changed
+index-D1GsdPgs.js:3471 🔍 [RECEIVE] {remoteTimestamp: 1753775232976, cloudSaveTimestamp: 0, flagBased: false, fallbackBased: false, remotePlaces: 1, …}
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: true _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: true _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index-D1GsdPgs.js:3471 🔧 Emergency click test - map ready check
+index-D1GsdPgs.js:3471 Map instance ready: true
+index-D1GsdPgs.js:3471 Map div element: <div style=​"width:​ 100%;​ height:​ 100vh;​ margin-left:​ 0px;​ transition:​ margin 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)​;​ cursor:​ default;​ position:​ relative;​ overflow:​ hidden;​">​…​</div>​
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: true _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index-D1GsdPgs.js:3471 🔄 MapEventHandler render - selectionMode: null
+index-D1GsdPgs.js:3471 🗺️ Map instance state: true _.Er {gm_bindings_: {…}, BM: _.Er, __gm: xca, gm_accessors_: {…}, mapCapabilities: {…}, …}
+index-D1GsdPgs.js:3665 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index-D1GsdPgs.js:3471 Test listener removed

@@ -39,22 +39,34 @@ export const usePlanStore = create<PlanState>((set, get) => ({
 
   listenToPlan: (planId) => {
     const { unsubscribe, activePlanId } = get();
+    
+    console.log('[planStore] listenToPlan called:', { planId, activePlanId, hasUnsubscribe: !!unsubscribe });
+    
     if (unsubscribe && activePlanId === planId) {
       // Already listening to this plan
+      console.log('[planStore] Already listening to this plan');
       return;
     }
 
     // If listening to another plan, unsubscribe first
     if (unsubscribe) {
+      console.log('[planStore] Unsubscribing from previous plan');
       unsubscribe();
     }
 
     set({ isLoading: true, activePlanId: planId });
 
     const newUnsubscribe = listenPlan(planId, (plan) => {
+      console.log('[planStore] Plan data received:', { 
+        planId: plan?.id, 
+        hasLastActionPosition: !!plan?.lastActionPosition,
+        lastActionPosition: plan?.lastActionPosition 
+      });
+      
       if (plan) {
         set({ plan, isLoading: false, error: null });
       } else {
+        console.error('[planStore] Plan not found or permission denied:', planId);
         set({ plan: null, isLoading: false, error: `Plan with ID ${planId} not found or permission denied.` });
       }
     });

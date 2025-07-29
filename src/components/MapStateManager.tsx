@@ -29,15 +29,13 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
   const { map } = useGoogleMaps();
   const { plan, isLoading } = usePlanStore();
   
-  // デバッグ: planの状態をログ出力
-  if (import.meta.env.DEV) {
-    console.log('[MapStateManager] Current state:', {
-      planId: plan?.id,
-      isLoading,
-      hasLastActionPosition: !!plan?.lastActionPosition,
-      lastActionPosition: plan?.lastActionPosition
-    });
-  }
+  // デバッグ: planの状態をログ出力（本番環境でも一時的に出力）
+  console.log('[MapStateManager] Current state:', {
+    planId: plan?.id,
+    isLoading,
+    hasLastActionPosition: !!plan?.lastActionPosition,
+    lastActionPosition: plan?.lastActionPosition
+  });
 
   // コンテナスタイルの計算
   const containerStyle = useMemo(() => {
@@ -109,21 +107,17 @@ export default function MapStateManager({ children }: MapStateManagerProps) {
     }
     
     if (plan?.lastActionPosition?.position) {
-      if (import.meta.env.DEV) {
-        console.log('[MapStateManager] プラン共有位置から復元:', {
-          position: plan.lastActionPosition.position,
-          userId: plan.lastActionPosition.userId,
-          actionType: plan.lastActionPosition.actionType,
-          timestamp: plan.lastActionPosition.timestamp
-        });
-      }
+      console.log('[MapStateManager] プラン共有位置から復元:', {
+        position: plan.lastActionPosition.position,
+        userId: plan.lastActionPosition.userId,
+        actionType: plan.lastActionPosition.actionType,
+        timestamp: plan.lastActionPosition.timestamp
+      });
       setCenter(plan.lastActionPosition.position);
       setCenterInitialized(true);
     } else if (!isLoading && !centerInitialized) {
       // planの読み込みが完了したが、lastActionPositionがない場合
-      if (import.meta.env.DEV) {
-        console.log('[MapStateManager] プラン共有位置がないため、デフォルト位置（東京駅）を使用');
-      }
+      console.log('[MapStateManager] プラン共有位置がないため、デフォルト位置（東京駅）を使用');
       setCenter(DEFAULT_CENTER);
       setCenterInitialized(true);
     }

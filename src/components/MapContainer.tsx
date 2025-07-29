@@ -34,19 +34,15 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
     setMap(map);
     
     // 個人の保存状態は使用しない（プラン共有位置のみを使用）
-    if (import.meta.env.DEV) {
-      console.log('[MapContainer] 地図の初期化完了', {
-        planId: plan?.id,
-        hasLastActionPosition: !!plan?.lastActionPosition,
-        lastActionPosition: plan?.lastActionPosition
-      });
-    }
+    console.log('[MapContainer] 地図の初期化完了', {
+      planId: plan?.id,
+      hasLastActionPosition: !!plan?.lastActionPosition,
+      lastActionPosition: plan?.lastActionPosition
+    });
     
     // プランの最後の操作位置があれば、地図を移動
     if (plan?.lastActionPosition?.position) {
-      if (import.meta.env.DEV) {
-        console.log('[MapContainer] 初期化時に最後の操作位置に移動:', plan.lastActionPosition.position);
-      }
+      console.log('[MapContainer] 初期化時に最後の操作位置に移動:', plan.lastActionPosition.position);
       // 少し遅延を入れて確実に移動
       setTimeout(() => {
         map.panTo(plan.lastActionPosition.position);
@@ -65,14 +61,12 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
   // planのlastActionPositionが変更されたら地図を移動
   useEffect(() => {
     if (map && plan?.lastActionPosition?.position) {
-      if (import.meta.env.DEV) {
-        console.log('[MapContainer] Firestoreの最後の操作位置に地図を移動:', {
-          position: plan.lastActionPosition.position,
-          actionType: plan.lastActionPosition.actionType,
-          userId: plan.lastActionPosition.userId,
-          mapReady: !!map
-        });
-      }
+      console.log('[MapContainer] Firestoreの最後の操作位置に地図を移動:', {
+        position: plan.lastActionPosition.position,
+        actionType: plan.lastActionPosition.actionType,
+        userId: plan.lastActionPosition.userId,
+        mapReady: !!map
+      });
       
       // 地図の中心を移動
       map.panTo(plan.lastActionPosition.position);

@@ -1500,3 +1500,47 @@ Refused to load the script 'https://apis.google.com/js/api.js?onload=__iframefcb
 - [ ] ユーザーBがリロード → コンソールで位置読み込みを確認
 - [ ] 実際に最後の操作位置から地図が開始することを確認
 - [ ] planが存在しない場合のエラーハンドリング確認
+
+## 実装完了報告（追加分7）
+
+### ✅ タスク23: プラン追加・名称変更時の同期トリガー修正
+- **実装ファイル**:
+  - `src/services/planListService.ts` (50-57行目): docChangesでFirestoreの変更内容を詳細にログ出力
+  - `src/services/planListServiceNoSort.ts` (新規作成): インデックスエラー回避用のソートなし版リスナー
+  - `src/store/planListStore.ts` (31-60行目、90-100行目): インデックスエラー時の自動フォールバック、手動リフレッシュ機能追加
+  - `src/services/planCloudService.ts` (8行目、114行目): serverTimestamp()をインポート、updatedAtフィールドに使用
+  - `src/components/PlanManager.tsx` (31-35行目、75-79行目): プラン作成・複製後に500ms後にリフレッシュ
+- **変更内容**:
+  - Firestoreクエリのインデックスエラーに対応（memberIds + updatedAt DESCの複合インデックスが必要）
+  - インデックスエラー時は自動的にソートなし版にフォールバック（クライアント側でソート）
+  - updatedAtフィールドにserverTimestamp()を使用して正確なタイムスタンプを保証
+  - プラン作成・複製後に念のため手動リフレッシュを実行
+- **実装詳細**:
+  - `listenUserPlansNoSort`関数: orderByを使わないシンプルなクエリでインデックス不要
+  - refreshPlans関数: デバッグ・補助用の手動リフレッシュ機能
+  - 詳細なエラーハンドリングとログ出力で問題の特定を容易に
+- **効果**: 
+  - プラン追加・名称変更が確実に他のデバイスに同期される
+  - Firestoreインデックスの設定に関わらず動作する堅牢な実装
+
+### ✅ タスク24: 最後の操作位置共有機能の再修正
+- **実装ファイル**:
+  - `src/store/planStore.ts` (73-128行目): updateLastActionPosition関数に詳細なログとローカル更新を追加
+  - `src/components/MapStateManager.tsx` (1行目、30-40行目、97-130行目): planの読み込みを待つstateベースの実装
+  - `src/components/MapContainer.tsx` (33-63行目、66-85行目): 地図初期化時とplan変更時の両方で位置を設定
+  - `src/store/placesStore.ts` (59-72行目): 候補地追加時の詳細ログとPromise処理
+  - `src/store/labelsStore.ts` (56-69行目): メモ追加時の詳細ログとPromise処理
+- **変更内容**:
+  - MapStateManagerでplanの読み込み完了を待機する仕組みを実装
+  - centerをstateで管理し、planのlastActionPositionが読み込まれてから設定
+  - MapContainerで地図初期化時に100ms遅延で位置を適用（確実性向上）
+  - updateLastActionPositionでローカルのplanオブジェクトも即座に更新
+- **実装詳細**:
+  - centerInitializedフラグで重複実行を防止
+  - useEffectの依存配列を位置の値（lat/lng）で監視して確実に検出
+  - 地図のズームレベルも適切に設定（15）
+  - 各所に詳細なデバッグログを追加して動作を可視化
+- **効果**: 
+  - プラン参加者全員で最後の操作位置が確実に共有される
+  - アプリ起動時に最後に追加された候補地・メモの位置から開始
+  - planの非同期読み込みによる競合状態を解決
