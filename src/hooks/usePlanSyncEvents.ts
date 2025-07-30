@@ -14,9 +14,6 @@ export function usePlanSyncEvents(
   useEffect(() => {
     const { setOnPlaceAdded } = usePlacesStore.getState();
     setOnPlaceAdded((newPlace) => {
-      if (import.meta.env.DEV) {
-        console.log('🚀 候補地追加検知、即座同期開始:', newPlace.name);
-      }
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan) {
         const planToSave: TravelPlan = {
@@ -46,9 +43,6 @@ export function usePlanSyncEvents(
   useEffect(() => {
     const { setOnPlaceDeleted } = usePlacesStore.getState();
     setOnPlaceDeleted((updatedPlaces) => {
-      if (import.meta.env.DEV) {
-        console.log('🗑️ 候補地削除検知、即座同期開始:');
-      }
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan) {
         const planToSave: TravelPlan = {
@@ -76,9 +70,6 @@ export function usePlanSyncEvents(
   useEffect(() => {
     const { setOnLabelAdded } = useLabelsStore.getState();
     setOnLabelAdded((newLabel) => {
-      if (import.meta.env.DEV) {
-        console.log('📝 ラベル追加検知（ローカルのみ）:', newLabel.text);
-      }
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan) {
         const planToSave: TravelPlan = {
@@ -94,9 +85,6 @@ export function usePlanSyncEvents(
   useEffect(() => {
     const { setOnLabelUpdated } = useLabelsStore.getState();
     setOnLabelUpdated((updatedLabel, updatedLabels) => {
-      if (import.meta.env.DEV) {
-        console.log('📝 ラベル更新検知、同期開始:', updatedLabel);
-      }
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan) {
         const planToSave: TravelPlan = {
@@ -121,9 +109,6 @@ export function usePlanSyncEvents(
   useEffect(() => {
     const { setOnLabelDeleted } = useLabelsStore.getState();
     setOnLabelDeleted((updatedLabels) => {
-      if (import.meta.env.DEV) {
-        console.log('🗑️ ラベル削除検知、即座同期開始:');
-      }
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan) {
         const planToSave: TravelPlan = {

@@ -33,7 +33,6 @@ export function listenUserPlans(
   onUpdate: (plans: PlanListItem[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  console.log('[planListService] Starting to listen for user plans:', user.uid);
   
   const plansRef = collection(db, 'plans');
   // 注意: このクエリにはFirestoreの複合インデックスが必要です
@@ -47,16 +46,6 @@ export function listenUserPlans(
   return onSnapshot(
     q,
     (snapshot) => {
-      console.log('[planListService] Received plans snapshot:', snapshot.size, 'plans');
-      
-      // 変更内容を詳細にログ出力
-      snapshot.docChanges().forEach((change) => {
-        console.log('[planListService] Document change:', {
-          type: change.type,
-          id: change.doc.id,
-          data: change.doc.data()
-        });
-      });
       
       const plans: PlanListItem[] = [];
       snapshot.forEach((doc) => {
@@ -88,7 +77,6 @@ export function listenUserPlans(
         });
       });
       
-      console.log('[planListService] Processed plans:', plans);
       onUpdate(plans);
     },
     (error) => {
@@ -114,7 +102,6 @@ export function listenUserPlans(
  * プラン名を更新
  */
 export async function updatePlanName(planId: string, newName: string): Promise<void> {
-  console.log('[planListService] Updating plan name:', { planId, newName });
   
   const planRef = doc(db, 'plans', planId);
   await updateDoc(planRef, {
@@ -122,19 +109,16 @@ export async function updatePlanName(planId: string, newName: string): Promise<v
     updatedAt: serverTimestamp(),
   });
   
-  console.log('[planListService] Plan name updated successfully');
 }
 
 /**
  * プランを削除
  */
 export async function deletePlanFromCloud(planId: string): Promise<void> {
-  console.log('[planListService] Deleting plan:', planId);
   
   const planRef = doc(db, 'plans', planId);
   await deleteDoc(planRef);
   
-  console.log('[planListService] Plan deleted successfully');
 }
 
 /**
@@ -145,7 +129,6 @@ export async function createNewPlan(
   name: string,
   initialPayload: string
 ): Promise<string> {
-  console.log('[planListService] Creating new plan:', { userId: user.uid, name });
   
   const plansRef = collection(db, 'plans');
   const docRef = await addDoc(plansRef, {

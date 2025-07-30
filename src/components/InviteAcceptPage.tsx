@@ -58,15 +58,6 @@ const InviteAcceptPage: React.FC = () => {
               const { loadPlanById } = await import('../services/planCloudService');
               const loadedPlan = await loadPlanById(user.uid, data.planId);
               if (loadedPlan) {
-                if (import.meta.env.DEV) {
-                  console.log('🎉 招待参加後プラン読み込み成功:', {
-                    planId: loadedPlan.id,
-                    planName: loadedPlan.name,
-                    placesCount: loadedPlan.places.length,
-                    labelsCount: loadedPlan.labels.length,
-                    members: loadedPlan.members
-                  });
-                }
                 usePlanStore.getState().setPlan(loadedPlan);
                 usePlacesStore.setState({ places: loadedPlan.places });
                 useLabelsStore.setState({ labels: loadedPlan.labels });

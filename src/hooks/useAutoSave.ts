@@ -58,18 +58,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     const recentCloudSave = cloudSaveTimestampRef.current > 0 && 
                            (now - cloudSaveTimestampRef.current) < 3000; // 3秒以内
     
-    if (import.meta.env.DEV && (recentlyCompleted || recentCloudSave)) {
-      console.log('🔍 自己更新フラグ判定:', {
-        isWritingToCloud: isWritingToCloudRef.current,
-        recentlyCompleted,
-        recentCloudSave,
-        lastWriteCompleted: lastWriteCompletedRef.current,
-        cloudSaveTimestamp: cloudSaveTimestampRef.current,
-        now,
-        timeSinceWrite: now - lastWriteCompletedRef.current,
-        timeSinceCloudSave: now - cloudSaveTimestampRef.current
-      });
-    }
     
     return isWritingToCloudRef.current || recentlyCompleted || recentCloudSave;
   }, []);
@@ -79,9 +67,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     try {
       await savePlanHybrid(plan, { mode: 'local' });
       lastLocalSaveRef.current = Date.now();
-      if (import.meta.env.DEV) {
-        console.log('💾 即座ローカル保存完了');
-      }
     } catch (error) {
       console.error('即座ローカル保存失敗:', error);
     }
@@ -100,9 +85,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     // SyncManagerの緊急停止フラグをチェック
     const syncStatus = syncManagerRef.current.getSyncStatus();
     if (syncStatus.emergencyStopFlag) {
-      if (import.meta.env.DEV) {
-        console.log('🚨 緊急停止中のためクラウド同期をスキップ');
-      }
       return;
     }
     
@@ -117,15 +99,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       // 保存開始時にタイムスタンプを設定（即座に利用可能にする）
       cloudSaveTimestampRef.current = saveStartTimestamp;
       
-      if (import.meta.env.DEV) {
-        console.log('☁️ 即座クラウド同期開始:', { 
-          saveStartTimestamp,
-          places: plan.places.length,
-          labels: plan.labels.length,
-          planHash: calculatePlanHash(plan),
-          cloudSaveTimestampRef: cloudSaveTimestampRef.current
-        });
-      }
       
       syncDebugUtils.log('save', {
         timestamp: saveStartTimestamp,
@@ -143,14 +116,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       cloudSaveTimestampRef.current = saveEndTimestamp;
       setIsSynced(true);
       
-      if (import.meta.env.DEV) {
-        console.log('☁️ 即座クラウド同期成功:', { 
-          saveStartTimestamp,
-          saveEndTimestamp,
-          timeDiff: saveEndTimestamp - saveStartTimestamp,
-          cloudSaveTimestampRef: cloudSaveTimestampRef.current
-        });
-      }
       
       onSave?.(saveEndTimestamp);
     } catch (err: any) {
@@ -163,9 +128,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
                           errorMessage.includes('too many requests');
       
       if (isQuotaError) {
-        if (import.meta.env.DEV) {
-          console.error('🚨 Firebaseクォータエラー検知 - SyncManagerで緊急停止をトリガー');
-        }
         // SyncManagerにエラーを通知して緊急停止をトリガー
         // ここではhandleFirebaseErrorを直接呼べないので、ダミーの同期操作でエラーを発生させる
         try {
@@ -208,14 +170,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       // 保存開始時にタイムスタンプを設定（即座に利用可能にする）
       cloudSaveTimestampRef.current = saveStartTimestamp;
       
-      if (import.meta.env.DEV) {
-        console.log('☁️ バッチクラウド同期開始:', { 
-          saveStartTimestamp,
-          places: plan.places.length,
-          labels: plan.labels.length,
-          cloudSaveTimestampRef: cloudSaveTimestampRef.current
-        });
-      }
       
       syncDebugUtils.log('save', {
         timestamp: saveStartTimestamp,
@@ -232,14 +186,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
       cloudSaveTimestampRef.current = saveEndTimestamp;
       setIsSynced(true);
       
-      if (import.meta.env.DEV) {
-        console.log('☁️ バッチクラウド同期成功:', { 
-          saveStartTimestamp,
-          saveEndTimestamp,
-          timeDiff: saveEndTimestamp - saveStartTimestamp,
-          cloudSaveTimestampRef: cloudSaveTimestampRef.current
-        });
-      }
       
       onSave?.(saveEndTimestamp);
     } catch (err: any) {
@@ -252,9 +198,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
                           errorMessage.includes('too many requests');
       
       if (isQuotaError) {
-        if (import.meta.env.DEV) {
-          console.error('🚨 Firebaseクォータエラー検知 - SyncManagerで緊急停止をトリガー');
-        }
       }
       
       setIsSynced(false);
@@ -294,9 +237,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     // 書き込みが最近完了した場合はスキップ（自己更新ループ防止）
     const now = Date.now();
     if (lastWriteCompletedRef.current > 0 && (now - lastWriteCompletedRef.current) < 500) {
-      if (import.meta.env.DEV) {
-        console.log('🔄 プラン変更検知 - 最近の書き込み完了のためスキップ');
-      }
       return;
     }
     
@@ -313,15 +253,6 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
     // 即座にローカル保存を実行
     saveImmediately(plan);
     
-    // 開発時のみ詳細ログ
-    if (import.meta.env.DEV) {
-      console.log('🔄 プラン変更検知:', {
-        places: plan.places.length,
-        labels: plan.labels.length,
-        changeCount: changeCountRef.current,
-        hash: currentHash
-      });
-    }
 
   }, [plan, isRemoteUpdateInProgress, saveImmediately, calculatePlanHash]);
 

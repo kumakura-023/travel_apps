@@ -36,7 +36,6 @@ export class SyncDebugUtils {
     };
     
     this.debugLogs.push(logEntry);
-    console.log(`🔍 [${type.toUpperCase()}]`, logEntry.data);
     
     // ログが多くなりすぎないよう、最新100件のみ保持
     if (this.debugLogs.length > 100) {
@@ -212,29 +211,12 @@ export class SyncDebugUtils {
    */
   clearLogs() {
     this.debugLogs = [];
-    console.log('🔍 デバッグログをクリアしました');
   }
 
   /**
    * 詳細な同期レポートを出力
    */
   printDetailedReport() {
-    console.log('🔍 === 同期デバッグ詳細レポート ===');
-    
-    const status = this.analyzeSyncStatus();
-    console.log('📊 同期統計:', status);
-    
-    const patterns = this.analyzeFailurePatterns();
-    console.log('❌ 無視された更新:', patterns.ignoredUpdates);
-    console.log('⚔️ 競合パターン:', patterns.conflictPatterns);
-    console.log('⏰ タイミング問題:', patterns.timingIssues);
-    
-    // 同期の質を評価
-    const quality = this.evaluateSyncQuality(status, patterns);
-    console.log('🎯 同期品質評価:', quality);
-    
-    console.log('📝 最近のログ:', this.getRecentLogs(5));
-    console.log('🔍 === レポート終了 ===');
   }
 
   /**
@@ -367,36 +349,6 @@ export class SyncDebugUtils {
    * 詳細な同期レポートを生成
    */
   generateDetailedReport(): void {
-    console.log('🔍 === 同期デバッグ詳細レポート ===');
-    
-    // 基本統計
-    const stats = this.analyzeSyncStatus();
-    console.log('📊 同期統計:', stats);
-    
-    // 無視された更新の分析
-    const ignoredUpdates = this.debugLogs.filter(log => log.type === 'ignore');
-    console.log('❌ 無視された更新:', ignoredUpdates.map(log => ({
-      reason: log.data.reason,
-      timestamp: log.timestamp
-    })));
-    
-    // 競合パターンの分析
-    const conflictPatterns = this.analyzeFailurePatterns();
-    console.log('⚔️ 競合パターン:', conflictPatterns);
-    
-    // タイミング問題の分析
-    const timingIssues = this.debugLogs.filter(log => log.type === 'conflict'); // タイミング問題は競合パターンとして扱う
-    console.log('⏰ タイミング問題:', timingIssues);
-    
-    // 同期品質評価
-    const qualityReport = this.generateQualityReport();
-    console.log('🎯 同期品質評価:', qualityReport);
-    
-    // 最近のログ（最新5件）
-    const recentLogs = this.debugLogs.slice(-5);
-    console.log('📝 最近のログ:', recentLogs);
-    
-    console.log('🔍 === レポート終了 ===');
   }
 
   /**

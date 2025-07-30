@@ -16,7 +16,6 @@ export class SyncTestUtils {
    * 基本的な競合解決テスト
    */
   testBasicConflictResolution(): void {
-    console.log('🧪 基本的な競合解決テスト開始');
 
     // テストデータ作成
     const baseTime = new Date('2024-01-01T10:00:00Z');
@@ -124,11 +123,6 @@ export class SyncTestUtils {
     );
 
     // 結果検証
-    console.log('📊 競合解決結果:');
-    console.log('- プラン名:', resolvedPlan.name); // リモートが新しいのでリモート名
-    console.log('- 地点数:', resolvedPlan.places.length); // 2つ（リモートの地点2が追加）
-    console.log('- ラベル数:', resolvedPlan.labels.length); // 1つ（リモートが新しい）
-    console.log('- 総コスト:', resolvedPlan.totalCost); // 7000（リモートの合計）
 
     // 期待値との比較
     const expectedPlaceCount = 2;
@@ -138,15 +132,7 @@ export class SyncTestUtils {
     if (resolvedPlan.places.length === expectedPlaceCount &&
         resolvedPlan.labels.length === expectedLabelCount &&
         resolvedPlan.totalCost === expectedTotalCost) {
-      console.log('✅ 基本的な競合解決テスト成功');
     } else {
-      console.error('❌ 基本的な競合解決テスト失敗');
-      console.error('期待値:', { expectedPlaceCount, expectedLabelCount, expectedTotalCost });
-      console.error('実際値:', { 
-        actualPlaceCount: resolvedPlan.places.length, 
-        actualLabelCount: resolvedPlan.labels.length, 
-        actualTotalCost: resolvedPlan.totalCost 
-      });
     }
   }
 
@@ -154,7 +140,6 @@ export class SyncTestUtils {
    * 同時編集シミュレーションテスト
    */
   testConcurrentEditing(): void {
-    console.log('🧪 同時編集シミュレーションテスト開始');
 
     const baseTime = new Date('2024-01-01T10:00:00Z');
     const device1Time = new Date('2024-01-01T11:00:00Z');
@@ -225,10 +210,6 @@ export class SyncTestUtils {
     );
 
     // 結果検証
-    console.log('📊 同時編集シミュレーション結果:');
-    console.log('- 地点数:', resolvedPlan.places.length); // 1つ（デバイス1の地点）
-    console.log('- ラベル数:', resolvedPlan.labels.length); // 1つ（デバイス2のラベル）
-    console.log('- 総コスト:', resolvedPlan.totalCost); // 1000（デバイス1の地点コスト）
 
     // 期待値との比較
     const expectedPlaceCount = 1;
@@ -238,15 +219,7 @@ export class SyncTestUtils {
     if (resolvedPlan.places.length === expectedPlaceCount &&
         resolvedPlan.labels.length === expectedLabelCount &&
         resolvedPlan.totalCost === expectedTotalCost) {
-      console.log('✅ 同時編集シミュレーションテスト成功');
     } else {
-      console.error('❌ 同時編集シミュレーションテスト失敗');
-      console.error('期待値:', { expectedPlaceCount, expectedLabelCount, expectedTotalCost });
-      console.error('実際値:', { 
-        actualPlaceCount: resolvedPlan.places.length, 
-        actualLabelCount: resolvedPlan.labels.length, 
-        actualTotalCost: resolvedPlan.totalCost 
-      });
     }
   }
 
@@ -254,17 +227,11 @@ export class SyncTestUtils {
    * 全テスト実行
    */
   runAllTests(): void {
-    console.log('🚀 同期競合解決機能の全テスト開始');
-    console.log('=====================================');
     
     try {
       this.testBasicConflictResolution();
-      console.log('---');
       this.testConcurrentEditing();
-      console.log('=====================================');
-      console.log('🎉 全テスト完了');
     } catch (error) {
-      console.error('❌ テスト実行中にエラーが発生:', error);
     }
   }
 }
