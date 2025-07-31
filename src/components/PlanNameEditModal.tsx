@@ -11,6 +11,10 @@ import {
   setActivePlan 
 } from '../services/storageService';
 import { TravelPlan } from '../types';
+import { deletePlanFromCloud, createNewPlan } from '../services/planListService';
+import { usePlanListStore } from '../store/planListStore';
+import { useAuthStore } from '../hooks/useAuth';
+import { serializePlan } from '../utils/planSerializer';
 
 interface PlanNameEditModalProps {
   isOpen: boolean;
@@ -72,24 +76,67 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
     setShowDeleteConfirm(true);
   };
 
-  const confirmDelete = () => {
-    deletePlan(plan.id);
-    setShowDeleteConfirm(false);
-    const remaining = getAllPlans();
-    if (remaining.length > 0) {
-      const nextPlan = remaining[0];
-      setPlan(nextPlan);
-      usePlacesStore.setState({ places: nextPlan.places });
-      useLabelsStore.setState({ labels: nextPlan.labels });
-      setActivePlan(nextPlan.id);
-    } else {
-      const newPlan = createEmptyPlan();
-      setPlan(newPlan);
-      usePlacesStore.setState({ places: [] });
-      useLabelsStore.setState({ labels: [] });
-      setActivePlan(newPlan.id);
+  const confirmDelete = async () => {
+    const { setActivePlanId } = usePlanStore.getState();
+    const { user } = useAuthStore.getState();
+    
+    try {
+      console.log('[PlanNameEditModal] Starting plan deletion:', plan.id);
+      
+      // ローディング状態の開始
+      setShowDeleteConfirm(false);
+      
+      // Firestoreからプランを削除
+      await deletePlanFromCloud(plan.id);
+      console.log('[PlanNameEditModal] Plan deleted from Firestore');
+      
+      // プラン一覧をリフレッシュ
+      const { refreshPlans } = usePlanListStore.getState();
+      await refreshPlans();
+      
+      // 残りのプランから次のアクティブプランを選択
+      const remaining = getAllPlans().filter(p => p.id !== plan.id);
+      
+      if (remaining.length > 0) {
+        const nextPlan = remaining[0];
+        
+        // Firestoreのユーザードキュメントを更新
+        await setActivePlanId(nextPlan.id);
+        
+        // ローカルストアを更新
+        setPlan(nextPlan);
+        usePlacesStore.setState({ places: nextPlan.places });
+        useLabelsStore.setState({ labels: nextPlan.labels });
+      } else {
+        // 最後のプランの場合は新規作成
+        const newPlan = createEmptyPlan();
+        
+        // Firestoreに新規プランを作成
+        if (user) {
+          const createdPlanId = await createNewPlan(
+            user,
+            newPlan.name,
+            serializePlan(newPlan)
+          );
+          
+          // 作成したプランをアクティブに設定
+          await setActivePlanId(createdPlanId);
+          
+          // 新規作成したプランのオブジェクトを設定
+          const createdPlan = { ...newPlan, id: createdPlanId };
+          setPlan(createdPlan);
+          usePlacesStore.setState({ places: [] });
+          useLabelsStore.setState({ labels: [] });
+        }
+      }
+      
+      console.log('[PlanNameEditModal] Plan deletion completed');
+      onClose();
+    } catch (error) {
+      console.error('[PlanNameEditModal] Failed to delete plan:', error);
+      alert('プランの削除に失敗しました。もう一度お試しください。');
+      setShowDeleteConfirm(false);
     }
-    onClose();
   };
 
   const handlePlanSelect = (selectedPlan: TravelPlan) => {

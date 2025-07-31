@@ -13,6 +13,7 @@ interface PlanListState {
   stopListening: () => void;
   updatePlans: (plans: PlanListItem[]) => void;
   setError: (error: string | null) => void;
+  refreshPlans: () => Promise<void>;
 }
 
 export const usePlanListStore = create<PlanListState>((set, get) => ({
@@ -43,7 +44,7 @@ export const usePlanListStore = create<PlanListState>((set, get) => ({
         console.error('[planListStore] Error with sorted query:', error);
         
         // インデックスエラーの場合は、ソートなし版を試す
-        if (!unsubscribeAttempted && error.code === 'failed-precondition') {
+        if (!unsubscribeAttempted && (error as any).code === 'failed-precondition') {
           console.log('[planListStore] Falling back to no-sort query');
           unsubscribeAttempted = true;
           
@@ -88,14 +89,18 @@ export const usePlanListStore = create<PlanListState>((set, get) => ({
   },
   
   // 手動でリフレッシュする機能（デバッグ用）
-  refreshPlans: () => {
-    const { unsubscribe, startListening } = get();
-    const user = (window as any).currentUser; // 一時的な実装
+  refreshPlans: async () => {
+    const { startListening } = get();
     
-    if (unsubscribe && user) {
+    // authから現在のユーザーを取得
+    const { auth } = await import('../firebase');
+    const user = auth.currentUser;
+    
+    if (user) {
       console.log('[planListStore] Manually refreshing plans');
-      unsubscribe();
       startListening(user);
+    } else {
+      console.error('[planListStore] No user found for refreshPlans');
     }
   },
 }));

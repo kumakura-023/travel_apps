@@ -1544,3 +1544,195 @@ Refused to load the script 'https://apis.google.com/js/api.js?onload=__iframefcb
   - プラン参加者全員で最後の操作位置が確実に共有される
   - アプリ起動時に最後に追加された候補地・メモの位置から開始
   - planの非同期読み込みによる競合状態を解決
+
+## タスク25: プラン削除後の復活問題修正
+
+### 目的
+プランを削除した後、何もせずにリロードすると削除したプランが復活する問題を修正する。削除ボタンはPlanNameEditModal内の「このプランを削除する」ボタンから実行される。
+
+### 問題の詳細
+- 前提条件：プランA、プランBが保存されていて、プランAがアクティブ
+- 削除実行後、プランBがアクティブになる
+- その後の挙動：
+  - 何もせずリロード → 削除したプランが復活する（問題）
+  - プランBに候補地を追加してからリロード → プランが正常に削除される（正常）
+
+### 原因の特定（調査結果）
+
+コードを調査した結果、以下の問題を特定しました：
+
+1. **PlanNameEditModalの削除処理（75-92行目）がローカルストレージのみを操作している**
+   - `confirmDelete`関数で`deletePlan(plan.id)`を呼び出している（76行目）
+   - この`deletePlan`は`storageService`の関数で、ローカルストレージからの削除のみを行う
+   - Firestoreへの削除処理が一切実行されていない
+
+2. **Firestoreへの削除関数は存在するが使用されていない**
+   - `src/services/planListService.ts`に`deletePlanFromCloud`関数が存在
+   - PlanListコンポーネントではこの関数が正しく使用されている
+   - しかし、PlanNameEditModalでは使用されていない
+
+3. **アクティブプランの切り替えもローカルストレージのみ**
+   - `setActivePlan`関数（84, 90行目）もローカルストレージのみを更新
+   - userドキュメントの`activePlanId`フィールドが更新されない
+
+### 根本原因
+PlanNameEditModalはFirestoreとの同期を考慮せずに実装されており、すべての操作がローカルストレージに対してのみ行われている。そのため、リロード時にFirestoreから最新のデータが読み込まれると、削除されていないプランが復活する。
+
+### 具体的な修正内容
+
+1. **PlanNameEditModal.tsxの修正（75-92行目を置換）**
+   ```typescript
+   import { deletePlanFromCloud } from '../services/planListService';
+   import { usePlanListStore } from '../store/planListStore';
+
+   const confirmDelete = async () => {
+     try {
+       console.log('[PlanNameEditModal] Starting plan deletion:', plan.id);
+       
+       // ローディング状態の開始（オプション）
+       setShowDeleteConfirm(false);
+       
+       // Firestoreからプランを削除
+       await deletePlanFromCloud(plan.id);
+       console.log('[PlanNameEditModal] Plan deleted from Firestore');
+       
+       // プラン一覧をリフレッシュ
+       const { refreshPlans } = usePlanListStore.getState();
+       await refreshPlans();
+       
+       // 残りのプランから次のアクティブプランを選択
+       const remaining = getAllPlans().filter(p => p.id !== plan.id);
+       
+       if (remaining.length > 0) {
+         const nextPlan = remaining[0];
+         
+         // Firestoreのユーザードキュメントを更新
+         const { setActivePlanId } = usePlanStore.getState();
+         await setActivePlanId(nextPlan.id);
+         
+         // ローカルストアを更新
+         setPlan(nextPlan);
+         usePlacesStore.setState({ places: nextPlan.places });
+         useLabelsStore.setState({ labels: nextPlan.labels });
+       } else {
+         // 最後のプランの場合は新規作成
+         const newPlan = createEmptyPlan();
+         
+         // Firestoreに新規プランを作成
+         const { user } = useAuthStore.getState();
+         if (user) {
+           const createdPlan = await createNewPlan(
+             user,
+             newPlan.name,
+             serializePlan(newPlan)
+           );
+           setPlan(createdPlan);
+           usePlacesStore.setState({ places: [] });
+           useLabelsStore.setState({ labels: [] });
+         }
+       }
+       
+       console.log('[PlanNameEditModal] Plan deletion completed');
+       onClose();
+     } catch (error) {
+       console.error('[PlanNameEditModal] Failed to delete plan:', error);
+       alert('プランの削除に失敗しました。もう一度お試しください。');
+       setShowDeleteConfirm(false);
+     }
+   };
+   ```
+
+2. **必要なインポートの追加（ファイル上部）**
+   ```typescript
+   import { deletePlanFromCloud, createNewPlan } from '../services/planListService';
+   import { usePlanListStore } from '../store/planListStore';
+   import { useAuthStore } from '../hooks/useAuth';
+   import { serializePlan } from '../utils/planSerializer';
+   ```
+
+3. **activePlanIdを更新する関数の実装**
+   - 現在、ユーザーのactivePlanIdを更新する専用の関数が存在しないため、以下のいずれかの方法で実装する：
+   
+   **方法A: planCloudService.tsに関数を追加**
+   ```typescript
+   // src/services/planCloudService.ts に追加
+   export async function updateUserActivePlanId(userId: string, planId: string): Promise<void> {
+     const userRef = doc(db, 'users', userId);
+     await updateDoc(userRef, {
+       activePlanId: planId,
+       updatedAt: serverTimestamp()
+     });
+     console.log('[planCloudService] Updated user activePlanId:', planId);
+   }
+   ```
+   
+   **方法B: planStore.tsに関数を追加（推奨）**
+   ```typescript
+   // src/store/planStore.ts に追加
+   setActivePlanId: async (planId: string) => {
+     const { user } = get();
+     if (!user) {
+       console.error('[planStore] No user found for setActivePlanId');
+       return;
+     }
+     
+     try {
+       const userRef = doc(db, 'users', user.uid);
+       await updateDoc(userRef, {
+         activePlanId: planId,
+         updatedAt: serverTimestamp()
+       });
+       console.log('[planStore] Updated activePlanId:', planId);
+     } catch (error) {
+       console.error('[planStore] Failed to update activePlanId:', error);
+       throw error;
+     }
+   }
+   ```
+
+### 追加で必要な修正
+
+1. **ローカルストレージの削除処理を無効化**
+   - 削除後にローカルストレージから削除する処理（`deletePlan`）は呼び出さない
+   - Firestoreからの削除が成功すれば、リフレッシュ時に自動的に反映される
+
+2. **エラーハンドリングの強化**
+   - ネットワークエラーやFirestoreエラーを適切に処理
+   - 削除に失敗した場合はユーザーに通知
+
+### 実装の優先順位
+
+1. **タスク25**（プラン削除後の復活問題）- データ整合性に関わる重要な問題
+
+### テスト項目
+
+- [ ] プランAがアクティブな状態でプランAを削除
+- [ ] 削除処理中に適切なローディング表示がされる
+- [ ] 削除後、自動的にプランBがアクティブになることを確認
+- [ ] 何もせずにページをリロード
+- [ ] 削除したプランAが復活しないことを確認
+- [ ] FirestoreコンソールでプランAが削除されていることを確認
+- [ ] userドキュメントのactivePlanIdがプランBになっていることを確認
+- [ ] 複数デバイスで同期されることを確認
+- [ ] 最後のプランを削除した場合、新規プランが自動作成される
+
+### 注意事項
+
+- 既にPlanListコンポーネントでは正しく実装されているので、そちらの実装を参考にする
+- 削除処理は非同期なので、適切にawaitを使用すること
+- ローカルストレージとFirestoreの二重管理を避けるため、Firestoreを信頼できる情報源とする
+
+### 実装順序
+
+1. **planStore.tsにsetActivePlanId関数を追加（方法B）**
+2. **PlanNameEditModal.tsxに必要なインポートを追加**
+3. **confirmDelete関数を上記の実装内容で置き換え**
+4. **動作確認とテスト実施**
+
+### 期待される結果
+
+この修正により、プラン削除時に以下の処理が正しく行われるようになる：
+1. Firestoreからプランが削除される
+2. ユーザーのactivePlanIdが次のプランに更新される
+3. リロード後も削除したプランが復活しない
+4. 複数デバイス間で削除が同期される

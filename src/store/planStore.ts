@@ -15,6 +15,7 @@ interface PlanState {
   listenToPlan: (planId: string) => void;
   unsubscribeFromPlan: () => void;
   updateLastActionPosition: (position: google.maps.LatLngLiteral, actionType: 'place' | 'label') => Promise<void>;
+  setActivePlanId: (planId: string) => Promise<void>;
 }
 
 export const usePlanStore = create<PlanState>((set, get) => ({
@@ -135,6 +136,29 @@ export const usePlanStore = create<PlanState>((set, get) => ({
       
     } catch (error) {
       console.error('[planStore] Error updating last action position:', error);
+      throw error;
+    }
+  },
+
+  setActivePlanId: async (planId: string) => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.error('[planStore] No user found for setActivePlanId');
+      return;
+    }
+    
+    try {
+      console.log('[planStore] Updating activePlanId:', { userId: user.uid, planId });
+      
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        activePlanId: planId,
+        updatedAt: serverTimestamp()
+      });
+      
+      console.log('[planStore] Updated activePlanId successfully');
+    } catch (error) {
+      console.error('[planStore] Failed to update activePlanId:', error);
       throw error;
     }
   },
