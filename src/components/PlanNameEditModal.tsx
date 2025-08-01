@@ -3,7 +3,6 @@ import { usePlanStore } from '../store/planStore';
 import { usePlacesStore } from '../store/placesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { 
-  savePlan, 
   setActivePlan 
 } from '../services/storageService';
 import { TravelPlan } from '../types';
@@ -54,8 +53,9 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
         totalCost: places.reduce((sum, p) => sum + (p.estimatedCost || 0), 0),
         updatedAt: new Date()
       };
+      
+      // updatePlanを呼ぶだけで、onPlanUpdatedコールバックが自動保存を実行
       updatePlan(updatedPlan);
-      savePlan(updatedPlan);
       onClose();
     }
   };

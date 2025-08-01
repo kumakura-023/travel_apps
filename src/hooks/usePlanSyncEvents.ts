@@ -9,7 +9,7 @@ export function usePlanSyncEvents(
   plan: TravelPlan | null,
   saveImmediately: (plan: TravelPlan) => void,
   saveImmediatelyCloud: (plan: TravelPlan) => void,
-  saveWithSyncManager?: (plan: TravelPlan, operationType?: 'place_added' | 'place_deleted' | 'place_updated' | 'memo_updated') => void
+  saveWithSyncManager?: (plan: TravelPlan, operationType?: 'place_added' | 'place_deleted' | 'place_updated' | 'memo_updated' | 'plan_updated') => void
 ) {
   useEffect(() => {
     const { setOnPlaceAdded } = usePlacesStore.getState();
@@ -128,6 +128,27 @@ export function usePlanSyncEvents(
       syncDebugUtils.log('save', {
         type: 'immediate_sync',
         reason: 'label_deleted',
+        timestamp: Date.now()
+      });
+    });
+  }, [plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager]);
+
+  // プラン更新イベントのリスナーを追加
+  useEffect(() => {
+    const { setOnPlanUpdated } = usePlanStore.getState();
+    setOnPlanUpdated((updatedPlan) => {
+      // 新しい同期システムがある場合はそれを使用、なければ従来の方法
+      if (saveWithSyncManager) {
+        saveWithSyncManager(updatedPlan, 'plan_updated');
+      } else {
+        saveImmediately(updatedPlan);
+        saveImmediatelyCloud(updatedPlan);
+      }
+      
+      syncDebugUtils.log('save', {
+        type: 'immediate_sync',
+        reason: 'plan_updated',
+        planName: updatedPlan.name,
         timestamp: Date.now()
       });
     });

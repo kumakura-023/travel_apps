@@ -6,6 +6,10 @@ interface PlanState {
   isLoading: boolean;
   error: string | null;
   
+  // プラン更新リスナー
+  onPlanUpdated?: (plan: TravelPlan) => void;
+  setOnPlanUpdated: (callback: (plan: TravelPlan) => void) => void;
+  
   // 互換性のための一時的なメソッド（将来的に削除予定）
   setPlan: (plan: TravelPlan | null) => void;
   updatePlan: (update: Partial<TravelPlan>) => void;
@@ -15,16 +19,30 @@ interface PlanState {
   setActivePlanId: (planId: string) => Promise<void>;
 }
 
-export const usePlanStore = create<PlanState>((set) => ({
+export const usePlanStore = create<PlanState>((set, get) => ({
   plan: null,
   isLoading: true,
   error: null,
   
+  // プラン更新リスナー
+  onPlanUpdated: undefined,
+  setOnPlanUpdated: (callback) => set({ onPlanUpdated: callback }),
+  
   // 互換性のための一時的なメソッド実装
   setPlan: (plan) => set({ plan }),
-  updatePlan: (update) => set((state) => ({
-    plan: state.plan ? { ...state.plan, ...update } : null
-  })),
+  updatePlan: (update) => set((state) => {
+    if (state.plan) {
+      const updatedPlan = { ...state.plan, ...update };
+      
+      // 更新後のコールバックを実行
+      if (state.onPlanUpdated) {
+        state.onPlanUpdated(updatedPlan);
+      }
+      
+      return { plan: updatedPlan };
+    }
+    return state;
+  }),
   listenToPlan: () => {
     console.warn('[planStore] listenToPlan is deprecated. Use PlanCoordinator instead.');
   },
