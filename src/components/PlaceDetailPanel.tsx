@@ -17,7 +17,6 @@ import { estimateCost } from '../utils/estimateCost';
 import ImageCarouselModal from './ImageCarouselModal';
 import ImageGallery from './placeDetail/ImageGallery';
 import PlaceActions from './placeDetail/PlaceActions';
-import MemoEditor from './placeDetail/MemoEditor';
 import { useBottomSheetStore } from '../store/bottomSheetStore';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { SyncOperationType } from '../types/SyncTypes';
@@ -27,7 +26,6 @@ export default function PlaceDetailPanel() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [isMemoEditing, setIsMemoEditing] = useState(false);
 
   const { deletePlace, addPlace, updatePlace } = usePlacesStore((s) => ({ 
     deletePlace: s.deletePlace, 
@@ -167,7 +165,6 @@ export default function PlaceDetailPanel() {
             ? photo 
             : photo.getUrl({ maxWidth: 800, maxHeight: 600 })
         ),
-        memo: '',
       });
     }
   };
@@ -204,48 +201,6 @@ export default function PlaceDetailPanel() {
     updatePlace(savedPlace.id, { scheduledDay: day });
   };
 
-  const handleMemoChange = (id: string, memo: string, operationType: SyncOperationType, isEditing?: boolean) => {
-    // 編集状態を更新
-    if (isEditing !== undefined) {
-      setIsMemoEditing(isEditing);
-    }
-    
-    // 既存のplace状態を取得
-    const currentPlace = savedPlaces.find(p => p.id === id);
-    if (currentPlace && plan) {
-      if (import.meta.env.DEV) {
-        console.log(`📝 PlaceDetailPanel: メモ変更処理`, {
-          placeId: id,
-          operationType,
-          isEditing,
-          memoLength: memo.length,
-          timestamp: new Date().toLocaleTimeString()
-        });
-      }
-      
-      const updatedPlace = { ...currentPlace, memo };
-      // ローカル状態を更新（即座反映用）
-      updatePlace(id, { memo });
-      
-      // 編集中でない場合のみ同期を実行
-      if (!isEditing) {
-        // プランの候補地一覧を更新
-        const updatedPlaces = plan.places.map(p => p.id === id ? updatedPlace : p);
-        const updatedPlan = {
-          ...plan,
-          places: updatedPlaces,
-          updatedAt: new Date()
-        };
-        
-        // 新しい同期システムでプランを更新
-        if (operationType === 'memo_updated') {
-          saveWithSyncManager(updatedPlan, 'memo_updated');
-        } else {
-          saveWithSyncManager(updatedPlan, 'place_updated');
-        }
-      }
-    }
-  };
 
   const handleClosePanel = () => {
     setPlace(null);
@@ -487,14 +442,6 @@ export default function PlaceDetailPanel() {
 
         {/* 詳細情報セクション */}
         <div className="px-5 pb-5 space-y-4">
-          {/* メモ */}
-          <MemoEditor 
-            saved={saved} 
-            savedPlace={savedPlace} 
-            isMobile={isMobile} 
-            updatePlace={updatePlace} 
-            onMemoChange={handleMemoChange}
-          />
 
           {/* 住所 */}
           {place.formatted_address && (

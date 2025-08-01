@@ -1,13 +1,14 @@
 import React from 'react';
-import { OverlayView, Circle, Marker } from '@react-google-maps/api';
+import { OverlayView } from '@react-google-maps/api';
 import { Place } from '../types';
 import { usePlacesStore } from '../store/placesStore';
 import { usePlanStore } from '../store/planStore';
-import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import { getCategoryColor, getCategoryDisplayName } from '../utils/categoryIcons';
 import { PlaceSimpleOverlay } from './PlaceSimpleOverlay';
+import { useSelectedPlaceStore } from '../store/placeStore';
+import { FiInfo } from 'react-icons/fi';
 
 interface Props {
   place: Place;
@@ -30,12 +31,11 @@ const getCategoryEmoji = (category: string) => {
 export default function PlaceCircle({ place, zoom = 14 }: Props) {
   const { deletePlace, updatePlace } = usePlacesStore();
   const { plan } = usePlanStore();
-  const { selectionState, startSelection, completeSelection } = useRouteConnectionsStore();
   const { setSelectedOrigin, setSelectedDestination, openRouteSearch } = useRouteSearchStore();
   const { isTouchDevice } = useDeviceDetect();
+  const { setPlace } = useSelectedPlaceStore();
 
   const color = getCategoryColor(place.category);
-  const isSelected = selectionState.selectedPlaces.includes(place.id);
   const shouldShowOverlay = zoom >= 15; // より高いズームレベルで詳細表示
   const shouldShowSimpleOverlay = zoom < 15 && zoom >= 6; // 簡易表示の範囲を拡大
   const scale = Math.max(0.34, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
@@ -63,17 +63,6 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
     openRouteSearch();
   };
 
-  const handleMarkerClick = (e: google.maps.MapMouseEvent) => {
-    if (e.domEvent) {
-        e.domEvent.stopPropagation();
-        e.domEvent.preventDefault();
-        if (selectionState.isSelecting) {
-          completeSelection(place.id);
-        } else if (e.domEvent.ctrlKey && !isTouchDevice) {
-          startSelection(place.id, 'ctrl-click');
-        }
-    }
-  };
   
   const generateDayOptions = () => {
     if (!plan?.startDate) return null;
@@ -85,19 +74,6 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
 
   return (
     <>
-      <Circle
-        center={place.coordinates}
-        radius={120}
-        options={{
-          strokeColor: color,
-          strokeOpacity: 0.6,
-          strokeWeight: 2,
-          fillColor: color,
-          fillOpacity: 0.15,
-          clickable: false,
-          zIndex: 50,
-        }}
-      />
       {/* 簡易オーバーレイ（ズーム6〜10） */}
       {shouldShowSimpleOverlay && (
         <OverlayView
@@ -222,33 +198,62 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
                     <span style={{ fontSize: '11px' }}>🎯</span> 目的地
                   </button>
                 </div>
+                {/* 詳細パネルを開くボタン */}
+                <div style={{ marginTop: '12px' }}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPlace({
+                        place_id: place.id,
+                        name: place.name,
+                        formatted_address: place.address,
+                        geometry: {
+                          location: {
+                            lat: () => place.coordinates.lat,
+                            lng: () => place.coordinates.lng,
+                          } as google.maps.LatLng,
+                        },
+                        types: [place.category],
+                        photos: place.photos?.map(url => ({
+                          getUrl: () => url
+                        } as google.maps.places.PlacePhoto)),
+                      } as google.maps.places.PlaceResult);
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    style={{
+                      width: '100%',
+                      padding: '10px 16px',
+                      background: `linear-gradient(135deg, rgba(${colorRgb}, 0.9), rgba(${colorRgb}, 0.8))`,
+                      color: 'white',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      boxShadow: `0 2px 8px rgba(${colorRgb}, 0.3)`,
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.02)';
+                      e.currentTarget.style.boxShadow = `0 4px 12px rgba(${colorRgb}, 0.4)`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = `0 2px 8px rgba(${colorRgb}, 0.3)`;
+                    }}
+                  >
+                    <FiInfo size={16} />
+                    <span>詳細を見る</span>
+                  </button>
+                </div>
               </div>
             </div>
         </OverlayView>
       )}
-      <Marker
-        position={place.coordinates}
-        onClick={handleMarkerClick}
-        onRightClick={(e) => {
-            if (e.domEvent) {
-                e.domEvent.stopPropagation();
-                e.domEvent.preventDefault();
-            }
-            deletePlace(place.id);
-        }}
-        icon={{
-          path: google.maps.SymbolPath.CIRCLE,
-          fillColor: color,
-          fillOpacity: isSelected ? 0.9 : 0.7,
-          strokeWeight: isSelected ? 3 : 2,
-          strokeColor: isSelected ? '#FFD700' : 'white',
-          scale: isSelected ? 10 : 8,
-        }}
-        options={{
-          clickable: true,
-          zIndex: isSelected ? 1000 : 500,
-        }}
-      />
     </>
   );
 }

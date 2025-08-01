@@ -262,3 +262,73 @@ const save = () => {
 2. リロード後もプランが削除されない
 3. 候補地追加なしでもプラン名変更が正しく保存される
 4. 他のプラン属性（説明、日程等）の変更も同様に自動保存される
+
+## タスク29: 「詳細を見る」ボタンから開いたPlaceDetailPanelで画像が表示されない問題の修正
+
+### 問題の概要
+- 候補地オーバーレイの「詳細を見る」ボタンからPlaceDetailPanelを開いた際、画像が表示されない
+- POIから直接PlaceDetailsPanelを開いた場合は画像が正常に表示される
+
+### 原因分析
+1. Place型には`photos: string[]`プロパティが存在する（src/types/index.ts:20）
+2. PlaceDetailPanelは`place.photos`から画像データを取得している（PlaceDetailPanel.tsx:101）
+3. 「詳細を見る」ボタンのクリック処理でPlace型からgoogle.maps.places.PlaceResult型に変換する際、`photos`プロパティが含まれていない
+
+### 修正内容
+
+#### 1. PlaceCircle.tsx内の変換処理を修正
+現在のコード（詳細オーバーレイ内の「詳細を見る」ボタン）：
+```javascript
+setPlace({
+  place_id: place.id,
+  name: place.name,
+  formatted_address: place.address,
+  geometry: {
+    location: {
+      lat: () => place.coordinates.lat,
+      lng: () => place.coordinates.lng,
+    } as google.maps.LatLng,
+  },
+  types: [place.category],
+} as google.maps.places.PlaceResult);
+```
+
+修正後：
+```javascript
+setPlace({
+  place_id: place.id,
+  name: place.name,
+  formatted_address: place.address,
+  geometry: {
+    location: {
+      lat: () => place.coordinates.lat,
+      lng: () => place.coordinates.lng,
+    } as google.maps.LatLng,
+  },
+  types: [place.category],
+  photos: place.photos, // 画像データを追加
+} as google.maps.places.PlaceResult);
+```
+
+#### 2. PlaceSimpleOverlay.tsx内の変換処理を修正
+同様に、簡易オーバーレイ内の詳細ボタンクリック処理にも`photos: place.photos`を追加する必要がある。
+
+### 実装手順
+
+1. **PlaceCircle.tsxを開く**
+   - 「詳細を見る」ボタンのonClickハンドラ内（約237行目）
+   - `setPlace`呼び出しに`photos: place.photos`を追加
+
+2. **PlaceSimpleOverlay.tsxを開く**
+   - 詳細ボタンのonClickハンドラ内（約106-117行目）
+   - `setPlace`呼び出しに`photos: place.photos`を追加
+
+3. **動作確認**
+   - 候補地の詳細オーバーレイから「詳細を見る」ボタンをクリック
+   - PlaceDetailPanelに画像が表示されることを確認
+   - 簡易オーバーレイからも同様に確認
+
+### 補足
+- Place型の`photos`は`string[]`型で画像URLの配列を保持している
+- PlaceDetailPanel内では、この画像データをそのまま使用できる
+- 画像URLは既に適切なフォーマットで保存されているため、追加の変換は不要

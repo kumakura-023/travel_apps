@@ -1,6 +1,8 @@
 import React from 'react';
 import { Place } from '../types';
 import { getCategoryColor, getCategoryDisplayName, getCategoryEmoji } from '../utils/categoryIcons';
+import { useSelectedPlaceStore } from '../store/placeStore';
+import { FiInfo } from 'react-icons/fi';
 
 interface PlaceSimpleOverlayProps {
   place: Place;
@@ -15,6 +17,7 @@ export const PlaceSimpleOverlay: React.FC<PlaceSimpleOverlayProps> = ({ place, p
   const categoryColor = getCategoryColor(place.category);
   const categoryEmoji = getCategoryEmoji(place.category);
   const categoryName = getCategoryDisplayName(place.category);
+  const { setPlace } = useSelectedPlaceStore();
   
   return (
     <div
@@ -34,8 +37,8 @@ export const PlaceSimpleOverlay: React.FC<PlaceSimpleOverlayProps> = ({ place, p
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 20px rgba(0, 0, 0, 0.08)',
         // 細いボーダーでエッジを強調
         border: '1px solid rgba(255, 255, 255, 0.2)',
-        // インタラクション無効化
-        pointerEvents: 'none',
+        // インタラクション無効化（ボタン以外）
+        pointerEvents: 'auto',
         // アニメーション対応
         transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         // Apple風のフォント設定
@@ -96,6 +99,59 @@ export const PlaceSimpleOverlay: React.FC<PlaceSimpleOverlayProps> = ({ place, p
             {place.name}
           </div>
         </div>
+        {/* 詳細ボタン */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setPlace({
+              place_id: place.id,
+              name: place.name,
+              formatted_address: place.address,
+              geometry: {
+                location: {
+                  lat: () => place.coordinates.lat,
+                  lng: () => place.coordinates.lng,
+                } as google.maps.LatLng,
+              },
+              types: [place.category],
+              photos: place.photos?.map(url => ({
+                getUrl: () => url
+              } as google.maps.places.PlacePhoto)),
+            } as google.maps.places.PlaceResult);
+          }}
+          style={{
+            width: '28px',
+            height: '28px',
+            padding: 0,
+            marginLeft: '8px',
+            background: 'rgba(255, 255, 255, 0.9)',
+            border: `1px solid ${categoryColor}33`,
+            borderRadius: '50%',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: categoryColor,
+            transition: 'all 0.15s ease',
+            flexShrink: 0,
+            boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = categoryColor;
+            e.currentTarget.style.color = 'white';
+            e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.boxShadow = `0 2px 8px ${categoryColor}66`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+            e.currentTarget.style.color = categoryColor;
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 1px 4px rgba(0, 0, 0, 0.1)';
+          }}
+          title="詳細を見る"
+        >
+          <FiInfo size={14} />
+        </button>
       </div>
     </div>
   );

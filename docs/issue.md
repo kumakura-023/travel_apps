@@ -141,6 +141,9 @@ index-CDAkFli6.js:3696 リダイレクト認証エラー: FirebaseError: Firebas
 修正内容 v15
 プランAとプランBがある状態でプランAがアクティブのとき、プランBをアクティブに変更するとプランAに追加されているPlaceCircleBackgroundが残ったままになってしまいます。
 
+修正内容 v16
+travel_app\docs\UI_name.md参照。PlaceCircleBackground、PlaceCircle UIを削除してください。その代わりにPlaceDetailOverlay/PlaceSimpleOverlay内にその地点のPlaceDetailPanel/PlaceDetailsPanelを開くためのUIを追加してください。このUIはtravel_app\document\rule\design_rule.mdを参考に作成してください。
+
 修正内容
 ・プランを複数まとめて削除できる機能の実装
 ・プランを新規作成するボタンを押したとき、プラン名の編集モーダルを開いてほしい。現状だと新規作成した後自分で編集モーダルを開かないといけずUXが非常に悪い
