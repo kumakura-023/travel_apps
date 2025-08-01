@@ -27,9 +27,8 @@ import PlanNameDisplay from './components/PlanNameDisplay';
 import { usePlanStore } from './store/planStore';
 import { useAuth } from './hooks/useAuth';
 import { useAutoSave } from './hooks/useAutoSave';
-import { usePlanLoad } from './hooks/usePlanLoad';
 import { usePlanSyncEvents } from './hooks/usePlanSyncEvents';
-import { useRealtimePlanListener } from './hooks/useRealtimePlanListener';
+import { usePlanInitializer } from './hooks/usePlanInitializer';
 import AuthButton from './components/AuthButton';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 import SyncTestButton from './components/SyncTestButton';
@@ -176,9 +175,8 @@ function App() {
 
   usePlanSyncEvents(plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager);
 
-  usePlanLoad(user, isInitializing);
-
-  useRealtimePlanListener(user, isInitializing, lastCloudSaveTimestamp, setIsRemoteUpdateInProgress, getSelfUpdateFlag);
+  // 新しいプラン初期化フックを使用
+  const { isInitialized } = usePlanInitializer();
 
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>

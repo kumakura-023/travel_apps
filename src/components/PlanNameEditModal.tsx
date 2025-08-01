@@ -4,17 +4,14 @@ import { usePlacesStore } from '../store/placesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { 
   savePlan, 
-  createEmptyPlan, 
-  duplicatePlan, 
-  deletePlan, 
-  getAllPlans, 
   setActivePlan 
 } from '../services/storageService';
 import { TravelPlan } from '../types';
-import { deletePlanFromCloud, createNewPlan } from '../services/planListService';
+import { deletePlanFromCloud, createNewPlan, PlanListItem } from '../services/planListService';
 import { usePlanListStore } from '../store/planListStore';
 import { useAuthStore } from '../hooks/useAuth';
 import { serializePlan } from '../utils/planSerializer';
+import { DIContainer } from '../di/DIContainer';
 
 interface PlanNameEditModalProps {
   isOpen: boolean;
@@ -25,23 +22,30 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
   const { plan, setPlan, updatePlan } = usePlanStore();
   const places = usePlacesStore((s) => s.getFilteredPlaces());
   const { labels } = useLabelsStore();
+  const planList = usePlanListStore((state) => state.plans);
   
   const [name, setName] = useState('');
   const [activeTab, setActiveTab] = useState<'edit' | 'manage'>('edit');
-  const [savedPlans, setSavedPlans] = useState<TravelPlan[]>([]);
+  const [savedPlans, setSavedPlans] = useState<(TravelPlan | PlanListItem)[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
-    if (plan && isOpen) {
-      setName(plan.name);
-      setSavedPlans(getAllPlans());
+    if (isOpen) {
+      if (plan) {
+        setName(plan.name);
+      } else {
+        // プランがない場合は管理タブを開く
+        setActiveTab('manage');
+      }
+      // planListStoreからプランを設定
+      setSavedPlans(planList);
     }
-  }, [plan, isOpen]);
+  }, [plan, isOpen, planList]);
 
-  if (!isOpen || !plan) return null;
+  if (!isOpen) return null;
 
   const save = () => {
-    if (name.trim()) {
+    if (name.trim() && plan) {
       const updatedPlan = { 
         ...plan, 
         name: name.trim(),
@@ -56,19 +60,63 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
     }
   };
 
-  const handleCreateNew = () => {
-    const newPlan = createEmptyPlan('新しいプラン');
-    setPlan(newPlan);
-    setActivePlan(newPlan.id);
-    onClose();
+  const handleCreateNew = async () => {
+    const { user } = useAuthStore.getState();
+    if (!user) {
+      alert('ログインが必要です');
+      return;
+    }
+    
+    try {
+      // DIコンテナから取得
+      const container = DIContainer.getInstance();
+      const coordinator = container.getPlanCoordinator();
+      
+      // Coordinatorを通じて新規作成
+      await coordinator.createNewPlan(user.uid, '新しいプラン');
+      
+      onClose();
+    } catch (error) {
+      console.error('[PlanNameEditModal] Failed to create new plan:', error);
+      alert('プランの作成に失敗しました。もう一度お試しください。');
+    }
   };
 
-  const handleDuplicate = () => {
-    const copy = duplicatePlan(plan.id, `${plan.name}_コピー`);
-    if (copy) {
-      setPlan(copy);
-      setActivePlan(copy.id);
-      setSavedPlans(getAllPlans());
+  const handleDuplicate = async () => {
+    const { user } = useAuthStore.getState();
+    if (!user || !plan) return;
+    
+    try {
+      // DIコンテナから取得
+      const container = DIContainer.getInstance();
+      const coordinator = container.getPlanCoordinator();
+      const planService = container.getPlanService();
+      
+      // プランを複製（新規作成と同じ流れ）
+      const duplicatedPlan = await planService.createPlan(
+        user.uid, 
+        `${plan.name}_コピー`
+      );
+      
+      // 既存のデータをコピー
+      duplicatedPlan.places = [...plan.places];
+      duplicatedPlan.labels = [...plan.labels];
+      duplicatedPlan.startDate = plan.startDate;
+      duplicatedPlan.endDate = plan.endDate;
+      
+      // 保存
+      await planService.savePlan(duplicatedPlan);
+      
+      // プランリストを更新
+      await usePlanListStore.getState().refreshPlans();
+      
+      // 新しいプランに切り替え
+      await coordinator.switchPlan(user.uid, duplicatedPlan.id);
+      
+      onClose();
+    } catch (error) {
+      console.error('[PlanNameEditModal] Failed to duplicate plan:', error);
+      alert('プランの複製に失敗しました。もう一度お試しください。');
     }
   };
 
@@ -77,61 +125,27 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
   };
 
   const confirmDelete = async () => {
-    const { setActivePlanId } = usePlanStore.getState();
     const { user } = useAuthStore.getState();
+    if (!user || !plan) return;
     
     try {
       console.log('[PlanNameEditModal] Starting plan deletion:', plan.id);
-      
-      // ローディング状態の開始
       setShowDeleteConfirm(false);
       
-      // Firestoreからプランを削除
-      await deletePlanFromCloud(plan.id);
-      console.log('[PlanNameEditModal] Plan deleted from Firestore');
+      // DIコンテナから取得
+      const container = DIContainer.getInstance();
+      const coordinator = container.getPlanCoordinator();
       
-      // プラン一覧をリフレッシュ
-      const { refreshPlans } = usePlanListStore.getState();
-      await refreshPlans();
-      
-      // 残りのプランから次のアクティブプランを選択
-      const remaining = getAllPlans().filter(p => p.id !== plan.id);
-      
-      if (remaining.length > 0) {
-        const nextPlan = remaining[0];
-        
-        // Firestoreのユーザードキュメントを更新
-        await setActivePlanId(nextPlan.id);
-        
-        // ローカルストアを更新
-        setPlan(nextPlan);
-        usePlacesStore.setState({ places: nextPlan.places });
-        useLabelsStore.setState({ labels: nextPlan.labels });
-      } else {
-        // 最後のプランの場合は新規作成
-        const newPlan = createEmptyPlan();
-        
-        // Firestoreに新規プランを作成
-        if (user) {
-          const createdPlanId = await createNewPlan(
-            user,
-            newPlan.name,
-            serializePlan(newPlan)
-          );
-          
-          // 作成したプランをアクティブに設定
-          await setActivePlanId(createdPlanId);
-          
-          // 新規作成したプランのオブジェクトを設定
-          const createdPlan = { ...newPlan, id: createdPlanId };
-          setPlan(createdPlan);
-          usePlacesStore.setState({ places: [] });
-          useLabelsStore.setState({ labels: [] });
-        }
-      }
+      // Coordinatorを通じて削除
+      await coordinator.deletePlan(user.uid, plan.id);
       
       console.log('[PlanNameEditModal] Plan deletion completed');
-      onClose();
+      
+      // 削除後は管理タブに切り替え
+      setActiveTab('manage');
+      
+      // savedPlansを更新（削除されたプランを除外）
+      setSavedPlans(prev => prev.filter(p => p.id !== plan.id));
     } catch (error) {
       console.error('[PlanNameEditModal] Failed to delete plan:', error);
       alert('プランの削除に失敗しました。もう一度お試しください。');
@@ -139,13 +153,23 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
     }
   };
 
-  const handlePlanSelect = (selectedPlan: TravelPlan) => {
-    setPlan(selectedPlan);
-    usePlacesStore.setState({ places: selectedPlan.places });
-    useLabelsStore.setState({ labels: selectedPlan.labels });
-    setActivePlan(selectedPlan.id);
-    savePlan({ ...selectedPlan, isActive: true });
-    onClose();
+  const handlePlanSelect = async (selectedPlan: TravelPlan | PlanListItem) => {
+    const { user } = useAuthStore.getState();
+    if (!user) return;
+    
+    try {
+      // DIコンテナから取得
+      const container = DIContainer.getInstance();
+      const coordinator = container.getPlanCoordinator();
+      
+      // Coordinatorを通じてプランを切り替え
+      await coordinator.switchPlan(user.uid, selectedPlan.id);
+      
+      onClose();
+    } catch (error) {
+      console.error('[PlanNameEditModal] Failed to switch plan:', error);
+      alert('プランの切り替えに失敗しました。もう一度お試しください。');
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -204,9 +228,10 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
 
         {/* コンテンツ */}
         {activeTab === 'edit' ? (
-          <div className="space-y-4">
-            {/* プラン名入力 */}
-            <div className="space-y-3">
+          plan ? (
+            <div className="space-y-4">
+              {/* プラン名入力 */}
+              <div className="space-y-3">
               <label className="subheadline block text-system-label">プラン名</label>
               <input
                 type="text"
@@ -241,12 +266,18 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
                 <div className="flex justify-between">
                   <span className="text-system-secondary-label">最終更新:</span>
                   <span className="text-system-label font-medium">
-                    {plan.updatedAt.toLocaleDateString('ja-JP')}
+                    {plan?.updatedAt.toLocaleDateString('ja-JP')}
                   </span>
                 </div>
               </div>
             </div>
           </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-system-secondary-label">プランが選択されていません</p>
+              <p className="text-system-tertiary-label text-sm mt-2">管理タブから既存のプランを選択するか、新しいプランを作成してください</p>
+            </div>
+          )
         ) : (
           <div className="space-y-4">
             {/* プラン操作ボタン */}
@@ -285,7 +316,7 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
                     <div
                       key={savedPlan.id}
                       className={`list-item rounded-lg cursor-pointer transition-colors duration-150 p-3 ${
-                        savedPlan.id === plan.id 
+                        plan && savedPlan.id === plan.id 
                           ? 'bg-coral-500/10 border border-coral-500/20' 
                           : 'hover:bg-system-secondary-background'
                       }`}
@@ -297,10 +328,10 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
                             {savedPlan.name}
                           </h4>
                           <p className="caption-1 text-system-secondary-label mt-1">
-                            {savedPlan.places.length}地点 • ¥{savedPlan.totalCost.toLocaleString()}
+                            {'places' in savedPlan ? `${savedPlan.places.length}地点 • ¥${savedPlan.totalCost.toLocaleString()}` : `${(savedPlan as PlanListItem).placeCount}地点 • ¥${(savedPlan as PlanListItem).totalCost.toLocaleString()}`}
                           </p>
                         </div>
-                        {savedPlan.id === plan.id && (
+                        {plan && savedPlan.id === plan.id && (
                           <div className="w-2 h-2 bg-coral-500 rounded-full ml-2 flex-shrink-0"></div>
                         )}
                       </div>
@@ -354,7 +385,7 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
             <div>
               <h3 className="headline text-system-label">プランを削除</h3>
               <p className="footnote text-system-secondary-label mt-2">
-                「{plan.name}」を削除しますか？<br/>
+                「{plan?.name}」を削除しますか？<br/>
                 この操作は取り消せません。
               </p>
             </div>
