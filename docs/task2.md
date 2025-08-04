@@ -581,3 +581,349 @@ if (currentPlan && currentPlan.id === planId) {
 2. アプリ起動時にその位置から地図が開始される
 3. プラン参加者全員で最後の操作位置が共有される
 4. 新しいDIコンテナベースのアーキテクチャに完全に準拠した実装となる
+
+## タスク31: プラン複数削除機能の実装
+
+### 背景と問題
+現在のプラン管理画面（PlanNameDisplay内）では、プランを1つずつしか削除できない。複数のプランを選択して一括削除する機能が必要。
+
+### 実装方針
+チェックボックスを使用した複数選択機能を追加し、選択したプランを一括削除できるUIを実装する。
+
+### 実装詳細
+
+#### 1. PlanNameEditModal.tsxの状態管理を拡張
+
+```typescript
+// 選択されたプランIDを管理するstateを追加
+const [selectedPlanIds, setSelectedPlanIds] = useState<Set<string>>(new Set());
+const [isDeleteMode, setIsDeleteMode] = useState(false);
+
+// チェックボックスのトグル関数
+const togglePlanSelection = (planId: string) => {
+  setSelectedPlanIds(prev => {
+    const newSet = new Set(prev);
+    if (newSet.has(planId)) {
+      newSet.delete(planId);
+    } else {
+      newSet.add(planId);
+    }
+    return newSet;
+  });
+};
+
+// 全選択/全解除関数
+const toggleSelectAll = () => {
+  if (selectedPlanIds.size === plans.length) {
+    setSelectedPlanIds(new Set());
+  } else {
+    setSelectedPlanIds(new Set(plans.map(p => p.id)));
+  }
+};
+```
+
+#### 2. 複数削除処理の実装
+
+```typescript
+const handleBulkDelete = async () => {
+  if (selectedPlanIds.size === 0) return;
+  
+  const confirmMessage = selectedPlanIds.size === 1 
+    ? 'このプランを削除しますか？'
+    : `${selectedPlanIds.size}件のプランを削除しますか？`;
+    
+  if (!confirm(confirmMessage)) return;
+  
+  try {
+    const container = DIContainer.getInstance();
+    const planService = container.getPlanService();
+    const userService = container.getUserService();
+    
+    // 削除処理を並行実行
+    const deletePromises = Array.from(selectedPlanIds).map(planId => 
+      planService.deletePlan(user.uid, planId)
+    );
+    
+    await Promise.all(deletePromises);
+    
+    // 削除後の処理
+    const remainingPlans = plans.filter(p => !selectedPlanIds.has(p.id));
+    
+    if (remainingPlans.length > 0) {
+      // アクティブプランが削除された場合、最初のプランをアクティブに
+      if (selectedPlanIds.has(plan.id)) {
+        await userService.updateUser(user.uid, {
+          activePlanId: remainingPlans[0].id
+        });
+        setActivePlan(remainingPlans[0].id);
+      }
+    } else {
+      // 全プラン削除の場合、新規プラン作成
+      const newPlan = await planService.createPlan(user.uid, '新しいプラン');
+      await userService.updateUser(user.uid, {
+        activePlanId: newPlan.id
+      });
+      setActivePlan(newPlan.id);
+    }
+    
+    // UI状態をリセット
+    setSelectedPlanIds(new Set());
+    setIsDeleteMode(false);
+    
+  } catch (error) {
+    console.error('Failed to delete plans:', error);
+    alert('プランの削除に失敗しました');
+  }
+};
+```
+
+#### 3. UIの実装
+
+```typescript
+// プラン管理タブ内のUI
+<div className="space-y-3">
+  {/* 削除モード切り替えボタン */}
+  <div className="flex justify-between items-center mb-4">
+    <button
+      onClick={() => {
+        setIsDeleteMode(!isDeleteMode);
+        setSelectedPlanIds(new Set());
+      }}
+      className="text-blue-500 hover:text-blue-600 text-sm font-medium"
+    >
+      {isDeleteMode ? 'キャンセル' : '複数選択'}
+    </button>
+    
+    {isDeleteMode && (
+      <button
+        onClick={toggleSelectAll}
+        className="text-blue-500 hover:text-blue-600 text-sm font-medium"
+      >
+        {selectedPlanIds.size === plans.length ? '全解除' : '全選択'}
+      </button>
+    )}
+  </div>
+  
+  {/* プランリスト */}
+  {plans.map((p) => (
+    <div
+      key={p.id}
+      className={`
+        flex items-center p-3 rounded-lg cursor-pointer
+        ${p.id === plan.id ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'}
+      `}
+    >
+      {/* チェックボックス（削除モード時のみ表示） */}
+      {isDeleteMode && (
+        <input
+          type="checkbox"
+          checked={selectedPlanIds.has(p.id)}
+          onChange={() => togglePlanSelection(p.id)}
+          className="mr-3 w-4 h-4 text-blue-500"
+          onClick={(e) => e.stopPropagation()}
+        />
+      )}
+      
+      {/* プラン情報 */}
+      <div
+        className="flex-1"
+        onClick={() => !isDeleteMode && handlePlanChange(p.id)}
+      >
+        <div className="font-semibold">{p.name}</div>
+        <div className="text-sm text-gray-500">
+          候補地: {p.places.length}件
+        </div>
+      </div>
+    </div>
+  ))}
+  
+  {/* 一括削除ボタン */}
+  {isDeleteMode && selectedPlanIds.size > 0 && (
+    <button
+      onClick={handleBulkDelete}
+      className="w-full mt-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+    >
+      選択した{selectedPlanIds.size}件を削除
+    </button>
+  )}
+</div>
+```
+
+### 実装手順
+
+1. **PlanNameEditModal.tsxに選択状態管理を追加**
+2. **複数削除処理関数を実装**
+3. **UIにチェックボックスと削除モード切り替えを追加**
+4. **削除確認ダイアログを実装**
+5. **エラーハンドリングとローディング状態を追加**
+
+### 期待される結果
+
+1. プラン管理画面で「複数選択」ボタンが表示される
+2. 複数選択モードで各プランにチェックボックスが表示される
+3. 選択したプランを一括削除できる
+4. 削除確認ダイアログが表示される
+5. 削除後、適切にアクティブプランが設定される
+
+## タスク32: プラン新規作成時の名前編集モーダル自動表示
+
+### 背景と問題
+現在、新規プランを作成すると「新しいプラン」という名前で作成され、ユーザーが手動で編集モーダルを開いて名前を変更する必要がある。これはUXが悪く、改善が必要。
+
+### 実装方針
+新規プラン作成時に自動的にプラン名編集モーダルを開き、ユーザーがすぐにプラン名を入力できるようにする。
+
+### 実装詳細
+
+#### 1. PlanNameDisplay.tsxの修正
+
+```typescript
+// 新規作成時にモーダルを開くフラグを追加
+const handleCreateNewPlan = async () => {
+  try {
+    const container = DIContainer.getInstance();
+    const planService = container.getPlanService();
+    const userService = container.getUserService();
+    
+    // 仮の名前で新規プラン作成
+    const tempName = `新しいプラン_${new Date().toLocaleDateString('ja-JP')}`;
+    const newPlan = await planService.createPlan(user.uid, tempName);
+    
+    // アクティブプランとして設定
+    await userService.updateUser(user.uid, {
+      activePlanId: newPlan.id
+    });
+    
+    // プランを設定
+    setActivePlan(newPlan.id);
+    
+    // 編集モーダルを自動的に開く（新規作成フラグ付き）
+    setIsEditModalOpen(true);
+    setIsNewPlanCreation(true);
+    
+  } catch (error) {
+    console.error('Failed to create new plan:', error);
+    alert('新しいプランの作成に失敗しました');
+  }
+};
+```
+
+#### 2. PlanNameEditModal.tsxの拡張
+
+```typescript
+// propsに新規作成フラグを追加
+interface PlanNameEditModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  isNewPlanCreation?: boolean;
+}
+
+// 新規作成時の処理を追加
+useEffect(() => {
+  if (isOpen && isNewPlanCreation && plan) {
+    // 新規作成時は名前フィールドを空にして、フォーカスを当てる
+    setName('');
+    setTimeout(() => {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    }, 100);
+  } else if (isOpen && plan) {
+    // 既存プランの編集時
+    setName(plan.name);
+  }
+}, [isOpen, isNewPlanCreation, plan]);
+
+// キャンセル時の処理
+const handleCancel = async () => {
+  if (isNewPlanCreation && name.trim() === '') {
+    // 新規作成時に名前が入力されていない場合
+    if (confirm('プラン名が入力されていません。このプランを削除しますか？')) {
+      try {
+        const container = DIContainer.getInstance();
+        const planService = container.getPlanService();
+        await planService.deletePlan(user.uid, plan.id);
+        
+        // 別のプランに切り替え
+        const plans = await getUserPlans(user.uid);
+        if (plans.length > 0) {
+          setActivePlan(plans[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to delete empty plan:', error);
+      }
+    }
+  }
+  onClose();
+};
+
+// 保存処理も修正
+const save = async () => {
+  if (!name.trim()) {
+    alert('プラン名を入力してください');
+    return;
+  }
+  
+  if (plan) {
+    const updatedPlan = { 
+      ...plan, 
+      name: name.trim(),
+      places,
+      labels,
+      totalCost: places.reduce((sum, p) => sum + (p.estimatedCost || 0), 0),
+      updatedAt: new Date()
+    };
+    
+    // 新規作成フラグをリセット
+    if (isNewPlanCreation) {
+      setIsNewPlanCreation(false);
+    }
+    
+    updatePlan(updatedPlan);
+    onClose();
+  }
+};
+```
+
+#### 3. UIの改善
+
+```typescript
+// モーダルのタイトルを動的に変更
+<h2 className="text-xl font-bold mb-4">
+  {isNewPlanCreation ? '新しいプランの作成' : 'プラン編集'}
+</h2>
+
+// プレースホルダーも動的に
+<input
+  ref={nameInputRef}
+  type="text"
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+  placeholder={isNewPlanCreation ? '例: 沖縄旅行2024' : 'プラン名を入力'}
+  className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+  onKeyPress={handleKeyPress}
+  autoFocus={isNewPlanCreation}
+/>
+
+// 新規作成時のヒントを表示
+{isNewPlanCreation && (
+  <p className="text-sm text-gray-500 mt-2">
+    わかりやすいプラン名を付けると、後で見つけやすくなります
+  </p>
+)}
+```
+
+### 実装手順
+
+1. **PlanNameDisplayに新規作成時のモーダル自動表示を追加**
+2. **PlanNameEditModalに新規作成フラグを追加**
+3. **新規作成時の特別な処理を実装**
+4. **キャンセル時の処理を追加**
+5. **UIの文言を動的に変更**
+
+### 期待される結果
+
+1. 「新しいプランを作成」ボタンをクリックすると自動的に名前編集モーダルが開く
+2. モーダルには「新しいプランの作成」というタイトルが表示される
+3. 名前入力フィールドに自動的にフォーカスが当たる
+4. キャンセル時に適切な処理が行われる
+5. プラン名を入力して保存すると、その名前でプランが作成される
