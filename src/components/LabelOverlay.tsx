@@ -13,11 +13,13 @@ interface Props {
   onEdit: () => void;
   onMove: (pos: { lat: number; lng: number }) => void;
   onResize: (size: { width: number; height: number }) => void;
+  onMoveEnd?: (pos: { lat: number; lng: number }) => void;
+  onResizeEnd?: (size: { width: number; height: number }) => void;
 }
 
 type InteractionMode = 'idle' | 'dragging' | 'resizing' | 'editing';
 
-export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: Props) {
+export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onMoveEnd, onResizeEnd }: Props) {
   const { isMobile } = useDeviceDetect();
   const setMapInteraction = useUIStore((s) => s.setMapInteraction);
 
@@ -36,6 +38,13 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTapTimeRef = useRef(0);
   const isPointerDownRef = useRef(false);
+
+  // 現在の位置とサイズを保持
+  const currentPositionRef = useRef<{ lat: number; lng: number }>(label.position);
+  const currentSizeRef = useRef<{ width: number; height: number }>({
+    width: label.width,
+    height: label.height
+  });
 
   const deleteLabel = useLabelsStore((s) => s.deleteLabel);
 
@@ -57,6 +66,10 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
         const dy = ev.clientY - interactionStartRef.current.clientY;
         const newWidth = Math.max(60, interactionStartRef.current.width + dx);
         const newHeight = Math.max(28, interactionStartRef.current.height + dy);
+        
+        // 現在のサイズを保存
+        currentSizeRef.current = { width: newWidth, height: newHeight };
+        
         onResize({ width: newWidth, height: newHeight });
         interactionStartRef.current.moved = true;
       } else if (mode === 'dragging') {
@@ -69,24 +82,33 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
         const dy = (ev.clientY - interactionStartRef.current.clientY) / scale;
         const newWorld = new google.maps.Point(interactionStartRef.current.world.x + dx, interactionStartRef.current.world.y + dy);
         const latLng = proj.fromPointToLatLng(newWorld);
-        if (latLng) onMove({ lat: latLng.lat(), lng: latLng.lng() });
+        if (latLng) {
+          const newPosition = { lat: latLng.lat(), lng: latLng.lng() };
+          
+          // 現在の位置を保存
+          currentPositionRef.current = newPosition;
+          
+          onMove(newPosition);
+        }
         interactionStartRef.current.moved = true;
       }
     };
 
     const handlePointerUp = () => {
       isPointerDownRef.current = false;
-      // Trigger sync on operation end
+      // 操作終了時の処理
       if (interactionStartRef.current.moved) {
-        if (mode === 'dragging') {
-            // onMove is already called during move, but we can call it one last time if needed
-        } else if (mode === 'resizing') {
-            // onResize is also called during resize
-            // On mobile, end editing mode after resize operation
-            if (isMobile) {
-              setMode('idle');
-              return;
-            }
+        if (mode === 'dragging' && onMoveEnd) {
+          // 保存された最新の位置で同期
+          onMoveEnd(currentPositionRef.current);
+        } else if (mode === 'resizing' && onResizeEnd) {
+          // 保存された最新のサイズで同期
+          onResizeEnd(currentSizeRef.current);
+          // On mobile, end editing mode after resize operation
+          if (isMobile) {
+            setMode('idle');
+            return;
+          }
         }
       }
       
@@ -126,6 +148,12 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize }: P
     setCurrentZoom(map.getZoom() ?? 14);
     return () => google.maps.event.removeListener(zoomListener);
   }, [map]);
+
+  // labelの位置・サイズが外部から変更された場合にrefを更新
+  useEffect(() => {
+    currentPositionRef.current = label.position;
+    currentSizeRef.current = { width: label.width, height: label.height };
+  }, [label.position.lat, label.position.lng, label.width, label.height]);
 
   // --- Event Handlers ---
 

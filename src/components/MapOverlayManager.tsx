@@ -97,8 +97,22 @@ export default function MapOverlayManager({
           label={l}
           map={map}
           onEdit={() => setEditing(l)}
-          onMove={(pos) => updateLabel(l.id, { position: pos })}
-          onResize={(size) => updateLabel(l.id, size)}
+          onMove={(pos) => {
+            // ローカルの状態のみ更新（同期はしない）
+            updateLabel(l.id, { position: pos }, true);
+          }}
+          onResize={(size) => {
+            // ローカルの状態のみ更新（同期はしない）
+            updateLabel(l.id, size, true);
+          }}
+          onMoveEnd={(pos) => {
+            // 操作終了時に同期
+            updateLabel(l.id, { position: pos });
+          }}
+          onResizeEnd={(size) => {
+            // 操作終了時に同期
+            updateLabel(l.id, size);
+          }}
         />
       ))}
       

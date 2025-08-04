@@ -66,6 +66,15 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
     }
   }, [map, plan?.lastActionPosition?.position?.lat, plan?.lastActionPosition?.position?.lng]);
 
+  // isMapInteractionEnabledの変更を監視してgestureHandlingを更新
+  useEffect(() => {
+    if (map) {
+      map.setOptions({
+        gestureHandling: isMapInteractionEnabled ? 'greedy' : 'none'
+      });
+    }
+  }, [map, isMapInteractionEnabled]);
+
   return (
     <MapStateManager>
       {({ containerStyle, mapOptions, center }) => (

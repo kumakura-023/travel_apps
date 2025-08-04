@@ -9,7 +9,7 @@ export function usePlanSyncEvents(
   plan: TravelPlan | null,
   saveImmediately: (plan: TravelPlan) => void,
   saveImmediatelyCloud: (plan: TravelPlan) => void,
-  saveWithSyncManager?: (plan: TravelPlan, operationType?: 'place_added' | 'place_deleted' | 'place_updated' | 'memo_updated' | 'plan_updated') => void
+  saveWithSyncManager?: (plan: TravelPlan, operationType?: 'place_added' | 'place_deleted' | 'place_updated' | 'memo_updated' | 'plan_updated' | 'label_added' | 'label_updated' | 'label_deleted') => void
 ) {
   useEffect(() => {
     const { setOnPlaceAdded } = usePlacesStore.getState();
@@ -78,9 +78,23 @@ export function usePlanSyncEvents(
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
+        // 新しい同期システムがある場合はそれを使用、なければ従来の方法
+        if (saveWithSyncManager) {
+          saveWithSyncManager(planToSave, 'label_added');
+        } else {
+          saveImmediately(planToSave);
+          saveImmediatelyCloud(planToSave);
+        }
       }
+      syncDebugUtils.log('save', {
+        type: 'immediate_sync',
+        reason: 'label_added',
+        labelText: newLabel.text,
+        labelId: newLabel.id,
+        timestamp: Date.now()
+      });
     });
-  }, []);
+  }, [plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager]);
 
   useEffect(() => {
     const { setOnLabelUpdated } = useLabelsStore.getState();
@@ -93,16 +107,22 @@ export function usePlanSyncEvents(
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
-        if (updatedLabel.status === 'synced') {
-          // 新しい同期システムがある場合はそれを使用、なければ従来の方法
-          if (saveWithSyncManager) {
-            saveWithSyncManager(planToSave, 'place_updated');
-          } else {
-            saveImmediately(planToSave);
-            saveImmediatelyCloud(planToSave);
-          }
+        // statusの条件を削除して、常に同期する
+        // 新しい同期システムがある場合はそれを使用、なければ従来の方法
+        if (saveWithSyncManager) {
+          saveWithSyncManager(planToSave, 'label_updated');
+        } else {
+          saveImmediately(planToSave);
+          saveImmediatelyCloud(planToSave);
         }
       }
+      syncDebugUtils.log('save', {
+        type: 'immediate_sync',
+        reason: 'label_updated',
+        labelText: updatedLabel.text,
+        labelId: updatedLabel.id,
+        timestamp: Date.now()
+      });
     });
   }, [plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager]);
 
@@ -119,7 +139,7 @@ export function usePlanSyncEvents(
         usePlanStore.getState().setPlan(planToSave);
         // 新しい同期システムがある場合はそれを使用、なければ従来の方法
         if (saveWithSyncManager) {
-          saveWithSyncManager(planToSave, 'place_updated');
+          saveWithSyncManager(planToSave, 'label_deleted');
         } else {
           saveImmediately(planToSave);
           saveImmediatelyCloud(planToSave);

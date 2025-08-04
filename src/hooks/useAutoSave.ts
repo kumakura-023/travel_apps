@@ -73,7 +73,7 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
   }, []);
 
   // 新しい同期システム経由の保存関数
-  const saveWithSyncManager = useCallback(async (plan: TravelPlan, operationType: 'place_added' | 'place_deleted' | 'place_updated' | 'memo_updated' | 'plan_updated' = 'place_updated') => {
+  const saveWithSyncManager = useCallback(async (plan: TravelPlan, operationType: 'place_added' | 'place_deleted' | 'place_updated' | 'memo_updated' | 'plan_updated' | 'label_added' | 'label_updated' | 'label_deleted' = 'place_updated') => {
     const context = getSyncContext();
     await syncManagerRef.current.queueOperation(operationType, plan, context);
   }, [getSyncContext]);

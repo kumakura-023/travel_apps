@@ -15,7 +15,7 @@ interface LabelsState {
   setOnLabelUpdated: (callback: (updatedLabel: MapLabel, allLabels: MapLabel[]) => void) => void;
   setOnLabelDeleted: (callback: (updatedLabels: MapLabel[]) => void) => void;
   addLabel: (partial: Partial<MapLabel>) => void;
-  updateLabel: (id: string, update: Partial<MapLabel>) => void;
+  updateLabel: (id: string, update: Partial<MapLabel>, localOnly?: boolean) => void;
   deleteLabel: (id: string) => void;
   clearLabels: () => void;
 }
@@ -88,7 +88,7 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
 
       return newState;
     }),
-  updateLabel: (id, update) => {
+  updateLabel: (id, update, localOnly = false) => {
     set((s) => {
       let updatedLabel: MapLabel | null = null;
       const updatedLabels = s.labels.map((l) => {
@@ -99,7 +99,8 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
         return l;
       });
 
-      if (s.onLabelUpdated && updatedLabel) {
+      // localOnlyがtrueの場合は同期コールバックを呼ばない
+      if (!localOnly && s.onLabelUpdated && updatedLabel) {
         s.onLabelUpdated(updatedLabel, updatedLabels);
       }
 
