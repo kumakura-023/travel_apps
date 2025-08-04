@@ -8,4 +8,6 @@ export interface IPlanRepository {
   getAllPlans(): Promise<TravelPlan[]>;
   
   listenToPlan(planId: string, callback: (plan: TravelPlan | null) => void): () => void;
+  
+  updatePlan(planId: string, update: Partial<TravelPlan>): Promise<void>;
 }

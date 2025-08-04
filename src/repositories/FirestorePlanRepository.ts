@@ -8,7 +8,9 @@ import {
   collection,
   query,
   where,
-  getDocs 
+  getDocs,
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { TravelPlan } from '../types';
@@ -78,5 +80,19 @@ export class FirestorePlanRepository implements IPlanRepository {
       
       callback(plan);
     });
+  }
+
+  async updatePlan(planId: string, update: Partial<TravelPlan>): Promise<void> {
+    try {
+      const planRef = doc(this.plansCollection, planId);
+      await updateDoc(planRef, {
+        ...update,
+        updatedAt: serverTimestamp()
+      });
+      console.log('[FirestorePlanRepository] Plan updated:', planId);
+    } catch (error) {
+      console.error('[FirestorePlanRepository] Failed to update plan:', error);
+      throw error;
+    }
   }
 }

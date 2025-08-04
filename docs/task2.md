@@ -332,3 +332,252 @@ setPlace({
 - Place型の`photos`は`string[]`型で画像URLの配列を保持している
 - PlaceDetailPanel内では、この画像データをそのまま使用できる
 - 画像URLは既に適切なフォーマットで保存されているため、追加の変換は不要
+
+## タスク30: 最新候補地点リスタート機能の復活
+
+### 背景と問題
+アプリ起動後、最後に追加した地点から再開する機能（タスク20, 21, 24で実装）が失われている。リファクタリングでplanStoreのupdateLastActionPositionメソッドがdeprecatedになり、実際の保存処理が行われなくなったことが原因。
+
+### 問題の詳細
+1. **updateLastActionPositionメソッドの無効化**
+   - planStore.tsのupdateLastActionPositionが警告を出すだけで、Firestoreへの保存を実行しない
+   - placesStore、labelsStoreから呼び出されても実際には何も保存されていない
+
+2. **新しいアーキテクチャへの対応不足**
+   - PlanServiceにupdateLastActionPositionに相当するメソッドが存在しない
+   - DIコンテナベースの新アーキテクチャに対応した実装が必要
+
+3. **読み込み処理は正常**
+   - MapStateManager、MapContainerでの読み込み処理は実装済み
+   - planCloudServiceでlastActionPositionの読み込みも実装済み
+   - 保存処理のみが欠落している状態
+
+### 修正方針
+新しいアーキテクチャに沿って、PlanServiceにupdateLastActionPositionメソッドを追加し、DIコンテナを通じて利用可能にする。
+
+### 実装詳細
+
+#### 1. PlanService.tsに新メソッドを追加（src/services/plan/PlanService.ts）
+
+```typescript
+// インポートにserverTimestampを追加
+import { serverTimestamp } from 'firebase/firestore';
+
+// PlanServiceクラスに以下のメソッドを追加（89行目の後）
+async updateLastActionPosition(
+  planId: string,
+  position: google.maps.LatLngLiteral,
+  userId: string,
+  actionType: 'place' | 'label'
+): Promise<void> {
+  const lastActionPosition = {
+    position: {
+      lat: position.lat,
+      lng: position.lng
+    },
+    timestamp: serverTimestamp(),
+    userId,
+    actionType
+  };
+  
+  console.log('[PlanService] Updating last action position:', {
+    planId,
+    position,
+    userId,
+    actionType
+  });
+  
+  try {
+    await this.planRepository.updatePlan(planId, {
+      lastActionPosition
+    });
+    
+    // ローカルキャッシュも更新
+    const cachedPlan = await this.localCacheRepository.loadPlan(planId);
+    if (cachedPlan) {
+      cachedPlan.lastActionPosition = {
+        ...lastActionPosition,
+        timestamp: new Date() // ローカルではDateオブジェクトを使用
+      };
+      await this.localCacheRepository.savePlan(cachedPlan);
+    }
+    
+    console.log('[PlanService] Last action position updated successfully');
+  } catch (error) {
+    console.error('[PlanService] Failed to update last action position:', error);
+    throw error;
+  }
+}
+```
+
+#### 2. IPlanRepositoryインターフェースに更新メソッドを追加（src/repositories/interfaces/IPlanRepository.ts）
+
+```typescript
+// 既存のメソッドの後に追加
+updatePlan(planId: string, update: Partial<TravelPlan>): Promise<void>;
+```
+
+#### 3. FirestorePlanRepositoryに実装を追加（src/repositories/FirestorePlanRepository.ts）
+
+```typescript
+// クラスに以下のメソッドを追加
+async updatePlan(planId: string, update: Partial<TravelPlan>): Promise<void> {
+  try {
+    const planRef = doc(this.db, 'plans', planId);
+    await updateDoc(planRef, {
+      ...update,
+      updatedAt: serverTimestamp()
+    });
+    console.log('[FirestorePlanRepository] Plan updated:', planId);
+  } catch (error) {
+    console.error('[FirestorePlanRepository] Failed to update plan:', error);
+    throw error;
+  }
+}
+```
+
+#### 4. LocalStoragePlanRepositoryにも実装を追加（src/repositories/LocalStoragePlanRepository.ts）
+
+```typescript
+// クラスに以下のメソッドを追加
+async updatePlan(planId: string, update: Partial<TravelPlan>): Promise<void> {
+  const plans = this.loadAllPlans();
+  const planIndex = plans.findIndex(p => p.id === planId);
+  
+  if (planIndex !== -1) {
+    plans[planIndex] = {
+      ...plans[planIndex],
+      ...update,
+      updatedAt: new Date()
+    };
+    
+    localStorage.setItem(this.storageKey, JSON.stringify(plans));
+    console.log('[LocalStoragePlanRepository] Plan updated:', planId);
+  } else {
+    throw new Error(`Plan not found: ${planId}`);
+  }
+}
+```
+
+#### 5. placesStore.tsの修正（src/store/placesStore.ts）
+
+```typescript
+// インポートを追加
+import { DIContainer } from '../di/DIContainer';
+import { useAuthStore } from '../hooks/useAuth';
+
+// addPlaceメソッド内のupdateLastActionPosition呼び出し部分を修正（66-72行目を置換）
+// Firestoreに最後の操作位置を保存（新アーキテクチャ対応）
+const { plan } = usePlanStore.getState();
+const { user } = useAuthStore.getState();
+
+if (plan && user) {
+  console.log('[placesStore] Saving last action position for new place:', {
+    placeId: newPlace.id,
+    placeName: newPlace.name,
+    coordinates: newPlace.coordinates
+  });
+  
+  try {
+    const container = DIContainer.getInstance();
+    const planService = container.getPlanService();
+    
+    await planService.updateLastActionPosition(
+      plan.id,
+      newPlace.coordinates,
+      user.uid,
+      'place'
+    );
+    
+    console.log('[placesStore] Last action position saved successfully');
+  } catch (error) {
+    console.error('[placesStore] Failed to update last action position:', error);
+  }
+}
+```
+
+#### 6. labelsStore.tsの修正（src/store/labelsStore.ts）
+
+```typescript
+// インポートを追加
+import { DIContainer } from '../di/DIContainer';
+import { useAuthStore } from '../hooks/useAuth';
+
+// addLabelメソッド内のupdateLastActionPosition呼び出し部分を修正（対応する行を置換）
+// Firestoreに最後の操作位置を保存（新アーキテクチャ対応）
+const { plan } = usePlanStore.getState();
+const { user } = useAuthStore.getState();
+
+if (plan && user) {
+  console.log('[labelsStore] Saving last action position for new label:', {
+    labelId: newLabel.id,
+    text: newLabel.text,
+    position: newLabel.position
+  });
+  
+  try {
+    const container = DIContainer.getInstance();
+    const planService = container.getPlanService();
+    
+    await planService.updateLastActionPosition(
+      plan.id,
+      newLabel.position,
+      user.uid,
+      'label'
+    );
+    
+    console.log('[labelsStore] Last action position saved successfully');
+  } catch (error) {
+    console.error('[labelsStore] Failed to update last action position:', error);
+  }
+}
+```
+
+#### 7. planStoreの状態更新も追加（オプション）
+
+MapStateManagerの実装を確認すると、planオブジェクトのlastActionPositionを監視しているため、ローカルの状態も更新する必要がある場合があります。
+
+```typescript
+// PlanService.tsのupdateLastActionPositionメソッド内に追加
+// planStoreの状態も更新（リアルタイム反映のため）
+const { setPlan, plan: currentPlan } = usePlanStore.getState();
+if (currentPlan && currentPlan.id === planId) {
+  setPlan({
+    ...currentPlan,
+    lastActionPosition: {
+      position: {
+        lat: position.lat,
+        lng: position.lng
+      },
+      timestamp: new Date(),
+      userId,
+      actionType
+    }
+  });
+}
+```
+
+### 実装手順
+
+1. **IPlanRepositoryインターフェースに`updatePlan`メソッドを追加**
+2. **FirestorePlanRepositoryとLocalStoragePlanRepositoryに実装を追加**
+3. **PlanServiceに`updateLastActionPosition`メソッドを追加**
+4. **placesStoreとlabelsStoreの呼び出し部分を新実装に置き換え**
+5. **動作確認とデバッグ**
+
+### テスト項目
+
+- [ ] 候補地追加時にコンソールログで保存処理が確認できる
+- [ ] FirestoreコンソールでlastActionPositionフィールドが更新される
+- [ ] アプリをリロードして最後に追加した候補地の位置から開始する
+- [ ] 別デバイスでも同じ位置から開始することを確認
+- [ ] メモ（ラベル）追加時も同様に動作することを確認
+- [ ] エラーが発生した場合、適切にログが出力される
+
+### 期待される結果
+
+この修正により：
+1. 最後に追加された候補地・メモの位置がFirestoreに保存される
+2. アプリ起動時にその位置から地図が開始される
+3. プラン参加者全員で最後の操作位置が共有される
+4. 新しいDIコンテナベースのアーキテクチャに完全に準拠した実装となる

@@ -2,6 +2,8 @@ import { IPlanRepository } from '../../repositories/interfaces/IPlanRepository';
 import { IUserRepository } from '../../repositories/interfaces/IUserRepository';
 import { TravelPlan } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
+import { serverTimestamp } from 'firebase/firestore';
+import { usePlanStore } from '../../store/planStore';
 
 export class PlanService {
   constructor(
@@ -85,5 +87,67 @@ export class PlanService {
       
       callback(plan);
     });
+  }
+
+  async updateLastActionPosition(
+    planId: string,
+    position: google.maps.LatLngLiteral,
+    userId: string,
+    actionType: 'place' | 'label'
+  ): Promise<void> {
+    const lastActionPosition = {
+      position: {
+        lat: position.lat,
+        lng: position.lng
+      },
+      timestamp: serverTimestamp(),
+      userId,
+      actionType
+    };
+    
+    console.log('[PlanService] Updating last action position:', {
+      planId,
+      position,
+      userId,
+      actionType
+    });
+    
+    try {
+      await this.planRepository.updatePlan(planId, {
+        lastActionPosition
+      });
+      
+      // ローカルキャッシュも更新
+      const cachedPlan = await this.localCacheRepository.loadPlan(planId);
+      if (cachedPlan) {
+        cachedPlan.lastActionPosition = {
+          ...lastActionPosition,
+          timestamp: new Date() // ローカルではDateオブジェクトを使用
+        };
+        await this.localCacheRepository.savePlan(cachedPlan);
+      }
+      
+      // planStoreの状態も更新（リアルタイム反映のため）
+      const { setPlan, plan: currentPlan } = usePlanStore.getState();
+      if (currentPlan && currentPlan.id === planId) {
+        setPlan({
+          ...currentPlan,
+          lastActionPosition: {
+            position: {
+              lat: position.lat,
+              lng: position.lng
+            },
+            timestamp: new Date(),
+            userId,
+            actionType
+          }
+        });
+      }
+      
+      console.log('[PlanService] Last action position updated successfully');
+    } catch (error) {
+      console.error('[PlanService] Failed to update last action position:', error);
+      throw error;
+    }
   }
 }

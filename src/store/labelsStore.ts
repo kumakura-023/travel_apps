@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { MapLabel } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
 import { usePlanStore } from './planStore';
+import { DIContainer } from '../di/DIContainer';
+import { useAuthStore } from '../hooks/useAuth';
 
 interface LabelsState {
   labels: MapLabel[];
@@ -53,20 +55,35 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
       if (newLabel.position) {
         // saveLastActionPosition(newLabel.position);
         
-        // Firestoreに最後の操作位置を保存（プラン共有）
-        console.log('[labelsStore] Saving last action position for new label:', {
-          labelId: newLabel.id,
-          labelText: newLabel.text,
-          position: newLabel.position
-        });
-        
-        usePlanStore.getState().updateLastActionPosition(newLabel.position, 'label')
-          .then(() => {
-            console.log('[labelsStore] Last action position saved successfully');
-          })
-          .catch(error => {
-            console.error('[labelsStore] Failed to update last action position:', error);
+        // Firestoreに最後の操作位置を保存（新アーキテクチャ対応）
+        const { plan } = usePlanStore.getState();
+        const { user } = useAuthStore.getState();
+
+        if (plan && user) {
+          console.log('[labelsStore] Saving last action position for new label:', {
+            labelId: newLabel.id,
+            text: newLabel.text,
+            position: newLabel.position
           });
+          
+          try {
+            const container = DIContainer.getInstance();
+            const planService = container.getPlanService();
+            
+            planService.updateLastActionPosition(
+              plan.id,
+              newLabel.position,
+              user.uid,
+              'label'
+            ).then(() => {
+              console.log('[labelsStore] Last action position saved successfully');
+            }).catch(error => {
+              console.error('[labelsStore] Failed to update last action position:', error);
+            });
+          } catch (error) {
+            console.error('[labelsStore] Failed to get PlanService:', error);
+          }
+        }
       }
 
       return newState;

@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { Place } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
 import { usePlanStore } from './planStore';
+import { DIContainer } from '../di/DIContainer';
+import { useAuthStore } from '../hooks/useAuth';
 
 interface PlacesState {
   places: Place[];
@@ -56,20 +58,35 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
       // ローカルストレージへの保存は無効化（プラン共有位置のみを使用）
       // saveLastActionPosition(newPlace.coordinates);
       
-      // Firestoreに最後の操作位置を保存（プラン共有）
-      console.log('[placesStore] Saving last action position for new place:', {
-        placeId: newPlace.id,
-        placeName: newPlace.name,
-        coordinates: newPlace.coordinates
-      });
-      
-      usePlanStore.getState().updateLastActionPosition(newPlace.coordinates, 'place')
-        .then(() => {
-          console.log('[placesStore] Last action position saved successfully');
-        })
-        .catch(error => {
-          console.error('[placesStore] Failed to update last action position:', error);
+      // Firestoreに最後の操作位置を保存（新アーキテクチャ対応）
+      const { plan } = usePlanStore.getState();
+      const { user } = useAuthStore.getState();
+
+      if (plan && user) {
+        console.log('[placesStore] Saving last action position for new place:', {
+          placeId: newPlace.id,
+          placeName: newPlace.name,
+          coordinates: newPlace.coordinates
         });
+        
+        try {
+          const container = DIContainer.getInstance();
+          const planService = container.getPlanService();
+          
+          planService.updateLastActionPosition(
+            plan.id,
+            newPlace.coordinates,
+            user.uid,
+            'place'
+          ).then(() => {
+            console.log('[placesStore] Last action position saved successfully');
+          }).catch(error => {
+            console.error('[placesStore] Failed to update last action position:', error);
+          });
+        } catch (error) {
+          console.error('[placesStore] Failed to get PlanService:', error);
+        }
+      }
 
       return newState;
     }),

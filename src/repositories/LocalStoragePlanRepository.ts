@@ -55,6 +55,23 @@ export class LocalStoragePlanRepository implements IPlanRepository {
     
     return () => {};
   }
+
+  async updatePlan(planId: string, update: Partial<TravelPlan>): Promise<void> {
+    const currentPlan = await this.loadPlan(planId);
+    
+    if (!currentPlan) {
+      throw new Error(`Plan not found: ${planId}`);
+    }
+    
+    const updatedPlan = {
+      ...currentPlan,
+      ...update,
+      updatedAt: new Date()
+    };
+    
+    await this.savePlan(updatedPlan);
+    console.log('[LocalStoragePlanRepository] Plan updated:', planId);
+  }
   
   private getPlanKey(planId: string): string {
     return `${this.PLAN_PREFIX}${planId}`;
