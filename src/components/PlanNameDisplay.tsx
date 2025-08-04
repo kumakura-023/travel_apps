@@ -14,6 +14,7 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
   const { plan, isLoading, error } = usePlanStore();
   const [nameModal, setNameModal] = useState(false);
   const [dateModal, setDateModal] = useState(false);
+  const [isNewPlanCreation, setIsNewPlanCreation] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = !isDesktop && !isTablet;
@@ -65,7 +66,10 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
         <div className={baseClassName}>
           <div className="flex flex-col items-center space-y-2">
             <button
-              onClick={() => setNameModal(true)}
+              onClick={() => {
+                setIsNewPlanCreation(true);
+                setNameModal(true);
+              }}
               className="flex items-center space-x-2 text-coral-500 hover:text-coral-600 
                          font-medium transition-all duration-150 ease-ios-default"
             >
@@ -81,7 +85,14 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
         </div>
 
         {/* モーダル */}
-        <PlanNameEditModal isOpen={nameModal} onClose={() => setNameModal(false)} />
+        <PlanNameEditModal 
+          isOpen={nameModal} 
+          onClose={() => {
+            setNameModal(false);
+            setIsNewPlanCreation(false);
+          }}
+          isNewPlanCreation={isNewPlanCreation}
+        />
       </>
     );
   }
@@ -181,7 +192,14 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
       </div>
 
       {/* モーダル */}
-      <PlanNameEditModal isOpen={nameModal} onClose={() => setNameModal(false)} />
+      <PlanNameEditModal 
+        isOpen={nameModal} 
+        onClose={() => {
+          setNameModal(false);
+          setIsNewPlanCreation(false);
+        }}
+        isNewPlanCreation={isNewPlanCreation}
+      />
       <DateSelectionModal isOpen={dateModal} onClose={() => setDateModal(false)} />
     </>
   );

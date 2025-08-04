@@ -15,9 +15,10 @@ import { DIContainer } from '../di/DIContainer';
 interface PlanNameEditModalProps {
   isOpen: boolean;
   onClose: () => void;
+  isNewPlanCreation?: boolean;
 }
 
-const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }) => {
+const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose, isNewPlanCreation = false }) => {
   const { plan, setPlan, updatePlan } = usePlanStore();
   const places = usePlacesStore((s) => s.getFilteredPlaces());
   const { labels } = useLabelsStore();
@@ -30,11 +31,18 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
   const [selectedPlanIds, setSelectedPlanIds] = useState<Set<string>>(new Set());
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [isNewPlan, setIsNewPlan] = useState(isNewPlanCreation);
 
   useEffect(() => {
     if (isOpen) {
-      if (plan) {
+      if (isNewPlanCreation && plan) {
+        // 新規作成時は名前フィールドを空にして、編集タブを開く
+        setName('');
+        setActiveTab('edit');
+        setIsNewPlan(true);
+      } else if (plan) {
         setName(plan.name);
+        setActiveTab('edit');
       } else {
         // プランがない場合は管理タブを開く
         setActiveTab('manage');
@@ -42,12 +50,17 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
       // planListStoreからプランを設定
       setSavedPlans(planList);
     }
-  }, [plan, isOpen, planList]);
+  }, [plan, isOpen, planList, isNewPlanCreation]);
 
   if (!isOpen) return null;
 
   const save = () => {
-    if (name.trim() && plan) {
+    if (!name.trim()) {
+      alert('プラン名を入力してください');
+      return;
+    }
+    
+    if (plan) {
       const updatedPlan = { 
         ...plan, 
         name: name.trim(),
@@ -56,6 +69,11 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
         totalCost: places.reduce((sum, p) => sum + (p.estimatedCost || 0), 0),
         updatedAt: new Date()
       };
+      
+      // 新規作成フラグをリセット
+      if (isNewPlan) {
+        setIsNewPlan(false);
+      }
       
       // updatePlanを呼ぶだけで、onPlanUpdatedコールバックが自動保存を実行
       updatePlan(updatedPlan);
@@ -75,10 +93,16 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
       const container = DIContainer.getInstance();
       const coordinator = container.getPlanCoordinator();
       
-      // Coordinatorを通じて新規作成
-      await coordinator.createNewPlan(user.uid, '新しいプラン');
+      // 仮の名前で新規プラン作成
+      const tempName = `新しいプラン_${new Date().toLocaleDateString('ja-JP')}`;
+      await coordinator.createNewPlan(user.uid, tempName);
       
-      onClose();
+      // 新規作成フラグを立てて、編集タブに切り替え
+      setIsNewPlan(true);
+      setName('');
+      setActiveTab('edit');
+      
+      // モーダルは開いたままにする
     } catch (error) {
       console.error('[PlanNameEditModal] Failed to create new plan:', error);
       alert('プランの作成に失敗しました。もう一度お試しください。');
@@ -272,7 +296,9 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
           </div>
-          <h2 className="headline text-system-label">プラン管理</h2>
+          <h2 className="headline text-system-label">
+            {isNewPlan ? '新しいプランの作成' : 'プラン管理'}
+          </h2>
         </div>
 
         {/* タブ */}
@@ -312,8 +338,8 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={handleKeyPress}
                 className="input text-lg"
-                placeholder="例: 東京旅行"
-                autoFocus
+                placeholder={isNewPlan ? '例: 沖縄旅行2024' : '例: 東京旅行'}
+                autoFocus={isNewPlan}
                 maxLength={50}
               />
               <div className="text-right">
@@ -321,6 +347,11 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
                   {name.length}/50
                 </span>
               </div>
+              {isNewPlan && (
+                <p className="text-sm text-gray-500 mt-2">
+                  わかりやすいプラン名を付けると、後で見つけやすくなります
+                </p>
+              )}
             </div>
 
             {/* プラン情報 */}
@@ -510,7 +541,25 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose }
         <div className="flex justify-end space-x-3 pt-4 border-t border-white/20">
           <button 
             className="btn-text text-system-secondary-label hover:text-system-label" 
-            onClick={onClose}
+            onClick={async () => {
+              // 新規作成時に名前が入力されていない場合の処理
+              if (isNewPlan && name.trim() === '' && plan) {
+                if (confirm('プラン名が入力されていません。このプランを削除しますか？')) {
+                  try {
+                    const { user } = useAuthStore.getState();
+                    if (user) {
+                      const container = DIContainer.getInstance();
+                      const coordinator = container.getPlanCoordinator();
+                      await coordinator.deletePlan(user.uid, plan.id);
+                    }
+                  } catch (error) {
+                    console.error('[PlanNameEditModal] Failed to delete empty plan:', error);
+                  }
+                }
+              }
+              setIsNewPlan(false);
+              onClose();
+            }}
           >
             {activeTab === 'edit' ? 'キャンセル' : '閉じる'}
           </button>
