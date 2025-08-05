@@ -118,7 +118,7 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose, 
       const planService = coordinator.getPlanService();
       
       // プランを複製（新規作成と同じ流れ）
-      const duplicatedPlan = await planService.createPlan(
+      const duplicatedPlan = await planService.createPlanLegacy(
         user.uid, 
         `${plan.name}_コピー`
       );
@@ -240,7 +240,7 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose, 
       
       // 削除処理を並行実行
       const deletePromises = Array.from(selectedPlanIds).map(planId => 
-        planService.deletePlan(user.uid, planId)
+        planService.deletePlanLegacy(user.uid, planId)
       );
       
       await Promise.all(deletePromises);

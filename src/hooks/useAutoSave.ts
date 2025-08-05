@@ -75,7 +75,7 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
   // 新しい同期システム経由の保存関数
   const saveWithSyncManager = useCallback(async (plan: TravelPlan, operationType: 'place_added' | 'place_deleted' | 'place_updated' | 'memo_updated' | 'plan_updated' | 'label_added' | 'label_updated' | 'label_deleted' = 'place_updated') => {
     const context = getSyncContext();
-    await syncManagerRef.current.queueOperation(operationType, plan, context);
+    await syncManagerRef.current.queueOperationLegacy(operationType, plan, context);
   }, [getSyncContext]);
 
   // 即座クラウド同期関数（イベントベース）
@@ -132,7 +132,7 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
         // ここではhandleFirebaseErrorを直接呼べないので、ダミーの同期操作でエラーを発生させる
         try {
           const context = getSyncContext();
-          await syncManagerRef.current.queueOperation('memo_updated', plan, context);
+          await syncManagerRef.current.queueOperationLegacy('memo_updated', plan, context);
         } catch {
           // 無視 - 既にSyncManager側でエラーハンドリングが動作する
         }

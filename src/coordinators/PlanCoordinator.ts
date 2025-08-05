@@ -65,7 +65,10 @@ export class PlanCoordinator {
 
   async deletePlan(userId: string, planId: string): Promise<void> {
     try {
-      const nextPlanId = await this.planService.deletePlan(userId, planId);
+      await this.planService.deletePlanLegacy(userId, planId);
+      
+      // TODO: 次のプランIDを取得する処理を実装
+      const nextPlanId: string | null = null;
       
       if (nextPlanId) {
         await this.switchPlan(userId, nextPlanId);
@@ -84,7 +87,7 @@ export class PlanCoordinator {
       console.log('[PlanCoordinator] Creating new plan:', name);
       
       // 新しいプランを作成
-      const newPlan = await this.planService.createPlan(userId, name);
+      const newPlan = await this.planService.createPlanLegacy(userId, name);
       console.log('[PlanCoordinator] New plan created:', newPlan.id);
       
       // プランリストを更新

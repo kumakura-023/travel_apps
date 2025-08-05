@@ -16,10 +16,15 @@ import PlaceLabel from './PlaceLabel';
 import LabelOverlay from './LabelOverlay';
 import LabelEditDialog from './LabelEditDialog';
 // import AddLabelToggle from './AddLabelToggle'; // TabNavigation に統合済み
-import TravelTimeCircle from './TravelTimeCircle';
-import RouteDisplay from './RouteDisplay';
+import TravelTimeCircleBase from './TravelTimeCircle';
+import RouteDisplayBase from './RouteDisplay';
 import RouteMarkers from './RouteMarkers';
 import PlaceMarkerCluster from './PlaceMarkerCluster';
+import { withErrorBoundary } from './hoc/withErrorBoundary';
+
+// エラーバウンダリでラップ
+const RouteDisplay = withErrorBoundary(RouteDisplayBase);
+const TravelTimeCircle = withErrorBoundary(TravelTimeCircleBase);
 
 /**
  * 地図オーバーレイの管理を担当するコンポーネント

@@ -12,7 +12,8 @@
       "Bash(mkdir:*)",
       "Bash(ls:*)",
       "Bash(rm:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

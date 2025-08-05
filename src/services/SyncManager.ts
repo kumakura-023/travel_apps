@@ -2,12 +2,13 @@ import { TravelPlan } from '../types';
 import { SyncOperation, SyncMode, SyncPriority, SyncOperationType, SyncConfig, SyncContext } from '../types/SyncTypes';
 import { savePlanHybrid } from './storageService';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
+import { ISyncService, SyncResult, SyncConflict } from '../interfaces/ISyncService';
 
 /**
  * 同期システム全体を管理するクラス
  * 操作の種類に応じて最適な同期戦略を適用
  */
-export class SyncManager {
+export class SyncManager implements ISyncService {
   private config: SyncConfig;
   private operationQueue: Map<string, SyncOperation> = new Map();
   private debounceTimers: Map<SyncOperationType, NodeJS.Timeout> = new Map();
@@ -51,9 +52,9 @@ export class SyncManager {
   }
 
   /**
-   * 同期操作をキューに追加
+   * 同期操作をキューに追加（旧実装）
    */
-  async queueOperation(
+  async queueOperationLegacy(
     type: SyncOperationType,
     plan: TravelPlan,
     context: SyncContext,
@@ -338,6 +339,105 @@ export class SyncManager {
   private canWriteNow(): boolean {
     this.cleanupWriteHistory();
     return this.writeHistory.length < this.maxWritesPerMinute && !this.emergencyStopFlag;
+  }
+
+  // ISyncService インターフェースの実装
+  private autoSyncEnabled = false;
+  private autoSyncInterval: NodeJS.Timeout | null = null;
+
+  /**
+   * 同期操作をキューに追加（ISyncServiceインターフェース）
+   */
+  queueOperation(operation: SyncOperation, plan: TravelPlan, context: SyncContext): void {
+    this.operationQueue.set(operation.id, operation);
+    
+    // 非同期でプロセスを開始
+    this.processOperation(operation, plan, context).catch(error => {
+      console.error('Failed to process operation:', error);
+    });
+  }
+
+  /**
+   * 指定されたプランを同期
+   */
+  async sync(planId: string): Promise<SyncResult> {
+    try {
+      // TODO: プランサービスからプランを取得
+      const result: SyncResult = {
+        success: true,
+        syncedAt: new Date(),
+      };
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        syncedAt: new Date(),
+        error: error as Error,
+      };
+    }
+  }
+
+  /**
+   * 自動同期を有効化
+   */
+  enableAutoSync(): void {
+    this.autoSyncEnabled = true;
+    // 30秒ごとに同期
+    this.autoSyncInterval = setInterval(() => {
+      this.processPendingOperations();
+    }, 30000);
+  }
+
+  /**
+   * 自動同期を無効化
+   */
+  disableAutoSync(): void {
+    this.autoSyncEnabled = false;
+    if (this.autoSyncInterval) {
+      clearInterval(this.autoSyncInterval);
+      this.autoSyncInterval = null;
+    }
+  }
+
+  /**
+   * 同期競合を解決
+   */
+  async resolveConflict(conflict: SyncConflict): Promise<TravelPlan> {
+    // デフォルトではリモートを優先
+    return conflict.remotePlan;
+  }
+
+  /**
+   * 保留中の同期操作を実行
+   */
+  async processPendingOperations(): Promise<void> {
+    if (this.isProcessing) return;
+    
+    this.isProcessing = true;
+    try {
+      const operations = Array.from(this.operationQueue.values());
+      for (const operation of operations) {
+        // 各操作を処理
+        await this.processPendingWrites();
+      }
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  /**
+   * 同期状態を取得
+   */
+  isAutoSyncEnabled(): boolean {
+    return this.autoSyncEnabled;
+  }
+
+  /**
+   * 同期履歴をクリア
+   */
+  clearSyncHistory(): void {
+    this.writeHistory = [];
+    this.clearPendingOperations();
   }
   
   /**

@@ -1,4 +1,5 @@
 import { TravelMode } from '../store/travelTimeStore';
+import { IDirectionsService, RouteRequest, RouteResult } from '../interfaces/IDirectionsService';
 
 interface LatLngLiteral {
   lat: number;
@@ -29,7 +30,7 @@ interface CacheEntry {
   timestamp: number;
 }
 
-class DirectionsService {
+class DirectionsService implements IDirectionsService {
   private directionsService: google.maps.DirectionsService | null = null;
   private cache = new Map<string, CacheEntry>();
   private requestQueue: Array<{
@@ -361,6 +362,118 @@ class DirectionsService {
         this.cache.delete(key);
       }
     }
+  }
+
+  // IDirectionsService インターフェースの実装
+  async calculateRoute(request: RouteRequest): Promise<RouteResult> {
+    const directionsResult = await this.getRoute(
+      request.origin,
+      request.destination,
+      request.travelMode
+    );
+
+    return {
+      duration: directionsResult.duration,
+      distance: directionsResult.distance,
+      durationText: directionsResult.durationText,
+      distanceText: directionsResult.distanceText,
+      route: directionsResult.route,
+      path: directionsResult.route.routes[0]?.overview_path.map(p => ({ lat: p.lat(), lng: p.lng() })) || []
+    };
+  }
+
+  async calculateBatchRoutes(requests: RouteRequest[]): Promise<RouteResult[]> {
+    const results: RouteResult[] = [];
+    
+    // バッチ処理
+    for (let i = 0; i < requests.length; i += this.BATCH_SIZE) {
+      const batch = requests.slice(i, i + this.BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map(request => this.calculateRoute(request))
+      );
+      results.push(...batchResults);
+      
+      // 次のバッチの前に遅延
+      if (i + this.BATCH_SIZE < requests.length) {
+        await new Promise(resolve => setTimeout(resolve, this.REQUEST_DELAY));
+      }
+    }
+    
+    return results;
+  }
+
+  /**
+   * キャッシュをクリア（clearCache重複定義の修正）
+   */
+  clearDirectionsCache(): void {
+    this.cache.clear();
+  }
+
+  async calculateTravelTime(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number },
+    travelMode: google.maps.TravelMode
+  ): Promise<number> {
+    const result = await this.getRoute(origin, destination, travelMode);
+    return Math.round(result.duration / 60); // 分単位で返す
+  }
+
+  async calculateDistance(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number },
+    travelMode: google.maps.TravelMode
+  ): Promise<number> {
+    const result = await this.getRoute(origin, destination, travelMode);
+    return result.distance;
+  }
+
+  async calculateOptimizedRoute(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number },
+    waypoints: Array<{ lat: number; lng: number }>,
+    travelMode: google.maps.TravelMode
+  ): Promise<RouteResult> {
+    const service = this.getDirectionsService();
+    
+    return new Promise((resolve, reject) => {
+      const request: google.maps.DirectionsRequest = {
+        origin,
+        destination,
+        waypoints: waypoints.map(point => ({
+          location: point,
+          stopover: true
+        })),
+        optimizeWaypoints: true,
+        travelMode,
+        unitSystem: google.maps.UnitSystem.METRIC,
+        region: 'JP',
+        language: 'ja'
+      };
+
+      service.route(request, (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK && result) {
+          const route = result.routes[0];
+          let totalDuration = 0;
+          let totalDistance = 0;
+          
+          route.legs.forEach(leg => {
+            totalDuration += leg.duration?.value || 0;
+            totalDistance += leg.distance?.value || 0;
+          });
+
+          resolve({
+            duration: totalDuration,
+            distance: totalDistance,
+            durationText: `${Math.round(totalDuration / 60)}分`,
+            distanceText: `${(totalDistance / 1000).toFixed(1)} km`,
+            route: result,
+            path: route.overview_path.map(p => ({ lat: p.lat(), lng: p.lng() }))
+          });
+        } else {
+          reject(new Error(this.getErrorMessage(status, travelMode)));
+        }
+      });
+    });
   }
 }
 

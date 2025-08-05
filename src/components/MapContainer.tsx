@@ -39,8 +39,10 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
     if (plan?.lastActionPosition?.position) {
       // 少し遅延を入れて確実に移動
       setTimeout(() => {
-        map.panTo(plan.lastActionPosition.position);
-        map.setZoom(15); // 適切なズームレベルに設定
+        if (plan.lastActionPosition?.position) {
+          map.panTo(plan.lastActionPosition.position);
+          map.setZoom(15); // 適切なズームレベルに設定
+        }
       }, 100);
     }
     
@@ -60,7 +62,7 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
       map.panTo(plan.lastActionPosition.position);
       
       // ズームレベルも適切に設定
-      if (map.getZoom() < 14) {
+      if (map.getZoom()! < 14) {
         map.setZoom(15);
       }
     }

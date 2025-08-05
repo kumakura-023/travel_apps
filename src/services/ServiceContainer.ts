@@ -6,6 +6,9 @@
 import { MapService } from '../interfaces/MapService';
 import { PlaceService } from '../interfaces/PlaceService';
 import { PlaceRepository } from '../interfaces/PlaceRepository';
+import { ISyncService } from '../interfaces/ISyncService';
+import { IPlanService } from '../interfaces/IPlanService';
+import { IDirectionsService } from '../interfaces/IDirectionsService';
 import { GoogleMapsServiceAdapter } from '../adapters/GoogleMapsServiceAdapter';
 import { ZustandPlaceRepositoryAdapter } from '../adapters/ZustandPlaceRepositoryAdapter';
 import { FirestorePlanRepository } from '../repositories/FirestorePlanRepository';
@@ -14,6 +17,8 @@ import { FirestoreUserRepository } from '../repositories/FirestoreUserRepository
 import { PlanService } from './plan/PlanService';
 import { ActivePlanService } from './plan/ActivePlanService';
 import { PlanCoordinator } from '../coordinators/PlanCoordinator';
+import { SyncManager } from './SyncManager';
+import { directionsService } from './directionsService';
 
 // サービスの識別子
 export const SERVICE_IDENTIFIERS = {
@@ -26,6 +31,8 @@ export const SERVICE_IDENTIFIERS = {
   FIRESTORE_PLAN_REPOSITORY: Symbol('FirestorePlanRepository'),
   LOCAL_STORAGE_PLAN_REPOSITORY: Symbol('LocalStoragePlanRepository'),
   FIRESTORE_USER_REPOSITORY: Symbol('FirestoreUserRepository'),
+  SYNC_SERVICE: Symbol('ISyncService'),
+  DIRECTIONS_SERVICE: Symbol('IDirectionsService'),
 } as const;
 
 type ServiceIdentifier = typeof SERVICE_IDENTIFIERS[keyof typeof SERVICE_IDENTIFIERS];
@@ -148,6 +155,17 @@ export function registerDefaultServices(): void {
     )
   );
 
+  // 新しいインターフェースベースのサービスを登録
+  container.registerSingleton(
+    SERVICE_IDENTIFIERS.SYNC_SERVICE,
+    () => new SyncManager()
+  );
+
+  container.registerSingleton(
+    SERVICE_IDENTIFIERS.DIRECTIONS_SERVICE,
+    () => directionsService
+  );
+
   // MapServiceは地図インスタンスが必要なため、
   // useGoogleMapsフック内で動的に登録される
 }
@@ -181,8 +199,16 @@ export function getPlanCoordinator(): PlanCoordinator {
   return container.get<PlanCoordinator>(SERVICE_IDENTIFIERS.PLAN_COORDINATOR);
 }
 
-export function getPlanService(): PlanService {
-  return container.get<PlanService>(SERVICE_IDENTIFIERS.PLAN_SERVICE);
+export function getPlanService(): IPlanService {
+  return container.get<IPlanService>(SERVICE_IDENTIFIERS.PLAN_SERVICE);
+}
+
+export function getSyncService(): ISyncService {
+  return container.get<ISyncService>(SERVICE_IDENTIFIERS.SYNC_SERVICE);
+}
+
+export function getDirectionsService(): IDirectionsService {
+  return container.get<IDirectionsService>(SERVICE_IDENTIFIERS.DIRECTIONS_SERVICE);
 }
 
 /**

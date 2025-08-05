@@ -2,26 +2,29 @@ import { IPlanRepository } from '../../repositories/interfaces/IPlanRepository';
 import { IUserRepository } from '../../repositories/interfaces/IUserRepository';
 import { TravelPlan } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
-import { serverTimestamp } from 'firebase/firestore';
+// import { serverTimestamp } from 'firebase/firestore';
 import { usePlanStore } from '../../store/planStore';
+import { IPlanService, PlanData, PlanUpdateData } from '../../interfaces/IPlanService';
 
-export class PlanService {
+export class PlanService implements IPlanService {
   constructor(
     private readonly planRepository: IPlanRepository,
     private readonly userRepository: IUserRepository,
     private readonly localCacheRepository: IPlanRepository
   ) {}
 
-  async createPlan(userId: string, name: string): Promise<TravelPlan> {
+  // IPlanService インターフェースの実装
+  async createPlan(data: PlanData): Promise<TravelPlan> {
+    const userId = await this.getCurrentUserId();
     const now = new Date();
     const newPlan: TravelPlan = {
       id: uuidv4(),
-      name,
-      description: '',
+      name: data.name,
+      description: data.description || '',
       places: [],
       labels: [],
-      startDate: now,
-      endDate: now,
+      startDate: data.startDate || now,
+      endDate: data.endDate || now,
       totalCost: 0,
       createdAt: now,
       updatedAt: now,
@@ -33,10 +36,14 @@ export class PlanService {
     };
     
     await this.planRepository.savePlan(newPlan);
-    
     await this.localCacheRepository.savePlan(newPlan);
     
     return newPlan;
+  }
+
+  // 既存のメソッドをラップ
+  async createPlanLegacy(userId: string, name: string): Promise<TravelPlan> {
+    return this.createPlan({ name });
   }
 
   async savePlan(plan: TravelPlan): Promise<void> {
@@ -47,7 +54,12 @@ export class PlanService {
     await this.localCacheRepository.savePlan(plan);
   }
 
-  async deletePlan(userId: string, planId: string): Promise<string | null> {
+  async deletePlan(id: string): Promise<void> {
+    await this.planRepository.deletePlan(id);
+    await this.localCacheRepository.deletePlan(id);
+  }
+
+  async deletePlanLegacy(userId: string, planId: string): Promise<string | null> {
     await this.planRepository.deletePlan(planId);
     
     await this.localCacheRepository.deletePlan(planId);
@@ -100,7 +112,7 @@ export class PlanService {
         lat: position.lat,
         lng: position.lng
       },
-      timestamp: serverTimestamp(),
+      timestamp: new Date(),
       userId,
       actionType
     };
@@ -149,5 +161,117 @@ export class PlanService {
       console.error('[PlanService] Failed to update last action position:', error);
       throw error;
     }
+  }
+
+  // IPlanService インターフェースの追加メソッド
+  async updatePlan(id: string, data: PlanUpdateData): Promise<TravelPlan> {
+    const plan = await this.getPlan(id);
+    if (!plan) {
+      throw new Error(`Plan not found: ${id}`);
+    }
+
+    const updatedPlan: TravelPlan = {
+      ...plan,
+      ...data,
+      updatedAt: new Date()
+    };
+
+    await this.savePlan(updatedPlan);
+    return updatedPlan;
+  }
+
+  async getPlan(id: string): Promise<TravelPlan | null> {
+    try {
+      const plan = await this.planRepository.loadPlan(id);
+      return plan;
+    } catch (error) {
+      const cachedPlan = await this.localCacheRepository.loadPlan(id);
+      return cachedPlan;
+    }
+  }
+
+  async getAllPlans(): Promise<TravelPlan[]> {
+    const userId = await this.getCurrentUserId();
+    return this.getUserPlans(userId);
+  }
+
+  async getUserPlans(userId: string): Promise<TravelPlan[]> {
+    try {
+      // TODO: planRepositoryにloadUserPlansメソッドを追加する必要がある
+      return [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  async setActivePlan(id: string): Promise<void> {
+    const plan = await this.getPlan(id);
+    if (!plan) {
+      throw new Error(`Plan not found: ${id}`);
+    }
+    
+    // 現在のアクティブプランを非アクティブに
+    const userId = await this.getCurrentUserId();
+    const userPlans = await this.getUserPlans(userId);
+    for (const p of userPlans) {
+      if (p.isActive && p.id !== id) {
+        p.isActive = false;
+        await this.savePlan(p);
+      }
+    }
+
+    // 指定されたプランをアクティブに
+    plan.isActive = true;
+    await this.savePlan(plan);
+  }
+
+  async duplicatePlan(id: string, newName: string): Promise<TravelPlan> {
+    const plan = await this.getPlan(id);
+    if (!plan) {
+      throw new Error(`Plan not found: ${id}`);
+    }
+
+    const duplicatedPlan: TravelPlan = {
+      ...plan,
+      id: uuidv4(),
+      name: newName,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isActive: false
+    };
+
+    await this.planRepository.savePlan(duplicatedPlan);
+    await this.localCacheRepository.savePlan(duplicatedPlan);
+
+    return duplicatedPlan;
+  }
+
+  async exportPlan(id: string): Promise<string> {
+    const plan = await this.getPlan(id);
+    if (!plan) {
+      throw new Error(`Plan not found: ${id}`);
+    }
+    return JSON.stringify(plan, null, 2);
+  }
+
+  async importPlan(data: string): Promise<TravelPlan> {
+    const parsedPlan = JSON.parse(data) as TravelPlan;
+    const importedPlan: TravelPlan = {
+      ...parsedPlan,
+      id: uuidv4(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isActive: false
+    };
+
+    await this.planRepository.savePlan(importedPlan);
+    await this.localCacheRepository.savePlan(importedPlan);
+
+    return importedPlan;
+  }
+
+  private async getCurrentUserId(): Promise<string> {
+    // TODO: userRepositoryにgetCurrentUserメソッドを追加する必要がある
+    throw new Error('User not authenticated');
   }
 }

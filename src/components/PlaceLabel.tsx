@@ -150,7 +150,7 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
         // Drag start
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
-        handleDragMouseDown(e);
+        handleMouseDown(e);
       }
     };
 
@@ -246,6 +246,8 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
             color: place.labelColor ?? 'rgba(0, 0, 0, 0.85)',
             fontFamily: place.labelFontFamily ?? '-apple-system, BlinkMacSystemFont, sans-serif',
             position: labelPos,
+            createdAt: new Date(),
+            updatedAt: new Date(),
           }}
           onSave={handleSave}
           onClose={() => setEditing(false)}
