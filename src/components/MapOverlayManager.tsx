@@ -3,7 +3,7 @@ import { Marker } from '@react-google-maps/api';
 import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { useLabelsStore } from '../store/labelsStore';
-import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
+import { useRouteConnectionsStore } from '../store/routeStoreMigration';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { MapLabel } from '../types';

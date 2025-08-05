@@ -1,5 +1,6 @@
 import { TravelMode } from '../store/travelTimeStore';
 import { IDirectionsService, RouteRequest, RouteResult } from '../interfaces/IDirectionsService';
+import { AppError, ErrorCode } from '../errors';
 
 interface LatLngLiteral {
   lat: number;
@@ -263,14 +264,13 @@ class DirectionsService implements IDirectionsService {
 
               resolve(directionsResult);
             } else {
-              const errorMessage = this.getErrorMessage(status, request.travelMode);
-              
-              reject(new Error(errorMessage));
+              const appError = this.createDirectionsError(status, request.travelMode);
+              reject(appError);
             }
           }
         );
       } catch (error) {
-        reject(error);
+        reject(AppError.fromError(error, ErrorCode.DIRECTIONS_API_ERROR));
       }
     });
   }
@@ -301,33 +301,76 @@ class DirectionsService implements IDirectionsService {
   }
 
   /**
-   * エラーメッセージを取得
+   * Directions APIのエラーをAppErrorに変換
    */
-  private getErrorMessage(status: google.maps.DirectionsStatus, travelMode?: google.maps.TravelMode): string {
-    // 日本での公共交通機関専用メッセージ
+  private createDirectionsError(status: google.maps.DirectionsStatus, travelMode?: google.maps.TravelMode): AppError {
+    // 日本での公共交通機関専用エラー
     if (status === google.maps.DirectionsStatus.ZERO_RESULTS && travelMode === google.maps.TravelMode.TRANSIT) {
-      return '🚫 日本の公共交通機関データは現在利用できません\n\n' +
-             '💡 理由：Google Directions APIは日本の詳細な電車・地下鉄データを提供していません\n\n' +
-             '🔄 自動的に徒歩ルートで検索します...';
+      return new AppError(
+        ErrorCode.DIRECTIONS_API_ERROR,
+        '日本の公共交通機関データは現在利用できません。自動的に徒歩ルートで検索します。',
+        {
+          details: {
+            status,
+            travelMode,
+            reason: 'Google Directions APIは日本の詳細な電車・地下鉄データを提供していません'
+          }
+        }
+      );
     }
     
+    // ステータスコードに応じたエラーを作成
+    const { code, message } = this.getErrorCodeAndMessage(status);
+    return new AppError(code, message, {
+      details: { status, travelMode }
+    });
+  }
+
+  /**
+   * DirectionsStatusからエラーコードとメッセージを取得
+   */
+  private getErrorCodeAndMessage(status: google.maps.DirectionsStatus): { code: ErrorCode; message: string } {
     switch (status) {
       case google.maps.DirectionsStatus.NOT_FOUND:
-        return 'ルートが見つかりませんでした。異なる移動手段でお試しください。';
+        return { 
+          code: ErrorCode.NOT_FOUND, 
+          message: 'ルートが見つかりませんでした。異なる移動手段でお試しください。' 
+        };
       case google.maps.DirectionsStatus.ZERO_RESULTS:
-        return '指定された地点間にルートがありません。別の移動手段を試してください。';
+        return { 
+          code: ErrorCode.NOT_FOUND, 
+          message: '指定された地点間にルートがありません。別の移動手段を試してください。' 
+        };
       case google.maps.DirectionsStatus.MAX_WAYPOINTS_EXCEEDED:
-        return '経由地点が多すぎます';
+        return { 
+          code: ErrorCode.VALIDATION_ERROR, 
+          message: '経由地点が多すぎます' 
+        };
       case google.maps.DirectionsStatus.INVALID_REQUEST:
-        return '無効なリクエストです。地点を再設定してください。';
+        return { 
+          code: ErrorCode.INVALID_INPUT, 
+          message: '無効なリクエストです。地点を再設定してください。' 
+        };
       case google.maps.DirectionsStatus.OVER_QUERY_LIMIT:
-        return 'クエリ制限を超過しました。しばらく待ってからお試しください';
+        return { 
+          code: ErrorCode.SYNC_RATE_LIMIT, 
+          message: 'クエリ制限を超過しました。しばらく待ってからお試しください' 
+        };
       case google.maps.DirectionsStatus.REQUEST_DENIED:
-        return 'リクエストが拒否されました。API設定を確認してください。';
+        return { 
+          code: ErrorCode.PERMISSION_DENIED, 
+          message: 'リクエストが拒否されました。API設定を確認してください。' 
+        };
       case google.maps.DirectionsStatus.UNKNOWN_ERROR:
-        return 'サーバーエラーが発生しました。再度お試しください';
+        return { 
+          code: ErrorCode.UNKNOWN_ERROR, 
+          message: 'サーバーエラーが発生しました。再度お試しください' 
+        };
       default:
-        return `Directionsリクエストエラー: ${status}`;
+        return { 
+          code: ErrorCode.DIRECTIONS_API_ERROR, 
+          message: `Directionsリクエストエラー: ${status}` 
+        };
     }
   }
 
@@ -470,7 +513,7 @@ class DirectionsService implements IDirectionsService {
             path: route.overview_path.map(p => ({ lat: p.lat(), lng: p.lng() }))
           });
         } else {
-          reject(new Error(this.getErrorMessage(status, travelMode)));
+          reject(this.createDirectionsError(status, travelMode));
         }
       });
     });

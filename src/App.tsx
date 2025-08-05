@@ -13,7 +13,7 @@ import TestPlacesButton from './components/TestPlacesButton';
 import RouteSearchPanel from './components/RouteSearchPanel';
 import Tutorial from './components/Tutorial';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
-import { useRouteSearchStore } from './store/routeSearchStore';
+import { useRouteSearchStore } from './store/routeStoreMigration';
 import { useDeviceDetect } from './hooks/useDeviceDetect';
 import { useGoogleMaps } from './hooks/useGoogleMaps';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -28,6 +28,7 @@ import { usePlanStore } from './store/planStore';
 import { useAuth } from './hooks/useAuth';
 import { useAutoSave } from './hooks/useAutoSave';
 import { usePlanSyncEvents } from './hooks/usePlanSyncEvents';
+import { usePlaceEventListeners } from './hooks/usePlaceEventListeners';
 import { usePlanInitializer } from './hooks/usePlanInitializer';
 import AuthButton from './components/AuthButton';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
@@ -37,12 +38,16 @@ import { syncDebugUtils } from './utils/syncDebugUtils';
 import SharePlanModal from './components/SharePlanModal';
 import ExternalBrowserPrompt from './components/ExternalBrowserPrompt';
 import { config, validateEnvironment } from './config/environment';
+import { ErrorHandler } from './errors';
 
 // LoadScript用のライブラリを定数として定義
 const LIBRARIES: ('places')[] = ['places'];
 
 // 環境変数の検証
 validateEnvironment();
+
+// グローバルエラーハンドラーを設定
+ErrorHandler.setupGlobalHandlers();
 
 function App() {
   const apiKey = config.googleMapsApiKey;
@@ -174,6 +179,9 @@ function App() {
   const { setIsRemoteUpdateInProgress, saveImmediately, saveImmediatelyCloud, lastCloudSaveTimestamp, getSelfUpdateFlag, saveWithSyncManager } = useAutoSave(plan, updateLastSavedTimestamp);
 
   usePlanSyncEvents(plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager);
+  
+  // 新しいイベントベースのリスナーも設定
+  usePlaceEventListeners(saveImmediately, saveImmediatelyCloud, saveWithSyncManager);
 
   // 新しいプラン初期化フックを使用
   const { isInitialized } = usePlanInitializer();

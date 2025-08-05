@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useSelectedPlaceStore } from '../../../store/selectedPlaceStore';
 import { useSavedPlacesStore } from '../../../store/savedPlacesStore';
 import { usePlanStore } from '../../../store/planStore';
-import { useRouteSearchStore } from '../../../store/routeSearchStore';
+import { useRouteSearchStore } from '../../../store/routeStoreMigration';
 import { useGoogleMaps } from '../../../hooks/useGoogleMaps';
 import { useAutoSave } from '../../../hooks/useAutoSave';
 import { classifyCategory } from '../../../utils/categoryClassifier';

@@ -3,7 +3,7 @@ import { OverlayView } from '@react-google-maps/api';
 import { Place } from '../types';
 import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { usePlanStore } from '../store/planStore';
-import { useRouteSearchStore } from '../store/routeSearchStore';
+import { useRouteSearchStore } from '../store/routeStoreMigration';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import { getCategoryColor, getCategoryDisplayName } from '../utils/categoryIcons';
 import { PlaceSimpleOverlay } from './PlaceSimpleOverlay';

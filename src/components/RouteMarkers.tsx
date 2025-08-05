@@ -1,6 +1,6 @@
 import React from 'react';
 import { Marker } from '@react-google-maps/api';
-import { useRouteSearchStore } from '../store/routeSearchStore';
+import { useRouteSearchStore } from '../store/routeStoreMigration';
 
 export default function RouteMarkers() {
   const { selectedOrigin, selectedDestination } = useRouteSearchStore();

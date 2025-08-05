@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { DirectionsRenderer, Marker } from '@react-google-maps/api';
 import { RouteConnection } from '../types';
-import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
+import { useRouteConnectionsStore } from '../store/routeStoreMigration';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit } from 'react-icons/md';
 

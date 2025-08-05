@@ -1,6 +1,6 @@
 import React from 'react';
 import { MdClose, MdTouchApp, MdMouse } from 'react-icons/md';
-import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
+import { useRouteConnectionsStore } from '../store/routeStoreMigration';
 import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 

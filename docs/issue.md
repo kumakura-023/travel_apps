@@ -155,6 +155,9 @@ travel_app\docs\UI_name.md参照。PlaceCircleBackground、PlaceCircle UIを削�
 
 修正内容 v19
 ・新規機能　ほかのユーザが追加した候補地の確認
+    詳細　あるプランに対してほかのユーザが候補地を追加したときに、その候補地の内容の確認が簡単にできるようにしたい。
+    　　　PlaceSimpleOverlayみたいなUIで「確認」ボタンを押すまで残るみたいな感じ。TabNavigationにアクセス用のアイコンを追加して
+        　そのモーダルを開くと確認できるようにしたい。
 
 修正内容 v20
 ・新規機能　メイン画面でのフィルター

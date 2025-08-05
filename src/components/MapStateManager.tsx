@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
-import { useRouteSearchStore } from '../store/routeSearchStore';
+import { useRouteSearchStore } from '../store/routeStoreMigration';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import useMediaQuery from '../hooks/useMediaQuery';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';

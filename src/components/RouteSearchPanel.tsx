@@ -1,8 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { MdClose, MdDirectionsCar, MdDirectionsTransit, MdDirectionsWalk, MdDirectionsBike, MdFlight, MdSwapVert, MdSearch, MdNavigation } from 'react-icons/md';
 import { Autocomplete } from '@react-google-maps/api';
-import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
-import { useRouteSearchStore } from '../store/routeSearchStore';
+import { useRouteConnectionsStore, useRouteSearchStore } from '../store/routeStoreMigration';
 import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { directionsService } from '../services/directionsService';
 import useMediaQuery from '../hooks/useMediaQuery';

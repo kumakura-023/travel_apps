@@ -3,8 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { Place } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
 import { usePlanStore } from './planStore';
-import { getPlanCoordinator } from '../services/ServiceContainer';
+import { getPlanCoordinator, getEventBus } from '../services/ServiceContainer';
 import { useAuthStore } from '../hooks/useAuth';
+import { PlaceEventBus } from '../events/PlaceEvents';
 
 interface PlacesState {
   places: Place[];
@@ -50,10 +51,15 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
         places: [...state.places, newPlace],
       };
 
-      // 即座同期コールバックを実行
+      // 即座同期コールバックを実行（互換性のため維持）
       if (state.onPlaceAdded) {
         state.onPlaceAdded(newPlace);
       }
+      
+      // イベントを発火
+      const eventBus = getEventBus();
+      const placeEventBus = new PlaceEventBus(eventBus);
+      placeEventBus.emitPlaceAdded(newPlace, 'user');
       
       // ローカルストレージへの保存は無効化（プラン共有位置のみを使用）
       // saveLastActionPosition(newPlace.coordinates);
@@ -91,9 +97,22 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
       return newState;
     }),
   updatePlace: (id, update) =>
-    set((state) => ({
-      places: state.places.map((p) => (p.id === id ? { ...p, ...update, updatedAt: new Date() } : p)),
-    })),
+    set((state) => {
+      const previousPlace = state.places.find(p => p.id === id);
+      if (!previousPlace) {
+        return { places: state.places };
+      }
+      
+      const updatedPlace = { ...previousPlace, ...update, updatedAt: new Date() };
+      const newPlaces = state.places.map((p) => (p.id === id ? updatedPlace : p));
+      
+      // イベントを発火
+      const eventBus = getEventBus();
+      const placeEventBus = new PlaceEventBus(eventBus);
+      placeEventBus.emitPlaceUpdated(id, updatedPlace, update, previousPlace);
+      
+      return { places: newPlaces };
+    }),
   deletePlace: (id) => {
     if (import.meta.env.DEV) {
       console.log(`deletePlace called: ${id}`);
@@ -122,10 +141,15 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
 
         const updatedPlaces = state.places.map(p => p.id === id ? updatedPlace : p);
         
-        // 削除コールバックを実行（状態更新後）
+        // 削除コールバックを実行（互換性のため維持）
         if (state.onPlaceDeleted) {
           state.onPlaceDeleted(updatedPlaces);
         }
+        
+        // イベントを発火
+        const eventBus = getEventBus();
+        const placeEventBus = new PlaceEventBus(eventBus);
+        placeEventBus.emitPlaceDeleted(id, updatedPlace, updatedPlaces);
         
         if (import.meta.env.DEV) {
           console.log(`Places: ${state.places.length} -> ${updatedPlaces.length}`);
