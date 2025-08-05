@@ -1,7 +1,7 @@
 import React from 'react';
 import { TravelPlan } from '../types';
 import { createEmptyPlan } from '../services/storageService';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { useAutoSave } from '../hooks/useAutoSave';
 import PlanList from './PlanList';
@@ -39,7 +39,7 @@ const PlanManager: React.FC = () => {
     }
   };
 
-  const places = usePlacesStore((s) => s.getFilteredPlaces());
+  const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const labels = useLabelsStore((s) => s.labels);
 
   // プラン名編集

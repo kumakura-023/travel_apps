@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Place, MapLabel } from '../types';
 import { getCategoryDisplayName, getCategoryColor } from '../utils/categoryIcons';
 import { formatCurrency } from '../utils/formatCurrency';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import DaySelector from './DaySelector';
 
@@ -13,7 +13,7 @@ interface Props {
 
 /** 単一Placeのカード表示 + 費用・日程編集 */
 export default function PlaceListItem({ place, showLinkedMemos = true }: Props) {
-  const updatePlace = usePlacesStore((s) => s.updatePlace);
+  const updatePlace = useSavedPlacesStore((s) => s.updatePlace);
   const { labels, addLabel, updateLabel, deleteLabel } = useLabelsStore();
   const [editing, setEditing] = useState(false);
   const [editingDay, setEditingDay] = useState(false);

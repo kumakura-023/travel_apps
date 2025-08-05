@@ -8,12 +8,24 @@ import { PlaceService } from '../interfaces/PlaceService';
 import { PlaceRepository } from '../interfaces/PlaceRepository';
 import { GoogleMapsServiceAdapter } from '../adapters/GoogleMapsServiceAdapter';
 import { ZustandPlaceRepositoryAdapter } from '../adapters/ZustandPlaceRepositoryAdapter';
+import { FirestorePlanRepository } from '../repositories/FirestorePlanRepository';
+import { LocalStoragePlanRepository } from '../repositories/LocalStoragePlanRepository';
+import { FirestoreUserRepository } from '../repositories/FirestoreUserRepository';
+import { PlanService } from './plan/PlanService';
+import { ActivePlanService } from './plan/ActivePlanService';
+import { PlanCoordinator } from '../coordinators/PlanCoordinator';
 
 // サービスの識別子
 export const SERVICE_IDENTIFIERS = {
   MAP_SERVICE: Symbol('MapService'),
   PLACE_SERVICE: Symbol('PlaceService'),
   PLACE_REPOSITORY: Symbol('PlaceRepository'),
+  PLAN_COORDINATOR: Symbol('PlanCoordinator'),
+  PLAN_SERVICE: Symbol('PlanService'),
+  ACTIVE_PLAN_SERVICE: Symbol('ActivePlanService'),
+  FIRESTORE_PLAN_REPOSITORY: Symbol('FirestorePlanRepository'),
+  LOCAL_STORAGE_PLAN_REPOSITORY: Symbol('LocalStoragePlanRepository'),
+  FIRESTORE_USER_REPOSITORY: Symbol('FirestoreUserRepository'),
 } as const;
 
 type ServiceIdentifier = typeof SERVICE_IDENTIFIERS[keyof typeof SERVICE_IDENTIFIERS];
@@ -94,6 +106,48 @@ export function registerDefaultServices(): void {
     () => new ZustandPlaceRepositoryAdapter()
   );
 
+  // リポジトリをシングルトンとして登録
+  container.registerSingleton(
+    SERVICE_IDENTIFIERS.FIRESTORE_PLAN_REPOSITORY,
+    () => new FirestorePlanRepository()
+  );
+
+  container.registerSingleton(
+    SERVICE_IDENTIFIERS.LOCAL_STORAGE_PLAN_REPOSITORY,
+    () => new LocalStoragePlanRepository()
+  );
+
+  container.registerSingleton(
+    SERVICE_IDENTIFIERS.FIRESTORE_USER_REPOSITORY,
+    () => new FirestoreUserRepository()
+  );
+
+  // サービスをシングルトンとして登録
+  container.registerSingleton(
+    SERVICE_IDENTIFIERS.PLAN_SERVICE,
+    () => new PlanService(
+      container.get(SERVICE_IDENTIFIERS.FIRESTORE_PLAN_REPOSITORY),
+      container.get(SERVICE_IDENTIFIERS.FIRESTORE_USER_REPOSITORY),
+      container.get(SERVICE_IDENTIFIERS.LOCAL_STORAGE_PLAN_REPOSITORY)
+    )
+  );
+
+  container.registerSingleton(
+    SERVICE_IDENTIFIERS.ACTIVE_PLAN_SERVICE,
+    () => new ActivePlanService(
+      container.get(SERVICE_IDENTIFIERS.FIRESTORE_USER_REPOSITORY)
+    )
+  );
+
+  // コーディネーターをシングルトンとして登録
+  container.registerSingleton(
+    SERVICE_IDENTIFIERS.PLAN_COORDINATOR,
+    () => new PlanCoordinator(
+      container.get(SERVICE_IDENTIFIERS.PLAN_SERVICE),
+      container.get(SERVICE_IDENTIFIERS.ACTIVE_PLAN_SERVICE)
+    )
+  );
+
   // MapServiceは地図インスタンスが必要なため、
   // useGoogleMapsフック内で動的に登録される
 }
@@ -121,6 +175,14 @@ export function getMapService(): MapService {
 
 export function getPlaceService(): PlaceService {
   return container.get<PlaceService>(SERVICE_IDENTIFIERS.PLACE_SERVICE);
+}
+
+export function getPlanCoordinator(): PlanCoordinator {
+  return container.get<PlanCoordinator>(SERVICE_IDENTIFIERS.PLAN_COORDINATOR);
+}
+
+export function getPlanService(): PlanService {
+  return container.get<PlanService>(SERVICE_IDENTIFIERS.PLAN_SERVICE);
 }
 
 /**

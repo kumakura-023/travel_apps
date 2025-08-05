@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { MapLabel } from '../types';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 
 interface Props {
   label: MapLabel;
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function LabelEditDialog({ label, onSave, onClose }: Props) {
-  const places = usePlacesStore((s) => s.getFilteredPlaces());
+  const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const [text, setText] = useState(label.text);
   const [color, setColor] = useState(label.color);
   const [fontSize, setFontSize] = useState(label.fontSize);

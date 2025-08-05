@@ -3,13 +3,13 @@ import { FiX, FiTrash2 } from 'react-icons/fi';
 import useMediaQuery from '../hooks/useMediaQuery';
 import { useBottomSheet } from '../hooks/useBottomSheet';
 import { usePullToRefreshPrevention } from '../hooks/usePullToRefreshPrevention';
-import { useSelectedPlaceStore } from '../store/placeStore';
+import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { usePlanStore } from '../store/planStore';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { BookingService } from '../services/bookingService';
 import ConfirmDialog from './ConfirmDialog';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { formatCurrency } from '../utils/formatCurrency';
 import { classifyCategory } from '../utils/categoryClassifier';
 import { getCategoryPath, getCategoryColor, getCategoryDisplayName } from '../utils/categoryIcons';
@@ -27,12 +27,12 @@ export default function PlaceDetailPanel() {
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  const { deletePlace, addPlace, updatePlace } = usePlacesStore((s) => ({ 
+  const { deletePlace, addPlace, updatePlace } = useSavedPlacesStore((s) => ({ 
     deletePlace: s.deletePlace, 
     addPlace: s.addPlace,
     updatePlace: s.updatePlace
   }));
-  const savedPlaces = usePlacesStore((s) => s.getFilteredPlaces());
+  const savedPlaces = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const { plan } = usePlanStore();
   const { setSelectedOrigin, setSelectedDestination, openRouteSearch } = useRouteSearchStore();
   const { map } = useGoogleMaps();

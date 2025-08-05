@@ -1,6 +1,6 @@
 import React from 'react';
 import { TravelPlan } from '../types';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { usePlanStore } from '../store/planStore';
 import { usePlanListStore } from '../store/planListStore';

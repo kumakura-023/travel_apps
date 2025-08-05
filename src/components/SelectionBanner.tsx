@@ -1,12 +1,12 @@
 import React from 'react';
 import { MdClose, MdTouchApp, MdMouse } from 'react-icons/md';
 import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 
 export default function SelectionBanner() {
   const { selectionState, cancelSelection } = useRouteConnectionsStore();
-  const places = usePlacesStore((s) => s.getFilteredPlaces());
+  const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const { isTouchDevice } = useDeviceDetect();
 
   if (!selectionState.isSelecting || !selectionState.selectedPlaceId) {

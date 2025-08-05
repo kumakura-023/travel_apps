@@ -2,7 +2,7 @@ import { OverlayView } from '@react-google-maps/api';
 import { MapLabel } from '../types';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useLabelsStore } from '../store/labelsStore';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useUIStore } from '../store/uiStore';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import { setGlobalScrollLock } from '../utils/scrollLock';
@@ -49,7 +49,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
   const deleteLabel = useLabelsStore((s) => s.deleteLabel);
 
   const linkedPlace = useMemo(
-    () => (label.linkedPlaceId ? usePlacesStore.getState().getFilteredPlaces().find((p) => p.id === label.linkedPlaceId) : null),
+    () => (label.linkedPlaceId ? useSavedPlacesStore.getState().getFilteredPlaces().find((p) => p.id === label.linkedPlaceId) : null),
     [label.linkedPlaceId],
   );
 

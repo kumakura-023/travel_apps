@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Marker } from '@react-google-maps/api';
-import { usePlacesStore } from '../store/placesStore';
-import { useSelectedPlaceStore } from '../store/placeStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
+import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
@@ -43,7 +43,7 @@ export default function MapOverlayManager({
   const { map } = useGoogleMaps();
   
   // ストアからの状態取得
-  const savedPlaces = usePlacesStore((s) => s.getFilteredPlaces());
+  const savedPlaces = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const { place } = useSelectedPlaceStore();
   const { labels, updateLabel } = useLabelsStore();
   const { routes } = useRouteConnectionsStore();

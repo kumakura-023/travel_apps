@@ -2,7 +2,7 @@ import { OverlayView } from '@react-google-maps/api';
 import { useState, useEffect, useRef } from 'react';
 import { Place } from '../types';
 import LabelEditDialog from './LabelEditDialog';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { getCategoryColor } from '../utils/categoryIcons';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function PlaceLabel({ place, zoom, map }: Props) {
-  const updatePlace = usePlacesStore((s) => s.updatePlace);
+  const updatePlace = useSavedPlacesStore((s) => s.updatePlace);
   const [editing, setEditing] = useState(false);
   const [resizing, setResizing] = useState(false);
   const [dragging, setDragging] = useState(false);

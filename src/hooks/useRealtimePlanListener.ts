@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { usePlanStore } from '../store/planStore';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
 
@@ -149,11 +149,11 @@ export function useRealtimePlanListener(
               });
 
               usePlanStore.getState().setPlan(resolvedPlan);
-              usePlacesStore.setState({ places: resolvedPlan.places });
+              useSavedPlacesStore.setState({ places: resolvedPlan.places });
               useLabelsStore.setState({ labels: resolvedPlan.labels });
             } else {
               usePlanStore.getState().setPlan(updated);
-              usePlacesStore.setState({ places: updated.places });
+              useSavedPlacesStore.setState({ places: updated.places });
               useLabelsStore.setState({ labels: updated.labels });
             }
 

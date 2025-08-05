@@ -1,7 +1,7 @@
 import { PlanService } from '../services/plan/PlanService';
 import { ActivePlanService } from '../services/plan/ActivePlanService';
 import { usePlanStore } from '../store/planStore';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { usePlanListStore } from '../store/planListStore';
 import { TravelPlan } from '../types';
@@ -140,7 +140,7 @@ export class PlanCoordinator {
       isLoading: false, 
       error: null 
     });
-    usePlacesStore.setState({ places: plan.places || [] });
+    useSavedPlacesStore.setState({ places: plan.places || [] });
     useLabelsStore.setState({ labels: plan.labels || [] });
   }
 
@@ -150,7 +150,7 @@ export class PlanCoordinator {
       isLoading: false, 
       error: null 
     });
-    usePlacesStore.setState({ places: [] });
+    useSavedPlacesStore.setState({ places: [] });
     useLabelsStore.setState({ labels: [] });
   }
 
@@ -167,5 +167,10 @@ export class PlanCoordinator {
       this.currentPlanUnsubscribe();
       this.currentPlanUnsubscribe = undefined;
     }
+  }
+
+  // ServiceContainerから移行した機能のためのアクセサ
+  getPlanService(): PlanService {
+    return this.planService;
   }
 }

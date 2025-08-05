@@ -3,7 +3,7 @@ import { MdClose, MdDirectionsCar, MdDirectionsTransit, MdDirectionsWalk, MdDire
 import { Autocomplete } from '@react-google-maps/api';
 import { useRouteConnectionsStore } from '../store/routeConnectionsStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
-import { useSelectedPlaceStore } from '../store/placeStore';
+import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { directionsService } from '../services/directionsService';
 import useMediaQuery from '../hooks/useMediaQuery';
 import { v4 as uuidv4 } from 'uuid';

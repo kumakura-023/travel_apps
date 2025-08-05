@@ -1,13 +1,13 @@
 import React from 'react';
 import { OverlayView } from '@react-google-maps/api';
 import { Place } from '../types';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { usePlanStore } from '../store/planStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 import { getCategoryColor, getCategoryDisplayName } from '../utils/categoryIcons';
 import { PlaceSimpleOverlay } from './PlaceSimpleOverlay';
-import { useSelectedPlaceStore } from '../store/placeStore';
+import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { FiInfo } from 'react-icons/fi';
 
 interface Props {
@@ -29,7 +29,7 @@ const getCategoryEmoji = (category: string) => {
 };
 
 export default function PlaceCircle({ place, zoom = 14 }: Props) {
-  const { deletePlace, updatePlace } = usePlacesStore();
+  const { deletePlace, updatePlace } = useSavedPlacesStore();
   const { plan } = usePlanStore();
   const { setSelectedOrigin, setSelectedDestination, openRouteSearch } = useRouteSearchStore();
   const { isTouchDevice } = useDeviceDetect();

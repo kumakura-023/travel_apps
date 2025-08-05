@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { usePlanStore } from '../store/planStore';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { FaCloudUploadAlt, FaCloud, FaExclamationTriangle } from 'react-icons/fa';
 
@@ -11,7 +11,7 @@ interface SyncStatusIndicatorProps {
 
 const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({ onSave }) => {
   const plan = usePlanStore((s) => s.plan);
-  const places = usePlacesStore((s) => s.getFilteredPlaces());
+  const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const labels = useLabelsStore((s) => s.labels);
 
   const mergedPlan = React.useMemo(() => {

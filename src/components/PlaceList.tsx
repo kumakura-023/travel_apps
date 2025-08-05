@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { usePlanStore } from '../store/planStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { Place } from '../types';
@@ -12,7 +12,7 @@ import PlanNameEditModal from './PlanNameEditModal';
 import DateSelectionModal from './DateSelectionModal';
 
 export default function PlaceList() {
-  const places = usePlacesStore((s) => s.getFilteredPlaces());
+  const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const { plan } = usePlanStore();
   const { labels } = useLabelsStore();
   const [search, setSearch] = useState('');

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer';
-import { usePlacesStore } from '../store/placesStore';
-import { useSelectedPlaceStore } from '../store/placeStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
+import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { getCategoryColor } from '../utils/categoryIcons';
 
@@ -15,7 +15,7 @@ const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
   threshold = 10 
 }) => {
   const { map } = useGoogleMaps();
-  const places = usePlacesStore((s) => s.getFilteredPlaces());
+  const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const { setPlace } = useSelectedPlaceStore();
   const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);

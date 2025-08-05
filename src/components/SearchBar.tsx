@@ -2,7 +2,7 @@ import { Autocomplete } from '@react-google-maps/api';
 import { useRef, useState } from 'react';
 import { FiSearch } from 'react-icons/fi';
 import { MdNavigation } from 'react-icons/md';
-import { useSelectedPlaceStore } from '../store/placeStore';
+import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';

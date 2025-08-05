@@ -1,6 +1,6 @@
 import { Place } from '../types';
 import { PlaceRepository, PlaceChangeEvent, PlaceRepositoryObserver } from '../interfaces/PlaceRepository';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 
 /**
  * ZustandストアをPlaceRepositoryインターフェースに適合させるアダプター
@@ -11,7 +11,7 @@ export class ZustandPlaceRepositoryAdapter implements PlaceRepository, PlaceRepo
 
   // 基本CRUD操作
   getAll(): Place[] {
-    return usePlacesStore.getState().places;
+    return useSavedPlacesStore.getState().places;
   }
 
   getById(id: string): Place | null {
@@ -20,7 +20,7 @@ export class ZustandPlaceRepositoryAdapter implements PlaceRepository, PlaceRepo
   }
 
   add(place: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>): Place {
-    const store = usePlacesStore.getState();
+    const store = useSavedPlacesStore.getState();
     store.addPlace(place);
     
     // 追加されたプレースを取得
@@ -39,7 +39,7 @@ export class ZustandPlaceRepositoryAdapter implements PlaceRepository, PlaceRepo
   }
 
   update(id: string, updates: Partial<Place>): Place | null {
-    const store = usePlacesStore.getState();
+    const store = useSavedPlacesStore.getState();
     const existingPlace = this.getById(id);
     
     if (!existingPlace) {
@@ -57,7 +57,7 @@ export class ZustandPlaceRepositoryAdapter implements PlaceRepository, PlaceRepo
   }
 
   delete(id: string): boolean {
-    const store = usePlacesStore.getState();
+    const store = useSavedPlacesStore.getState();
     const existingPlace = this.getById(id);
     
     if (!existingPlace) {
@@ -145,7 +145,7 @@ export class ZustandPlaceRepositoryAdapter implements PlaceRepository, PlaceRepo
   }
 
   clear(): void {
-    const store = usePlacesStore.getState();
+    const store = useSavedPlacesStore.getState();
     const allPlaces = this.getAll();
     
     // 全ての地点を削除

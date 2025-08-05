@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { useRouteSearchStore } from '../store/routeSearchStore';
-import { useSelectedPlaceStore } from '../store/placeStore';
+import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import { useBottomSheetStore } from '../store/bottomSheetStore';

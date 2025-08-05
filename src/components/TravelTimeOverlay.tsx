@@ -1,7 +1,7 @@
 import { Circle, Marker, InfoWindow } from '@react-google-maps/api';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { useTravelTimeStore } from '../store/travelTimeStore';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useEffect, useRef } from 'react';
 import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit } from 'react-icons/md';
 
@@ -17,7 +17,7 @@ export default function TravelTimeOverlay() {
     enabled,
   } = useTravelTimeStore();
 
-  const places = usePlacesStore((s) => s.getFilteredPlaces());
+  const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
 
   const circleRef = useRef<google.maps.Circle | null>(null);
 

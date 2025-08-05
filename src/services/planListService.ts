@@ -31,17 +31,23 @@ export interface PlanListItem {
 export function listenUserPlans(
   user: User,
   onUpdate: (plans: PlanListItem[]) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
+  useSort: boolean = true
 ): Unsubscribe {
   
   const plansRef = collection(db, 'plans');
   // 注意: このクエリにはFirestoreの複合インデックスが必要です
   // memberIds (array-contains) + updatedAt (desc)
-  const q = query(
-    plansRef,
-    where('memberIds', 'array-contains', user.uid),
-    orderBy('updatedAt', 'desc')
-  );
+  const q = useSort
+    ? query(
+        plansRef,
+        where('memberIds', 'array-contains', user.uid),
+        orderBy('updatedAt', 'desc')
+      )
+    : query(
+        plansRef,
+        where('memberIds', 'array-contains', user.uid)
+      );
 
   return onSnapshot(
     q,
@@ -76,6 +82,11 @@ export function listenUserPlans(
           createdAt: data.createdAt?.toDate() || new Date(),
         });
       });
+      
+      // ソートなしの場合は手動でソート
+      if (!useSort) {
+        plans.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      }
       
       onUpdate(plans);
     },

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { usePlanStore } from '../store/planStore';
 import { TravelPlan } from '../types';
@@ -12,7 +12,7 @@ export function usePlanSyncEvents(
   saveWithSyncManager?: (plan: TravelPlan, operationType?: 'place_added' | 'place_deleted' | 'place_updated' | 'memo_updated' | 'plan_updated' | 'label_added' | 'label_updated' | 'label_deleted') => void
 ) {
   useEffect(() => {
-    const { setOnPlaceAdded } = usePlacesStore.getState();
+    const { setOnPlaceAdded } = useSavedPlacesStore.getState();
     setOnPlaceAdded((newPlace) => {
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan) {
@@ -41,7 +41,7 @@ export function usePlanSyncEvents(
   }, [plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager]);
 
   useEffect(() => {
-    const { setOnPlaceDeleted } = usePlacesStore.getState();
+    const { setOnPlaceDeleted } = useSavedPlacesStore.getState();
     setOnPlaceDeleted((updatedPlaces) => {
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan) {

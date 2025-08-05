@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from 'react';
-import { useSelectedPlaceStore } from '../store/placeStore';
+import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { useRouteSearchStore } from '../store/routeSearchStore';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import useMediaQuery from '../hooks/useMediaQuery';

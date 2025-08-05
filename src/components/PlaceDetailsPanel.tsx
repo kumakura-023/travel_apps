@@ -1,4 +1,4 @@
-import { useSelectedPlaceStore } from '../store/placeStore';
+import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { FiX } from 'react-icons/fi';
 import { useMemo } from 'react';
 import { BookingService } from '../services/bookingService';

@@ -1,7 +1,7 @@
 import { LoadScript } from '@react-google-maps/api';
 import * as React from 'react';
 import { useCallback, useRef, useState, useEffect } from 'react';
-import Map from './components/Map';
+import MapContainer from './components/MapContainer';
 import SearchBar from './components/SearchBar';
 import PlaceDetailPanel from './components/PlaceDetailPanel';
 import TabNavigationWrapper from './components/TabNavigationWrapper';
@@ -17,10 +17,10 @@ import { useRouteSearchStore } from './store/routeSearchStore';
 import { useDeviceDetect } from './hooks/useDeviceDetect';
 import { useGoogleMaps } from './hooks/useGoogleMaps';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { useSelectedPlaceStore } from './store/placeStore';
+import { useSelectedPlaceStore } from './store/selectedPlaceStore';
 import { useTravelTimeStore } from './store/travelTimeStore';
 import PlaceList from './components/PlaceList';
-import { usePlacesStore } from './store/placesStore';
+import { useSavedPlacesStore } from './store/savedPlacesStore';
 import { useLabelsStore } from './store/labelsStore';
 import { useLabelModeStore } from './store/labelModeStore';
 import PlanNameDisplay from './components/PlanNameDisplay';
@@ -201,7 +201,7 @@ function App() {
       {/* 地点選択中のバナー */}
       <SelectionBanner />
       
-      <Map
+      <MapContainer
         showLabelToggle={false}
       />
       

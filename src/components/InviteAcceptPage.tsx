@@ -4,7 +4,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { useAuth, isInAppBrowser } from '../hooks/useAuth';
 import { usePlanStore } from '../store/planStore';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { useBrowserPromptStore } from '../store/browserPromptStore';
 import { setActivePlan } from '../services/storageService';
@@ -46,7 +46,7 @@ const InviteAcceptPage: React.FC = () => {
           // プランストアの状態をクリア
           usePlanStore.getState().unsubscribeFromPlan();
           usePlanStore.getState().setPlan(null);
-          usePlacesStore.setState({ places: [] });
+          useSavedPlacesStore.setState({ places: [] });
           useLabelsStore.setState({ labels: [] });
           
           // アクティブプランを設定
@@ -59,7 +59,7 @@ const InviteAcceptPage: React.FC = () => {
               const loadedPlan = await loadPlanById(user.uid, data.planId);
               if (loadedPlan) {
                 usePlanStore.getState().setPlan(loadedPlan);
-                usePlacesStore.setState({ places: loadedPlan.places });
+                useSavedPlacesStore.setState({ places: loadedPlan.places });
                 useLabelsStore.setState({ labels: loadedPlan.labels });
               } else {
                 console.error('プランの読み込みに失敗: プランが見つかりません');

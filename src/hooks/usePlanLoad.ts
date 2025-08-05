@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { loadPlanFromUrl } from '../utils/shareUtils';
 import { usePlanStore } from '../store/planStore';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { usePlanListStore } from '../store/planListStore';
 import { getActivePlan, setActivePlan, loadActivePlanHybrid, loadPlan } from '../services/storageService';
@@ -13,7 +13,7 @@ export function usePlanLoad(user: any, isInitializing: boolean) {
     (async () => {
       const planFromUrl = loadPlanFromUrl();
       if (planFromUrl) {
-        usePlacesStore.setState({ places: planFromUrl.places });
+        useSavedPlacesStore.setState({ places: planFromUrl.places });
         useLabelsStore.setState({ labels: planFromUrl.labels });
         usePlanStore.getState().setPlan(planFromUrl);
         return;
@@ -37,7 +37,7 @@ export function usePlanLoad(user: any, isInitializing: boolean) {
         // ロードしたプランが存在する場合
         console.log('[usePlanLoad] Starting to listen to loaded plan:', loaded.id);
         usePlanStore.getState().listenToPlan(loaded.id);
-        usePlacesStore.setState({ places: loaded.places || [] });
+        useSavedPlacesStore.setState({ places: loaded.places || [] });
         useLabelsStore.setState({ labels: loaded.labels || [] });
       } else if (plans.length > 0) {
         // ロードしたプランが存在しないが、他のプランがある場合
@@ -54,14 +54,14 @@ export function usePlanLoad(user: any, isInitializing: boolean) {
         // 初期データを設定（ローカルストレージから読み込み）
         const localPlan = loadPlan(firstPlan.id);
         if (localPlan) {
-          usePlacesStore.setState({ places: localPlan.places || [] });
+          useSavedPlacesStore.setState({ places: localPlan.places || [] });
           useLabelsStore.setState({ labels: localPlan.labels || [] });
         }
       } else {
         // プランが一つもない場合
         console.log('[usePlanLoad] No plans available');
         usePlanStore.getState().setPlan(null);
-        usePlacesStore.setState({ places: [] });
+        useSavedPlacesStore.setState({ places: [] });
         useLabelsStore.setState({ labels: [] });
         
         // アクティブプランIDをクリア

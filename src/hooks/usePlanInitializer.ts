@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from './useAuth';
-import { DIContainer } from '../di/DIContainer';
+import { getPlanCoordinator } from '../services/ServiceContainer';
 import { PlanCoordinator } from '../coordinators/PlanCoordinator';
 
 export function usePlanInitializer() {
@@ -20,8 +20,7 @@ export function usePlanInitializer() {
     
     const initialize = async () => {
       try {
-        const container = DIContainer.getInstance();
-        const coordinator = container.getPlanCoordinator();
+        const coordinator = getPlanCoordinator();
         coordinatorRef.current = coordinator;
         
         await coordinator.initialize(user.uid);

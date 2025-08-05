@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { PlanListItem, listenUserPlans } from '../services/planListService';
-import { listenUserPlansNoSort } from '../services/planListServiceNoSort';
 import { User } from 'firebase/auth';
 import { Unsubscribe } from 'firebase/firestore';
 
@@ -48,14 +47,15 @@ export const usePlanListStore = create<PlanListState>((set, get) => ({
           console.log('[planListStore] Falling back to no-sort query');
           unsubscribeAttempted = true;
           
-          const fallbackUnsubscribe = listenUserPlansNoSort(
+          const fallbackUnsubscribe = listenUserPlans(
             user,
             (plans) => {
               set({ plans, isLoading: false, error: null });
             },
             (fallbackError) => {
               set({ error: fallbackError.message, isLoading: false });
-            }
+            },
+            false // ソートなし
           );
           
           set({ unsubscribe: fallbackUnsubscribe });

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { classifyCategory } from '../utils/categoryClassifier';
 import { estimateCost } from '../utils/estimateCost';
 import DaySelector from './DaySelector';
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function AddPlaceButton({ place }: Props) {
-  const addPlace = usePlacesStore((s) => s.addPlace);
+  const addPlace = useSavedPlacesStore((s) => s.addPlace);
   const [selectedDay, setSelectedDay] = useState<number | undefined>(undefined);
   const [showDaySelector, setShowDaySelector] = useState(false);
 

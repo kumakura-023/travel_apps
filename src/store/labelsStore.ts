@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { MapLabel } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
 import { usePlanStore } from './planStore';
-import { DIContainer } from '../di/DIContainer';
+import { getPlanCoordinator } from '../services/ServiceContainer';
 import { useAuthStore } from '../hooks/useAuth';
 
 interface LabelsState {
@@ -67,8 +67,8 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
           });
           
           try {
-            const container = DIContainer.getInstance();
-            const planService = container.getPlanService();
+            const planCoordinator = getPlanCoordinator();
+            const planService = planCoordinator.getPlanService();
             
             planService.updateLastActionPosition(
               plan.id,

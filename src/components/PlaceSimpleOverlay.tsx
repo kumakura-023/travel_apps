@@ -1,7 +1,7 @@
 import React from 'react';
 import { Place } from '../types';
 import { getCategoryColor, getCategoryDisplayName, getCategoryEmoji } from '../utils/categoryIcons';
-import { useSelectedPlaceStore } from '../store/placeStore';
+import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { FiInfo } from 'react-icons/fi';
 
 interface PlaceSimpleOverlayProps {

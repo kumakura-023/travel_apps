@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePlanStore } from '../store/planStore';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { 
   setActivePlan 
@@ -10,7 +10,7 @@ import { deletePlanFromCloud, createNewPlan, PlanListItem } from '../services/pl
 import { usePlanListStore } from '../store/planListStore';
 import { useAuthStore } from '../hooks/useAuth';
 import { serializePlan } from '../utils/planSerializer';
-import { DIContainer } from '../di/DIContainer';
+import { getPlanCoordinator } from '../services/ServiceContainer';
 
 interface PlanNameEditModalProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ interface PlanNameEditModalProps {
 
 const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose, isNewPlanCreation = false }) => {
   const { plan, setPlan, updatePlan } = usePlanStore();
-  const places = usePlacesStore((s) => s.getFilteredPlaces());
+  const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const { labels } = useLabelsStore();
   const planList = usePlanListStore((state) => state.plans);
   
@@ -89,9 +89,8 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose, 
     }
     
     try {
-      // DIコンテナから取得
-      const container = DIContainer.getInstance();
-      const coordinator = container.getPlanCoordinator();
+      // ServiceContainerから取得
+      const coordinator = getPlanCoordinator();
       
       // 仮の名前で新規プラン作成
       const tempName = `新しいプラン_${new Date().toLocaleDateString('ja-JP')}`;
@@ -114,10 +113,9 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose, 
     if (!user || !plan) return;
     
     try {
-      // DIコンテナから取得
-      const container = DIContainer.getInstance();
-      const coordinator = container.getPlanCoordinator();
-      const planService = container.getPlanService();
+      // ServiceContainerから取得
+      const coordinator = getPlanCoordinator();
+      const planService = coordinator.getPlanService();
       
       // プランを複製（新規作成と同じ流れ）
       const duplicatedPlan = await planService.createPlan(
@@ -159,9 +157,8 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose, 
       console.log('[PlanNameEditModal] Starting plan deletion:', plan.id);
       setShowDeleteConfirm(false);
       
-      // DIコンテナから取得
-      const container = DIContainer.getInstance();
-      const coordinator = container.getPlanCoordinator();
+      // ServiceContainerから取得
+      const coordinator = getPlanCoordinator();
       
       // Coordinatorを通じて削除
       await coordinator.deletePlan(user.uid, plan.id);
@@ -185,9 +182,8 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose, 
     if (!user) return;
     
     try {
-      // DIコンテナから取得
-      const container = DIContainer.getInstance();
-      const coordinator = container.getPlanCoordinator();
+      // ServiceContainerから取得
+      const coordinator = getPlanCoordinator();
       
       // Coordinatorを通じてプランを切り替え
       await coordinator.switchPlan(user.uid, selectedPlan.id);
@@ -239,9 +235,8 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose, 
     if (!user) return;
     
     try {
-      const container = DIContainer.getInstance();
-      const planService = container.getPlanService();
-      const coordinator = container.getPlanCoordinator();
+      const coordinator = getPlanCoordinator();
+      const planService = coordinator.getPlanService();
       
       // 削除処理を並行実行
       const deletePromises = Array.from(selectedPlanIds).map(planId => 
@@ -548,8 +543,7 @@ const PlanNameEditModal: React.FC<PlanNameEditModalProps> = ({ isOpen, onClose, 
                   try {
                     const { user } = useAuthStore.getState();
                     if (user) {
-                      const container = DIContainer.getInstance();
-                      const coordinator = container.getPlanCoordinator();
+                      const coordinator = getPlanCoordinator();
                       await coordinator.deletePlan(user.uid, plan.id);
                     }
                   } catch (error) {

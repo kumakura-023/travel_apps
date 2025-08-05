@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { RouteConnection, PlaceSelectionState } from '../types';
 import { directionsService } from '../services/directionsService';
-import { usePlacesStore } from './placesStore';
+import { useSavedPlacesStore } from './savedPlacesStore';
 import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -204,7 +204,7 @@ export const useRouteConnectionsStore = create<RouteConnectionsState>((set, get)
 
   getPlaceCoordinates: (placeId) => {
     // 候補地から検索
-    const places = usePlacesStore.getState().places;
+    const places = useSavedPlacesStore.getState().places;
     const place = places.find(p => p.id === placeId);
     if (place) {
       return place.coordinates;

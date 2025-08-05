@@ -1,12 +1,12 @@
 import React from 'react';
-import { usePlacesStore } from '../store/placesStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 
 export default function TestPlacesButton() {
-  const { addPlace } = usePlacesStore();
+  const { addPlace } = useSavedPlacesStore();
 
   const addTestPlaces = () => {
     console.log('テスト候補地追加ボタンがクリックされました');
-    console.log('現在の候補地数:', usePlacesStore.getState().getFilteredPlaces().length);
+    console.log('現在の候補地数:', useSavedPlacesStore.getState().getFilteredPlaces().length);
     
     // テスト用の候補地を追加
     const testPlaces = [
@@ -47,7 +47,7 @@ export default function TestPlacesButton() {
       addPlace(place);
     });
     
-    console.log('追加後の候補地数:', usePlacesStore.getState().getFilteredPlaces().length);
+    console.log('追加後の候補地数:', useSavedPlacesStore.getState().getFilteredPlaces().length);
     alert('テスト候補地を追加しました！');
   };
 

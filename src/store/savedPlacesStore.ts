@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Place } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
 import { usePlanStore } from './planStore';
-import { getPlanService } from '../services/ServiceContainer';
+import { getPlanCoordinator } from '../services/ServiceContainer';
 import { useAuthStore } from '../hooks/useAuth';
 
 interface PlacesState {
@@ -70,7 +70,8 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
         });
         
         try {
-          const planService = getPlanService();
+          const planCoordinator = getPlanCoordinator();
+          const planService = planCoordinator.getPlanService();
           
           planService.updateLastActionPosition(
             plan.id,
