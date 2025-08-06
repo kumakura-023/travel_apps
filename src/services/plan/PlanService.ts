@@ -271,7 +271,13 @@ export class PlanService implements IPlanService {
   }
 
   private async getCurrentUserId(): Promise<string> {
-    // TODO: userRepositoryにgetCurrentUserメソッドを追加する必要がある
-    throw new Error('User not authenticated');
+    const { auth } = await import('../../firebase');
+    const currentUser = auth.currentUser;
+    
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    return currentUser.uid;
   }
 }

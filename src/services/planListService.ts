@@ -36,8 +36,8 @@ export function listenUserPlans(
 ): Unsubscribe {
   
   const plansRef = collection(db, 'plans');
-  // 注意: このクエリにはFirestoreの複合インデックスが必要です
-  // memberIds (array-contains) + updatedAt (desc)
+  
+  // まずmemberIds配列でクエリを試みる
   const q = useSort
     ? query(
         plansRef,
@@ -52,12 +52,10 @@ export function listenUserPlans(
   return onSnapshot(
     q,
     (snapshot) => {
-      
       const plans: PlanListItem[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
         
-        // payloadから基本情報を抽出
         let placeCount = 0;
         let totalCost = 0;
         
@@ -83,7 +81,6 @@ export function listenUserPlans(
         });
       });
       
-      // ソートなしの場合は手動でソート
       if (!useSort) {
         plans.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
       }
@@ -93,13 +90,63 @@ export function listenUserPlans(
     (error) => {
       console.error('[planListService] Error listening to plans:', error);
       
-      // Firestoreインデックスエラーの場合は詳細なメッセージを表示
-      if (error.code === 'failed-precondition' && error.message.includes('index')) {
-        console.error('[planListService] Firestore index required. Please create the composite index for:', {
-          collection: 'plans',
-          fields: ['memberIds', 'updatedAt DESC']
-        });
-        console.error('[planListService] You can create the index by visiting the URL in the error message or Firebase Console');
+      // memberIds配列でのクエリが失敗した場合、全プランを取得してクライアント側でフィルタリング
+      if (error.code === 'failed-precondition' || error.message.includes('memberIds')) {
+        console.log('[planListService] Falling back to full collection scan with client-side filtering');
+        
+        // 全プランを取得
+        const allPlansQuery = query(plansRef);
+        
+        return onSnapshot(
+          allPlansQuery,
+          (snapshot) => {
+            const plans: PlanListItem[] = [];
+            
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              const members = data.members || {};
+              
+              // クライアント側でメンバーチェック
+              if (members[user.uid] || data.ownerId === user.uid) {
+                let placeCount = 0;
+                let totalCost = 0;
+                
+                try {
+                  if (data.payload) {
+                    const payload = JSON.parse(data.payload);
+                    placeCount = payload.places?.length || 0;
+                    totalCost = payload.totalCost || 0;
+                  }
+                } catch (e) {
+                  console.error('[planListService] Failed to parse payload:', e);
+                }
+                
+                plans.push({
+                  id: doc.id,
+                  name: data.name || '名称未設定',
+                  ownerId: data.ownerId,
+                  memberCount: Object.keys(members).length,
+                  placeCount,
+                  totalCost,
+                  updatedAt: data.updatedAt?.toDate() || new Date(),
+                  createdAt: data.createdAt?.toDate() || new Date(),
+                });
+              }
+            });
+            
+            // クライアント側でソート
+            plans.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+            
+            console.log(`[planListService] Found ${plans.length} plans for user after client-side filtering`);
+            onUpdate(plans);
+          },
+          (fallbackError) => {
+            console.error('[planListService] Fallback query also failed:', fallbackError);
+            if (onError) {
+              onError(fallbackError);
+            }
+          }
+        );
       }
       
       if (onError) {

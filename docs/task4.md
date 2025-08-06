@@ -523,3 +523,420 @@ export async function addUserToPlan(planId: string, newUserId: string, role: 'ed
 - Cloud Functionsのデプロイ後は必ず動作確認を行う
 - インデックス作成には時間がかかるため、最初に実施する
 - 修復スクリプトは本番環境で実行する前に、開発環境でテストする
+
+---
+
+## 追加修正タスク（修正内容v20 - 続き）
+
+### 判明した新たな問題
+エラーログ分析により、以下の追加問題が判明：
+
+1. **既存プランにmemberIds配列が存在しない**
+   - Cloud Functions修正だけでは既存プランは更新されない
+   - 修復スクリプトは作成済みだが未実行のため、プラン一覧が空になる
+
+2. **フォールバック処理の不備**
+   - ソートなしクエリでもmemberIds配列を使用しているため、既存プランが取得できない
+
+### 緊急修正タスク
+
+#### 1. planListService.tsの完全フォールバック処理実装
+**ファイル**: `src/services/planListService.ts`
+
+**修正箇所**: listenUserPlans関数全体
+
+**変更後のコード**:
+```typescript
+export function listenUserPlans(
+  user: User,
+  onUpdate: (plans: PlanListItem[]) => void,
+  onError?: (error: Error) => void,
+  useSort: boolean = true
+): Unsubscribe {
+  
+  const plansRef = collection(db, 'plans');
+  
+  // まずmemberIds配列でクエリを試みる
+  const q = useSort
+    ? query(
+        plansRef,
+        where('memberIds', 'array-contains', user.uid),
+        orderBy('updatedAt', 'desc')
+      )
+    : query(
+        plansRef,
+        where('memberIds', 'array-contains', user.uid)
+      );
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const plans: PlanListItem[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        
+        let placeCount = 0;
+        let totalCost = 0;
+        
+        try {
+          if (data.payload) {
+            const payload = JSON.parse(data.payload);
+            placeCount = payload.places?.length || 0;
+            totalCost = payload.totalCost || 0;
+          }
+        } catch (e) {
+          console.error('[planListService] Failed to parse payload:', e);
+        }
+        
+        plans.push({
+          id: doc.id,
+          name: data.name || '名称未設定',
+          ownerId: data.ownerId,
+          memberCount: Object.keys(data.members || {}).length,
+          placeCount,
+          totalCost,
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          createdAt: data.createdAt?.toDate() || new Date(),
+        });
+      });
+      
+      if (!useSort) {
+        plans.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      }
+      
+      onUpdate(plans);
+    },
+    (error) => {
+      console.error('[planListService] Error listening to plans:', error);
+      
+      // memberIds配列でのクエリが失敗した場合、全プランを取得してクライアント側でフィルタリング
+      if (error.code === 'failed-precondition' || error.message.includes('memberIds')) {
+        console.log('[planListService] Falling back to full collection scan with client-side filtering');
+        
+        // 全プランを取得
+        const allPlansQuery = query(plansRef);
+        
+        return onSnapshot(
+          allPlansQuery,
+          (snapshot) => {
+            const plans: PlanListItem[] = [];
+            
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              const members = data.members || {};
+              
+              // クライアント側でメンバーチェック
+              if (members[user.uid] || data.ownerId === user.uid) {
+                let placeCount = 0;
+                let totalCost = 0;
+                
+                try {
+                  if (data.payload) {
+                    const payload = JSON.parse(data.payload);
+                    placeCount = payload.places?.length || 0;
+                    totalCost = payload.totalCost || 0;
+                  }
+                } catch (e) {
+                  console.error('[planListService] Failed to parse payload:', e);
+                }
+                
+                plans.push({
+                  id: doc.id,
+                  name: data.name || '名称未設定',
+                  ownerId: data.ownerId,
+                  memberCount: Object.keys(members).length,
+                  placeCount,
+                  totalCost,
+                  updatedAt: data.updatedAt?.toDate() || new Date(),
+                  createdAt: data.createdAt?.toDate() || new Date(),
+                });
+              }
+            });
+            
+            // クライアント側でソート
+            plans.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+            
+            console.log(`[planListService] Found ${plans.length} plans for user after client-side filtering`);
+            onUpdate(plans);
+          },
+          (fallbackError) => {
+            console.error('[planListService] Fallback query also failed:', fallbackError);
+            if (onError) {
+              onError(fallbackError);
+            }
+          }
+        );
+      }
+      
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
+}
+```
+
+#### 2. 修復スクリプトの実行手順
+
+**手順1: Cloud Functionsのデプロイ**
+```bash
+# functions ディレクトリに移動
+cd functions
+
+# 依存関係をインストール
+npm install
+
+# Cloud Functions をデプロイ
+firebase deploy --only functions:repairExistingPlansMemberIds,functions:repairSinglePlanMemberIds
+
+# または全関数をデプロイ
+firebase deploy --only functions
+```
+
+**手順2: 修復関数の実行（3つの方法）**
+
+**方法A: Firebase Console から実行**
+1. Firebase Console にアクセス
+2. Functions セクションに移動
+3. `repairExistingPlansMemberIds` 関数を探す
+4. 右側の三点メニューから「テスト」を選択
+5. 空のデータ `{}` を入力して実行
+
+**方法B: クライアントアプリから実行（一時的なボタン追加）**
+```typescript
+// 一時的に設定画面などに追加
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
+
+const repairPlans = async () => {
+  try {
+    const repairFunction = httpsCallable(functions, 'repairExistingPlansMemberIds');
+    const result = await repairFunction({});
+    console.log('Repair result:', result.data);
+    alert(`修復完了: ${result.data.message}`);
+  } catch (error) {
+    console.error('Repair failed:', error);
+    alert('修復に失敗しました');
+  }
+};
+
+// ボタンコンポーネント
+<button onClick={repairPlans}>既存プランを修復</button>
+```
+
+**方法C: Firebase CLIから実行**
+```bash
+# Firebase CLIでログイン
+firebase login
+
+# 関数を実行
+firebase functions:shell
+
+# シェル内で実行
+repairExistingPlansMemberIds({})
+```
+
+#### 3. 動作確認手順（詳細版）
+
+**ステップ1: 修復前の確認**
+1. ブラウザの開発者ツールを開く
+2. Consoleタブでエラーメッセージを確認
+3. `[PlanCoordinator] Available plans: 0` が表示されることを確認
+
+**ステップ2: 修復スクリプトの実行**
+1. 上記の方法のいずれかで修復スクリプトを実行
+2. 実行結果を確認（修復されたプラン数が表示される）
+
+**ステップ3: planListService.ts の更新**
+1. 上記の完全フォールバック処理を実装
+2. ビルドしてデプロイ
+```bash
+npm run build
+# デプロイまたはローカルテスト
+```
+
+**ステップ4: 動作確認**
+1. アプリをリロード
+2. Consoleで以下を確認：
+   - `[planListService] Falling back to full collection scan` が表示される場合は、フォールバック処理が動作
+   - `[PlanCoordinator] Available plans: [数値]` でプラン数が0以上
+3. プラン一覧にプランが表示されることを確認
+
+**ステップ5: 招待機能の再テスト**
+1. 新しい招待URLを生成
+2. 別のユーザーアカウントで招待URLにアクセス
+3. プランに参加できることを確認
+4. 参加後、プラン一覧に表示されることを確認
+
+#### 4. インデックス作成の確認
+
+**Firebase Console での確認手順**:
+1. Firebase Console > Firestore Database
+2. 「インデックス」タブを選択
+3. 以下のインデックスが存在することを確認：
+   - コレクション: `plans`
+   - フィールド: `memberIds` (Array contains), `updatedAt` (Descending)
+4. ステータスが「有効」になっていることを確認
+
+**インデックスが存在しない場合**:
+1. コンソールのエラーメッセージ内のリンクをクリック
+2. または手動で作成（上記の設定で）
+
+### トラブルシューティング
+
+#### 問題1: 修復スクリプト実行後もプランが表示されない
+**解決策**:
+1. Firestore で直接プランドキュメントを確認
+2. memberIds配列が正しく追加されているか確認
+3. membersオブジェクトにユーザーIDが含まれているか確認
+
+#### 問題2: フォールバック処理でパフォーマンスが悪い
+**解決策**:
+1. 修復スクリプトが正常に完了していることを確認
+2. インデックスが作成され有効になっていることを確認
+3. 一時的な問題なので、修復完了後は発生しない
+
+#### 問題3: 新規作成したプランが表示されない
+**解決策**:
+1. planCloudService.ts でmemberIds配列が正しく設定されているか確認
+2. Cloud Functions が最新版にデプロイされているか確認
+
+### 実装の優先順位
+
+1. **最優先**: planListService.ts の完全フォールバック処理を実装（即座に解決）
+2. **高優先**: 修復スクリプトを実行（既存プランの恒久的解決）
+3. **中優先**: インデックス作成（パフォーマンス改善）
+
+これらの修正により、招待URLからの参加問題が完全に解決されます。
+
+---
+
+## 新規プラン作成エラーの修正タスク
+
+### 問題概要
+Firebaseから全データを削除後、新規プランを作成しようとすると以下のエラーが発生：
+```
+[PlanCoordinator] Creating new plan: 新しいプラン_2025/8/6
+[PlanCoordinator] Failed to create new plan: 
+[PlanNameEditModal] Failed to create new plan:
+```
+
+### 根本原因
+PlanService.tsの`getCurrentUserId()`メソッドが未実装で、常に`Error('User not authenticated')`をスローしている。
+
+### 修正タスク
+
+#### 1. PlanService.tsのgetCurrentUserIdメソッド実装
+**ファイル**: `src/services/plan/PlanService.ts`
+
+**修正箇所**: 273-276行目
+
+**変更前のコード**:
+```typescript
+private async getCurrentUserId(): Promise<string> {
+  // TODO: userRepositoryにgetCurrentUserメソッドを追加する必要がある
+  throw new Error('User not authenticated');
+}
+```
+
+**変更後のコード**:
+```typescript
+private async getCurrentUserId(): Promise<string> {
+  // Firebaseから現在のユーザーを取得
+  const { auth } = await import('../../firebase');
+  const currentUser = auth.currentUser;
+  
+  if (!currentUser) {
+    throw new Error('User not authenticated');
+  }
+  
+  return currentUser.uid;
+}
+```
+
+**代替実装（userRepositoryを使用する場合）**:
+```typescript
+private async getCurrentUserId(): Promise<string> {
+  // userRepositoryがgetCurrentUserメソッドを持っている場合
+  const user = await this.userRepository.getCurrentUser();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  return user.id;
+}
+```
+
+#### 2. IUserRepositoryインターフェースの拡張（オプション）
+**ファイル**: `src/repositories/interfaces/IUserRepository.ts`
+
+**追加するメソッド**:
+```typescript
+export interface IUserRepository {
+  // 既存のメソッド...
+  
+  /**
+   * 現在ログイン中のユーザーを取得
+   */
+  getCurrentUser(): Promise<{ id: string; email?: string } | null>;
+}
+```
+
+#### 3. FirebaseUserRepositoryの実装（オプション）
+**ファイル**: `src/repositories/firebase/FirebaseUserRepository.ts`（存在する場合）
+
+**追加する実装**:
+```typescript
+async getCurrentUser(): Promise<{ id: string; email?: string } | null> {
+  const { auth } = await import('../../firebase');
+  const currentUser = auth.currentUser;
+  
+  if (!currentUser) {
+    return null;
+  }
+  
+  return {
+    id: currentUser.uid,
+    email: currentUser.email || undefined
+  };
+}
+```
+
+### 動作確認手順
+
+1. **修正前の確認**
+   - Firebaseで全データを削除
+   - 新規プラン作成を試みる
+   - Consoleでエラーを確認
+
+2. **修正の適用**
+   - PlanService.tsのgetCurrentUserIdメソッドを修正
+   - ビルドとデプロイ
+
+3. **修正後の確認**
+   - アプリをリロード
+   - 新規プラン作成を実行
+   - プランが正常に作成されることを確認
+   - Firestoreでプランドキュメントが作成されていることを確認
+
+4. **memberIds配列の確認**
+   - 新規作成されたプランにmemberIds配列が含まれているか確認
+   - memberIds配列にユーザーIDが含まれているか確認
+
+### 関連する問題との整合性
+
+この修正により、以下の2つの問題が解決されます：
+
+1. **新規プラン作成エラー**
+   - getCurrentUserIdの実装により解決
+
+2. **memberIds配列の整合性**
+   - planListService.createNewPlanは既にmemberIds配列を設定している
+   - PlanServiceを経由する場合も、planRepositoryがFirestoreに保存する際に適切に処理される
+
+### 実装の優先順位
+
+1. **最優先**: PlanService.tsのgetCurrentUserId修正（即座に解決）
+2. **中優先**: IUserRepositoryの拡張（将来的な保守性向上）
+3. **低優先**: FirebaseUserRepositoryの実装（アーキテクチャの一貫性）
+
+この修正と前述のplanListServiceのフォールバック処理を組み合わせることで、全ての問題が解決されます。
