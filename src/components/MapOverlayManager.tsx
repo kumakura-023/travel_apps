@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Marker } from '@react-google-maps/api';
 import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
@@ -9,6 +9,10 @@ import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { MapLabel } from '../types';
 import { classifyCategory } from '../utils/categoryClassifier';
 import { getCategoryColor } from '../utils/categoryIcons';
+import { useNotificationStore } from '../store/notificationStore';
+import { useAuthStore } from '../hooks/useAuth';
+import { usePlanStore } from '../store/planStore';
+import { OverlayView } from '@react-google-maps/api';
 
 // コンポーネントのインポート
 import PlaceCircle from './PlaceCircle';
@@ -21,6 +25,7 @@ import RouteDisplayBase from './RouteDisplay';
 import RouteMarkers from './RouteMarkers';
 import PlaceMarkerCluster from './PlaceMarkerCluster';
 import { withErrorBoundary } from './hoc/withErrorBoundary';
+import { PlaceNotificationOverlay } from './PlaceNotificationOverlay';
 
 // エラーバウンダリでラップ
 const RouteDisplay = withErrorBoundary(RouteDisplayBase);
@@ -49,10 +54,43 @@ export default function MapOverlayManager({
   
   // ストアからの状態取得
   const savedPlaces = useSavedPlacesStore((s) => s.getFilteredPlaces());
-  const { place } = useSelectedPlaceStore();
+  const { place, setPlace } = useSelectedPlaceStore();
   const { labels, updateLabel } = useLabelsStore();
   const { routes } = useRouteConnectionsStore();
   const { circles } = useTravelTimeMode();
+  const { user } = useAuthStore();
+  const { plan } = usePlanStore();
+  const { notifications, isReadByUser, markAsRead, getNotificationsByPlan } = useNotificationStore();
+
+  // 現在のプランの未読通知を取得
+  const unreadNotifications = useMemo(() => {
+    if (!plan || !user) return [];
+    return getNotificationsByPlan(plan.id, user.uid).filter(n => !isReadByUser(n, user.uid));
+  }, [plan, user, getNotificationsByPlan, isReadByUser, notifications]);
+
+  // 通知の確認ハンドラー
+  const handleNotificationConfirm = (notificationId: string, placeId: string) => {
+    if (!user) return;
+    
+    // 既読にする
+    markAsRead(notificationId, user.uid);
+    
+    // 該当する場所を選択
+    const notificationPlace = savedPlaces.find(p => p.id === placeId);
+    if (notificationPlace && map) {
+      setPlace({
+        place_id: notificationPlace.id,
+        name: notificationPlace.name,
+        geometry: {
+          location: {
+            lat: () => notificationPlace.coordinates.lat,
+            lng: () => notificationPlace.coordinates.lng,
+          } as google.maps.LatLng,
+        },
+        types: [notificationPlace.category],
+      } as google.maps.places.PlaceResult);
+    }
+  };
 
   return (
     <>
@@ -121,6 +159,22 @@ export default function MapOverlayManager({
         />
       ))}
       
+      {/* 通知オーバーレイの表示 */}
+      {map && unreadNotifications.map((notification) => (
+        <OverlayView
+          key={`notification-${notification.id}`}
+          position={notification.position}
+          mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+        >
+          <PlaceNotificationOverlay
+            notification={notification}
+            onConfirm={() => handleNotificationConfirm(notification.id, notification.placeId)}
+            map={map}
+            position={{ x: 0, y: 0 }} // OverlayViewが位置を管理
+          />
+        </OverlayView>
+      ))}
+
       {/* 移動時間圏の表示 */}
       {circles.map((c) => (
         <TravelTimeCircle 

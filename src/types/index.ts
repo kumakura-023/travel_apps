@@ -33,6 +33,10 @@ export interface Place {
     lng: number;
   };
   deleted?: boolean;
+  addedBy?: {
+    uid: string;
+    displayName: string;
+  };
 }
 
 export interface TravelPlan {

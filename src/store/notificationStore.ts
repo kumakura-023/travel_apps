@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { PlaceCategory } from '../types/Place';
+import { PlaceCategory } from '../types';
 
 export interface PlaceNotification {
   id: string;

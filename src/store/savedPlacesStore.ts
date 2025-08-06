@@ -6,6 +6,7 @@ import { usePlanStore } from './planStore';
 import { getPlanCoordinator, getEventBus } from '../services/ServiceContainer';
 import { useAuthStore } from '../hooks/useAuth';
 import { PlaceEventBus } from '../events/PlaceEvents';
+import { useNotificationStore } from './notificationStore';
 
 interface PlacesState {
   places: Place[];
@@ -92,6 +93,22 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
         } catch (error) {
           console.error('[placesStore] Failed to get PlanService:', error);
         }
+      }
+
+      // 通知を生成（自分が追加した候補地は通知しない）
+      if (plan && user && newPlace.addedBy?.uid && newPlace.addedBy.uid !== user.uid) {
+        const notificationStore = useNotificationStore.getState();
+        notificationStore.addNotification({
+          placeId: newPlace.id,
+          placeName: newPlace.name,
+          placeCategory: newPlace.category,
+          addedBy: {
+            uid: newPlace.addedBy.uid,
+            displayName: newPlace.addedBy.displayName || 'ユーザー'
+          },
+          planId: plan.id,
+          position: newPlace.coordinates
+        });
       }
 
       return newState;

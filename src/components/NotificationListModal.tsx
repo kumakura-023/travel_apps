@@ -5,7 +5,7 @@ import { usePlanStore } from '../store/planStore';
 import { getCategoryColor, getCategoryEmoji, getCategoryDisplayName } from '../utils/categoryIcons';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
-import { ServiceContainer } from '../services/ServiceContainer';
+import { getMapService } from '../services/ServiceContainer';
 
 interface NotificationListModalProps {
   isOpen: boolean;
@@ -38,7 +38,7 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, o
   if (!isOpen) return null;
 
   const handleNotificationClick = async (notification: any) => {
-    const mapService = ServiceContainer.getMapService();
+    const mapService = getMapService();
     if (mapService) {
       await mapService.panTo(notification.position.lat, notification.position.lng);
       await mapService.setZoom(17);
