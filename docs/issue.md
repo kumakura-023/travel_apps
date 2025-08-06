@@ -160,4 +160,18 @@ travel_app\docs\UI_name.md参照。PlaceCircleBackground、PlaceCircle UIを削�
         　そのモーダルを開くと確認できるようにしたい。
 
 修正内容 v20
+・招待URLから参加すると以下のログが出力され、招待されたはずのプランに参加できない。招待URLから参加したとき、プラン一覧にプランが追加され、ゲスト側のユーザもいつでもアクセスできるようにしてください。
+index-f3hn6yqQ.js:3472 [planListService] Error listening to plans: FirebaseError: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/voyagesketch/firestore/ind…2luZGV4ZXMvXxABGg0KCW1lbWJlcklkcxgBGg0KCXVwZGF0ZWRBdBACGgwKCF9fbmFtZV9fEAI
+
+index-f3hn6yqQ.js:3472 [planListService] Firestore index required. Please create the composite index for: 
+Object
+index-f3hn6yqQ.js:3472 [planListService] You can create the index by visiting the URL in the error message or Firebase Console
+index-f3hn6yqQ.js:3472 [planListStore] Error with sorted query: FirebaseError: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/voyagesketch/firestore/ind…2luZGV4ZXMvXxABGg0KCW1lbWJlcklkcxgBGg0KCXVwZGF0ZWRBdBACGgwKCF9fbmFtZV9fEAI
+index-f3hn6yqQ.js:3472 [planListStore] Falling back to no-sort query
+index-f3hn6yqQ.js:3472 [PlanCoordinator] Retrieved active plan ID: e61ae225-760a-4c06-b7c9-5391f4423eae
+index-f3hn6yqQ.js:3472 [PlanCoordinator] Available plans: 0
+index-f3hn6yqQ.js:3472 [PlanCoordinator] No plans available, keeping empty state
+index-f3hn6yqQ.js:3472 [PlanCoordinator] Initialization completed
+
+修正内容 v21
 ・新規機能　メイン画面でのフィルター

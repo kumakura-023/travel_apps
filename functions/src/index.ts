@@ -80,11 +80,20 @@ export const inviteUserToPlan = onCall(async (request) => {
     }
 
     // 5. Add User to Plan
+    // planDataから既存のmemberIds配列を取得
+    const existingMemberIds = planData.memberIds || [];
+    const updatedMemberIds = existingMemberIds.includes(invitee.uid) 
+      ? existingMemberIds 
+      : [...existingMemberIds, invitee.uid];
+
+    // membersとmemberIds両方を更新
     await planRef.update({
       [`members.${invitee.uid}`]: {
         role: "editor",
         joinedAt: admin.firestore.FieldValue.serverTimestamp(),
       },
+      memberIds: updatedMemberIds,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     return {
@@ -166,11 +175,20 @@ export const acceptInviteToken = onCall(async (request) => {
   if (members[uid]) {
     return { alreadyMember: true, planId: planDoc.id };
   }
+  // 既存のmemberIds配列を取得
+  const existingMemberIds = planData.memberIds || [];
+  const updatedMemberIds = existingMemberIds.includes(uid) 
+    ? existingMemberIds 
+    : [...existingMemberIds, uid];
+
+  // membersとmemberIds両方を更新
   await planDoc.ref.update({
     [`members.${uid}`]: {
       role: 'editor',
       joinedAt: admin.firestore.FieldValue.serverTimestamp(),
     },
+    memberIds: updatedMemberIds,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
   // 参加ユーザーの activePlanId を更新
   await db.collection('users').doc(uid).set({
@@ -179,3 +197,6 @@ export const acceptInviteToken = onCall(async (request) => {
   }, { merge: true });
   return { success: true, planId: planDoc.id };
 });
+
+// Export repair functions
+export { repairExistingPlansMemberIds, repairSinglePlanMemberIds } from './repairMemberIds';

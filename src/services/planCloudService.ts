@@ -154,9 +154,22 @@ export function listenPlan(
 // Function to invite a user (to be called from a Cloud Function for security)
 export async function addUserToPlan(planId: string, newUserId: string, role: 'editor' | 'viewer' = 'editor') {
     const planRef = planDocRef(planId);
+    
+    // 既存のプランデータを取得
+    const planSnap = await getDoc(planRef);
+    const planData = planSnap.exists() ? planSnap.data() : {};
+    const existingMemberIds = planData.memberIds || [];
+    
+    // memberIds配列を更新
+    const updatedMemberIds = existingMemberIds.includes(newUserId) 
+      ? existingMemberIds 
+      : [...existingMemberIds, newUserId];
+    
     await setDoc(planRef, {
         members: {
             [newUserId]: { role, joinedAt: new Date() }
-        }
+        },
+        memberIds: updatedMemberIds,
+        updatedAt: serverTimestamp()
     }, { merge: true });
 } 
