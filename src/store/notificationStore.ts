@@ -129,9 +129,9 @@ export const useNotificationStore = create<NotificationStore>()(
 
       getNotificationsByPlan: (planId: string, userId: string) => {
         const { notifications } = get();
-        return notifications.filter(notification => 
-          notification.planId === planId
-        );
+        return notifications
+          .filter(notification => notification.planId === planId)
+          .sort((a, b) => b.timestamp - a.timestamp);
       },
 
       isReadByUser: (notification: PlaceNotification, userId: string) => {
