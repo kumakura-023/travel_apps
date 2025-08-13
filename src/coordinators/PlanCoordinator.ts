@@ -5,6 +5,8 @@ import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useLabelsStore } from '../store/labelsStore';
 import { usePlanListStore } from '../store/planListStore';
 import { TravelPlan } from '../types';
+import { useNotificationStore } from '../store/notificationStore';
+import { useAuthStore } from '../hooks/useAuth';
 
 export class PlanCoordinator {
   private currentPlanUnsubscribe?: () => void;
@@ -138,12 +140,57 @@ export class PlanCoordinator {
   }
 
   private updateStores(plan: TravelPlan): void {
+    const currentPlaces = useSavedPlacesStore.getState().places;
+    const newPlaces = plan.places || [];
+    const { user } = useAuthStore.getState();
+    
+    // 他のユーザーが追加した新しい場所を検出
+    if (user && currentPlaces.length > 0) {
+      const currentPlaceIds = new Set(currentPlaces.map(p => p.id));
+      const newAddedPlaces = newPlaces.filter(p => !currentPlaceIds.has(p.id));
+      
+      console.log('[PlanCoordinator] 場所の変更を検出:', {
+        現在の場所数: currentPlaces.length,
+        新しい場所数: newPlaces.length,
+        追加された場所数: newAddedPlaces.length
+      });
+      
+      // 他のユーザーが追加した場所の通知を作成
+      newAddedPlaces.forEach(place => {
+        // 自分が追加した場所でない場合（addedByが存在し、自分と異なる）
+        if (place.addedBy?.uid && place.addedBy.uid !== user.uid) {
+          console.log('[PlanCoordinator] 他のユーザーが追加した場所を検出:', {
+            placeId: place.id,
+            placeName: place.name,
+            addedByUid: place.addedBy.uid,
+            addedByName: place.addedBy.displayName,
+            currentUserId: user.uid
+          });
+          
+          const notificationStore = useNotificationStore.getState();
+          notificationStore.addNotification({
+            placeId: place.id,
+            placeName: place.name,
+            placeCategory: place.category,
+            addedBy: {
+              uid: place.addedBy.uid,
+              displayName: place.addedBy.displayName || 'ユーザー'
+            },
+            planId: plan.id,
+            position: place.coordinates
+          });
+          
+          console.log('[PlanCoordinator] 他のユーザーの場所追加通知を作成しました');
+        }
+      });
+    }
+    
     usePlanStore.setState({ 
       plan, 
       isLoading: false, 
       error: null 
     });
-    useSavedPlacesStore.setState({ places: plan.places || [] });
+    useSavedPlacesStore.setState({ places: newPlaces });
     useLabelsStore.setState({ labels: plan.labels || [] });
   }
 

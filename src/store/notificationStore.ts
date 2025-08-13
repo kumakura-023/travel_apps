@@ -59,9 +59,24 @@ export const useNotificationStore = create<NotificationStore>()(
           readBy: []
         };
 
-        set((state) => ({
-          notifications: [...state.notifications, newNotification]
-        }));
+        console.log('[通知ストア] 新しい通知を作成:', {
+          notificationId: newNotification.id,
+          placeId: newNotification.placeId,
+          placeName: newNotification.placeName,
+          addedByUid: newNotification.addedBy.uid,
+          addedByName: newNotification.addedBy.displayName,
+          planId: newNotification.planId,
+          timestamp: new Date(newNotification.timestamp).toISOString()
+        });
+
+        set((state) => {
+          const updatedNotifications = [...state.notifications, newNotification];
+          console.log('[通知ストア] 通知総数:', updatedNotifications.length);
+          console.log('[通知ストア] 現在のユーザーID:', state.currentUserId);
+          return {
+            notifications: updatedNotifications
+          };
+        });
 
         get().clearExpiredNotifications();
       },

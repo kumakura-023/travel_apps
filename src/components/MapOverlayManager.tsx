@@ -64,8 +64,32 @@ export default function MapOverlayManager({
 
   // 現在のプランの未読通知を取得
   const unreadNotifications = useMemo(() => {
-    if (!plan || !user) return [];
-    return getNotificationsByPlan(plan.id, user.uid).filter(n => !isReadByUser(n, user.uid));
+    if (!plan || !user) {
+      console.log('[通知表示] プランまたはユーザーが未設定:', { 
+        hasPlan: !!plan, 
+        hasUser: !!user 
+      });
+      return [];
+    }
+    
+    const planNotifications = getNotificationsByPlan(plan.id, user.uid);
+    const unread = planNotifications.filter(n => !isReadByUser(n, user.uid));
+    
+    console.log('[通知表示] 通知の状況:', {
+      planId: plan.id,
+      userId: user.uid,
+      全通知数: notifications.length,
+      プランの通知数: planNotifications.length,
+      未読通知数: unread.length,
+      通知詳細: unread.map(n => ({
+        id: n.id,
+        placeName: n.placeName,
+        addedBy: n.addedBy.displayName,
+        timestamp: new Date(n.timestamp).toISOString()
+      }))
+    });
+    
+    return unread;
   }, [plan, user, getNotificationsByPlan, isReadByUser, notifications]);
 
   // 通知の確認ハンドラー

@@ -36,6 +36,9 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
         throw new Error('Coordinates are required for adding a place');
       }
       
+      // 現在のユーザー情報を取得
+      const { user: currentUser } = useAuthStore.getState();
+      
       const newPlace = {
         ...partial,
         labelHidden: true,
@@ -46,6 +49,11 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
         id: uuidv4(),
         createdAt: new Date(),
         updatedAt: new Date(),
+        // 追加者情報を設定
+        addedBy: currentUser ? {
+          uid: currentUser.uid,
+          displayName: currentUser.displayName || currentUser.email || 'ユーザー'
+        } : undefined,
       } as Place;
 
       const newState = {
@@ -95,8 +103,22 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
         }
       }
 
-      // 通知を生成（自分が追加した候補地は通知しない）
-      if (plan && user && newPlace.addedBy?.uid && newPlace.addedBy.uid !== user.uid) {
+      // 通知を生成（自分が追加した候補地を他のプラン参加者に通知）
+      // 自分が追加した場合、他のメンバーが後で確認できるように通知を作成
+      if (plan && user && newPlace.addedBy?.uid) {
+        console.log('[通知デバッグ] 通知作成条件を満たしました:', {
+          planId: plan.id,
+          planName: plan.name,
+          userId: user.uid,
+          userDisplayName: user.displayName,
+          placeId: newPlace.id,
+          placeName: newPlace.name,
+          addedBy: newPlace.addedBy,
+          planMembers: plan.members ? Object.keys(plan.members) : []
+        });
+        
+        // ここで通知を作成
+        // 注意: 通知は各ユーザーが個別に既読管理するため、自分が追加したものも含めて作成
         const notificationStore = useNotificationStore.getState();
         notificationStore.addNotification({
           placeId: newPlace.id,
@@ -108,6 +130,17 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
           },
           planId: plan.id,
           position: newPlace.coordinates
+        });
+        
+        console.log('[通知デバッグ] 通知作成を要求しました');
+      } else {
+        console.log('[通知デバッグ] 通知作成条件を満たしませんでした:', {
+          hasPlan: !!plan,
+          hasUser: !!user,
+          hasAddedBy: !!newPlace.addedBy?.uid,
+          planId: plan?.id,
+          userId: user?.uid,
+          addedBy: newPlace.addedBy
         });
       }
 
