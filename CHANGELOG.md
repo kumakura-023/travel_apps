@@ -1,3 +1,10 @@
+## [v1.3.1] - 2025-08-13
+### 修正
+- **POIのカテゴリ分類精度を改善**
+  - ショッピング系POIが正しく「shopping」カテゴリに分類されない問題を修正
+  - categoryClassifier.tsにショッピング関連のGoogle Places APIタイプを追加（shopping_mall, department_store, clothing_store等）
+  - その他のカテゴリ（レストラン、観光、交通）にも関連タイプを追加して分類精度を向上
+
 ## [v1.5.2] - 2024-05-X
 ### 新機能・UI改善
 - **共有・招待UIをアカウントアイコンのメニューに統合**
