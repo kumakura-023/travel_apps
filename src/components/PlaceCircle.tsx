@@ -39,12 +39,14 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
   const { user } = useAuthStore();
   const { getNotificationsByPlan, isReadByUser } = useNotificationStore();
 
-  // この地点に未読通知があるかチェック
+  // この地点に未読通知があるかチェック（自分が追加した場所は除外）
   const hasUnreadNotification = useMemo(() => {
     if (!plan || !user) return false;
     const planNotifications = getNotificationsByPlan(plan.id, user.uid);
     return planNotifications.some(n => 
-      n.placeId === place.id && !isReadByUser(n, user.uid)
+      n.placeId === place.id && 
+      !isReadByUser(n, user.uid) && 
+      n.addedBy.uid !== user.uid // 自分が追加した場所の通知は除外
     );
   }, [plan, user, place.id, getNotificationsByPlan, isReadByUser]);
 

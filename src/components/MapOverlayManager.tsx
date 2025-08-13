@@ -62,7 +62,7 @@ export default function MapOverlayManager({
   const { plan } = usePlanStore();
   const { notifications, isReadByUser, markAsRead, getNotificationsByPlan } = useNotificationStore();
 
-  // 現在のプランの未読通知を取得
+  // 現在のプランの未読通知を取得（自分が追加した場所の通知は除外）
   const unreadNotifications = useMemo(() => {
     if (!plan || !user) {
       console.log('[通知表示] プランまたはユーザーが未設定:', { 
@@ -73,7 +73,10 @@ export default function MapOverlayManager({
     }
     
     const planNotifications = getNotificationsByPlan(plan.id, user.uid);
-    const unread = planNotifications.filter(n => !isReadByUser(n, user.uid));
+    const unread = planNotifications.filter(n => 
+      !isReadByUser(n, user.uid) && 
+      n.addedBy.uid !== user.uid // 自分が追加した場所の通知は表示しない
+    );
     
     console.log('[通知表示] 通知の状況:', {
       planId: plan.id,
