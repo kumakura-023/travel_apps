@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNotificationStore } from '../store/notificationStore';
 import { useAuthStore } from '../hooks/useAuth';
 import { usePlanStore } from '../store/planStore';
@@ -85,7 +86,7 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, o
     return new Date(timestamp).toLocaleDateString('ja-JP');
   };
 
-  return (
+  return createPortal(
     <div 
       className="fixed inset-0 bg-black/60 backdrop-blur-md z-[1000] flex items-center justify-center p-4
                  animate-modal-fade-in"
@@ -229,7 +230,8 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, o
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
