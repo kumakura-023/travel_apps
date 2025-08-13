@@ -37,7 +37,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
   const { isTouchDevice } = useDeviceDetect();
   const { setPlace } = useSelectedPlaceStore();
   const { user } = useAuthStore();
-  const { getNotificationsByPlan, isReadByUser } = useNotificationStore();
+  const { notifications, getNotificationsByPlan, isReadByUser } = useNotificationStore();
 
   // この地点に未読通知があるかチェック（自分が追加した場所は除外）
   const hasUnreadNotification = useMemo(() => {
@@ -48,7 +48,7 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
       !isReadByUser(n, user.uid) && 
       n.addedBy.uid !== user.uid // 自分が追加した場所の通知は除外
     );
-  }, [plan, user, place.id, getNotificationsByPlan, isReadByUser]);
+  }, [plan, user, place.id, getNotificationsByPlan, isReadByUser, notifications]); // notifications配列も依存に追加
 
   const color = getCategoryColor(place.category);
   const shouldShowOverlay = zoom >= 15; // より高いズームレベルで詳細表示
