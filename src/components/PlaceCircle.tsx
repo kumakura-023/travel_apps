@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { OverlayView } from '@react-google-maps/api';
 import { Place } from '../types';
 import { useSavedPlacesStore } from '../store/savedPlacesStore';
@@ -9,6 +9,8 @@ import { getCategoryColor, getCategoryDisplayName } from '../utils/categoryIcons
 import { PlaceSimpleOverlay } from './PlaceSimpleOverlay';
 import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
 import { FiInfo } from 'react-icons/fi';
+import { useNotificationStore } from '../store/notificationStore';
+import { useAuthStore } from '../hooks/useAuth';
 
 interface Props {
   place: Place;
@@ -34,6 +36,17 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
   const { setSelectedOrigin, setSelectedDestination, openRouteSearch } = useRouteSearchStore();
   const { isTouchDevice } = useDeviceDetect();
   const { setPlace } = useSelectedPlaceStore();
+  const { user } = useAuthStore();
+  const { getNotificationsByPlan, isReadByUser } = useNotificationStore();
+
+  // この地点に未読通知があるかチェック
+  const hasUnreadNotification = useMemo(() => {
+    if (!plan || !user) return false;
+    const planNotifications = getNotificationsByPlan(plan.id, user.uid);
+    return planNotifications.some(n => 
+      n.placeId === place.id && !isReadByUser(n, user.uid)
+    );
+  }, [plan, user, place.id, getNotificationsByPlan, isReadByUser]);
 
   const color = getCategoryColor(place.category);
   const shouldShowOverlay = zoom >= 15; // より高いズームレベルで詳細表示
@@ -74,8 +87,8 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
 
   return (
     <>
-      {/* 簡易オーバーレイ（ズーム6〜10） */}
-      {shouldShowSimpleOverlay && (
+      {/* 簡易オーバーレイ（ズーム6〜10） - 未読通知がある場合は非表示 */}
+      {shouldShowSimpleOverlay && !hasUnreadNotification && (
         <OverlayView
           position={place.coordinates}
           mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
@@ -83,8 +96,8 @@ export default function PlaceCircle({ place, zoom = 14 }: Props) {
           <PlaceSimpleOverlay place={place} position={{ x: 0, y: 0 }} />
         </OverlayView>
       )}
-      {/* 詳細オーバーレイ（ズーム12以上） */}
-      {shouldShowOverlay && (
+      {/* 詳細オーバーレイ（ズーム12以上） - 未読通知がある場合は非表示 */}
+      {shouldShowOverlay && !hasUnreadNotification && (
         <OverlayView
           position={place.coordinates}
           mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
