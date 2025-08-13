@@ -6,7 +6,6 @@ import { usePlanStore } from './planStore';
 import { getPlanCoordinator, getEventBus } from '../services/ServiceContainer';
 import { useAuthStore } from '../hooks/useAuth';
 import { PlaceEventBus } from '../events/PlaceEvents';
-import { useNotificationStore } from './notificationStore';
 
 interface PlacesState {
   places: Place[];
@@ -103,43 +102,14 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
         }
       }
 
-      // 通知を生成（自分が追加した候補地を他のプラン参加者に通知）
-      // 自分が追加した場合、他のメンバーが後で確認できるように通知を作成
+      // 通知の作成はPlanCoordinatorで一元管理するため、ここでは作成しない
+      // （重複を防ぐため、Firestore同期時にのみ通知を作成）
       if (plan && user && newPlace.addedBy?.uid) {
-        console.log('[通知デバッグ] 通知作成条件を満たしました:', {
+        console.log('[通知デバッグ] 場所が追加されました。通知はPlanCoordinatorで作成されます:', {
           planId: plan.id,
-          planName: plan.name,
           userId: user.uid,
-          userDisplayName: user.displayName,
           placeId: newPlace.id,
           placeName: newPlace.name,
-          addedBy: newPlace.addedBy,
-          planMembers: plan.members ? Object.keys(plan.members) : []
-        });
-        
-        // ここで通知を作成
-        // 注意: 通知は各ユーザーが個別に既読管理するため、自分が追加したものも含めて作成
-        const notificationStore = useNotificationStore.getState();
-        notificationStore.addNotification({
-          placeId: newPlace.id,
-          placeName: newPlace.name,
-          placeCategory: newPlace.category,
-          addedBy: {
-            uid: newPlace.addedBy.uid,
-            displayName: newPlace.addedBy.displayName || 'ユーザー'
-          },
-          planId: plan.id,
-          position: newPlace.coordinates
-        });
-        
-        console.log('[通知デバッグ] 通知作成を要求しました');
-      } else {
-        console.log('[通知デバッグ] 通知作成条件を満たしませんでした:', {
-          hasPlan: !!plan,
-          hasUser: !!user,
-          hasAddedBy: !!newPlace.addedBy?.uid,
-          planId: plan?.id,
-          userId: user?.uid,
           addedBy: newPlace.addedBy
         });
       }

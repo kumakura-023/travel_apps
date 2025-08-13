@@ -52,6 +52,22 @@ export const useNotificationStore = create<NotificationStore>()(
       },
 
       addNotification: (notification) => {
+        // 同じ場所・同じ追加者の通知が既に存在するかチェック
+        const existingNotification = get().notifications.find(n => 
+          n.placeId === notification.placeId && 
+          n.planId === notification.planId &&
+          n.addedBy.uid === notification.addedBy.uid
+        );
+
+        if (existingNotification) {
+          console.log('[通知ストア] 重複通知をスキップ:', {
+            placeId: notification.placeId,
+            placeName: notification.placeName,
+            addedByUid: notification.addedBy.uid
+          });
+          return;
+        }
+
         const newNotification: PlaceNotification = {
           ...notification,
           id: uuidv4(),
