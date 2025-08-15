@@ -35,7 +35,7 @@ export function useAutoSaveNew(
         error: error as Error 
       }));
     }
-  }, [plan, userId]);
+  }, [plan?.id, userId]);
 
   const saveImmediate = useCallback(() => save('immediate'), [save]);
 
@@ -43,7 +43,7 @@ export function useAutoSaveNew(
     if (plan && options.autoSave !== false) {
       save('debounced');
     }
-  }, [plan, save, options.autoSave]);
+  }, [plan?.id, options.autoSave]);
 
   useEffect(() => {
     return () => {

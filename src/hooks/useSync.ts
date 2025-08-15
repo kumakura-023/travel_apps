@@ -54,7 +54,7 @@ export function useSync(plan: TravelPlan | null, userId: string | null, options:
         error: error as Error
       }));
     }
-  }, [plan, userId, options]);
+  }, [plan?.id, userId, options.strategy, options.debounceMs, options.localOnly]);
 
   const forceSync = useCallback(() => sync('immediate'), [sync]);
 
@@ -80,7 +80,7 @@ export function useSync(plan: TravelPlan | null, userId: string | null, options:
     if (plan && options.strategy !== 'manual') {
       sync();
     }
-  }, [plan, sync, options.strategy]);
+  }, [plan?.id, options.strategy]);
 
   useEffect(() => {
     return () => {
