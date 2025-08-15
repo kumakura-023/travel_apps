@@ -126,7 +126,7 @@ export default function MapOverlayManager({
       
       {/* 候補地のサークルとオーバーレイ */}
       {savedPlaces.map((p) => (
-        <PlaceCircle key={`place-circle-${p.id}`} place={p} zoom={zoom} />
+        <PlaceCircle key={`place-circle-${plan?.id || 'no-plan'}-${p.id}`} place={p} zoom={zoom} />
       ))}
       
       {/* 選択中の地点のマーカー */}
@@ -157,7 +157,7 @@ export default function MapOverlayManager({
       
       {/* 地点の付箋ラベル */}
       {savedPlaces.map((p) => (
-        <PlaceLabel key={`place-label-${p.id}`} place={p} zoom={zoom} />
+        <PlaceLabel key={`place-label-${plan?.id || 'no-plan'}-${p.id}`} place={p} zoom={zoom} />
       ))}
       
       {/* カスタムラベル */}

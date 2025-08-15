@@ -58,6 +58,10 @@ export class PlanCoordinator {
       
       await this.activePlanService.setActivePlanId(userId, planId);
       
+      // プラン切り替え時にオーバーレイを一時的にクリア
+      useSavedPlacesStore.getState().clearPlaces();
+      useLabelsStore.setState({ labels: [] });
+      
       await this.loadAndListenToPlan(planId);
     } catch (error) {
       console.error('[PlanCoordinator] Failed to switch plan:', error);
