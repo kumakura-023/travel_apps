@@ -23,11 +23,15 @@ export class FirestorePlanRepository implements IPlanRepository {
     const planRef = doc(this.plansCollection, plan.id);
     const payload = serializePlan(plan);
     
+    // membersからmemberIds配列を生成（プランリスト取得のため）
+    const memberIds = Object.keys(plan.members || {});
+    
     await setDoc(planRef, {
       payload,
       name: plan.name,
       ownerId: plan.ownerId,
       members: plan.members || {},
+      memberIds: memberIds, // プランリスト取得用の配列
       updatedAt: new Date(),
       lastActionPosition: plan.lastActionPosition || null
     });
@@ -85,10 +89,19 @@ export class FirestorePlanRepository implements IPlanRepository {
   async updatePlan(planId: string, update: Partial<TravelPlan>): Promise<void> {
     try {
       const planRef = doc(this.plansCollection, planId);
-      await updateDoc(planRef, {
+      
+      // updateデータを準備
+      const updateData: any = {
         ...update,
         updatedAt: serverTimestamp()
-      });
+      };
+      
+      // membersが更新される場合、memberIds配列も同期
+      if (update.members) {
+        updateData.memberIds = Object.keys(update.members);
+      }
+      
+      await updateDoc(planRef, updateData);
       console.log('[FirestorePlanRepository] Plan updated:', planId);
     } catch (error) {
       console.error('[FirestorePlanRepository] Failed to update plan:', error);

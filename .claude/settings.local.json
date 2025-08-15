@@ -19,7 +19,8 @@
       "Bash(npm install:*)",
       "Bash(true)",
       "Bash(cp:*)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(firebase deploy:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
