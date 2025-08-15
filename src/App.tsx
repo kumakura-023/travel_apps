@@ -28,6 +28,8 @@ import { usePlanStore } from './store/planStore';
 import { useAuth } from './hooks/useAuth';
 import { useAutoSave } from './hooks/useAutoSave';
 import { usePlanSyncEvents } from './hooks/usePlanSyncEvents';
+import { SyncTestComponent } from './components/test/SyncTestComponent';
+import { AutoSaveTestComponent } from './components/test/AutoSaveTestComponent';
 import { usePlaceEventListeners } from './hooks/usePlaceEventListeners';
 import { usePlanInitializer } from './hooks/usePlanInitializer';
 import AuthButton from './components/AuthButton';
@@ -249,6 +251,9 @@ function App() {
       {/* アプリ内ブラウザでログインできない場合の案内 */}
       <ExternalBrowserPrompt />
 
+      {/* 新同期システムテスト */}
+      <SyncTestComponent />
+      <AutoSaveTestComponent />
       
     </LoadScript>
   );
