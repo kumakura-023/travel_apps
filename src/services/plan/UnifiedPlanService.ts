@@ -1,4 +1,4 @@
-import { TravelPlan } from '../../types';
+import { TravelPlan, Place, Label } from '../../types';
 import { PlanOperationResult } from '../../types/PlanOperations';
 import { usePlanStore } from '../../store/planStore';
 import { useSavedPlacesStore } from '../../store/savedPlacesStore';
@@ -7,11 +7,17 @@ import { useNotificationStore } from '../../store/notificationStore';
 import { useAuthStore } from '../../hooks/useAuth';
 import { createEmptyPlan } from '../storageService';
 import { IPlanRepository } from '../../repositories/interfaces/IPlanRepository';
+import { PlanEventService } from './PlanEventService';
+import { storeEventBus } from '../../events/StoreEvents';
 
 export class UnifiedPlanService {
+  private eventService: PlanEventService;
+
   constructor(
     private planRepository: IPlanRepository
-  ) {}
+  ) {
+    this.eventService = new PlanEventService(storeEventBus);
+  }
 
   async createPlan(userId: string, name: string): Promise<PlanOperationResult> {
     try {
@@ -20,6 +26,10 @@ export class UnifiedPlanService {
 
       await this.planRepository.savePlan(newPlan);
       
+      // 新しいイベント駆動型の更新
+      this.eventService.planLoaded(newPlan);
+      
+      // 互換性のため既存の更新も実行
       this.updateStoresOptimized(newPlan);
       
       return {
@@ -44,6 +54,10 @@ export class UnifiedPlanService {
         throw new Error('プランが見つかりません');
       }
 
+      // 新しいイベント駆動型の更新
+      this.eventService.planLoaded(plan);
+      
+      // 互換性のため既存の更新も実行
       this.updateStoresOptimized(plan);
       
       return {
@@ -64,6 +78,10 @@ export class UnifiedPlanService {
     try {
       await this.planRepository.deletePlan(planId);
       
+      // 新しいイベント駆動型の削除
+      this.eventService.planDeleted(planId);
+      
+      // 互換性のため既存のクリアも実行
       this.clearAllStores();
       
       return {
@@ -97,6 +115,11 @@ export class UnifiedPlanService {
       };
 
       await this.planRepository.savePlan(duplicatedPlan);
+      
+      // 新しいイベント駆動型の更新
+      this.eventService.planLoaded(duplicatedPlan);
+      
+      // 互換性のため既存の更新も実行
       this.updateStoresOptimized(duplicatedPlan);
       
       return {
@@ -127,6 +150,11 @@ export class UnifiedPlanService {
       };
 
       await this.planRepository.savePlan(updatedPlan);
+      
+      // 新しいイベント駆動型の更新
+      this.eventService.planUpdated(planId, { name: newName, updatedAt: updatedPlan.updatedAt });
+      
+      // 互換性のため既存の更新も実行
       this.updateStoresOptimized(updatedPlan);
       
       return {
@@ -140,6 +168,114 @@ export class UnifiedPlanService {
         error: error as Error,
         message: 'プラン名の更新に失敗しました'
       };
+    }
+  }
+
+  async addPlace(planId: string, place: Place): Promise<void> {
+    // イベントを発行して新しいアーキテクチャを使用
+    this.eventService.placeAdded(planId, place);
+    
+    // 互換性のため、既存のリポジトリ操作も実行
+    const currentPlan = usePlanStore.getState().plan;
+    if (currentPlan && currentPlan.id === planId) {
+      const updatedPlan = {
+        ...currentPlan,
+        places: [...(currentPlan.places || []), place],
+        updatedAt: new Date()
+      };
+      await this.planRepository.savePlan(updatedPlan);
+    }
+  }
+
+  async updatePlace(planId: string, placeId: string, changes: Partial<Place>): Promise<void> {
+    // イベントを発行して新しいアーキテクチャを使用
+    this.eventService.placeUpdated(planId, placeId, changes);
+    
+    // 互換性のため、既存のリポジトリ操作も実行
+    const currentPlan = usePlanStore.getState().plan;
+    if (currentPlan && currentPlan.id === planId) {
+      const updatedPlaces = currentPlan.places?.map(p => 
+        p.id === placeId ? { ...p, ...changes, updatedAt: new Date() } : p
+      ) || [];
+      
+      const updatedPlan = {
+        ...currentPlan,
+        places: updatedPlaces,
+        updatedAt: new Date()
+      };
+      await this.planRepository.savePlan(updatedPlan);
+    }
+  }
+
+  async deletePlace(planId: string, placeId: string): Promise<void> {
+    // イベントを発行して新しいアーキテクチャを使用
+    this.eventService.placeDeleted(planId, placeId);
+    
+    // 互換性のため、既存のリポジトリ操作も実行
+    const currentPlan = usePlanStore.getState().plan;
+    if (currentPlan && currentPlan.id === planId) {
+      const updatedPlaces = currentPlan.places?.filter(p => p.id !== placeId) || [];
+      
+      const updatedPlan = {
+        ...currentPlan,
+        places: updatedPlaces,
+        updatedAt: new Date()
+      };
+      await this.planRepository.savePlan(updatedPlan);
+    }
+  }
+
+  async addLabel(planId: string, label: Label): Promise<void> {
+    // イベントを発行して新しいアーキテクチャを使用
+    this.eventService.labelAdded(planId, label);
+    
+    // 互換性のため、既存のリポジトリ操作も実行
+    const currentPlan = usePlanStore.getState().plan;
+    if (currentPlan && currentPlan.id === planId) {
+      const updatedPlan = {
+        ...currentPlan,
+        labels: [...(currentPlan.labels || []), label],
+        updatedAt: new Date()
+      };
+      await this.planRepository.savePlan(updatedPlan);
+    }
+  }
+
+  async updateLabel(planId: string, labelId: string, changes: Partial<Label>): Promise<void> {
+    // イベントを発行して新しいアーキテクチャを使用
+    this.eventService.labelUpdated(planId, labelId, changes);
+    
+    // 互換性のため、既存のリポジトリ操作も実行
+    const currentPlan = usePlanStore.getState().plan;
+    if (currentPlan && currentPlan.id === planId) {
+      const updatedLabels = currentPlan.labels?.map(l => 
+        l.id === labelId ? { ...l, ...changes, updatedAt: new Date() } : l
+      ) || [];
+      
+      const updatedPlan = {
+        ...currentPlan,
+        labels: updatedLabels,
+        updatedAt: new Date()
+      };
+      await this.planRepository.savePlan(updatedPlan);
+    }
+  }
+
+  async deleteLabel(planId: string, labelId: string): Promise<void> {
+    // イベントを発行して新しいアーキテクチャを使用
+    this.eventService.labelDeleted(planId, labelId);
+    
+    // 互換性のため、既存のリポジトリ操作も実行
+    const currentPlan = usePlanStore.getState().plan;
+    if (currentPlan && currentPlan.id === planId) {
+      const updatedLabels = currentPlan.labels?.filter(l => l.id !== labelId) || [];
+      
+      const updatedPlan = {
+        ...currentPlan,
+        labels: updatedLabels,
+        updatedAt: new Date()
+      };
+      await this.planRepository.savePlan(updatedPlan);
     }
   }
 

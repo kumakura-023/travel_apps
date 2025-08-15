@@ -9,15 +9,16 @@ export type PlaceCategory =
 export interface Place {
   id: string; // UUID
   name: string;
-  address: string;
+  address?: string;
   coordinates: {
     lat: number;
     lng: number;
   };
   category: PlaceCategory;
-  memo: string;
-  estimatedCost: number;
-  photos: string[];
+  memo?: string;
+  estimatedCost?: number;
+  photos?: string[];
+  imageUrls?: string[]; // 互換性のため
   createdAt: Date;
   updatedAt: Date;
   scheduledDay?: number; // 何日目に予定しているか（1始まり）
@@ -37,6 +38,7 @@ export interface Place {
     uid: string;
     displayName: string;
   };
+  planId?: string; // プランとの関連
 }
 
 export interface TravelPlan {
@@ -66,20 +68,22 @@ export interface TravelPlan {
 
 export interface MapLabel {
   id: string;
-  text: string;
+  text?: string;
   position: {
     lat: number;
     lng: number;
   };
-  fontSize: number; // px
-  fontFamily: string;
-  color: string;
-  width: number; // px
-  height: number; // px
+  fontSize?: number; // px
+  fontFamily?: string;
+  color?: string;
+  width?: number; // px
+  height?: number; // px
   linkedPlaceId?: string; // 候補地とのリンク
   createdAt: Date; // 作成時刻
   updatedAt: Date; // 更新時刻
   status?: 'new' | 'synced'; // 同期状態
+  deleted?: boolean; // 削除フラグ
+  planId?: string; // プランとの関連
 }
 
 // 2地点間移動時間表示のための型定義
@@ -115,4 +119,5 @@ export interface PlaceSelectionState {
 // モバイル/デスクトップでの操作方法
 export type SelectionMethod = 'ctrl-click' | 'long-press';
 
-export type { RouteConnection as Route }; 
+export type { RouteConnection as Route };
+export type { MapLabel as Label }; 
