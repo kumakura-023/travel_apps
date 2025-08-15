@@ -144,8 +144,11 @@ export class PlanCoordinator {
   }
 
   private updateStores(plan: TravelPlan): void {
+    const currentPlan = usePlanStore.getState().plan;
     const currentPlaces = useSavedPlacesStore.getState().places;
+    const currentLabels = useLabelsStore.getState().labels;
     const newPlaces = plan.places || [];
+    const newLabels = plan.labels || [];
     const { user } = useAuthStore.getState();
     
     // 他のユーザーが追加した新しい場所を検出
@@ -153,11 +156,13 @@ export class PlanCoordinator {
       const currentPlaceIds = new Set(currentPlaces.map(p => p.id));
       const newAddedPlaces = newPlaces.filter(p => !currentPlaceIds.has(p.id));
       
-      console.log('[PlanCoordinator] 場所の変更を検出:', {
-        現在の場所数: currentPlaces.length,
-        新しい場所数: newPlaces.length,
-        追加された場所数: newAddedPlaces.length
-      });
+      if (newAddedPlaces.length > 0) {
+        console.log('[PlanCoordinator] 場所の変更を検出:', {
+          現在の場所数: currentPlaces.length,
+          新しい場所数: newPlaces.length,
+          追加された場所数: newAddedPlaces.length
+        });
+      }
       
       // 他のユーザーが追加した場所の通知を作成
       newAddedPlaces.forEach(place => {
@@ -189,13 +194,24 @@ export class PlanCoordinator {
       });
     }
     
-    usePlanStore.setState({ 
-      plan, 
-      isLoading: false, 
-      error: null 
-    });
-    useSavedPlacesStore.setState({ places: newPlaces });
-    useLabelsStore.setState({ labels: plan.labels || [] });
+    // プランが実際に変更された場合のみ更新
+    if (!currentPlan || currentPlan.id !== plan.id || JSON.stringify(currentPlan) !== JSON.stringify(plan)) {
+      usePlanStore.setState({ 
+        plan, 
+        isLoading: false, 
+        error: null 
+      });
+    }
+    
+    // 場所が実際に変更された場合のみ更新
+    if (JSON.stringify(currentPlaces) !== JSON.stringify(newPlaces)) {
+      useSavedPlacesStore.setState({ places: newPlaces });
+    }
+    
+    // ラベルが実際に変更された場合のみ更新
+    if (JSON.stringify(currentLabels) !== JSON.stringify(newLabels)) {
+      useLabelsStore.setState({ labels: newLabels });
+    }
   }
 
   private setEmptyState(): void {

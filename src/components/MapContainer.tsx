@@ -1,5 +1,5 @@
 import { GoogleMap } from '@react-google-maps/api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import MapStateManager from './MapStateManager';
 import MapEventHandler from './MapEventHandler';
@@ -28,6 +28,7 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
   const [zoom, setZoom] = useState(14);
   const isMapInteractionEnabled = useUIStore((s) => s.isMapInteractionEnabled);
   const { plan } = usePlanStore();
+  const lastPositionRef = useRef<{ lat: number; lng: number } | null>(null);
 
   // 地図の読み込み完了時のハンドラー
   const handleMapLoad = (map: google.maps.Map) => {
@@ -54,16 +55,27 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
     });
   };
   
-  // planのlastActionPositionが変更されたら地図を移動
+  // planのlastActionPositionが実際に変更されたら地図を移動
   useEffect(() => {
     if (map && plan?.lastActionPosition?.position) {
+      const newPosition = plan.lastActionPosition.position;
+      const lastPosition = lastPositionRef.current;
       
-      // 地図の中心を移動
-      map.panTo(plan.lastActionPosition.position);
-      
-      // ズームレベルも適切に設定
-      if (map.getZoom()! < 14) {
-        map.setZoom(15);
+      // 前回の位置と比較して、実際に変更された場合のみ移動
+      if (!lastPosition || 
+          Math.abs(lastPosition.lat - newPosition.lat) > 0.000001 ||
+          Math.abs(lastPosition.lng - newPosition.lng) > 0.000001) {
+        
+        // 地図の中心を移動
+        map.panTo(newPosition);
+        
+        // ズームレベルも適切に設定
+        if (map.getZoom()! < 14) {
+          map.setZoom(15);
+        }
+        
+        // 前回の位置を更新
+        lastPositionRef.current = { ...newPosition };
       }
     }
   }, [map, plan?.lastActionPosition?.position?.lat, plan?.lastActionPosition?.position?.lng]);

@@ -27,14 +27,13 @@ export function useAutoSave(plan: TravelPlan | null, onSave?: (timestamp: number
 
   // プランのハッシュを計算（変更検知用）- 最適化版
   const calculatePlanHash = useCallback((plan: TravelPlan): string => {
-    // 軽量なハッシュ計算（IDとタイムスタンプのみ）
+    // 軽量なハッシュ計算（IDのみ、updatedAtは除外して無限ループを防ぐ）
     const placeIds = plan.places.map(p => p.id).sort().join(',');
     const labelIds = plan.labels.map(l => l.id).sort().join(',');
     const placeCount = plan.places.length;
     const labelCount = plan.labels.length;
-    const lastUpdate = plan.updatedAt.getTime();
     
-    return `${placeCount}:${labelCount}:${lastUpdate}:${placeIds}:${labelIds}`;
+    return `${placeCount}:${labelCount}:${placeIds}:${labelIds}`;
   }, []);
 
   // 同期コンテキストを取得
