@@ -29,6 +29,7 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
   const isMapInteractionEnabled = useUIStore((s) => s.isMapInteractionEnabled);
   const { plan } = usePlanStore();
   const lastPositionRef = useRef<{ lat: number; lng: number } | null>(null);
+  const planSwitchedTimeRef = useRef<number | null>(null);
 
   // プラン内の全ての場所を表示するように地図をフィット
   const fitMapToShowAllPlaces = useCallback((map: google.maps.Map) => {
@@ -88,16 +89,27 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
   // プランが変更された時の地図表示調整
   useEffect(() => {
     if (map && plan) {
-      // プラン切り替え時は全体を表示
+      // プラン切り替え時はlastPositionRefをクリアして全体を表示
+      lastPositionRef.current = null;
+      planSwitchedTimeRef.current = Date.now();
+      console.log('[MapContainer] Plan changed, clearing lastPosition and fitting map');
       fitMapToShowAllPlaces(map);
     }
-  }, [map, plan?.id]); // plan.id が変更された時にトリガー
+  }, [map, plan?.id, fitMapToShowAllPlaces]); // plan.id が変更された時にトリガー
 
   // lastActionPositionの変更は新しい場所やラベルが追加された時のみ反応
   useEffect(() => {
     if (map && plan?.lastActionPosition?.position) {
       const newPosition = plan.lastActionPosition.position;
       const lastPosition = lastPositionRef.current;
+      const timeSincePlanSwitch = planSwitchedTimeRef.current ? Date.now() - planSwitchedTimeRef.current : Infinity;
+      
+      // プラン切り替え直後（3秒以内）はlastActionPositionを無視
+      if (timeSincePlanSwitch < 3000) {
+        console.log('[MapContainer] Ignoring lastActionPosition - plan recently switched');
+        lastPositionRef.current = { ...newPosition };
+        return;
+      }
       
       // 新しい操作があった場合のみ、その位置に移動
       // ただし、プラン初期表示時は除く（fitMapToShowAllPlacesで対応済み）
@@ -105,6 +117,7 @@ export default function MapContainer({ children, showLabelToggle = true }: MapCo
           (Math.abs(lastPosition.lat - newPosition.lat) > 0.000001 ||
            Math.abs(lastPosition.lng - newPosition.lng) > 0.000001)) {
         
+        console.log('[MapContainer] Panning to lastActionPosition:', newPosition);
         // 地図の中心を移動
         map.panTo(newPosition);
         

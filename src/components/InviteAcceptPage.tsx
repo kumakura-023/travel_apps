@@ -45,23 +45,24 @@ const InviteAcceptPage: React.FC = () => {
           if (data.planId) {
             setActivePlan(data.planId);
             
-            // 新しいプランを読み込む - 通常のアプリ初期化フローを再実行
+            // 新しいプランを読み込む - プランIDを直接指定して読み込み
             try {
               console.log('[InviteAcceptPage] プラン参加後の初期化を開始:', data.planId);
               
-              // PlanCoordinatorを取得して通常の初期化フローを実行
+              // PlanCoordinatorを取得
               const coordinator = getPlanCoordinator();
               
               // クリーンアップしてから再初期化
               coordinator.cleanup();
               
-              // 少し待機してから初期化
-              await new Promise(resolve => setTimeout(resolve, 500));
+              // Firestoreの一貫性を考慮してより長く待機
+              await new Promise(resolve => setTimeout(resolve, 1000));
               
-              // 通常の初期化フローを実行（アクティブプランの自動読み込み）
-              await coordinator.initialize(user.uid);
+              // プランリストに依存せず、直接プランIDを使用して切り替え
+              console.log('[InviteAcceptPage] 直接プランを切り替え:', data.planId);
+              await coordinator.switchPlan(user.uid, data.planId);
               
-              console.log('[InviteAcceptPage] プラン初期化完了');
+              console.log('[InviteAcceptPage] プラン切り替え完了');
               
               // 成功メッセージの表示を延長
               setMessage(data.alreadyMember ? 'プランに参加済みです。アプリに移動します...' : 'プランに参加しました！アプリに移動します...');
