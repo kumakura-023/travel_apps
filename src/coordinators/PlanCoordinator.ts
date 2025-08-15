@@ -10,6 +10,8 @@ import { useAuthStore } from '../hooks/useAuth';
 
 export class PlanCoordinator {
   private currentPlanUnsubscribe?: () => void;
+  private isInitialized: boolean = false;
+  private currentUserId?: string;
   
   constructor(
     private readonly planService: PlanService,
@@ -18,6 +20,13 @@ export class PlanCoordinator {
 
   async initialize(userId: string): Promise<void> {
     console.log('[PlanCoordinator] Starting initialization for user:', userId);
+    
+    // 既に同じユーザーで初期化済みで、現在のプランが存在する場合はスキップ
+    if (this.isInitialized && this.currentUserId === userId && usePlanStore.getState().plan) {
+      console.log('[PlanCoordinator] Already initialized with plan, skipping initialization');
+      return;
+    }
+    
     try {
       // プランリストを先に初期化して完了を待つ
       console.log('[PlanCoordinator] Refreshing plan list...');
@@ -46,6 +55,8 @@ export class PlanCoordinator {
       }
       
       console.log('[PlanCoordinator] Initialization completed');
+      this.isInitialized = true;
+      this.currentUserId = userId;
     } catch (error) {
       console.error('[PlanCoordinator] Failed to initialize:', error);
       this.setErrorState(error);
@@ -63,6 +74,10 @@ export class PlanCoordinator {
       useLabelsStore.setState({ labels: [] });
       
       await this.loadAndListenToPlan(planId);
+      
+      // プラン切り替え成功時は初期化済みとして記録
+      this.isInitialized = true;
+      this.currentUserId = userId;
     } catch (error) {
       console.error('[PlanCoordinator] Failed to switch plan:', error);
       this.setErrorState(error);
@@ -112,6 +127,8 @@ export class PlanCoordinator {
 
   cleanup(): void {
     this.stopListening();
+    this.isInitialized = false;
+    this.currentUserId = undefined;
   }
 
   private async loadAndListenToPlan(planId: string): Promise<void> {

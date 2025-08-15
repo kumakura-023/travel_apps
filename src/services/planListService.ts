@@ -91,7 +91,10 @@ export function listenUserPlans(
       console.error('[planListService] Error listening to plans:', error);
       
       // memberIds配列でのクエリが失敗した場合、全プランを取得してクライアント側でフィルタリング
-      if (error.code === 'failed-precondition' || error.message.includes('memberIds')) {
+      if (error.code === 'failed-precondition' || 
+          error.code === 'permission-denied' ||
+          error.message.includes('memberIds') ||
+          error.message.includes('permissions')) {
         console.log('[planListService] Falling back to full collection scan with client-side filtering');
         
         // 全プランを取得
