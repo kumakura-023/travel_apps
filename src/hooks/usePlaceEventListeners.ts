@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { getEventBus } from '../services/ServiceContainer';
 import { PlaceEventBus } from '../events/PlaceEvents';
 import { usePlanStore } from '../store/planStore';
+import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { TravelPlan } from '../types';
 import { syncDebugUtils } from '../utils/syncDebugUtils';
 
@@ -24,9 +25,11 @@ export function usePlaceEventListeners(
     const unsubscribeAdd = placeEventBus.onPlaceAdded(({ place, source }) => {
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan && source === 'user') {
+        // savedPlacesStoreから最新のplaces配列を取得（重複を避けるため）
+        const latestPlaces = useSavedPlacesStore.getState().getFilteredPlaces();
         const planToSave: TravelPlan = {
           ...currentPlan,
-          places: [...currentPlan.places, place],
+          places: latestPlaces,
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
@@ -52,9 +55,11 @@ export function usePlaceEventListeners(
     const unsubscribeDelete = placeEventBus.onPlaceDeleted(({ placeId, place, allPlaces }) => {
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan) {
+        // savedPlacesStoreから最新のplaces配列を取得（一貫性のため）
+        const latestPlaces = useSavedPlacesStore.getState().getFilteredPlaces();
         const planToSave: TravelPlan = {
           ...currentPlan,
-          places: allPlaces,
+          places: latestPlaces,
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
@@ -79,10 +84,11 @@ export function usePlaceEventListeners(
     const unsubscribeUpdate = placeEventBus.onPlaceUpdated(({ placeId, place, changes }) => {
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan) {
-        const updatedPlaces = currentPlan.places.map(p => p.id === placeId ? place : p);
+        // savedPlacesStoreから最新のplaces配列を取得（一貫性のため）
+        const latestPlaces = useSavedPlacesStore.getState().getFilteredPlaces();
         const planToSave: TravelPlan = {
           ...currentPlan,
-          places: updatedPlaces,
+          places: latestPlaces,
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
