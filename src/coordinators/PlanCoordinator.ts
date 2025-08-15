@@ -243,4 +243,10 @@ export class PlanCoordinator {
   getPlanService(): PlanService {
     return this.planService;
   }
+
+  // Phase4で追加: UnifiedPlanServiceのアクセサ
+  getUnifiedPlanService() {
+    const { getUnifiedPlanService } = require('../services/ServiceContainer');
+    return getUnifiedPlanService();
+  }
 }

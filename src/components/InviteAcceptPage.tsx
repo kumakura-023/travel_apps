@@ -3,11 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { useAuth, isInAppBrowser } from '../hooks/useAuth';
-import { usePlanStore } from '../store/planStore';
-import { useSavedPlacesStore } from '../store/savedPlacesStore';
-import { useLabelsStore } from '../store/labelsStore';
 import { useBrowserPromptStore } from '../store/browserPromptStore';
 import { setActivePlan } from '../services/storageService';
+import { getPlanCoordinator } from '../services/ServiceContainer';
 import ExternalBrowserPrompt from './ExternalBrowserPrompt';
 
 const INVITE_TOKEN_KEY = 'pending_invite_token';
@@ -43,29 +41,34 @@ const InviteAcceptPage: React.FC = () => {
           setStatus(data.alreadyMember ? 'already' : 'success');
           setMessage(data.alreadyMember ? 'すでにこのプランのメンバーです。' : 'プランに参加しました！');
           
-          // プランストアの状態をクリア
-          usePlanStore.getState().unsubscribeFromPlan();
-          usePlanStore.getState().setPlan(null);
-          useSavedPlacesStore.setState({ places: [] });
-          useLabelsStore.setState({ labels: [] });
-          
           // アクティブプランを設定
           if (data.planId) {
             setActivePlan(data.planId);
             
-            // 新しいプランを読み込む
+            // 新しいプランを読み込む - 通常のアプリ初期化フローを再実行
             try {
-              const { loadPlanById } = await import('../services/planCloudService');
-              const loadedPlan = await loadPlanById(user.uid, data.planId);
-              if (loadedPlan) {
-                usePlanStore.getState().setPlan(loadedPlan);
-                useSavedPlacesStore.setState({ places: loadedPlan.places });
-                useLabelsStore.setState({ labels: loadedPlan.labels });
-              } else {
-                console.error('プランの読み込みに失敗: プランが見つかりません');
-              }
+              console.log('[InviteAcceptPage] プラン参加後の初期化を開始:', data.planId);
+              
+              // PlanCoordinatorを取得して通常の初期化フローを実行
+              const coordinator = getPlanCoordinator();
+              
+              // クリーンアップしてから再初期化
+              coordinator.cleanup();
+              
+              // 少し待機してから初期化
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              // 通常の初期化フローを実行（アクティブプランの自動読み込み）
+              await coordinator.initialize(user.uid);
+              
+              console.log('[InviteAcceptPage] プラン初期化完了');
+              
+              // 成功メッセージの表示を延長
+              setMessage(data.alreadyMember ? 'プランに参加済みです。アプリに移動します...' : 'プランに参加しました！アプリに移動します...');
+              
             } catch (error) {
-              console.error('プランの読み込みに失敗しました:', error);
+              console.error('プランの初期化に失敗しました:', error);
+              setMessage('プランの読み込みに失敗しました');
             }
           }
           

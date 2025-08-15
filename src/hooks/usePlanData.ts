@@ -81,16 +81,13 @@ export function usePlanData(): PlanDataHook {
     };
   }, [planWithData, selectedPlace, selectedLabel, isLoading, error]);
   
-  // 操作の実装
+  // 操作の実装（既存のサービスを使用）
   const createPlan = useCallback(async (name: string) => {
     const user = useAuthStore.getState().user;
     if (!user) throw new Error('User not authenticated');
     
-    const unifiedPlanService = planCoordinatorRef.current.getPlanService();
-    const result = await unifiedPlanService.createPlan(user.uid, name);
-    if (!result.success) {
-      throw result.error;
-    }
+    const coordinator = planCoordinatorRef.current;
+    await coordinator.createNewPlan(user.uid, name);
   }, []);
   
   const updatePlanName = useCallback(async (name: string) => {
@@ -99,11 +96,8 @@ export function usePlanData(): PlanDataHook {
     const user = useAuthStore.getState().user;
     if (!user) throw new Error('User not authenticated');
     
-    const unifiedPlanService = planCoordinatorRef.current.getPlanService();
-    const result = await unifiedPlanService.updatePlanName(user.uid, plan.id, name);
-    if (!result.success) {
-      throw result.error;
-    }
+    const unifiedPlanService = planCoordinatorRef.current.getUnifiedPlanService();
+    await unifiedPlanService.updatePlanName(user.uid, plan.id, name);
   }, [plan]);
   
   const deletePlan = useCallback(async () => {
@@ -112,11 +106,8 @@ export function usePlanData(): PlanDataHook {
     const user = useAuthStore.getState().user;
     if (!user) throw new Error('User not authenticated');
     
-    const unifiedPlanService = planCoordinatorRef.current.getPlanService();
-    const result = await unifiedPlanService.deletePlan(user.uid, plan.id);
-    if (!result.success) {
-      throw result.error;
-    }
+    const coordinator = planCoordinatorRef.current;
+    await coordinator.deletePlan(user.uid, plan.id);
   }, [plan]);
   
   const duplicatePlan = useCallback(async () => {
@@ -125,11 +116,8 @@ export function usePlanData(): PlanDataHook {
     const user = useAuthStore.getState().user;
     if (!user) throw new Error('User not authenticated');
     
-    const unifiedPlanService = planCoordinatorRef.current.getPlanService();
-    const result = await unifiedPlanService.duplicatePlan(user.uid, plan.id);
-    if (!result.success) {
-      throw result.error;
-    }
+    const unifiedPlanService = planCoordinatorRef.current.getUnifiedPlanService();
+    await unifiedPlanService.duplicatePlan(user.uid, plan.id);
   }, [plan]);
   
   const addPlace = useCallback(async (placeData: Partial<Place>) => {
@@ -148,21 +136,21 @@ export function usePlanData(): PlanDataHook {
       updatedAt: new Date()
     };
     
-    const unifiedPlanService = planCoordinatorRef.current.getPlanService();
+    const unifiedPlanService = planCoordinatorRef.current.getUnifiedPlanService();
     await unifiedPlanService.addPlace(plan.id, completePlace);
   }, [plan]);
   
   const updatePlace = useCallback(async (id: string, update: Partial<Place>) => {
     if (!plan) return;
     
-    const unifiedPlanService = planCoordinatorRef.current.getPlanService();
+    const unifiedPlanService = planCoordinatorRef.current.getUnifiedPlanService();
     await unifiedPlanService.updatePlace(plan.id, id, update);
   }, [plan]);
   
   const deletePlace = useCallback(async (id: string) => {
     if (!plan) return;
     
-    const unifiedPlanService = planCoordinatorRef.current.getPlanService();
+    const unifiedPlanService = planCoordinatorRef.current.getUnifiedPlanService();
     await unifiedPlanService.deletePlace(plan.id, id);
   }, [plan]);
   
@@ -184,21 +172,21 @@ export function usePlanData(): PlanDataHook {
       updatedAt: new Date()
     };
     
-    const unifiedPlanService = planCoordinatorRef.current.getPlanService();
+    const unifiedPlanService = planCoordinatorRef.current.getUnifiedPlanService();
     await unifiedPlanService.addLabel(plan.id, completeLabel);
   }, [plan]);
   
   const updateLabel = useCallback(async (id: string, update: Partial<Label>) => {
     if (!plan) return;
     
-    const unifiedPlanService = planCoordinatorRef.current.getPlanService();
+    const unifiedPlanService = planCoordinatorRef.current.getUnifiedPlanService();
     await unifiedPlanService.updateLabel(plan.id, id, update);
   }, [plan]);
   
   const deleteLabel = useCallback(async (id: string) => {
     if (!plan) return;
     
-    const unifiedPlanService = planCoordinatorRef.current.getPlanService();
+    const unifiedPlanService = planCoordinatorRef.current.getUnifiedPlanService();
     await unifiedPlanService.deleteLabel(plan.id, id);
   }, [plan]);
   

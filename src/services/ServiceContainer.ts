@@ -20,6 +20,7 @@ import { PlanCoordinator } from '../coordinators/PlanCoordinator';
 import { SyncManager } from './SyncManager';
 import { directionsService } from './directionsService';
 import { EventBus, eventBus } from '../events/EventBus';
+import { UnifiedPlanService } from './plan/UnifiedPlanService';
 
 // サービスの識別子
 export const SERVICE_IDENTIFIERS = {
@@ -35,6 +36,7 @@ export const SERVICE_IDENTIFIERS = {
   SYNC_SERVICE: Symbol('ISyncService'),
   DIRECTIONS_SERVICE: Symbol('IDirectionsService'),
   EVENT_BUS: Symbol('EventBus'),
+  UNIFIED_PLAN_SERVICE: Symbol('UnifiedPlanService'),
 } as const;
 
 type ServiceIdentifier = typeof SERVICE_IDENTIFIERS[keyof typeof SERVICE_IDENTIFIERS];
@@ -174,6 +176,14 @@ export function registerDefaultServices(): void {
     () => eventBus
   );
 
+  // UnifiedPlanServiceをシングルトンとして登録
+  container.registerSingleton(
+    SERVICE_IDENTIFIERS.UNIFIED_PLAN_SERVICE,
+    () => new UnifiedPlanService(
+      container.get(SERVICE_IDENTIFIERS.FIRESTORE_PLAN_REPOSITORY)
+    )
+  );
+
   // MapServiceは地図インスタンスが必要なため、
   // useGoogleMapsフック内で動的に登録される
 }
@@ -221,6 +231,10 @@ export function getDirectionsService(): IDirectionsService {
 
 export function getEventBus(): EventBus {
   return container.get<EventBus>(SERVICE_IDENTIFIERS.EVENT_BUS);
+}
+
+export function getUnifiedPlanService(): UnifiedPlanService {
+  return container.get<UnifiedPlanService>(SERVICE_IDENTIFIERS.UNIFIED_PLAN_SERVICE);
 }
 
 /**
