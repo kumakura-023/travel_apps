@@ -16,7 +16,8 @@
       "Bash(find:*)",
       "Bash(dir:*)",
       "Bash(npm install:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

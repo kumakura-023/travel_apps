@@ -25,29 +25,39 @@ export function usePlaceEventListeners(
     const unsubscribeAdd = placeEventBus.onPlaceAdded(({ place, source }) => {
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan && source === 'user') {
-        // savedPlacesStoreから最新のplaces配列を取得（重複を避けるため）
-        const latestPlaces = useSavedPlacesStore.getState().getFilteredPlaces();
-        const planToSave: TravelPlan = {
-          ...currentPlan,
-          places: latestPlaces,
-          updatedAt: new Date(),
-        };
-        usePlanStore.getState().setPlan(planToSave);
-        
-        if (saveWithSyncManager) {
-          saveWithSyncManager(planToSave, 'place_added');
+        // 重複チェック：プランに既に同じIDの場所が存在するかチェック
+        const placeExists = currentPlan.places.some(p => p.id === place.id);
+        if (!placeExists) {
+          const planToSave: TravelPlan = {
+            ...currentPlan,
+            places: [...currentPlan.places, place],
+            updatedAt: new Date(),
+          };
+          usePlanStore.getState().setPlan(planToSave);
+          
+          if (saveWithSyncManager) {
+            saveWithSyncManager(planToSave, 'place_added');
+          } else {
+            saveImmediately(planToSave);
+            saveImmediatelyCloud(planToSave);
+          }
+          
+          syncDebugUtils.log('save', {
+            type: 'event_based_sync',
+            reason: 'place_added',
+            placeName: place.name,
+            placeId: place.id,
+            timestamp: Date.now()
+          });
         } else {
-          saveImmediately(planToSave);
-          saveImmediatelyCloud(planToSave);
+          syncDebugUtils.log('ignore', {
+            type: 'event_based_sync',
+            reason: 'place_already_exists',
+            placeName: place.name,
+            placeId: place.id,
+            timestamp: Date.now()
+          });
         }
-        
-        syncDebugUtils.log('save', {
-          type: 'event_based_sync',
-          reason: 'place_added',
-          placeName: place.name,
-          placeId: place.id,
-          timestamp: Date.now()
-        });
       }
     });
 
@@ -55,11 +65,9 @@ export function usePlaceEventListeners(
     const unsubscribeDelete = placeEventBus.onPlaceDeleted(({ placeId, place, allPlaces }) => {
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan) {
-        // savedPlacesStoreから最新のplaces配列を取得（一貫性のため）
-        const latestPlaces = useSavedPlacesStore.getState().getFilteredPlaces();
         const planToSave: TravelPlan = {
           ...currentPlan,
-          places: latestPlaces,
+          places: allPlaces,
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
@@ -84,11 +92,10 @@ export function usePlaceEventListeners(
     const unsubscribeUpdate = placeEventBus.onPlaceUpdated(({ placeId, place, changes }) => {
       const currentPlan = usePlanStore.getState().plan;
       if (currentPlan) {
-        // savedPlacesStoreから最新のplaces配列を取得（一貫性のため）
-        const latestPlaces = useSavedPlacesStore.getState().getFilteredPlaces();
+        const updatedPlaces = currentPlan.places.map(p => p.id === placeId ? place : p);
         const planToSave: TravelPlan = {
           ...currentPlan,
-          places: latestPlaces,
+          places: updatedPlaces,
           updatedAt: new Date(),
         };
         usePlanStore.getState().setPlan(planToSave);
