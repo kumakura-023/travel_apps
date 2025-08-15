@@ -20,14 +20,26 @@ export interface ConflictInfo {
   field: string;
   localValue: any;
   remoteValue: any;
+  localChange: ChangeMetadata;
+  remoteChange: ChangeMetadata;
   resolutionStrategy?: 'accept-local' | 'accept-remote' | 'merge';
+  severity: 'low' | 'medium' | 'high';
 }
 
 export interface ResolutionLog {
-  reason: 'self-change' | 'no-conflicts' | 'conflicts-resolved';
+  reason: 'self-change' | 'no-conflicts' | 'conflicts-resolved' | 'merge-applied';
   conflicts?: number;
-  strategy?: string;
+  strategy?: ConflictResolutionStrategy;
   timestamp: number;
+  details?: string;
+  conflictItems?: string[];
+}
+
+export interface ConflictResolutionResult {
+  resolved: VersionedPlan;
+  hadConflicts: boolean;
+  resolutionLog: ResolutionLog;
+  appliedChanges: ChangeMetadata[];
 }
 
 export type ConflictResolutionStrategy = 'last-write-wins' | 'merge-non-conflicting' | 'user-choice';

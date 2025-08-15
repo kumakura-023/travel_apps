@@ -17,7 +17,9 @@
       "Bash(dir:*)",
       "Bash(npm install:*)",
       "Bash(npm install:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(cp:*)",
+      "Bash(touch:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

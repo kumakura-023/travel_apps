@@ -2,17 +2,21 @@ import { create } from 'zustand';
 import { TravelPlan } from '../types';
 
 interface PlanState {
+  // 新しい責任範囲：プランメタデータのみ
   plan: TravelPlan | null;
   isLoading: boolean;
   error: string | null;
   
-  // プラン更新リスナー
-  onPlanUpdated?: (plan: TravelPlan) => void;
-  setOnPlanUpdated: (callback: (plan: TravelPlan) => void) => void;
-  
-  // 互換性のための一時的なメソッド（将来的に削除予定）
+  // 基本操作
   setPlan: (plan: TravelPlan | null) => void;
   updatePlan: (update: Partial<TravelPlan>) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearPlan: () => void;
+  
+  // 互換性のための非推奨メソッド（段階的に削除予定）
+  onPlanUpdated?: (plan: TravelPlan) => void;
+  setOnPlanUpdated: (callback: (plan: TravelPlan) => void) => void;
   listenToPlan: (planId: string) => void;
   unsubscribeFromPlan: () => void;
   updateLastActionPosition: (position: google.maps.LatLngLiteral, actionType: 'place' | 'label') => Promise<void>;
@@ -21,20 +25,16 @@ interface PlanState {
 
 export const usePlanStore = create<PlanState>((set, get) => ({
   plan: null,
-  isLoading: true,
+  isLoading: false,
   error: null,
   
-  // プラン更新リスナー
-  onPlanUpdated: undefined,
-  setOnPlanUpdated: (callback) => set({ onPlanUpdated: callback }),
-  
-  // 互換性のための一時的なメソッド実装
-  setPlan: (plan) => set({ plan }),
+  // 基本操作
+  setPlan: (plan) => set({ plan, error: null }),
   updatePlan: (update) => set((state) => {
     if (state.plan) {
-      const updatedPlan = { ...state.plan, ...update };
+      const updatedPlan = { ...state.plan, ...update, updatedAt: new Date() };
       
-      // 更新後のコールバックを実行
+      // 既存のコールバック互換性のため
       if (state.onPlanUpdated) {
         state.onPlanUpdated(updatedPlan);
       }
@@ -43,16 +43,23 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     }
     return state;
   }),
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+  clearPlan: () => set({ plan: null, error: null, isLoading: false }),
+  
+  // 互換性のための非推奨メソッド
+  onPlanUpdated: undefined,
+  setOnPlanUpdated: (callback) => set({ onPlanUpdated: callback }),
   listenToPlan: () => {
-    console.warn('[planStore] listenToPlan is deprecated. Use PlanCoordinator instead.');
+    console.warn('[planStore] listenToPlan is deprecated. Use UnifiedPlanService or PlanLifecycleManager instead.');
   },
   unsubscribeFromPlan: () => {
-    console.warn('[planStore] unsubscribeFromPlan is deprecated. Use PlanCoordinator instead.');
+    console.warn('[planStore] unsubscribeFromPlan is deprecated. Use UnifiedPlanService or PlanLifecycleManager instead.');
   },
   updateLastActionPosition: async () => {
-    console.warn('[planStore] updateLastActionPosition is deprecated. Use PlanService instead.');
+    console.warn('[planStore] updateLastActionPosition is deprecated. Use UnifiedPlanService instead.');
   },
   setActivePlanId: async () => {
-    console.warn('[planStore] setActivePlanId is deprecated. Use ActivePlanService instead.');
+    console.warn('[planStore] setActivePlanId is deprecated. Use UnifiedPlanService instead.');
   }
 })); 

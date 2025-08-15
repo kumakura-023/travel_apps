@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { TravelPlan } from '../types';
 import { SyncCoordinator, SyncStrategy } from '../services/sync/SyncCoordinator';
 import { RealtimeWatcher } from '../services/sync/RealtimeWatcher';
-import { ConflictResolver } from '../services/sync/ConflictResolver';
+import { ConflictResolver } from '../services/conflict/ConflictResolver';
 
 export interface UseSyncOptions {
   strategy?: SyncStrategy;

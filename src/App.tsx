@@ -9,7 +9,6 @@ import { TabKey } from './components/TabNavigation';
 
 import TravelTimeControls from './components/TravelTimeControls';
 import SelectionBanner from './components/SelectionBanner';
-import TestPlacesButton from './components/TestPlacesButton';
 import RouteSearchPanel from './components/RouteSearchPanel';
 import Tutorial from './components/Tutorial';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
@@ -20,22 +19,18 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useSelectedPlaceStore } from './store/selectedPlaceStore';
 import { useTravelTimeStore } from './store/travelTimeStore';
 import PlaceList from './components/PlaceList';
-import { useSavedPlacesStore } from './store/savedPlacesStore';
-import { useLabelsStore } from './store/labelsStore';
 import { useLabelModeStore } from './store/labelModeStore';
 import PlanNameDisplay from './components/PlanNameDisplay';
 import { usePlanStore } from './store/planStore';
 import { useAuth } from './hooks/useAuth';
 import { useAutoSave } from './hooks/useAutoSave';
 import { usePlanSyncEvents } from './hooks/usePlanSyncEvents';
+import { UnifiedPlanTestComponent } from './components/test/UnifiedPlanTestComponent';
+import { PlanLifecycleTestComponent } from './components/test/PlanLifecycleTestComponent';
+import { ConflictResolutionTestComponent } from './components/test/ConflictResolutionTestComponent';
 import { usePlaceEventListeners } from './hooks/usePlaceEventListeners';
 import { usePlanInitializer } from './hooks/usePlanInitializer';
-import AuthButton from './components/AuthButton';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
-import SyncTestButton from './components/SyncTestButton';
-import SyncDebugButton from './components/SyncDebugButton';
-import { syncDebugUtils } from './utils/syncDebugUtils';
-import SharePlanModal from './components/SharePlanModal';
 import ExternalBrowserPrompt from './components/ExternalBrowserPrompt';
 import { config, validateEnvironment } from './config/environment';
 import { ErrorHandler } from './errors';
@@ -52,6 +47,34 @@ ErrorHandler.setupGlobalHandlers();
 function App() {
   const apiKey = config.googleMapsApiKey;
   
+  // フックは常に同じ順序で呼び出す必要がある
+  const { isDesktop } = useDeviceDetect();
+  const { panTo, zoomIn, zoomOut } = useGoogleMaps();
+
+  const searchRef = useRef<HTMLInputElement>(null);
+  
+  // チュートリアル・ヘルプ関連のstate
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const { plan } = usePlanStore();
+  
+  // Tab navigation state
+  const [activeTab, setActiveTab] = React.useState<TabKey>('map');
+  
+  const { labelMode } = useLabelModeStore();
+  
+  // Route search store
+  const { 
+    isRouteSearchOpen, 
+    selectedOrigin, 
+    selectedDestination,
+    closeRouteSearch 
+  } = useRouteSearchStore();
+  
+  // 認証状態と初期化完了フラグを取得
+  const { user } = useAuth();
+  
+  // APIキーが設定されていない場合の早期リターン
   if (!apiKey) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
@@ -68,17 +91,6 @@ function App() {
     );
   }
 
-  const { isDesktop } = useDeviceDetect();
-  const { panTo, zoomIn, zoomOut } = useGoogleMaps();
-
-  const searchRef = useRef<HTMLInputElement>(null);
-  
-  // チュートリアル・ヘルプ関連のstate
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
-  const [shareModalOpen, setShareModalOpen] = useState(false);
-  const { plan } = usePlanStore();
-
   const focusSearch = useCallback(() => {
     searchRef.current?.focus();
   }, []);
@@ -94,6 +106,27 @@ function App() {
   const showHelp = useCallback(() => {
     setShowKeyboardShortcuts(true);
   }, []);
+
+  const handleTutorialClose = useCallback(() => {
+    setShowTutorial(false);
+    localStorage.setItem('travel-app-tutorial-seen', 'true');
+  }, []);
+
+  const handlePlaceSelected = (lat: number, lng: number) => {
+    panTo(lat, lng, 17);
+  };
+
+  // 保存タイムスタンプを更新する関数
+  const updateLastSavedTimestamp = useCallback((timestamp: number) => {
+    // timestamp管理用（未使用警告を避ける）
+    console.log('Timestamp updated:', timestamp);
+  }, []);
+
+  // 自動保存フックを使用
+  const { saveImmediately, saveImmediatelyCloud, saveWithSyncManager } = useAutoSave(plan, updateLastSavedTimestamp);
+
+  // 新しいプラン初期化フックを使用
+  usePlanInitializer();
 
   useKeyboardShortcuts({
     isDesktop,
@@ -116,22 +149,6 @@ function App() {
     }
   }, []);
 
-  const handleTutorialClose = useCallback(() => {
-    setShowTutorial(false);
-    localStorage.setItem('travel-app-tutorial-seen', 'true');
-  }, []);
-
-  const handlePlaceSelected = (lat: number, lng: number) => {
-    panTo(lat, lng, 17);
-  };
-
-  const placeOpen = !!useSelectedPlaceStore((s) => s.place);
-
-  // Tab navigation state
-  const [activeTab, setActiveTab] = React.useState<TabKey>('map');
-  
-  const { labelMode } = useLabelModeStore();
-
   // ESCキーでラベルモードを終了
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -143,14 +160,6 @@ function App() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
-  
-  // Route search store
-  const { 
-    isRouteSearchOpen, 
-    selectedOrigin, 
-    selectedDestination,
-    closeRouteSearch 
-  } = useRouteSearchStore();
 
   // Enable/disable travel-time store based on active tab
   React.useEffect(() => {
@@ -163,28 +172,10 @@ function App() {
     }
   }, [activeTab]);
 
-  // 認証状態と初期化完了フラグを取得
-  const { user, isInitializing } = useAuth();
-  const planId = usePlanStore((s) => s.plan?.id);
-  
-  // 自動保存のタイムスタンプを管理
-  const lastSavedTimestampRef = useRef<number>(0);
-  
-  // 保存タイムスタンプを更新する関数
-  const updateLastSavedTimestamp = useCallback((timestamp: number) => {
-    lastSavedTimestampRef.current = timestamp;
-  }, []);
-
-  // 自動保存フックを使用
-  const { setIsRemoteUpdateInProgress, saveImmediately, saveImmediatelyCloud, lastCloudSaveTimestamp, getSelfUpdateFlag, saveWithSyncManager } = useAutoSave(plan, updateLastSavedTimestamp);
-
   usePlanSyncEvents(plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager);
   
   // 新しいイベントベースのリスナーも設定
   usePlaceEventListeners(saveImmediately, saveImmediatelyCloud, saveWithSyncManager);
-
-  // 新しいプラン初期化フックを使用
-  const { isInitialized } = usePlanInitializer();
 
   return (
     <LoadScript googleMapsApiKey={apiKey} language="ja" region="JP" libraries={LIBRARIES}>
@@ -249,6 +240,14 @@ function App() {
       {/* アプリ内ブラウザでログインできない場合の案内 */}
       <ExternalBrowserPrompt />
 
+      {/* UnifiedPlanService テスト */}
+      <UnifiedPlanTestComponent />
+      
+      {/* PlanLifecycle テスト */}
+      <PlanLifecycleTestComponent />
+      
+      {/* ConflictResolution テスト */}
+      <ConflictResolutionTestComponent />
       
     </LoadScript>
   );
