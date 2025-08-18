@@ -139,7 +139,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
       window.removeEventListener('pointercancel', handlePointerUp);
       mapClickListener?.remove();
     };
-  }, [mode, map, onMove, onResize, setMapInteraction]);
+  }, [mode, map, onMove, onResize]);
 
   // Zoom listener
   useEffect(() => {
