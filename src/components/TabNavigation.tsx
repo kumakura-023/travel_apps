@@ -1,9 +1,10 @@
-import { MdMap, MdAccessTime, MdList, MdEditNote } from 'react-icons/md';
+import { MdMap, MdAccessTime, MdList, MdEditNote, MdFilterList } from 'react-icons/md';
 import { BellIcon } from '@heroicons/react/24/outline';
 import AuthButton from './AuthButton';
 import { useLabelModeStore } from '../store/labelModeStore';
 import { useNotificationStore } from '../store/notificationStore';
 import { useAuthStore } from '../hooks/useAuth';
+import { useUIStore } from '../store/uiStore';
 import { useState } from 'react';
 import NotificationListModal from './NotificationListModal';
 
@@ -25,9 +26,11 @@ const TabNavigation: React.FC<Props> = ({ active, onChange, isVisible }) => {
   const { labelMode, toggleLabelMode } = useLabelModeStore();
   const { user } = useAuthStore();
   const { getUnreadCount } = useNotificationStore();
+  const { selectedCategories, openCategoryFilterModal } = useUIStore();
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   
   const unreadCount = user ? getUnreadCount(user.uid) : 0;
+  const hasActiveFilters = selectedCategories.length > 0;
   return (
     <nav className={`glass-effect-border rounded-xl flex flex-col items-center py-3 z-40 transition-all duration-300 ease-ios-default ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
       <AuthButton />
@@ -63,6 +66,30 @@ const TabNavigation: React.FC<Props> = ({ active, onChange, isVisible }) => {
         <MdEditNote size={24} />
         <span className="caption-2 mt-1 select-none font-medium">
           {labelMode ? '配置中' : 'メモ'}
+        </span>
+      </button>
+
+      <button
+        className={`relative flex flex-col items-center justify-center w-full h-16 rounded-lg mx-1 my-1 group transition-all duration-150 ease-ios-default hover:scale-105 active:scale-95 ${
+          hasActiveFilters
+            ? 'text-white bg-coral-500 border border-coral-400/30'
+            : 'text-system-secondary-label hover:text-coral-500 hover:bg-coral-500/5'
+        }`}
+        onClick={openCategoryFilterModal}
+        title="カテゴリフィルター"
+      >
+        <div className="relative">
+          <MdFilterList size={24} />
+          {hasActiveFilters && (
+            <div className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-white rounded-full flex items-center justify-center">
+              <span className="text-coral-500 text-xs font-bold px-1">
+                {selectedCategories.length > 9 ? '9+' : selectedCategories.length}
+              </span>
+            </div>
+          )}
+        </div>
+        <span className="caption-2 mt-1 select-none font-medium">
+          フィルター
         </span>
       </button>
 

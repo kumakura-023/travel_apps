@@ -18,7 +18,6 @@ import { useGoogleMaps } from './hooks/useGoogleMaps';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useTravelTimeStore } from './store/travelTimeStore';
 import PlaceList from './components/PlaceList';
-import MapCategoryFilter from './components/MapCategoryFilter';
 import { useLabelModeStore } from './store/labelModeStore';
 import PlanNameDisplay from './components/PlanNameDisplay';
 import { usePlanStore } from './store/planStore';
@@ -29,6 +28,8 @@ import { usePlaceEventListeners } from './hooks/usePlaceEventListeners';
 import { usePlanInitializer } from './hooks/usePlanInitializer';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 import ExternalBrowserPrompt from './components/ExternalBrowserPrompt';
+import CategoryFilterModal from './components/CategoryFilterModal';
+import { useUIStore } from './store/uiStore';
 import { config, validateEnvironment } from './config/environment';
 import { ErrorHandler } from './errors';
 
@@ -58,6 +59,8 @@ function App() {
   // Tab navigation state
   const [activeTab, setActiveTab] = React.useState<TabKey>('map');
   
+  // UI Store
+  const { isCategoryFilterModalOpen, closeCategoryFilterModal } = useUIStore();
   
   // Route search store
   const { 
@@ -192,12 +195,6 @@ function App() {
         />
       )}
       
-      {/* マップタブでのみカテゴリフィルターを表示 */}
-      {!isRouteSearchOpen && activeTab === 'map' && (
-        <div className="fixed top-28 left-4 right-4 z-30 max-w-md mx-auto">
-          <MapCategoryFilter />
-        </div>
-      )}
       
       <PlaceDetailPanel />
       
@@ -243,6 +240,12 @@ function App() {
 
       {/* アプリ内ブラウザでログインできない場合の案内 */}
       <ExternalBrowserPrompt />
+
+      {/* カテゴリフィルターモーダル */}
+      <CategoryFilterModal 
+        isOpen={isCategoryFilterModalOpen}
+        onClose={closeCategoryFilterModal}
+      />
 
       
     </LoadScript>
