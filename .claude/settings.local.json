@@ -33,7 +33,13 @@
       "mcp__serena-local__replace_symbol_body",
       "mcp__serena-local__find_file",
       "WebFetch(domain:voyagesketch.vercel.app)",
-      "mcp__serena-local__find_referencing_symbols"
+      "mcp__serena-local__find_referencing_symbols",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_handle_dialog"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
