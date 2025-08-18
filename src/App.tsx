@@ -194,7 +194,7 @@ function App() {
       
       {/* マップタブでのみカテゴリフィルターを表示 */}
       {!isRouteSearchOpen && activeTab === 'map' && (
-        <div className="fixed top-[4.5rem] left-4 right-4 z-40 max-w-md mx-auto">
+        <div className="fixed top-20 left-4 right-4 z-40 max-w-md mx-auto">
           <MapCategoryFilter />
         </div>
       )}
