@@ -12,6 +12,7 @@ import { getCategoryColor } from '../utils/categoryIcons';
 import { useNotificationStore } from '../store/notificationStore';
 import { useAuthStore } from '../hooks/useAuth';
 import { usePlanStore } from '../store/planStore';
+import { useUIStore } from '../store/uiStore';
 import { OverlayView } from '@react-google-maps/api';
 
 // コンポーネントのインポート
@@ -61,6 +62,15 @@ export default function MapOverlayManager({
   const { user } = useAuthStore();
   const { plan } = usePlanStore();
   const { notifications, isReadByUser, markAsRead, getNotificationsByPlan } = useNotificationStore();
+  const { selectedCategories } = useUIStore();
+
+  // カテゴリフィルタリングを適用
+  const filteredPlaces = useMemo(() => {
+    if (selectedCategories.length === 0) {
+      return savedPlaces; // 何も選択されていない場合は全て表示
+    }
+    return savedPlaces.filter(place => selectedCategories.includes(place.category));
+  }, [savedPlaces, selectedCategories]);
 
   // 現在のプランの未読通知を取得（自分が追加した場所の通知は除外）
   const unreadNotifications = useMemo(() => {
@@ -125,7 +135,7 @@ export default function MapOverlayManager({
       <PlaceMarkerCluster zoom={zoom} threshold={15} />
       
       {/* 候補地のサークルとオーバーレイ */}
-      {savedPlaces.map((p) => (
+      {filteredPlaces.map((p) => (
         <PlaceCircle key={`place-circle-${plan?.id || 'no-plan'}-${p.id}`} place={p} zoom={zoom} />
       ))}
       

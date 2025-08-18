@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer';
 import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
+import { useUIStore } from '../store/uiStore';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { getCategoryColor } from '../utils/categoryIcons';
 
@@ -15,8 +16,17 @@ const PlaceMarkerCluster: React.FC<PlaceMarkerClusterProps> = ({
   threshold = 10 
 }) => {
   const { map } = useGoogleMaps();
-  const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
+  const savedPlaces = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const { setPlace } = useSelectedPlaceStore();
+  const { selectedCategories } = useUIStore();
+
+  // カテゴリフィルタリングを適用
+  const places = useMemo(() => {
+    if (selectedCategories.length === 0) {
+      return savedPlaces; // 何も選択されていない場合は全て表示
+    }
+    return savedPlaces.filter(place => selectedCategories.includes(place.category));
+  }, [savedPlaces, selectedCategories]);
   const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const [shouldCluster, setShouldCluster] = useState(false);

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useSavedPlacesStore } from '../store/savedPlacesStore';
 import { usePlanStore } from '../store/planStore';
 import { useLabelsStore } from '../store/labelsStore';
+import { useUIStore } from '../store/uiStore';
 import { Place } from '../types';
 import PlaceListItem from './PlaceListItem';
 import CategoryFilter from './CategoryFilter';
@@ -15,8 +16,8 @@ export default function PlaceList() {
   const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const { plan } = usePlanStore();
   const { labels } = useLabelsStore();
+  const { selectedCategories, setSelectedCategories } = useUIStore();
   const [search, setSearch] = useState('');
-  const [selectedCats, setSelectedCats] = useState([] as string[]);
   const [selectedDay, setSelectedDay] = useState<number | undefined>(undefined);
   const [sortKey, setSortKey] = useState<'name' | 'cost' | 'date' | 'day'>('date');
   const [sortAsc, setSortAsc] = useState(false);
@@ -36,8 +37,8 @@ export default function PlaceList() {
     }
     
     // カテゴリフィルター
-    if (selectedCats.length) {
-      arr = arr.filter((p) => selectedCats.includes(p.category));
+    if (selectedCategories.length) {
+      arr = arr.filter((p) => selectedCategories.includes(p.category));
     }
     
     // 日程フィルター
@@ -89,7 +90,7 @@ export default function PlaceList() {
       return sortAsc ? v : -v;
     });
     return arr;
-  }, [places, labels, search, selectedCats, selectedDay, sortKey, sortAsc, showMemoOnly, memoSearch]);
+  }, [places, labels, search, selectedCategories, selectedDay, sortKey, sortAsc, showMemoOnly, memoSearch]);
 
   return (
     <div className="fixed inset-0 glass-effect overflow-y-auto z-30 safe-area-inset">
@@ -169,7 +170,7 @@ export default function PlaceList() {
           
           <div className="space-y-2">
             <label className="subheadline text-system-label font-medium">カテゴリフィルター</label>
-            <CategoryFilter selected={selectedCats as any} onChange={setSelectedCats as any} />
+            <CategoryFilter selected={selectedCategories} onChange={setSelectedCategories} />
           </div>
           
           <div className="space-y-2">

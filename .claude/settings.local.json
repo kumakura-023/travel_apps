@@ -20,9 +20,22 @@
       "Bash(true)",
       "Bash(cp:*)",
       "Bash(touch:*)",
-      "Bash(firebase deploy:*)"
+      "Bash(firebase deploy:*)",
+      "mcp__serena-local__check_onboarding_performed",
+      "mcp__serena-local__onboarding",
+      "mcp__serena-local__list_dir",
+      "mcp__serena-local__find_symbol",
+      "mcp__serena-local__search_for_pattern",
+      "mcp__serena-local__get_symbols_overview",
+      "mcp__serena-local__think_about_collected_information",
+      "mcp__serena-local__write_memory",
+      "mcp__serena-local__think_about_task_adherence",
+      "mcp__serena-local__replace_symbol_body"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
-  }
+  },
+  "enabledMcpjsonServers": [
+    "serena-local"
+  ]
 }

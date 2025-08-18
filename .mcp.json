@@ -1,0 +1,14 @@
+{
+    "mcpServers": {
+      "serena-local": {
+        "command": "uvx",
+        "args": [
+          "--from", "git+https://github.com/oraios/serena",
+          "serena", "start-mcp-server",
+          "--context", "ide-assistant",
+          "--project", "C:\\cursor\\travel_app\\travel_app",
+          "--transport", "stdio"
+        ]
+      }
+    }
+  }
