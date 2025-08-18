@@ -28,4 +28,9 @@ Thumbs.db
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp
+
+# Serena (MCP) related files
+.serena/
+.serena_*
+serena_* 
