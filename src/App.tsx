@@ -18,6 +18,7 @@ import { useGoogleMaps } from './hooks/useGoogleMaps';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useTravelTimeStore } from './store/travelTimeStore';
 import PlaceList from './components/PlaceList';
+import MapCategoryFilter from './components/MapCategoryFilter';
 import { useLabelModeStore } from './store/labelModeStore';
 import PlanNameDisplay from './components/PlanNameDisplay';
 import { usePlanStore } from './store/planStore';
@@ -190,6 +191,14 @@ function App() {
           onClearExternal={() => {}}
         />
       )}
+      
+      {/* マップタブでのみカテゴリフィルターを表示 */}
+      {!isRouteSearchOpen && activeTab === 'map' && (
+        <div className="fixed top-[4.5rem] left-4 right-4 z-40 max-w-md mx-auto">
+          <MapCategoryFilter />
+        </div>
+      )}
+      
       <PlaceDetailPanel />
       
       {/* 地点選択中のバナー */}
