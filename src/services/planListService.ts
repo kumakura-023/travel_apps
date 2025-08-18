@@ -37,6 +37,8 @@ export function listenUserPlans(
   
   const plansRef = collection(db, 'plans');
   
+  console.log(`[planListService] Starting to listen for plans for user ${user.uid}, useSort: ${useSort}`);
+  
   // まずmemberIds配列でクエリを試みる
   const q = useSort
     ? query(
@@ -52,6 +54,7 @@ export function listenUserPlans(
   return onSnapshot(
     q,
     (snapshot) => {
+      console.log(`[planListService] Successfully retrieved ${snapshot.size} plans with memberIds query`);
       const plans: PlanListItem[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
@@ -88,73 +91,78 @@ export function listenUserPlans(
       onUpdate(plans);
     },
     (error) => {
-      console.error('[planListService] Error listening to plans:', error);
+      console.error('[planListService] Error listening to plans with memberIds query:', error);
+      console.error('[planListService] Error code:', error.code);
+      console.error('[planListService] Error message:', error.message);
       
-      // memberIds配列でのクエリが失敗した場合、全プランを取得してクライアント側でフィルタリング
-      if (error.code === 'failed-precondition' || 
-          error.code === 'permission-denied' ||
-          error.message.includes('memberIds') ||
-          error.message.includes('permissions')) {
-        console.log('[planListService] Falling back to full collection scan with client-side filtering');
-        
-        // 全プランを取得
-        const allPlansQuery = query(plansRef);
-        
-        return onSnapshot(
-          allPlansQuery,
-          (snapshot) => {
-            const plans: PlanListItem[] = [];
+      // Firestoreルールを更新したため、単純な全コレクションクエリを試行
+      console.log('[planListService] Falling back to full collection scan with client-side filtering');
+      
+      const allPlansQuery = query(plansRef);
+      
+      return onSnapshot(
+        allPlansQuery,
+        (snapshot) => {
+          console.log(`[planListService] Successfully retrieved ${snapshot.size} plans with full scan`);
+          const plans: PlanListItem[] = [];
+          
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            const members = data.members || {};
+            const memberIds = data.memberIds || [];
             
-            snapshot.forEach((doc) => {
-              const data = doc.data();
-              const members = data.members || {};
+            // クライアント側でメンバーチェック（両方の形式をサポート）
+            const isMember = members[user.uid] || 
+                           memberIds.includes(user.uid) || 
+                           data.ownerId === user.uid;
+            
+            if (isMember) {
+              let placeCount = 0;
+              let totalCost = 0;
               
-              // クライアント側でメンバーチェック
-              if (members[user.uid] || data.ownerId === user.uid) {
-                let placeCount = 0;
-                let totalCost = 0;
-                
-                try {
-                  if (data.payload) {
-                    const payload = JSON.parse(data.payload);
-                    placeCount = payload.places?.length || 0;
-                    totalCost = payload.totalCost || 0;
-                  }
-                } catch (e) {
-                  console.error('[planListService] Failed to parse payload:', e);
+              try {
+                if (data.payload) {
+                  const payload = JSON.parse(data.payload);
+                  placeCount = payload.places?.length || 0;
+                  totalCost = payload.totalCost || 0;
                 }
-                
-                plans.push({
-                  id: doc.id,
-                  name: data.name || '名称未設定',
-                  ownerId: data.ownerId,
-                  memberCount: Object.keys(members).length,
-                  placeCount,
-                  totalCost,
-                  updatedAt: data.updatedAt?.toDate() || new Date(),
-                  createdAt: data.createdAt?.toDate() || new Date(),
-                });
+              } catch (e) {
+                console.error('[planListService] Failed to parse payload:', e);
               }
-            });
-            
-            // クライアント側でソート
-            plans.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-            
-            console.log(`[planListService] Found ${plans.length} plans for user after client-side filtering`);
-            onUpdate(plans);
-          },
-          (fallbackError) => {
-            console.error('[planListService] Fallback query also failed:', fallbackError);
-            if (onError) {
-              onError(fallbackError);
+              
+              plans.push({
+                id: doc.id,
+                name: data.name || '名称未設定',
+                ownerId: data.ownerId,
+                memberCount: Object.keys(members).length,
+                placeCount,
+                totalCost,
+                updatedAt: data.updatedAt?.toDate() || new Date(),
+                createdAt: data.createdAt?.toDate() || new Date(),
+              });
             }
+          });
+          
+          // クライアント側でソート
+          plans.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+          
+          console.log(`[planListService] Found ${plans.length} plans for user after client-side filtering`);
+          onUpdate(plans);
+        },
+        (fallbackError) => {
+          console.error('[planListService] Fallback query also failed:', fallbackError);
+          console.error('[planListService] Fallback error code:', fallbackError.code);
+          console.error('[planListService] Fallback error message:', fallbackError.message);
+          
+          // 最終フォールバック：空のリストを返す
+          console.log('[planListService] All queries failed, returning empty list');
+          onUpdate([]);
+          
+          if (onError) {
+            onError(new Error(`プラン一覧の取得に失敗しました。権限設定を確認してください。エラー: ${fallbackError.message}`));
           }
-        );
-      }
-      
-      if (onError) {
-        onError(error);
-      }
+        }
+      );
     }
   );
 }

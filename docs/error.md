@@ -1,27 +1,26 @@
+index--nnscMTS.js:3472 [planListService] Error listening to plans: FirebaseError: Missing or insufficient permissions.
+
+index--nnscMTS.js:3472 [planListService] Falling back to full collection scan with client-side filtering
+index--nnscMTS.js:3472 [planListService] Found 3 plans for user after client-side filtering
+index--nnscMTS.js:3472 [planListService] Fallback query also failed: FirebaseError: Missing or insufficient permissions.
+index--nnscMTS.js:3472 [planListStore] Error with sorted query: FirebaseError: Missing or insufficient permissions.
+
 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3472 [labelsStore] Saving last action position for new label: {labelId: 'faa896d8-f989-4e66-9583-fad08a9e6b79', text: '', position: {…}}
-index-DaNJUkLm.js:3472 [PlanService] Updating last action position: {planId: 'a1d01ed8-e9b8-4ed0-b714-607b670afbba', position: {…}, userId: 'hkd6j5M4E5eMB0bpI6eLuIEaOwD2', actionType: 'label'}
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3472 [planListServiceNoSort] Received plans snapshot: 2 plans
-index-DaNJUkLm.js:3472 [planListServiceNoSort] Document change: {type: 'modified', id: 'a1d01ed8-e9b8-4ed0-b714-607b670afbba', data: {…}}
-index-DaNJUkLm.js:3472 [planListServiceNoSort] Processed plans: (2) [{…}, {…}]
-index-DaNJUkLm.js:3472 [PlanCoordinator] Plan updated via listener: a1d01ed8-e9b8-4ed0-b714-607b670afbba
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3472 [FirestorePlanRepository] Plan updated: a1d01ed8-e9b8-4ed0-b714-607b670afbba
-index-DaNJUkLm.js:3472 [PlanService] Last action position updated successfully
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3472 [labelsStore] Last action position saved successfully
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3472 [planListServiceNoSort] Received plans snapshot: 2 plans
-index-DaNJUkLm.js:3472 [planListServiceNoSort] Document change: {type: 'modified', id: 'a1d01ed8-e9b8-4ed0-b714-607b670afbba', data: {…}}
-index-DaNJUkLm.js:3472 [planListServiceNoSort] Processed plans: (2) [{…}, {…}]
-index-DaNJUkLm.js:3472 [PlanCoordinator] Plan updated via listener: a1d01ed8-e9b8-4ed0-b714-607b670afbba
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
-index-DaNJUkLm.js:3666 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index--nnscMTS.js:3838 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index--nnscMTS.js:3838 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index--nnscMTS.js:3838 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index--nnscMTS.js:3838 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+index--nnscMTS.js:3838 RouteMarkers render: {hasOrigin: false, hasDestination: false, origin: null, destination: null}
+vendor-DWvC8KHc.js:32 Error: Minified React error #185; visit https://reactjs.org/docs/error-decoder.html?invariant=185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at Re (vendor-DWvC8KHc.js:32:33651)
+    at ia (vendor-DWvC8KHc.js:30:19759)
+    at vendor-DWvC8KHc.js:30:19622
+    at utils-E1DIqedg.js:1:244
+    at Set.forEach (<anonymous>)
+    at r (utils-E1DIqedg.js:1:233)
+    at setMapInteraction (index--nnscMTS.js:3648:26383)
+    at index--nnscMTS.js:3658:1801
+    at ol (vendor-DWvC8KHc.js:32:24177)
+    at Xt (vendor-DWvC8KHc.js:32:42061)
+
+main.js:456 Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'yD')

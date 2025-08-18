@@ -17,7 +17,7 @@ interface PlanListProps {
  */
 const PlanList: React.FC<PlanListProps> = ({ onSelect }) => {
   const { user } = useAuth();
-  const { plans, isLoading, error, startListening, stopListening } = usePlanListStore();
+  const { plans, isLoading, error, startListening, stopListening, refreshPlans } = usePlanListStore();
   const { listenToPlan } = usePlanStore();
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [editingName, setEditingName] = React.useState('');
@@ -64,20 +64,50 @@ const PlanList: React.FC<PlanListProps> = ({ onSelect }) => {
     }
   };
 
+  const handleRetry = () => {
+    if (user) {
+      console.log('[PlanList] Retrying to load plans');
+      refreshPlans();
+    }
+  };
+
   if (!user) {
     return <p className="text-gray-500 text-sm">ログインしてください。</p>;
   }
 
   if (isLoading) {
-    return <p className="text-gray-500 text-sm">読み込み中...</p>;
+    return (
+      <div className="flex items-center space-x-2 text-gray-500 text-sm">
+        <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+        <span>プラン一覧を読み込み中...</span>
+      </div>
+    );
   }
 
   if (error) {
-    return <p className="text-red-500 text-sm">エラー: {error}</p>;
+    return (
+      <div className="space-y-3">
+        <div className="text-red-500 text-sm p-3 bg-red-50 border border-red-200 rounded">
+          <div className="font-medium mb-1">プラン一覧の取得に失敗しました</div>
+          <div className="text-xs text-red-600">{error}</div>
+        </div>
+        <button 
+          onClick={handleRetry}
+          className="px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          再試行
+        </button>
+      </div>
+    );
   }
 
   if (plans.length === 0) {
-    return <p className="text-gray-500 text-sm">保存されたプランはありません。</p>;
+    return (
+      <div className="text-center py-8 space-y-2">
+        <p className="text-gray-500 text-sm">保存されたプランはありません。</p>
+        <p className="text-gray-400 text-xs">新しいプランを作成してください。</p>
+      </div>
+    );
   }
 
   return (

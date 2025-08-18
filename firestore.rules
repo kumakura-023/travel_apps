@@ -129,8 +129,11 @@ service cloud.firestore {
     
     // プランコレクション
     match /plans/{planId} {
-      // 読み取り: プランのメンバーのみ
-      allow read: if resource == null || canViewPlan(resource.data);
+      // リスト取得: 認証済みユーザー（クライアント側でフィルタリング）
+      allow list: if isValidAuth();
+      
+      // 個別読み取り: プランのメンバーのみ
+      allow get: if resource == null || canViewPlan(resource.data);
       
       // 作成: 認証済みユーザー、自身がオーナーかつメンバーに含まれる
       allow create: if isValidAuth() && 
