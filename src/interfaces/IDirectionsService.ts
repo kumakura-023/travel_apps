@@ -26,7 +26,7 @@ export interface RouteRequest {
  */
 export interface RouteResult {
   duration: number; // seconds
-  distance: number; // meters  
+  distance: number; // meters
   durationText: string;
   distanceText: string;
   route: google.maps.DirectionsResult;
@@ -67,7 +67,7 @@ export interface IDirectionsService {
   calculateTravelTime(
     origin: { lat: number; lng: number },
     destination: { lat: number; lng: number },
-    travelMode: google.maps.TravelMode
+    travelMode: google.maps.TravelMode,
   ): Promise<number>;
 
   /**
@@ -80,7 +80,7 @@ export interface IDirectionsService {
   calculateDistance(
     origin: { lat: number; lng: number },
     destination: { lat: number; lng: number },
-    travelMode: google.maps.TravelMode
+    travelMode: google.maps.TravelMode,
   ): Promise<number>;
 
   /**
@@ -95,6 +95,6 @@ export interface IDirectionsService {
     origin: { lat: number; lng: number },
     destination: { lat: number; lng: number },
     waypoints: Array<{ lat: number; lng: number }>,
-    travelMode: google.maps.TravelMode
+    travelMode: google.maps.TravelMode,
   ): Promise<RouteResult>;
 }

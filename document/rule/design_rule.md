@@ -3,13 +3,17 @@
 ## 🎨 デザイン原則
 
 ### 基本理念
+
 **「Clarity, Deference, Depth」** - Appleの設計原則を踏襲
+
 - **Clarity（明瞭性）**: 情報の階層を明確に、直感的な操作を実現
 - **Deference（控えめ）**: コンテンツを主役に、UIは控えめに
 - **Depth（奥行き）**: レイヤーと動きで階層構造を表現
 
 ### ブランドパーソナリティ
+
 **「楽しさ」と「洗練」の融合**
+
 - 旅のワクワク感を色彩で表現
 - Appleの洗練されたインタラクション
 - 親しみやすさと高品質の両立
@@ -17,6 +21,7 @@
 ## 🎨 カラーシステム
 
 ### プライマリカラーパレット
+
 ```css
 /* tailwind.config.js */
 colors: {
@@ -39,7 +44,7 @@ colors: {
     500: '#4ECDC4', // Secondary
     700: '#2C7A7B',
   },
-  
+
   // Apple風のシステムカラー
   'system': {
     'background': '#FFFFFF',
@@ -56,6 +61,7 @@ colors: {
 ```
 
 ### セマンティックカラー（Apple風）
+
 ```css
 /* 動的カラー */
 .dynamic-color {
@@ -66,10 +72,10 @@ colors: {
   --color-separator: rgba(0, 0, 0, 0.15);
   --color-fill: rgba(120, 120, 128, 0.2);
   --color-secondary-fill: rgba(120, 120, 128, 0.16);
-  
+
   /* アクセントカラー（ブランドカラー使用） */
-  --color-accent: #FF6B6B;
-  --color-accent-hover: #E53E3E;
+  --color-accent: #ff6b6b;
+  --color-accent-hover: #e53e3e;
 }
 
 /* ダークモード */
@@ -88,6 +94,7 @@ colors: {
 ## 📝 タイポグラフィ（SF Pro風）
 
 ### フォントシステム
+
 ```css
 /* System Font Stack */
 fontFamily: {
@@ -108,37 +115,37 @@ fontFamily: {
 }
 
 /* Dynamic Type Scale (iOS風) */
-.title-large { 
+.title-large {
   @apply text-[34px] leading-[41px] tracking-[0.374px] font-normal;
 }
-.title-1 { 
+.title-1 {
   @apply text-[28px] leading-[34px] tracking-[0.364px] font-normal;
 }
-.title-2 { 
+.title-2 {
   @apply text-[22px] leading-[28px] tracking-[0.352px] font-normal;
 }
-.title-3 { 
+.title-3 {
   @apply text-[20px] leading-[25px] tracking-[0.38px] font-normal;
 }
-.headline { 
+.headline {
   @apply text-[17px] leading-[22px] tracking-[-0.408px] font-semibold;
 }
-.body { 
+.body {
   @apply text-[17px] leading-[22px] tracking-[-0.408px] font-normal;
 }
-.callout { 
+.callout {
   @apply text-[16px] leading-[21px] tracking-[-0.32px] font-normal;
 }
-.subheadline { 
+.subheadline {
   @apply text-[15px] leading-[20px] tracking-[-0.24px] font-normal;
 }
-.footnote { 
+.footnote {
   @apply text-[13px] leading-[18px] tracking-[-0.078px] font-normal;
 }
-.caption-1 { 
+.caption-1 {
   @apply text-[12px] leading-[16px] tracking-[0px] font-normal;
 }
-.caption-2 { 
+.caption-2 {
   @apply text-[11px] leading-[13px] tracking-[0.066px] font-normal;
 }
 ```
@@ -146,6 +153,7 @@ fontFamily: {
 ## 📐 レイアウトシステム
 
 ### 余白（Apple風の精密な間隔）
+
 ```css
 /* Spacing Scale (4pt基準) */
 spacing: {
@@ -172,6 +180,7 @@ spacing: {
 ```
 
 ### セーフエリア（iOS対応）
+
 ```css
 /* iPhone のノッチ・ホームインジケータ対応 */
 .safe-area-inset {
@@ -193,6 +202,7 @@ spacing: {
 ## 🔲 視覚効果
 
 ### 角丸（Apple風の洗練された曲線）
+
 ```css
 borderRadius: {
   'none': '0',
@@ -202,7 +212,7 @@ borderRadius: {
   'xl': '16px',   // 大きなカード
   '2xl': '20px',  // シート、大モーダル
   'full': '9999px', // 完全円形
-  
+
   /* iOS風の連続性のある角丸 */
   'ios-sm': '10px',
   'ios-md': '14px',
@@ -212,6 +222,7 @@ borderRadius: {
 ```
 
 ### 影とぼかし効果
+
 ```css
 /* Apple風の繊細な影 */
 boxShadow: {
@@ -221,7 +232,7 @@ boxShadow: {
   'elevation-3': '0 5px 10px rgba(0, 0, 0, 0.08)',
   'elevation-4': '0 8px 30px rgba(0, 0, 0, 0.08)',
   'elevation-5': '0 16px 40px rgba(0, 0, 0, 0.12)',
-  
+
   /* ブランドカラーの影（旅行アプリ用） */
   'coral-glow': '0 4px 20px rgba(255, 107, 107, 0.25)',
   'teal-glow': '0 4px 20px rgba(78, 205, 196, 0.25)',
@@ -242,6 +253,7 @@ boxShadow: {
 ## 🧩 コンポーネント設計
 
 ### ボタン（iOS風）
+
 ```css
 /* ベースボタン */
 .btn {
@@ -249,7 +261,7 @@ boxShadow: {
   @apply font-system text-[17px] font-normal tracking-[-0.408px];
   @apply transition-all duration-100 ease-out;
   @apply select-none touch-manipulation;
-  
+
   /* タップ時のフィードバック */
   @apply active:scale-[0.96] active:opacity-60;
 }
@@ -286,6 +298,7 @@ boxShadow: {
 ```
 
 ### カード（Material You × iOS）
+
 ```css
 /* ベースカード */
 .card {
@@ -321,6 +334,7 @@ boxShadow: {
 ```
 
 ### フォーム要素（iOS風）
+
 ```css
 /* テキストフィールド */
 .input {
@@ -330,7 +344,7 @@ boxShadow: {
   @apply text-[17px] tracking-[-0.408px];
   @apply placeholder-system-tertiary-label;
   @apply transition-all duration-150;
-  
+
   /* フォーカス時 */
   @apply focus:outline-none focus:ring-2 focus:ring-coral-500/30;
   @apply focus:bg-white;
@@ -361,6 +375,7 @@ boxShadow: {
 ```
 
 ### ナビゲーション（iOS風）
+
 ```css
 /* ナビゲーションバー */
 .navbar {
@@ -396,6 +411,7 @@ boxShadow: {
 ```
 
 ### モーダル・シート（iOS風）
+
 ```css
 /* モーダル背景 */
 .modal-backdrop {
@@ -411,7 +427,7 @@ boxShadow: {
   @apply shadow-elevation-5;
   @apply z-50;
   @apply safe-area-inset;
-  
+
   /* スワイプハンドル */
   &::before {
     @apply content-[''] absolute top-2 left-1/2 -translate-x-1/2;
@@ -441,29 +457,44 @@ boxShadow: {
 ## ⚡ アニメーション
 
 ### トランジション（iOS風の自然な動き）
+
 ```css
 /* Easing Functions (iOS風) */
-.ease-ios-default { 
+.ease-ios-default {
   transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-.ease-ios-in-out { 
+.ease-ios-in-out {
   transition-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
 }
-.ease-ios-out { 
+.ease-ios-out {
   transition-timing-function: cubic-bezier(0.19, 0.91, 0.38, 1);
 }
 
 /* Duration */
-.duration-ios-fast { transition-duration: 150ms; }
-.duration-ios-base { transition-duration: 250ms; }
-.duration-ios-slow { transition-duration: 350ms; }
+.duration-ios-fast {
+  transition-duration: 150ms;
+}
+.duration-ios-base {
+  transition-duration: 250ms;
+}
+.duration-ios-slow {
+  transition-duration: 350ms;
+}
 
 /* スプリングアニメーション風 */
 @keyframes spring-scale {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.05); }
-  60% { transform: scale(0.95); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.05);
+  }
+  60% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .animate-spring {
@@ -474,6 +505,7 @@ boxShadow: {
 ## ♿ アクセシビリティ
 
 ### Dynamic Type対応
+
 ```css
 /* テキストサイズの自動調整 */
 @supports (font: -apple-system-body) {
@@ -490,12 +522,13 @@ boxShadow: {
 ```
 
 ### ハイコントラストモード
+
 ```css
 @media (prefers-contrast: high) {
   .btn-primary {
     @apply bg-black text-white border-2 border-white;
   }
-  
+
   .card {
     @apply border-2 border-black;
   }
@@ -503,10 +536,13 @@ boxShadow: {
 ```
 
 ### モーション設定
+
 ```css
 /* 動きを減らす設定 */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -518,6 +554,7 @@ boxShadow: {
 ## 🎯 実装例
 
 ### 完全なカードコンポーネント
+
 ```html
 <!-- ホテルカード（統合デザイン） -->
 <div class="card card-interactive p-5 space-y-4">
@@ -525,21 +562,23 @@ boxShadow: {
   <div class="flex items-start justify-between">
     <div class="flex-1">
       <h3 class="headline text-system-label">ヒルトン東京</h3>
-      <p class="footnote text-system-secondary-label mt-1">
-        新宿区西新宿6-6-2
-      </p>
+      <p class="footnote text-system-secondary-label mt-1">新宿区西新宿6-6-2</p>
     </div>
-    <span class="px-3 py-1 bg-teal-500/10 text-teal-700 
-                 rounded-full caption-1 font-medium">
+    <span
+      class="px-3 py-1 bg-teal-500/10 text-teal-700 
+                 rounded-full caption-1 font-medium"
+    >
       ホテル
     </span>
   </div>
-  
+
   <!-- 画像 -->
   <div class="relative -mx-5 px-5">
-    <img src="/hotel.jpg" 
-         class="w-full h-48 object-cover rounded-lg" 
-         alt="ヒルトン東京">
+    <img
+      src="/hotel.jpg"
+      class="w-full h-48 object-cover rounded-lg"
+      alt="ヒルトン東京"
+    />
     <div class="absolute top-3 right-3">
       <button class="glass-effect rounded-full p-2">
         <svg class="w-5 h-5 text-coral-500">
@@ -548,7 +587,7 @@ boxShadow: {
       </button>
     </div>
   </div>
-  
+
   <!-- 詳細情報 -->
   <div class="flex items-center justify-between">
     <div class="flex items-center space-x-3">
@@ -567,12 +606,10 @@ boxShadow: {
       <span class="caption-1 text-system-secondary-label">/泊</span>
     </span>
   </div>
-  
+
   <!-- アクション -->
   <div class="flex space-x-2 pt-2">
-    <button class="btn-primary flex-1">
-      予約する
-    </button>
+    <button class="btn-primary flex-1">予約する</button>
     <button class="btn-secondary px-4">
       <svg class="w-5 h-5">
         <!-- share icon -->
@@ -583,50 +620,47 @@ boxShadow: {
 ```
 
 ### ボトムシートの実装例
+
 ```html
 <!-- iOS風ボトムシート -->
 <div class="modal-backdrop"></div>
 <div class="sheet">
   <div class="p-5 space-y-4">
     <h2 class="title-3 text-center">フィルター</h2>
-    
+
     <!-- 価格帯 -->
     <div class="space-y-2">
       <label class="headline">価格帯</label>
       <div class="flex space-x-2">
-        <input type="text" class="input flex-1" placeholder="最低価格">
+        <input type="text" class="input flex-1" placeholder="最低価格" />
         <span class="subheadline self-center">〜</span>
-        <input type="text" class="input flex-1" placeholder="最高価格">
+        <input type="text" class="input flex-1" placeholder="最高価格" />
       </div>
     </div>
-    
+
     <!-- カテゴリー -->
     <div class="space-y-2">
       <label class="headline">カテゴリー</label>
       <div class="card-list">
         <label class="card-list-item">
           <span class="body">ホテル</span>
-          <input type="checkbox" class="checkbox">
+          <input type="checkbox" class="checkbox" />
         </label>
         <label class="card-list-item">
           <span class="body">レストラン</span>
-          <input type="checkbox" class="checkbox">
+          <input type="checkbox" class="checkbox" />
         </label>
         <label class="card-list-item">
           <span class="body">アクティビティ</span>
-          <input type="checkbox" class="checkbox">
+          <input type="checkbox" class="checkbox" />
         </label>
       </div>
     </div>
-    
+
     <!-- アクションボタン -->
     <div class="flex space-x-2 pt-4">
-      <button class="btn-secondary flex-1">
-        リセット
-      </button>
-      <button class="btn-primary flex-1">
-        適用
-      </button>
+      <button class="btn-secondary flex-1">リセット</button>
+      <button class="btn-primary flex-1">適用</button>
     </div>
   </div>
 </div>
@@ -635,33 +669,37 @@ boxShadow: {
 ## 📋 デザイントークン一覧
 
 ### カラートークン
-| トークン名 | 値 | 用途 |
-|---------|-----|-----|
-| coral-500 | #FF6B6B | プライマリアクション |
-| teal-500 | #4ECDC4 | セカンダリアクション |
-| system-label | rgba(0,0,0,0.85) | メインテキスト |
-| system-secondary-label | rgba(0,0,0,0.5) | サブテキスト |
+
+| トークン名             | 値               | 用途                 |
+| ---------------------- | ---------------- | -------------------- |
+| coral-500              | #FF6B6B          | プライマリアクション |
+| teal-500               | #4ECDC4          | セカンダリアクション |
+| system-label           | rgba(0,0,0,0.85) | メインテキスト       |
+| system-secondary-label | rgba(0,0,0,0.5)  | サブテキスト         |
 
 ### スペーシングトークン
-| トークン名 | 値 | 用途 |
-|---------|-----|-----|
-| spacing-1 | 4px | 最小間隔 |
-| spacing-4 | 16px | 標準間隔 |
-| spacing-8 | 32px | セクション間隔 |
+
+| トークン名 | 値   | 用途           |
+| ---------- | ---- | -------------- |
+| spacing-1  | 4px  | 最小間隔       |
+| spacing-4  | 16px | 標準間隔       |
+| spacing-8  | 32px | セクション間隔 |
 
 ### 角丸トークン
-| トークン名 | 値 | 用途 |
-|---------|-----|-----|
-| rounded-md | 8px | インプット |
-| rounded-lg | 12px | カード |
-| rounded-xl | 16px | モーダル |
+
+| トークン名 | 値   | 用途       |
+| ---------- | ---- | ---------- |
+| rounded-md | 8px  | インプット |
+| rounded-lg | 12px | カード     |
+| rounded-xl | 16px | モーダル   |
 
 ### シャドウトークン
-| トークン名 | 値 | 用途 |
-|---------|-----|-----|
-| elevation-1 | 0 1px 2px rgba(0,0,0,0.04) | 最小標高 |
-| elevation-2 | 0 2px 8px rgba(0,0,0,0.04) | カード標準 |
-| elevation-3 | 0 5px 10px rgba(0,0,0,0.08) | ホバー時 |
+
+| トークン名  | 値                          | 用途       |
+| ----------- | --------------------------- | ---------- |
+| elevation-1 | 0 1px 2px rgba(0,0,0,0.04)  | 最小標高   |
+| elevation-2 | 0 2px 8px rgba(0,0,0,0.04)  | カード標準 |
+| elevation-3 | 0 5px 10px rgba(0,0,0,0.08) | ホバー時   |
 
 ## 🚀 実装ガイドライン
 
@@ -697,6 +735,7 @@ boxShadow: {
 今回のプラン名ボタンとモーダル実装で確立した新しいデザインパターンを記録します。
 
 #### 分離された操作UI
+
 ```css
 /* 複数の操作を含むコンポーネントの設計原則 */
 .multi-action-container {
@@ -726,6 +765,7 @@ boxShadow: {
 ```
 
 #### 日付バッジデザイン
+
 ```css
 /* 階層的な情報表示バッジ */
 .date-badge {
@@ -744,6 +784,7 @@ boxShadow: {
 ```
 
 #### モーダルヘッダーパターン
+
 ```css
 /* アイコン付きモーダルヘッダー */
 .modal-header {
@@ -764,6 +805,7 @@ boxShadow: {
 ```
 
 #### カレンダーUIパターン
+
 ```css
 /* 日本語対応カレンダー */
 .calendar-grid {
@@ -799,6 +841,7 @@ boxShadow: {
 ```
 
 #### 範囲選択フィードバック
+
 ```css
 /* 選択状況表示パネル */
 .selection-feedback {
@@ -819,6 +862,7 @@ boxShadow: {
 ```
 
 #### リアルタイム検証UI
+
 ```css
 /* 入力検証とフィードバック */
 .input-with-validation {
@@ -837,19 +881,24 @@ boxShadow: {
 ```
 
 #### モーダルアニメーション（追加）
+
 ```css
 /* カスタムモーダルアニメーション */
 @keyframes modal-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modal-zoom-in {
-  from { 
+  from {
     opacity: 0;
     transform: scale(0.95) translateY(8px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
@@ -867,24 +916,22 @@ boxShadow: {
 ### 実装例
 
 #### 分離操作UI実装例
+
 ```tsx
 // プラン名と日程の分離された操作
 <div className="glass-effect rounded-xl px-6 py-3 pointer-events-none">
   <div className="flex flex-col items-center space-y-1">
     {/* プラン名 - 個別クリック */}
-    <button 
+    <button
       className="text-action-button pointer-events-auto"
       onClick={handleNameEdit}
     >
       {planName}
     </button>
-    
+
     {/* 日程 - 個別操作 */}
     <div className="flex items-center space-x-2 pointer-events-auto">
-      <button 
-        className="icon-action-button"
-        onClick={handleDateEdit}
-      >
+      <button className="icon-action-button" onClick={handleDateEdit}>
         <CalendarIcon />
       </button>
       <div className="date-badge pointer-events-none">
@@ -897,6 +944,7 @@ boxShadow: {
 ```
 
 #### カレンダーモーダル実装例
+
 ```tsx
 // 範囲選択カレンダー
 <div className="calendar-grid">
@@ -909,15 +957,17 @@ boxShadow: {
       {date.getDate()}
     </button>
   ))}
-</div>
+</div>;
 
-{/* 選択フィードバック */}
+{
+  /* 選択フィードバック */
+}
 <div className="selection-feedback">
   <div className="selection-feedback-item">
     <span className="selection-feedback-label">出発日:</span>
     <span className="selection-feedback-value">{startDate}</span>
   </div>
-</div>
+</div>;
 ```
 
 ### デザイン原則（追加）

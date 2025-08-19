@@ -1,9 +1,14 @@
-import React, { useEffect, useRef } from 'react';
-import { DirectionsRenderer, Marker } from '@react-google-maps/api';
-import { RouteConnection } from '../types';
-import { useRouteConnectionsStore } from '../store/routeStoreMigration';
-import { useGoogleMaps } from '../hooks/useGoogleMaps';
-import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit } from 'react-icons/md';
+import React, { useEffect, useRef } from "react";
+import { DirectionsRenderer, Marker } from "@react-google-maps/api";
+import { RouteConnection } from "../types";
+import { useRouteConnectionsStore } from "../store/routeStoreMigration";
+import { useGoogleMaps } from "../hooks/useGoogleMaps";
+import {
+  MdClose,
+  MdDirectionsWalk,
+  MdDirectionsCar,
+  MdDirectionsTransit,
+} from "react-icons/md";
 
 interface Props {
   route: RouteConnection;
@@ -14,7 +19,9 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
   const { map } = useGoogleMaps();
   const { removeRoute } = useRouteConnectionsStore();
   const overlayRef = useRef<google.maps.OverlayView | null>(null);
-  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
+  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(
+    null,
+  );
 
   // ズーム比率に応じたスケール計算（下限値を2倍に変更）
   const scale = Math.max(0.34, Math.min(0.67, Math.pow(2, zoom - 14) / 3));
@@ -36,20 +43,23 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
     }
 
     // ルートの中点を計算
-    const midPoint = calculateMidPoint(route.originCoordinates, route.destinationCoordinates);
+    const midPoint = calculateMidPoint(
+      route.originCoordinates,
+      route.destinationCoordinates,
+    );
 
     // カスタムオーバーレイクラスを作成
     class RouteInfoOverlay extends google.maps.OverlayView {
       private div: HTMLDivElement | null = null;
 
       onAdd() {
-        this.div = document.createElement('div');
-        this.div.style.position = 'absolute';
-        this.div.style.cursor = 'auto';
-        this.div.style.userSelect = 'none';
-        this.div.style.zIndex = '1000';
+        this.div = document.createElement("div");
+        this.div.style.position = "absolute";
+        this.div.style.cursor = "auto";
+        this.div.style.userSelect = "none";
+        this.div.style.zIndex = "1000";
         this.div.style.transform = `scale(${scale})`;
-        this.div.style.transformOrigin = 'center';
+        this.div.style.transformOrigin = "center";
 
         // design_ruleに沿ったルート情報オーバーレイの内容
         this.div.innerHTML = `
@@ -161,9 +171,11 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
         `;
 
         // 削除ボタンのクリックイベントを追加
-        const deleteBtn = this.div.querySelector(`#delete-route-btn-${route.id}`);
+        const deleteBtn = this.div.querySelector(
+          `#delete-route-btn-${route.id}`,
+        );
         if (deleteBtn) {
-          deleteBtn.addEventListener('click', (e) => {
+          deleteBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             handleDelete();
           });
@@ -183,12 +195,12 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
         if (!projection) return;
 
         const position = projection.fromLatLngToDivPixel(
-          new google.maps.LatLng(midPoint.lat, midPoint.lng)
+          new google.maps.LatLng(midPoint.lat, midPoint.lng),
         );
 
         if (position) {
-          this.div.style.left = position.x - 150 + 'px'; // 中央揃え（幅300pxの半分）
-          this.div.style.top = position.y - 35 + 'px'; // 中央揃え
+          this.div.style.left = position.x - 150 + "px"; // 中央揃え（幅300pxの半分）
+          this.div.style.top = position.y - 35 + "px"; // 中央揃え
         }
       }
 
@@ -211,7 +223,14 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
         overlayRef.current = null;
       }
     };
-  }, [map, shouldShowOverlay, route.id, route.durationText, route.distanceText, scale]);
+  }, [
+    map,
+    shouldShowOverlay,
+    route.id,
+    route.durationText,
+    route.distanceText,
+    scale,
+  ]);
 
   // コンポーネントがアンマウントされるときのクリーンアップ
   useEffect(() => {
@@ -228,40 +247,37 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
   }, [route.id]);
 
   const handleDelete = () => {
-    
     try {
       // オーバーレイを削除
       if (overlayRef.current) {
         overlayRef.current.setMap(null);
         overlayRef.current = null;
       }
-      
+
       // DirectionsRendererを削除
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setMap(null);
         directionsRendererRef.current = null;
       }
-      
+
       // ストアから削除
       removeRoute(route.id);
-      
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   // 移動手段のアイコンを取得
   const getTravelModeIcon = () => {
     switch (route.travelMode) {
       case google.maps.TravelMode.WALKING:
-        return '🚶';
+        return "🚶";
       case google.maps.TravelMode.DRIVING:
-        return '🚗';
+        return "🚗";
       case google.maps.TravelMode.TRANSIT:
-        return '🚇';
+        return "🚇";
       case google.maps.TravelMode.BICYCLING:
-        return '🚴';
+        return "🚴";
       default:
-        return '🚗';
+        return "🚗";
     }
   };
 
@@ -269,22 +285,22 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
   const getTravelModeLabel = () => {
     switch (route.travelMode) {
       case google.maps.TravelMode.WALKING:
-        return '徒歩';
+        return "徒歩";
       case google.maps.TravelMode.DRIVING:
-        return '車';
+        return "車";
       case google.maps.TravelMode.TRANSIT:
-        return '電車';
+        return "電車";
       case google.maps.TravelMode.BICYCLING:
-        return '自転車';
+        return "自転車";
       default:
-        return '車';
+        return "車";
     }
   };
 
   // 2地点の中点を計算
   const calculateMidPoint = (
     origin: { lat: number; lng: number },
-    destination: { lat: number; lng: number }
+    destination: { lat: number; lng: number },
   ) => {
     return {
       lat: (origin.lat + destination.lat) / 2,
@@ -293,21 +309,28 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
   };
 
   // 検索結果のルートかどうかを判定（search_origin_/search_destination_で始まる）
-  const isSearchRoute = route.originId.startsWith('search_origin_') || route.destinationId.startsWith('search_destination_');
-  
+  const isSearchRoute =
+    route.originId.startsWith("search_origin_") ||
+    route.destinationId.startsWith("search_destination_");
+
   // 座標が日本以外（海外）かどうかを判定
-  const isInternationalRoute = route.originCoordinates.lat < 20 || route.originCoordinates.lat > 50 || 
-                              route.originCoordinates.lng < 120 || route.originCoordinates.lng > 150 ||
-                              route.destinationCoordinates.lat < 20 || route.destinationCoordinates.lat > 50 || 
-                              route.destinationCoordinates.lng < 120 || route.destinationCoordinates.lng > 150;
-  
+  const isInternationalRoute =
+    route.originCoordinates.lat < 20 ||
+    route.originCoordinates.lat > 50 ||
+    route.originCoordinates.lng < 120 ||
+    route.originCoordinates.lng > 150 ||
+    route.destinationCoordinates.lat < 20 ||
+    route.destinationCoordinates.lat > 50 ||
+    route.destinationCoordinates.lng < 120 ||
+    route.destinationCoordinates.lng > 150;
+
   // DirectionsRendererのオプション
   const directionsOptions = {
     suppressMarkers: true, // デフォルトのマーカーを非表示
     suppressInfoWindows: true, // デフォルトのInfoWindowを非表示
     preserveViewport: !(isSearchRoute && isInternationalRoute), // 検索結果かつ海外の場合のみ地図を移動させる
     polylineOptions: {
-      strokeColor: '#EC4899', // マゼンタピンク（高視認性で自然環境でも見やすい）
+      strokeColor: "#EC4899", // マゼンタピンク（高視認性で自然環境でも見やすい）
       strokeWeight: 6,
       strokeOpacity: 0.9,
       zIndex: 100,
@@ -318,7 +341,6 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
   useEffect(() => {
     if (!map) return;
 
-    
     // 既存のDirectionsRendererがあれば削除
     if (directionsRendererRef.current) {
       directionsRendererRef.current.setMap(null);
@@ -326,17 +348,15 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
 
     try {
       // 新しいDirectionsRendererを作成
-      const directionsRenderer = new google.maps.DirectionsRenderer(directionsOptions);
-      
+      const directionsRenderer = new google.maps.DirectionsRenderer(
+        directionsOptions,
+      );
+
       directionsRenderer.setMap(map);
-      
-      
+
       directionsRenderer.setDirections(route.route);
       directionsRendererRef.current = directionsRenderer;
-      
-      
-    } catch (error) {
-    }
+    } catch (error) {}
 
     // クリーンアップ関数
     return () => {
@@ -344,8 +364,7 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
         try {
           directionsRendererRef.current.setMap(null);
           directionsRendererRef.current = null;
-        } catch (error) {
-        }
+        } catch (error) {}
       }
     };
   }, [map, route.id, isSearchRoute, isInternationalRoute]);
@@ -358,8 +377,8 @@ export default function RouteDisplay({ route, zoom = 14 }: Props) {
 export const createRouteConnection = async (
   originId: string,
   destinationId: string,
-  travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING
+  travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING,
 ): Promise<RouteConnection | null> => {
   const { createRouteBetweenPlaces } = useRouteConnectionsStore.getState();
   return await createRouteBetweenPlaces(originId, destinationId, travelMode);
-}; 
+};

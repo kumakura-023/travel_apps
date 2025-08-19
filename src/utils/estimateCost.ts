@@ -1,23 +1,26 @@
-import { PlaceCategory } from '../types';
-import { priceLevelToCost } from './priceLevelToCost';
+import { PlaceCategory } from "../types";
+import { priceLevelToCost } from "./priceLevelToCost";
 
-export function estimateCost(priceLevel: number | undefined | null, category: PlaceCategory): number {
+export function estimateCost(
+  priceLevel: number | undefined | null,
+  category: PlaceCategory,
+): number {
   if (priceLevel !== undefined && priceLevel !== null) {
     return priceLevelToCost(priceLevel);
   }
   // Fallback by category
   switch (category) {
-    case 'hotel':
+    case "hotel":
       return 15000; // 1泊目安
-    case 'restaurant':
+    case "restaurant":
       return 3000; // ランチ〜ディナー平均
-    case 'sightseeing':
+    case "sightseeing":
       return 1000; // 入館料など
-    case 'shopping':
+    case "shopping":
       return 0; // 費用はユーザー入力に任せる
-    case 'transport':
+    case "transport":
       return 0; // 移動コストは別途
     default:
       return 0;
   }
-} 
+}

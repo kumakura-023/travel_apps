@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { FiX, FiChevronLeft, FiChevronRight, FiMapPin, FiEdit, FiDollarSign } from 'react-icons/fi';
+import React, { useState, useEffect } from "react";
+import {
+  FiX,
+  FiChevronLeft,
+  FiChevronRight,
+  FiMapPin,
+  FiEdit,
+  FiDollarSign,
+} from "react-icons/fi";
 
 interface TutorialProps {
   isOpen: boolean;
@@ -18,30 +25,33 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
 
   const steps: TutorialStep[] = [
     {
-      title: '旅行の候補地を計画しよう',
-      description: '上部の検索バーで行きたい場所を探し、「候補地に追加」ボタンでプランに追加できます。追加した場所は地図上にピンで表示されます。',
+      title: "旅行の候補地を計画しよう",
+      description:
+        "上部の検索バーで行きたい場所を探し、「候補地に追加」ボタンでプランに追加できます。追加した場所は地図上にピンで表示されます。",
       icon: <FiMapPin className="w-8 h-8" />,
       tips: [
-        'レストラン、ホテル、観光地など、あらゆる場所を検索できます。',
-        '候補地はカテゴリ別に自動で色分けされ、一目でわかります。',
+        "レストラン、ホテル、観光地など、あらゆる場所を検索できます。",
+        "候補地はカテゴリ別に自動で色分けされ、一目でわかります。",
       ],
     },
     {
-      title: '地図上にメモを書き込もう',
-      description: '右側のナビゲーションバーにあるメモボタン（鉛筆アイコン）で、地図上の好きな場所にメモを直接配置できます。',
+      title: "地図上にメモを書き込もう",
+      description:
+        "右側のナビゲーションバーにあるメモボタン（鉛筆アイコン）で、地図上の好きな場所にメモを直接配置できます。",
       icon: <FiEdit className="w-8 h-8" />,
       tips: [
-        'メモはダブルタップ（スマホ）またはダブルクリック（PC）で編集できます。',
-        '近くの候補地とリンクさせて、関連情報をまとめることも可能です。',
+        "メモはダブルタップ（スマホ）またはダブルクリック（PC）で編集できます。",
+        "近くの候補地とリンクさせて、関連情報をまとめることも可能です。",
       ],
     },
     {
-      title: '予算を自動で概算しよう',
-      description: '追加した候補地の情報をもとに、旅行全体の概算費用が自動で計算され、リストタブで確認できます。',
+      title: "予算を自動で概算しよう",
+      description:
+        "追加した候補地の情報をもとに、旅行全体の概算費用が自動で計算され、リストタブで確認できます。",
       icon: <FiDollarSign className="w-8 h-8" />,
       tips: [
-        '⚠️ 注意: 費用はGoogleマップの料金レベル（$, $$, $$$）から計算される「目安」です。',
-        '正確な金額は、各店舗の公式サイトなどで必ずご確認ください。',
+        "⚠️ 注意: 費用はGoogleマップの料金レベル（$, $$, $$$）から計算される「目安」です。",
+        "正確な金額は、各店舗の公式サイトなどで必ずご確認ください。",
       ],
     },
   ];
@@ -66,18 +76,18 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
-      } else if (e.key === 'ArrowRight') {
+      } else if (e.key === "ArrowRight") {
         handleNext();
-      } else if (e.key === 'ArrowLeft') {
+      } else if (e.key === "ArrowLeft") {
         handlePrev();
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
     }
   }, [isOpen, currentStep, handleNext, handlePrev, onClose]);
 
@@ -90,10 +100,10 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <div className="text-blue-600">
-              {currentStepData.icon}
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900">チュートリアル</h2>
+            <div className="text-blue-600">{currentStepData.icon}</div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              チュートリアル
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -110,7 +120,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               <div
                 key={index}
                 className={`h-2 flex-1 rounded-full transition-colors ${
-                  index <= currentStep ? 'bg-blue-600' : 'bg-gray-200'
+                  index <= currentStep ? "bg-blue-600" : "bg-gray-200"
                 }`}
               />
             ))}
@@ -170,7 +180,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition-colors"
             >
               {currentStep === steps.length - 1 ? (
-                '始める'
+                "始める"
               ) : (
                 <>
                   次へ
@@ -185,16 +195,15 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
           <p className="text-xs text-gray-500 text-center">
             <kbd className="px-1 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
               ←
-            </kbd>
-            {' '}
+            </kbd>{" "}
             <kbd className="px-1 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
               →
-            </kbd>
-            {' '}キーでナビゲート / {' '}
+            </kbd>{" "}
+            キーでナビゲート /{" "}
             <kbd className="px-1 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
               Esc
-            </kbd>
-            {' '}で閉じる
+            </kbd>{" "}
+            で閉じる
           </p>
         </div>
       </div>

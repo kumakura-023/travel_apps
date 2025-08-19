@@ -1,6 +1,14 @@
-import React from 'react';
-import { FiX, FiCommand, FiSearch, FiZoomIn, FiZoomOut, FiRotateCcw, FiMapPin } from 'react-icons/fi';
-import { useDeviceDetect } from '../hooks/useDeviceDetect';
+import React from "react";
+import {
+  FiX,
+  FiCommand,
+  FiSearch,
+  FiZoomIn,
+  FiZoomOut,
+  FiRotateCcw,
+  FiMapPin,
+} from "react-icons/fi";
+import { useDeviceDetect } from "../hooks/useDeviceDetect";
 
 interface KeyboardShortcutsProps {
   isOpen: boolean;
@@ -11,89 +19,95 @@ interface ShortcutItem {
   keys: string[];
   description: string;
   icon?: React.ReactNode;
-  category: 'navigation' | 'search' | 'selection' | 'general';
+  category: "navigation" | "search" | "selection" | "general";
 }
 
-const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({ isOpen, onClose }) => {
+const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const { isDesktop } = useDeviceDetect();
 
   const shortcuts: ShortcutItem[] = [
     {
-      keys: ['Ctrl', 'F'],
-      description: '検索バーにフォーカス',
+      keys: ["Ctrl", "F"],
+      description: "検索バーにフォーカス",
       icon: <FiSearch className="w-4 h-4" />,
-      category: 'search'
+      category: "search",
     },
     {
-      keys: ['Esc'],
-      description: '検索をクリア / モーダルを閉じる',
+      keys: ["Esc"],
+      description: "検索をクリア / モーダルを閉じる",
       icon: <FiRotateCcw className="w-4 h-4" />,
-      category: 'general'
+      category: "general",
     },
     {
-      keys: ['+'],
-      description: '地図をズームイン',
+      keys: ["+"],
+      description: "地図をズームイン",
       icon: <FiZoomIn className="w-4 h-4" />,
-      category: 'navigation'
+      category: "navigation",
     },
     {
-      keys: ['-'],
-      description: '地図をズームアウト',
+      keys: ["-"],
+      description: "地図をズームアウト",
       icon: <FiZoomOut className="w-4 h-4" />,
-      category: 'navigation'
+      category: "navigation",
     },
     {
-      keys: ['Ctrl', 'S'],
-      description: '現在の変更を保存',
+      keys: ["Ctrl", "S"],
+      description: "現在の変更を保存",
       icon: <FiCommand className="w-4 h-4" />,
-      category: 'general'
+      category: "general",
     },
     {
-      keys: ['Ctrl', 'Click'],
-      description: '2地点間のルート検索',
+      keys: ["Ctrl", "Click"],
+      description: "2地点間のルート検索",
       icon: <FiMapPin className="w-4 h-4" />,
-      category: 'selection'
+      category: "selection",
     },
     {
-      keys: ['Tab'],
-      description: '次のフォーカス可能な要素へ移動',
-      category: 'navigation'
+      keys: ["Tab"],
+      description: "次のフォーカス可能な要素へ移動",
+      category: "navigation",
     },
     {
-      keys: ['Enter'],
-      description: '編集モードを開始',
-      category: 'general'
+      keys: ["Enter"],
+      description: "編集モードを開始",
+      category: "general",
     },
     {
-      keys: ['?'],
-      description: 'このヘルプを表示',
-      category: 'general'
-    }
+      keys: ["?"],
+      description: "このヘルプを表示",
+      category: "general",
+    },
   ];
 
   const categoryNames = {
-    navigation: '地図ナビゲーション',
-    search: '検索',
-    selection: '地点操作',
-    general: '一般'
+    navigation: "地図ナビゲーション",
+    search: "検索",
+    selection: "地点操作",
+    general: "一般",
   };
 
-  const groupedShortcuts = shortcuts.reduce((acc, shortcut) => {
-    if (!acc[shortcut.category]) {
-      acc[shortcut.category] = [];
-    }
-    acc[shortcut.category].push(shortcut);
-    return acc;
-  }, {} as Record<string, ShortcutItem[]>);
+  const groupedShortcuts = shortcuts.reduce(
+    (acc, shortcut) => {
+      if (!acc[shortcut.category]) {
+        acc[shortcut.category] = [];
+      }
+      acc[shortcut.category].push(shortcut);
+      return acc;
+    },
+    {} as Record<string, ShortcutItem[]>,
+  );
 
   // MacとWindowsでModifierキーを適切に表示
   const formatKeys = (keys: string[]) => {
-    return keys.map(key => {
-      if (key === 'Ctrl' && navigator.platform.indexOf('Mac') > -1) {
-        return '⌘';
+    return keys.map((key) => {
+      if (key === "Ctrl" && navigator.platform.indexOf("Mac") > -1) {
+        return "⌘";
       }
-      if (key === 'Alt' && navigator.platform.indexOf('Mac') > -1) {
-        return '⌥';
+      if (key === "Alt" && navigator.platform.indexOf("Mac") > -1) {
+        return "⌥";
       }
       return key;
     });
@@ -135,11 +149,11 @@ const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({ isOpen, onClose }
                     >
                       <div className="flex items-center space-x-3">
                         {shortcut.icon && (
-                          <div className="text-gray-500">
-                            {shortcut.icon}
-                          </div>
+                          <div className="text-gray-500">{shortcut.icon}</div>
                         )}
-                        <span className="text-gray-700">{shortcut.description}</span>
+                        <span className="text-gray-700">
+                          {shortcut.description}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-1">
                         {formatKeys(shortcut.keys).map((key, keyIndex) => (
@@ -175,4 +189,4 @@ const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({ isOpen, onClose }
   );
 };
 
-export default KeyboardShortcuts; 
+export default KeyboardShortcuts;

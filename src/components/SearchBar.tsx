@@ -1,11 +1,11 @@
-import { Autocomplete } from '@react-google-maps/api';
-import { useRef, useState } from 'react';
-import { FiSearch } from 'react-icons/fi';
-import { MdNavigation } from 'react-icons/md';
-import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
-import { useRouteSearchStore } from '../store/routeStoreMigration';
-import { useGoogleMaps } from '../hooks/useGoogleMaps';
-import { useDeviceDetect } from '../hooks/useDeviceDetect';
+import { Autocomplete } from "@react-google-maps/api";
+import { useRef, useState } from "react";
+import { FiSearch } from "react-icons/fi";
+import { MdNavigation } from "react-icons/md";
+import { useSelectedPlaceStore } from "../store/selectedPlaceStore";
+import { useRouteSearchStore } from "../store/routeStoreMigration";
+import { useGoogleMaps } from "../hooks/useGoogleMaps";
+import { useDeviceDetect } from "../hooks/useDeviceDetect";
 
 interface Props {
   onPlaceSelected: (lat: number, lng: number) => void;
@@ -18,7 +18,7 @@ export default function SearchBar({
   inputRef,
   onClearExternal,
 }: Props) {
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const localRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const setPlace = useSelectedPlaceStore((s) => s.setPlace);
@@ -36,7 +36,7 @@ export default function SearchBar({
       if (map) {
         placesServiceRef.current = new google.maps.places.PlacesService(map);
       } else {
-        const div = document.createElement('div');
+        const div = document.createElement("div");
         placesServiceRef.current = new google.maps.places.PlacesService(div);
       }
     }
@@ -56,12 +56,12 @@ export default function SearchBar({
   };
 
   const clear = () => {
-    setInputValue('');
+    setInputValue("");
     if (onClearExternal) onClearExternal();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       const place = autocompleteRef.current?.getPlace();
       if (place && place.geometry && place.geometry.location) {
@@ -70,46 +70,61 @@ export default function SearchBar({
           setInputValue(place.name);
           combinedRef.current && (combinedRef.current.value = place.name);
         }
-        onPlaceSelected(place.geometry.location.lat(), place.geometry.location.lng());
+        onPlaceSelected(
+          place.geometry.location.lat(),
+          place.geometry.location.lng(),
+        );
         return;
       }
 
-      if (placesServiceRef.current && inputValue.trim() !== '') {
-        placesServiceRef.current.textSearch({ query: inputValue }, (results, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && results && results[0]) {
-            const result = results[0];
-            const loc = result.geometry?.location;
-            if (loc) {
-              if (result.name) {
-                setInputValue(result.name);
-                combinedRef.current && (combinedRef.current.value = result.name);
+      if (placesServiceRef.current && inputValue.trim() !== "") {
+        placesServiceRef.current.textSearch(
+          { query: inputValue },
+          (results, status) => {
+            if (
+              status === google.maps.places.PlacesServiceStatus.OK &&
+              results &&
+              results[0]
+            ) {
+              const result = results[0];
+              const loc = result.geometry?.location;
+              if (loc) {
+                if (result.name) {
+                  setInputValue(result.name);
+                  combinedRef.current &&
+                    (combinedRef.current.value = result.name);
+                }
+                if (result.place_id) {
+                  placesServiceRef.current?.getDetails(
+                    {
+                      placeId: result.place_id,
+                      fields: [
+                        "place_id",
+                        "name",
+                        "geometry",
+                        "formatted_address",
+                        "rating",
+                        "photos",
+                        "website",
+                        "types",
+                      ],
+                    },
+                    (detail, detStatus) => {
+                      if (
+                        detStatus ===
+                          google.maps.places.PlacesServiceStatus.OK &&
+                        detail
+                      ) {
+                        setPlace(detail);
+                      }
+                    },
+                  );
+                }
+                onPlaceSelected(loc.lat(), loc.lng());
               }
-              if (result.place_id) {
-                placesServiceRef.current?.getDetails(
-                  {
-                    placeId: result.place_id,
-                    fields: [
-                      'place_id',
-                      'name',
-                      'geometry',
-                      'formatted_address',
-                      'rating',
-                      'photos',
-                      'website',
-                      'types',
-                    ],
-                  },
-                  (detail, detStatus) => {
-                    if (detStatus === google.maps.places.PlacesServiceStatus.OK && detail) {
-                      setPlace(detail);
-                    }
-                  },
-                );
-              }
-              onPlaceSelected(loc.lat(), loc.lng());
             }
-          }
-        });
+          },
+        );
       }
     }
   };
@@ -119,7 +134,7 @@ export default function SearchBar({
       className={`fixed z-50 flex items-center justify-between 
                   glass-effect-border rounded-xl 
                   transition-all duration-150 ease-ios-default
-                  ${isDesktop ? 'top-4 left-4 w-[480px]' : isTablet ? 'top-4 left-4 w-[360px]' : 'top-4 left-4 right-4 max-w-[calc(100vw-2rem)]'}`}
+                  ${isDesktop ? "top-4 left-4 w-[480px]" : isTablet ? "top-4 left-4 w-[360px]" : "top-4 left-4 right-4 max-w-[calc(100vw-2rem)]"}`}
     >
       <div className="flex-1">
         <Autocomplete
@@ -127,14 +142,14 @@ export default function SearchBar({
           onPlaceChanged={onPlaceChanged}
           options={{
             fields: [
-              'place_id',
-              'name',
-              'geometry',
-              'formatted_address',
-              'rating',
-              'photos',
-              'website',
-              'types',
+              "place_id",
+              "name",
+              "geometry",
+              "formatted_address",
+              "rating",
+              "photos",
+              "website",
+              "types",
             ],
           }}
         >
@@ -161,13 +176,19 @@ export default function SearchBar({
                        transition-colors duration-150 focus:outline-none"
             title="クリア"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         )}
-        
+
         {/* 検索アイコン（虫眼鏡）*/}
         <button
           className="p-2 text-system-secondary-label hover:text-coral-500 
@@ -178,7 +199,7 @@ export default function SearchBar({
         >
           <FiSearch size={18} />
         </button>
-        
+
         {/* ナビゲーション（ルート検索）ボタン */}
         <button
           onClick={openRouteSearch}
@@ -193,4 +214,4 @@ export default function SearchBar({
       </div>
     </div>
   );
-} 
+}

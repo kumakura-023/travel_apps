@@ -1,7 +1,10 @@
-import React from 'react';
-import { Place, PlaceCategory } from '../types';
-import { getCategoryDisplayName, getCategoryColor } from '../utils/categoryIcons';
-import { formatCurrency } from '../utils/formatCurrency';
+import React from "react";
+import { Place, PlaceCategory } from "../types";
+import {
+  getCategoryDisplayName,
+  getCategoryColor,
+} from "../utils/categoryIcons";
+import { formatCurrency } from "../utils/formatCurrency";
 
 interface Props {
   places: Place[];
@@ -23,14 +26,22 @@ export default function CostSummary({ places }: Props) {
   return (
     <div className="space-y-4">
       {/* 総費用カード */}
-      <div className="glass-effect rounded-xl p-5 shadow-elevation-2
-                      bg-teal-500/10 border border-teal-500/20">
+      <div
+        className="glass-effect rounded-xl p-5 shadow-elevation-2
+                      bg-teal-500/10 border border-teal-500/20"
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-teal-500/20 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" y1="1" x2="12" y2="23"/>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              <svg
+                className="w-5 h-5 text-teal-600"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
               </svg>
             </div>
             <div>
@@ -60,13 +71,16 @@ export default function CostSummary({ places }: Props) {
             {byCategory.map(([cat, amount]) => {
               const categoryColor = getCategoryColor(cat);
               const percentage = total > 0 ? (amount / total) * 100 : 0;
-              
+
               return (
-                <div key={cat} className="px-5 py-3 hover:bg-system-secondary-background/50 
-                                        transition-colors duration-150">
+                <div
+                  key={cat}
+                  className="px-5 py-3 hover:bg-system-secondary-background/50 
+                                        transition-colors duration-150"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div 
+                      <div
                         className="w-4 h-4 rounded-full"
                         style={{ backgroundColor: categoryColor }}
                       />
@@ -84,7 +98,7 @@ export default function CostSummary({ places }: Props) {
                         {formatCurrency(amount)}
                       </p>
                       <p className="caption-2 text-system-tertiary-label">
-                        {places.filter(p => p.category === cat).length}件
+                        {places.filter((p) => p.category === cat).length}件
                       </p>
                     </div>
                   </div>
@@ -96,4 +110,4 @@ export default function CostSummary({ places }: Props) {
       )}
     </div>
   );
-} 
+}

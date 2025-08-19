@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -16,8 +16,8 @@ export const inviteUserToPlan = onCall(async (request) => {
   // 1. Authentication Check
   if (!request.auth) {
     throw new HttpsError(
-        "unauthenticated",
-        "The function must be called while authenticated.",
+      "unauthenticated",
+      "The function must be called while authenticated.",
     );
   }
 
@@ -27,8 +27,8 @@ export const inviteUserToPlan = onCall(async (request) => {
   // 2. Input Validation
   if (!planId || !email) {
     throw new HttpsError(
-        "invalid-argument",
-        "The function must be called with a 'planId' and 'email'.",
+      "invalid-argument",
+      "The function must be called with a 'planId' and 'email'.",
     );
   }
 
@@ -37,18 +37,12 @@ export const inviteUserToPlan = onCall(async (request) => {
     const planSnap = await planRef.get();
 
     if (!planSnap.exists) {
-      throw new HttpsError(
-          "not-found",
-          `Plan with ID ${planId} not found.`,
-      );
+      throw new HttpsError("not-found", `Plan with ID ${planId} not found.`);
     }
 
     const planData = planSnap.data();
     if (!planData) {
-        throw new HttpsError(
-            "internal",
-            "Plan data is missing.",
-        );
+      throw new HttpsError("internal", "Plan data is missing.");
     }
     const members = planData.members || {};
 
@@ -56,8 +50,8 @@ export const inviteUserToPlan = onCall(async (request) => {
     const inviterRole = members[inviterUid]?.role;
     if (inviterRole !== "owner" && inviterRole !== "editor") {
       throw new HttpsError(
-          "permission-denied",
-          "You do not have permission to invite users to this plan.",
+        "permission-denied",
+        "You do not have permission to invite users to this plan.",
       );
     }
 
@@ -66,24 +60,21 @@ export const inviteUserToPlan = onCall(async (request) => {
     try {
       invitee = await admin.auth().getUserByEmail(email);
     } catch (error) {
-      throw new HttpsError(
-          "not-found",
-          `No user found with email ${email}.`,
-      );
+      throw new HttpsError("not-found", `No user found with email ${email}.`);
     }
 
     if (members[invitee.uid]) {
       throw new HttpsError(
-          "already-exists",
-          `User ${email} is already a member of this plan.`,
+        "already-exists",
+        `User ${email} is already a member of this plan.`,
       );
     }
 
     // 5. Add User to Plan
     // planDataから既存のmemberIds配列を取得
     const existingMemberIds = planData.memberIds || [];
-    const updatedMemberIds = existingMemberIds.includes(invitee.uid) 
-      ? existingMemberIds 
+    const updatedMemberIds = existingMemberIds.includes(invitee.uid)
+      ? existingMemberIds
       : [...existingMemberIds, invitee.uid];
 
     // membersとmemberIds両方を更新
@@ -105,10 +96,7 @@ export const inviteUserToPlan = onCall(async (request) => {
     if (error instanceof HttpsError) {
       throw error;
     }
-    throw new HttpsError(
-        "internal",
-        "An unexpected error occurred.",
-    );
+    throw new HttpsError("internal", "An unexpected error occurred.");
   }
 });
 
@@ -119,26 +107,26 @@ export const inviteUserToPlan = onCall(async (request) => {
  */
 export const generateInviteToken = onCall(async (request) => {
   if (!request.auth) {
-    throw new HttpsError('unauthenticated', '認証が必要です');
+    throw new HttpsError("unauthenticated", "認証が必要です");
   }
   const uid = request.auth.uid;
   const { planId } = request.data as { planId: string };
   if (!planId) {
-    throw new HttpsError('invalid-argument', 'planIdが必要です');
+    throw new HttpsError("invalid-argument", "planIdが必要です");
   }
-  const planRef = db.collection('plans').doc(planId);
+  const planRef = db.collection("plans").doc(planId);
   const planSnap = await planRef.get();
   if (!planSnap.exists) {
-    throw new HttpsError('not-found', 'プランが存在しません');
+    throw new HttpsError("not-found", "プランが存在しません");
   }
   const planData = planSnap.data();
   if (!planData) {
-    throw new HttpsError('internal', 'プランデータが取得できません');
+    throw new HttpsError("internal", "プランデータが取得できません");
   }
   const members = planData.members || {};
   const role = members[uid]?.role;
-  if (role !== 'owner' && role !== 'editor') {
-    throw new HttpsError('permission-denied', '招待権限がありません');
+  if (role !== "owner" && role !== "editor") {
+    throw new HttpsError("permission-denied", "招待権限がありません");
   }
   let inviteToken = planData.inviteToken;
   if (!inviteToken) {
@@ -154,22 +142,25 @@ export const generateInviteToken = onCall(async (request) => {
  */
 export const acceptInviteToken = onCall(async (request) => {
   if (!request.auth) {
-    throw new HttpsError('unauthenticated', '認証が必要です');
+    throw new HttpsError("unauthenticated", "認証が必要です");
   }
   const uid = request.auth.uid;
   const { token } = request.data as { token: string };
   if (!token) {
-    throw new HttpsError('invalid-argument', 'tokenが必要です');
+    throw new HttpsError("invalid-argument", "tokenが必要です");
   }
   // inviteTokenでプランを検索
-  const plansSnap = await db.collection('plans').where('inviteToken', '==', token).get();
+  const plansSnap = await db
+    .collection("plans")
+    .where("inviteToken", "==", token)
+    .get();
   if (plansSnap.empty) {
-    throw new HttpsError('not-found', '有効な招待トークンが見つかりません');
+    throw new HttpsError("not-found", "有効な招待トークンが見つかりません");
   }
   const planDoc = plansSnap.docs[0];
   const planData = planDoc.data();
   if (!planData) {
-    throw new HttpsError('internal', 'プランデータが取得できません');
+    throw new HttpsError("internal", "プランデータが取得できません");
   }
   const members = planData.members || {};
   if (members[uid]) {
@@ -177,26 +168,32 @@ export const acceptInviteToken = onCall(async (request) => {
   }
   // 既存のmemberIds配列を取得
   const existingMemberIds = planData.memberIds || [];
-  const updatedMemberIds = existingMemberIds.includes(uid) 
-    ? existingMemberIds 
+  const updatedMemberIds = existingMemberIds.includes(uid)
+    ? existingMemberIds
     : [...existingMemberIds, uid];
 
   // membersとmemberIds両方を更新
   await planDoc.ref.update({
     [`members.${uid}`]: {
-      role: 'editor',
+      role: "editor",
       joinedAt: admin.firestore.FieldValue.serverTimestamp(),
     },
     memberIds: updatedMemberIds,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
   // 参加ユーザーの activePlanId を更新
-  await db.collection('users').doc(uid).set({
-    activePlanId: planDoc.id,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
+  await db.collection("users").doc(uid).set(
+    {
+      activePlanId: planDoc.id,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
   return { success: true, planId: planDoc.id };
 });
 
 // Export repair functions
-export { repairExistingPlansMemberIds, repairSinglePlanMemberIds } from './repairMemberIds';
+export {
+  repairExistingPlansMemberIds,
+  repairSinglePlanMemberIds,
+} from "./repairMemberIds";

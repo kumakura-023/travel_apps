@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
-import { PlaceCategory } from '../types';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { v4 as uuidv4 } from "uuid";
+import { PlaceCategory } from "../types";
 
 export interface PlaceNotification {
   id: string;
@@ -23,12 +23,17 @@ interface NotificationStore {
   currentUserId: string | null;
   setCurrentUserId: (userId: string | null) => void;
   getUnreadCount: (userId: string) => number;
-  addNotification: (notification: Omit<PlaceNotification, 'id' | 'timestamp' | 'readBy'>) => void;
+  addNotification: (
+    notification: Omit<PlaceNotification, "id" | "timestamp" | "readBy">,
+  ) => void;
   markAsRead: (notificationId: string, userId: string) => void;
   markAllAsRead: (userId: string) => void;
   removeNotification: (notificationId: string) => void;
   clearAllNotifications: () => void;
-  getNotificationsByPlan: (planId: string, userId: string) => PlaceNotification[];
+  getNotificationsByPlan: (
+    planId: string,
+    userId: string,
+  ) => PlaceNotification[];
   isReadByUser: (notification: PlaceNotification, userId: string) => boolean;
   clearExpiredNotifications: () => void;
 }
@@ -46,24 +51,25 @@ export const useNotificationStore = create<NotificationStore>()(
 
       getUnreadCount: (userId: string) => {
         const { notifications } = get();
-        return notifications.filter(notification => 
-          !notification.readBy.includes(userId)
+        return notifications.filter(
+          (notification) => !notification.readBy.includes(userId),
         ).length;
       },
 
       addNotification: (notification) => {
         // 同じ場所・同じ追加者の通知が既に存在するかチェック
-        const existingNotification = get().notifications.find(n => 
-          n.placeId === notification.placeId && 
-          n.planId === notification.planId &&
-          n.addedBy.uid === notification.addedBy.uid
+        const existingNotification = get().notifications.find(
+          (n) =>
+            n.placeId === notification.placeId &&
+            n.planId === notification.planId &&
+            n.addedBy.uid === notification.addedBy.uid,
         );
 
         if (existingNotification) {
-          console.log('[通知ストア] 重複通知をスキップ:', {
+          console.log("[通知ストア] 重複通知をスキップ:", {
             placeId: notification.placeId,
             placeName: notification.placeName,
-            addedByUid: notification.addedBy.uid
+            addedByUid: notification.addedBy.uid,
           });
           return;
         }
@@ -72,25 +78,28 @@ export const useNotificationStore = create<NotificationStore>()(
           ...notification,
           id: uuidv4(),
           timestamp: Date.now(),
-          readBy: []
+          readBy: [],
         };
 
-        console.log('[通知ストア] 新しい通知を作成:', {
+        console.log("[通知ストア] 新しい通知を作成:", {
           notificationId: newNotification.id,
           placeId: newNotification.placeId,
           placeName: newNotification.placeName,
           addedByUid: newNotification.addedBy.uid,
           addedByName: newNotification.addedBy.displayName,
           planId: newNotification.planId,
-          timestamp: new Date(newNotification.timestamp).toISOString()
+          timestamp: new Date(newNotification.timestamp).toISOString(),
         });
 
         set((state) => {
-          const updatedNotifications = [...state.notifications, newNotification];
-          console.log('[通知ストア] 通知総数:', updatedNotifications.length);
-          console.log('[通知ストア] 現在のユーザーID:', state.currentUserId);
+          const updatedNotifications = [
+            ...state.notifications,
+            newNotification,
+          ];
+          console.log("[通知ストア] 通知総数:", updatedNotifications.length);
+          console.log("[通知ストア] 現在のユーザーID:", state.currentUserId);
           return {
-            notifications: updatedNotifications
+            notifications: updatedNotifications,
           };
         });
 
@@ -99,27 +108,30 @@ export const useNotificationStore = create<NotificationStore>()(
 
       markAsRead: (notificationId: string, userId: string) => {
         set((state) => ({
-          notifications: state.notifications.map(notification =>
-            notification.id === notificationId && !notification.readBy.includes(userId)
+          notifications: state.notifications.map((notification) =>
+            notification.id === notificationId &&
+            !notification.readBy.includes(userId)
               ? { ...notification, readBy: [...notification.readBy, userId] }
-              : notification
-          )
+              : notification,
+          ),
         }));
       },
 
       markAllAsRead: (userId: string) => {
         set((state) => ({
-          notifications: state.notifications.map(notification =>
+          notifications: state.notifications.map((notification) =>
             !notification.readBy.includes(userId)
               ? { ...notification, readBy: [...notification.readBy, userId] }
-              : notification
-          )
+              : notification,
+          ),
         }));
       },
 
       removeNotification: (notificationId: string) => {
         set((state) => ({
-          notifications: state.notifications.filter(n => n.id !== notificationId)
+          notifications: state.notifications.filter(
+            (n) => n.id !== notificationId,
+          ),
         }));
       },
 
@@ -130,7 +142,7 @@ export const useNotificationStore = create<NotificationStore>()(
       getNotificationsByPlan: (planId: string, userId: string) => {
         const { notifications } = get();
         return notifications
-          .filter(notification => notification.planId === planId)
+          .filter((notification) => notification.planId === planId)
           .sort((a, b) => b.timestamp - a.timestamp);
       },
 
@@ -141,20 +153,21 @@ export const useNotificationStore = create<NotificationStore>()(
       clearExpiredNotifications: () => {
         const now = Date.now();
         set((state) => ({
-          notifications: state.notifications.filter(notification =>
-            now - notification.timestamp < NOTIFICATION_EXPIRY_MS
-          )
+          notifications: state.notifications.filter(
+            (notification) =>
+              now - notification.timestamp < NOTIFICATION_EXPIRY_MS,
+          ),
         }));
-      }
+      },
     }),
     {
-      name: 'travel-app-notifications',
+      name: "travel-app-notifications",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        notifications: state.notifications
-      })
-    }
-  )
+        notifications: state.notifications,
+      }),
+    },
+  ),
 );
 
 export default useNotificationStore;

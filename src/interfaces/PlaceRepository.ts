@@ -1,4 +1,4 @@
-import { Place } from '../types';
+import { Place } from "../types";
 
 /**
  * 地点データ管理のインターフェース
@@ -9,22 +9,24 @@ export interface PlaceRepository {
   // 基本CRUD操作
   getAll(): Place[];
   getById(id: string): Place | null;
-  add(place: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>): Place;
+  add(place: Omit<Place, "id" | "createdAt" | "updatedAt">): Place;
   update(id: string, updates: Partial<Place>): Place | null;
   delete(id: string): boolean;
-  
+
   // 検索・フィルタリング
   findByCategory(category: string): Place[];
   findByLocation(
     center: { lat: number; lng: number },
-    radiusKm: number
+    radiusKm: number,
   ): Place[];
   search(query: string): Place[];
-  
+
   // 一括操作
-  addMultiple(places: Array<Omit<Place, 'id' | 'createdAt' | 'updatedAt'>>): Place[];
+  addMultiple(
+    places: Array<Omit<Place, "id" | "createdAt" | "updatedAt">>,
+  ): Place[];
   deleteMultiple(ids: string[]): number;
-  
+
   // 永続化
   save(): Promise<void>;
   load(): Promise<void>;
@@ -35,7 +37,7 @@ export interface PlaceRepository {
  * 地点リポジトリの設定
  */
 export interface PlaceRepositoryConfig {
-  storage: 'localStorage' | 'sessionStorage' | 'indexedDB' | 'memory';
+  storage: "localStorage" | "sessionStorage" | "indexedDB" | "memory";
   autoSave?: boolean;
   maxItems?: number;
 }
@@ -51,7 +53,7 @@ export interface PlaceRepositoryFactory {
  * 地点データの変更通知
  */
 export interface PlaceChangeEvent {
-  type: 'added' | 'updated' | 'deleted' | 'cleared';
+  type: "added" | "updated" | "deleted" | "cleared";
   place?: Place;
   places?: Place[];
   id?: string;
@@ -64,4 +66,4 @@ export interface PlaceChangeEvent {
 export interface PlaceRepositoryObserver {
   subscribe(callback: (event: PlaceChangeEvent) => void): () => void;
   unsubscribe(callback: (event: PlaceChangeEvent) => void): void;
-} 
+}

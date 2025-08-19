@@ -45,6 +45,7 @@ cat .gitignore | grep .env
 ### 2. APIキーの制限設定
 
 #### Google Maps API キー
+
 1. [Google Cloud Console](https://console.cloud.google.com/) にアクセス
 2. 「APIとサービス」→「認証情報」
 3. 該当の API キーをクリック
@@ -54,6 +55,7 @@ cat .gitignore | grep .env
    - `https://www.yourdomain.com/*`
 
 #### Firebase プロジェクト
+
 1. [Firebase Console](https://console.firebase.google.com/) にアクセス
 2. プロジェクト設定 → 全般
 3. 「承認済みドメイン」にドメインを追加
@@ -93,6 +95,7 @@ grep -r "VITE_" dist/ # 何も表示されないことを確認
 ### 5. セキュリティヘッダーの確認
 
 デプロイ後、以下のツールでセキュリティヘッダーを確認：
+
 - [Security Headers](https://securityheaders.com/)
 - [Mozilla Observatory](https://observatory.mozilla.org/)
 
@@ -126,6 +129,7 @@ grep -r "VITE_" dist/ # 何も表示されないことを確認
 ```
 
 環境変数の設定：
+
 1. Vercel ダッシュボード → Settings → Environment Variables
 2. 各環境変数を追加（.env.example を参照）
 
@@ -142,12 +146,14 @@ grep -r "VITE_" dist/ # 何も表示されないことを確認
 ```
 
 環境変数の設定：
+
 1. Netlify ダッシュボード → Site settings → Environment variables
 2. 各環境変数を追加
 
 ## 今後の対応推奨項目
 
 ### 1. XSS 対策の完全適用
+
 現在作成した `SafeRouteOverlay.tsx` と `SafeTravelTimeOverlay.tsx` を実際のコンポーネントに適用：
 
 ```typescript
@@ -193,12 +199,14 @@ npm update
 ## 緊急時の対応
 
 ### APIキーが漏洩した場合
+
 1. 即座に該当の API キーを無効化
 2. 新しい API キーを生成
 3. 環境変数を更新
 4. アプリケーションを再デプロイ
 
 ### 不正アクセスが検知された場合
+
 1. Firebase セキュリティルールで一時的にアクセスを制限
 2. ログを確認して影響範囲を特定
 3. 必要に応じてユーザーに通知

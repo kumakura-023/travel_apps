@@ -1,12 +1,15 @@
 # Phase 2: 地図・場所機能 - 詳細実装指示
 
 ## 目標
+
 Google Maps APIを使用した地図表示と場所管理機能を実装する。パフォーマンス最適化と使いやすさを重視した設計とする。
 
 ## 実装期間
+
 2-3週間
 
 ## 前提条件
+
 - Phase 1の基盤構築が完了済み
 - Google Maps APIキーが設定済み
 - 基本ストアが動作中
@@ -16,15 +19,19 @@ Google Maps APIを使用した地図表示と場所管理機能を実装する�
 ### 1. Google Maps統合の構築
 
 #### A. マップサービスの実装 (`src/services/api/mapService.ts`)
+
 ```typescript
-import { GooglePlace } from '@/types/api';
+import { GooglePlace } from "@/types/api";
 
 class MapService {
   private map: google.maps.Map | null = null;
   private placesService: google.maps.places.PlacesService | null = null;
   private directionsService: google.maps.DirectionsService | null = null;
 
-  async initializeMap(container: HTMLElement, options: google.maps.MapOptions): Promise<google.maps.Map> {
+  async initializeMap(
+    container: HTMLElement,
+    options: google.maps.MapOptions,
+  ): Promise<google.maps.Map> {
     // Google Maps APIの遅延読み込み
     if (!window.google) {
       await this.loadGoogleMapsAPI();
@@ -52,19 +59,23 @@ class MapService {
         return;
       }
 
-      const script = document.createElement('script');
+      const script = document.createElement("script");
       script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places&language=ja`;
       script.async = true;
       script.defer = true;
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Google Maps API の読み込みに失敗しました'));
+      script.onerror = () =>
+        reject(new Error("Google Maps API の読み込みに失敗しました"));
       document.head.appendChild(script);
     });
   }
 
-  async searchPlaces(query: string, location?: google.maps.LatLng): Promise<GooglePlace[]> {
+  async searchPlaces(
+    query: string,
+    location?: google.maps.LatLng,
+  ): Promise<GooglePlace[]> {
     if (!this.placesService) {
-      throw new Error('Places service is not initialized');
+      throw new Error("Places service is not initialized");
     }
 
     return new Promise((resolve, reject) => {
@@ -76,7 +87,7 @@ class MapService {
 
       this.placesService!.textSearch(request, (results, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-          const places: GooglePlace[] = results.map(place => ({
+          const places: GooglePlace[] = results.map((place) => ({
             place_id: place.place_id!,
             name: place.name!,
             formatted_address: place.formatted_address!,
@@ -98,25 +109,27 @@ class MapService {
     });
   }
 
-  async getPlaceDetails(placeId: string): Promise<google.maps.places.PlaceResult> {
+  async getPlaceDetails(
+    placeId: string,
+  ): Promise<google.maps.places.PlaceResult> {
     if (!this.placesService) {
-      throw new Error('Places service is not initialized');
+      throw new Error("Places service is not initialized");
     }
 
     return new Promise((resolve, reject) => {
       const request: google.maps.places.PlaceDetailsRequest = {
         placeId,
         fields: [
-          'place_id',
-          'name',
-          'formatted_address',
-          'geometry',
-          'rating',
-          'photos',
-          'formatted_phone_number',
-          'opening_hours',
-          'website',
-          'types',
+          "place_id",
+          "name",
+          "formatted_address",
+          "geometry",
+          "rating",
+          "photos",
+          "formatted_phone_number",
+          "opening_hours",
+          "website",
+          "types",
         ],
       };
 
@@ -139,10 +152,11 @@ export const mapService = new MapService();
 ```
 
 #### B. マップストアの実装 (`src/stores/mapStore.ts`)
+
 ```typescript
-import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
-import type { GooglePlace } from '@/types/api';
+import { create } from "zustand";
+import { immer } from "zustand/middleware/immer";
+import type { GooglePlace } from "@/types/api";
 
 interface MapState {
   map: google.maps.Map | null;
@@ -180,50 +194,60 @@ export const useMapStore = create<MapState & MapActions>()(
     searchError: null,
 
     // Actions
-    setMap: (map) => set((state) => {
-      state.map = map;
-    }),
+    setMap: (map) =>
+      set((state) => {
+        state.map = map;
+      }),
 
-    setLoaded: (loaded) => set((state) => {
-      state.isLoaded = loaded;
-    }),
+    setLoaded: (loaded) =>
+      set((state) => {
+        state.isLoaded = loaded;
+      }),
 
-    setCenter: (center) => set((state) => {
-      state.center = center;
-    }),
+    setCenter: (center) =>
+      set((state) => {
+        state.center = center;
+      }),
 
-    setZoom: (zoom) => set((state) => {
-      state.zoom = zoom;
-    }),
+    setZoom: (zoom) =>
+      set((state) => {
+        state.zoom = zoom;
+      }),
 
-    setSearchResults: (results) => set((state) => {
-      state.searchResults = results;
-    }),
+    setSearchResults: (results) =>
+      set((state) => {
+        state.searchResults = results;
+      }),
 
-    setSelectedPlace: (place) => set((state) => {
-      state.selectedPlace = place;
-    }),
+    setSelectedPlace: (place) =>
+      set((state) => {
+        state.selectedPlace = place;
+      }),
 
-    setSearching: (searching) => set((state) => {
-      state.isSearching = searching;
-    }),
+    setSearching: (searching) =>
+      set((state) => {
+        state.isSearching = searching;
+      }),
 
-    setSearchError: (error) => set((state) => {
-      state.searchError = error;
-    }),
+    setSearchError: (error) =>
+      set((state) => {
+        state.searchError = error;
+      }),
 
-    clearSearch: () => set((state) => {
-      state.searchResults = [];
-      state.selectedPlace = null;
-      state.searchError = null;
-    }),
-  }))
+    clearSearch: () =>
+      set((state) => {
+        state.searchResults = [];
+        state.selectedPlace = null;
+        state.searchError = null;
+      }),
+  })),
 );
 ```
 
 ### 2. 地図コンポーネントの実装
 
 #### A. メインマップコンポーネント (`src/components/map/Map.tsx`)
+
 ```typescript
 import React, { useEffect, useRef, useCallback } from 'react';
 import { useMapStore } from '@/stores/mapStore';
@@ -239,12 +263,12 @@ interface MapProps {
 
 export const Map: React.FC<MapProps> = ({ className, onMapClick }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const { 
-    map, 
-    isLoaded, 
-    center, 
+  const {
+    map,
+    isLoaded,
+    center,
     zoom,
-    setMap, 
+    setMap,
     setLoaded,
     setCenter,
     setZoom
@@ -318,7 +342,7 @@ export const Map: React.FC<MapProps> = ({ className, onMapClick }) => {
   return (
     <div className={`relative ${className}`}>
       <div ref={mapRef} className="w-full h-full" />
-      
+
       {isLoaded && (
         <>
           <MapControls />
@@ -331,12 +355,13 @@ export const Map: React.FC<MapProps> = ({ className, onMapClick }) => {
 ```
 
 #### B. 場所マーカーコンポーネント (`src/components/map/PlaceMarkers.tsx`)
+
 ```typescript
-import React, { useEffect, useRef } from 'react';
-import { MarkerClusterer } from '@googlemaps/markerclusterer';
-import { useMapStore } from '@/stores/mapStore';
-import { usePlanStore } from '@/stores/planStore';
-import type { Place } from '@/types/core';
+import React, { useEffect, useRef } from "react";
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import { useMapStore } from "@/stores/mapStore";
+import { usePlanStore } from "@/stores/planStore";
+import type { Place } from "@/types/core";
 
 export const PlaceMarkers: React.FC = () => {
   const { map } = useMapStore();
@@ -345,14 +370,14 @@ export const PlaceMarkers: React.FC = () => {
   const clustererRef = useRef<MarkerClusterer | null>(null);
 
   // カテゴリ別のマーカーアイコン
-  const getMarkerIcon = (category: Place['category']): string => {
+  const getMarkerIcon = (category: Place["category"]): string => {
     const icons = {
-      restaurant: '🍽️',
-      hotel: '🏨',
-      attraction: '🎯',
-      shopping: '🛍️',
-      transport: '🚌',
-      other: '📍',
+      restaurant: "🍽️",
+      hotel: "🏨",
+      attraction: "🎯",
+      shopping: "🛍️",
+      transport: "🚌",
+      other: "📍",
     };
     return icons[category];
   };
@@ -362,7 +387,7 @@ export const PlaceMarkers: React.FC = () => {
     if (!map || !currentPlan?.places) return;
 
     // 既存のマーカーをクリア
-    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current.forEach((marker) => marker.setMap(null));
     markersRef.current = [];
 
     if (clustererRef.current) {
@@ -370,7 +395,7 @@ export const PlaceMarkers: React.FC = () => {
     }
 
     // 新しいマーカーを作成
-    const markers = currentPlan.places.map(place => {
+    const markers = currentPlan.places.map((place) => {
       const marker = new google.maps.Marker({
         position: { lat: place.lat, lng: place.lng },
         title: place.name,
@@ -381,7 +406,7 @@ export const PlaceMarkers: React.FC = () => {
               <text x="16" y="20" text-anchor="middle" font-size="12" fill="white">
                 ${getMarkerIcon(place.category)}
               </text>
-            </svg>`
+            </svg>`,
           )}`,
           scaledSize: new google.maps.Size(32, 32),
           anchor: new google.maps.Point(16, 16),
@@ -389,9 +414,9 @@ export const PlaceMarkers: React.FC = () => {
       });
 
       // クリックイベント
-      marker.addListener('click', () => {
+      marker.addListener("click", () => {
         // 場所詳細パネルを開く処理をここに追加
-        console.log('Place clicked:', place);
+        console.log("Place clicked:", place);
       });
 
       return marker;
@@ -412,7 +437,7 @@ export const PlaceMarkers: React.FC = () => {
 
     // クリーンアップ
     return () => {
-      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current.forEach((marker) => marker.setMap(null));
       if (clustererRef.current) {
         clustererRef.current.clearMarkers();
       }
@@ -426,6 +451,7 @@ export const PlaceMarkers: React.FC = () => {
 ### 3. 場所検索機能の実装
 
 #### A. 検索バーコンポーネント (`src/components/places/SearchBar.tsx`)
+
 ```typescript
 import React, { useState, useCallback, useRef } from 'react';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -438,7 +464,7 @@ export const SearchBar: React.FC = () => {
   const [query, setQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  
+
   const {
     center,
     searchResults,
@@ -514,17 +540,17 @@ export const SearchBar: React.FC = () => {
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
         </div>
-        
+
         <input
           type="text"
           value={query}
           onChange={handleInputChange}
           placeholder="場所を検索..."
-          className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg 
+          className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg
                    bg-white shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                    text-sm placeholder-gray-500"
         />
-        
+
         {query && (
           <button
             onClick={handleClear}
@@ -550,6 +576,7 @@ export const SearchBar: React.FC = () => {
 ```
 
 #### B. 検索結果コンポーネント (`src/components/places/SearchResults.tsx`)
+
 ```typescript
 import React from 'react';
 import { MapPinIcon, StarIcon } from '@heroicons/react/24/outline';
@@ -617,7 +644,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
               <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
                 <MapPinIcon className="w-5 h-5 text-primary-600" />
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
                   {place.name}
@@ -625,7 +652,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                 <p className="text-sm text-gray-500 truncate">
                   {place.formatted_address}
                 </p>
-                
+
                 {place.rating && (
                   <div className="flex items-center mt-1">
                     <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />
@@ -647,42 +674,80 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 ### 4. 場所管理機能の実装
 
 #### A. 場所追加フック (`src/hooks/places/usePlaceActions.ts`)
+
 ```typescript
-import { useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { usePlanStore } from '@/stores/planStore';
-import { useAuthStore } from '@/stores/authStore';
-import { mapService } from '@/services/api/mapService';
-import type { Place, PlaceCategory } from '@/types/core';
-import type { GooglePlace } from '@/types/api';
+import { useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { usePlanStore } from "@/stores/planStore";
+import { useAuthStore } from "@/stores/authStore";
+import { mapService } from "@/services/api/mapService";
+import type { Place, PlaceCategory } from "@/types/core";
+import type { GooglePlace } from "@/types/api";
 
 export const usePlaceActions = () => {
   const { currentPlan, addPlace, updatePlace, deletePlace } = usePlanStore();
   const { user } = useAuthStore();
 
-  const addPlaceFromGoogle = useCallback(async (
-    googlePlace: GooglePlace,
-    category: PlaceCategory = 'other'
-  ): Promise<Place | null> => {
-    if (!currentPlan || !user) return null;
+  const addPlaceFromGoogle = useCallback(
+    async (
+      googlePlace: GooglePlace,
+      category: PlaceCategory = "other",
+    ): Promise<Place | null> => {
+      if (!currentPlan || !user) return null;
 
-    try {
-      // Google Places APIから詳細情報を取得
-      const details = await mapService.getPlaceDetails(googlePlace.place_id);
-      
+      try {
+        // Google Places APIから詳細情報を取得
+        const details = await mapService.getPlaceDetails(googlePlace.place_id);
+
+        const newPlace: Place = {
+          id: uuidv4(),
+          name: googlePlace.name,
+          address: googlePlace.formatted_address,
+          lat: googlePlace.geometry.location.lat,
+          lng: googlePlace.geometry.location.lng,
+          placeId: googlePlace.place_id,
+          category,
+          memo: "",
+          rating: googlePlace.rating,
+          photos:
+            details.photos
+              ?.slice(0, 3)
+              .map((photo) =>
+                photo.getUrl({ maxWidth: 400, maxHeight: 300 }),
+              ) || [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: user.id,
+        };
+
+        addPlace(currentPlan.id, newPlace);
+        return newPlace;
+      } catch (error) {
+        console.error("場所の追加に失敗:", error);
+        return null;
+      }
+    },
+    [currentPlan, user, addPlace],
+  );
+
+  const addPlaceManually = useCallback(
+    (
+      name: string,
+      address: string,
+      lat: number,
+      lng: number,
+      category: PlaceCategory = "other",
+    ): Place | null => {
+      if (!currentPlan || !user) return null;
+
       const newPlace: Place = {
         id: uuidv4(),
-        name: googlePlace.name,
-        address: googlePlace.formatted_address,
-        lat: googlePlace.geometry.location.lat,
-        lng: googlePlace.geometry.location.lng,
-        placeId: googlePlace.place_id,
+        name,
+        address,
+        lat,
+        lng,
         category,
-        memo: '',
-        rating: googlePlace.rating,
-        photos: details.photos?.slice(0, 3).map(photo => 
-          photo.getUrl({ maxWidth: 400, maxHeight: 300 })
-        ) || [],
+        memo: "",
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: user.id,
@@ -690,54 +755,29 @@ export const usePlaceActions = () => {
 
       addPlace(currentPlan.id, newPlace);
       return newPlace;
-    } catch (error) {
-      console.error('場所の追加に失敗:', error);
-      return null;
-    }
-  }, [currentPlan, user, addPlace]);
+    },
+    [currentPlan, user, addPlace],
+  );
 
-  const addPlaceManually = useCallback((
-    name: string,
-    address: string,
-    lat: number,
-    lng: number,
-    category: PlaceCategory = 'other'
-  ): Place | null => {
-    if (!currentPlan || !user) return null;
+  const updatePlaceInfo = useCallback(
+    (placeId: string, updates: Partial<Place>) => {
+      if (!currentPlan) return;
 
-    const newPlace: Place = {
-      id: uuidv4(),
-      name,
-      address,
-      lat,
-      lng,
-      category,
-      memo: '',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: user.id,
-    };
+      updatePlace(currentPlan.id, placeId, {
+        ...updates,
+        updatedAt: new Date(),
+      });
+    },
+    [currentPlan, updatePlace],
+  );
 
-    addPlace(currentPlan.id, newPlace);
-    return newPlace;
-  }, [currentPlan, user, addPlace]);
-
-  const updatePlaceInfo = useCallback((
-    placeId: string,
-    updates: Partial<Place>
-  ) => {
-    if (!currentPlan) return;
-
-    updatePlace(currentPlan.id, placeId, {
-      ...updates,
-      updatedAt: new Date(),
-    });
-  }, [currentPlan, updatePlace]);
-
-  const removePlaceFromPlan = useCallback((placeId: string) => {
-    if (!currentPlan) return;
-    deletePlace(currentPlan.id, placeId);
-  }, [currentPlan, deletePlace]);
+  const removePlaceFromPlan = useCallback(
+    (placeId: string) => {
+      if (!currentPlan) return;
+      deletePlace(currentPlan.id, placeId);
+    },
+    [currentPlan, deletePlace],
+  );
 
   return {
     addPlaceFromGoogle,
@@ -749,9 +789,10 @@ export const usePlaceActions = () => {
 ```
 
 #### B. カテゴリフィルター (`src/components/places/CategoryFilter.tsx`)
+
 ```typescript
 import React from 'react';
-import { 
+import {
   BuildingStorefrontIcon,
   BuildingOfficeIcon,
   MapPinIcon,
@@ -829,8 +870,8 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
               className={`
                 flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium
                 transition-colors border
-                ${isSelected 
-                  ? `${config.color} border-current` 
+                ${isSelected
+                  ? `${config.color} border-current`
                   : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }
               `}
@@ -849,8 +890,9 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
 ### 5. 共通フック・ユーティリティ
 
 #### A. デバウンスフック (`src/hooks/shared/useDebounce.ts`)
+
 ```typescript
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -870,13 +912,14 @@ export function useDebounce<T>(value: T, delay: number): T {
 ```
 
 #### B. 地理位置ユーティリティ (`src/utils/geoUtils.ts`)
+
 ```typescript
 // 2点間の距離を計算（メートル）
 export function calculateDistance(
   lat1: number,
   lng1: number,
   lat2: number,
-  lng2: number
+  lng2: number,
 ): number {
   const R = 6371e3; // 地球の半径（メートル）
   const φ1 = (lat1 * Math.PI) / 180;
@@ -896,7 +939,7 @@ export function calculateDistance(
 export function getCurrentPosition(): Promise<{ lat: number; lng: number }> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported'));
+      reject(new Error("Geolocation is not supported"));
       return;
     }
 
@@ -914,7 +957,7 @@ export function getCurrentPosition(): Promise<{ lat: number; lng: number }> {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 300000, // 5分間キャッシュ
-      }
+      },
     );
   });
 }

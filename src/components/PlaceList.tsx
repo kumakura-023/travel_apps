@@ -1,96 +1,115 @@
-import React, { useState, useMemo } from 'react';
-import { useSavedPlacesStore } from '../store/savedPlacesStore';
-import { usePlanStore } from '../store/planStore';
-import { useLabelsStore } from '../store/labelsStore';
-import { useUIStore } from '../store/uiStore';
-import { Place } from '../types';
-import PlaceListItem from './PlaceListItem';
-import CategoryFilter from './CategoryFilter';
-import DaySelector from './DaySelector';
-import CostSummary from './CostSummary';
-import CostPieChart from './CostPieChart';
-import PlanNameEditModal from './PlanNameEditModal';
-import DateSelectionModal from './DateSelectionModal';
+import React, { useState, useMemo } from "react";
+import { useSavedPlacesStore } from "../store/savedPlacesStore";
+import { usePlanStore } from "../store/planStore";
+import { useLabelsStore } from "../store/labelsStore";
+import { useUIStore } from "../store/uiStore";
+import { Place } from "../types";
+import PlaceListItem from "./PlaceListItem";
+import CategoryFilter from "./CategoryFilter";
+import DaySelector from "./DaySelector";
+import CostSummary from "./CostSummary";
+import CostPieChart from "./CostPieChart";
+import PlanNameEditModal from "./PlanNameEditModal";
+import DateSelectionModal from "./DateSelectionModal";
 
 export default function PlaceList() {
   const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const { plan } = usePlanStore();
   const { labels } = useLabelsStore();
   const { selectedCategories, setSelectedCategories } = useUIStore();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [selectedDay, setSelectedDay] = useState<number | undefined>(undefined);
-  const [sortKey, setSortKey] = useState<'name' | 'cost' | 'date' | 'day'>('date');
+  const [sortKey, setSortKey] = useState<"name" | "cost" | "date" | "day">(
+    "date",
+  );
   const [sortAsc, setSortAsc] = useState(false);
   const [nameModal, setNameModal] = useState(false);
   const [dateModal, setDateModal] = useState(false);
   // メモ関連のフィルタリング
   const [showMemoOnly, setShowMemoOnly] = useState(false);
   const [showLinkedMemos, setShowLinkedMemos] = useState(true);
-  const [memoSearch, setMemoSearch] = useState('');
+  const [memoSearch, setMemoSearch] = useState("");
 
   const filtered = useMemo(() => {
     let arr = places as Place[];
-    
+
     // 名前での検索
     if (search.trim()) {
-      arr = arr.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+      arr = arr.filter((p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()),
+      );
     }
-    
+
     // カテゴリフィルター
     if (selectedCategories.length) {
       arr = arr.filter((p) => selectedCategories.includes(p.category));
     }
-    
+
     // 日程フィルター
     if (selectedDay !== undefined) {
       arr = arr.filter((p) => p.scheduledDay === selectedDay);
     }
-    
+
     // メモ関連のフィルタリング
     if (showMemoOnly) {
       arr = arr.filter((p) => {
         // 候補地自身にメモがあるか、リンクされたメモがあるかをチェック
-        const hasOwnMemo = p.memo && p.memo.trim() !== '';
-        const hasLinkedMemo = labels.some(label => label.linkedPlaceId === p.id);
+        const hasOwnMemo = p.memo && p.memo.trim() !== "";
+        const hasLinkedMemo = labels.some(
+          (label) => label.linkedPlaceId === p.id,
+        );
         return hasOwnMemo || hasLinkedMemo;
       });
     }
-    
+
     // メモ内容での検索
     if (memoSearch.trim()) {
       arr = arr.filter((p) => {
         // 候補地自身のメモを検索
-        const ownMemoMatch = p.memo?.toLowerCase().includes(memoSearch.toLowerCase());
+        const ownMemoMatch = p.memo
+          ?.toLowerCase()
+          .includes(memoSearch.toLowerCase());
         // リンクされたメモを検索
-        const linkedMemoMatch = labels.some(label => 
-          label.linkedPlaceId === p.id && 
-          label.text.toLowerCase().includes(memoSearch.toLowerCase())
+        const linkedMemoMatch = labels.some(
+          (label) =>
+            label.linkedPlaceId === p.id &&
+            label.text.toLowerCase().includes(memoSearch.toLowerCase()),
         );
         return ownMemoMatch || linkedMemoMatch;
       });
     }
-    
+
     // ソート
     arr = [...arr].sort((a, b) => {
       let v = 0;
       switch (sortKey) {
-        case 'name':
+        case "name":
           v = a.name.localeCompare(b.name);
           break;
-        case 'cost':
+        case "cost":
           v = (a.estimatedCost || 0) - (b.estimatedCost || 0);
           break;
-        case 'date':
+        case "date":
           v = a.createdAt.getTime() - b.createdAt.getTime();
           break;
-        case 'day':
+        case "day":
           v = (a.scheduledDay || 999) - (b.scheduledDay || 999);
           break;
       }
       return sortAsc ? v : -v;
     });
     return arr;
-  }, [places, labels, search, selectedCategories, selectedDay, sortKey, sortAsc, showMemoOnly, memoSearch]);
+  }, [
+    places,
+    labels,
+    search,
+    selectedCategories,
+    selectedDay,
+    sortKey,
+    sortAsc,
+    showMemoOnly,
+    memoSearch,
+  ]);
 
   return (
     <div className="fixed inset-0 glass-effect overflow-y-auto z-30 safe-area-inset">
@@ -110,7 +129,7 @@ export default function PlaceList() {
               >
                 {plan.name}
               </button>
-              
+
               {/* 日程表示 - クリック可能 */}
               {plan.startDate && (
                 <button
@@ -121,31 +140,42 @@ export default function PlaceList() {
                   title="日程を編集"
                 >
                   <div className="w-4 h-4 text-coral-500 flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-full h-full">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                      <line x1="16" y1="2" x2="16" y2="6"/>
-                      <line x1="8" y1="2" x2="8" y2="6"/>
-                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="w-full h-full"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
                     </svg>
                   </div>
                   <span className="subheadline text-system-secondary-label font-medium group-hover:text-coral-600">
-                    {plan.startDate.toLocaleDateString('ja-JP', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
+                    {plan.startDate.toLocaleDateString("ja-JP", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
                     })}
-                    {plan.endDate && plan.endDate.getTime() !== plan.startDate.getTime() && (
-                      <> 〜 {plan.endDate.toLocaleDateString('ja-JP', { 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}</>
-                    )}
+                    {plan.endDate &&
+                      plan.endDate.getTime() !== plan.startDate.getTime() && (
+                        <>
+                          {" "}
+                          〜{" "}
+                          {plan.endDate.toLocaleDateString("ja-JP", {
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </>
+                      )}
                   </span>
                 </button>
               )}
             </div>
           )}
-          
+
           {/* 候補地リストのサブタイトル */}
           <div className="pt-2 border-t border-system-separator/30">
             <h2 className="headline text-system-label">候補地リスト</h2>
@@ -158,7 +188,9 @@ export default function PlaceList() {
         {/* 検索 & フィルター */}
         <div className="glass-effect rounded-xl p-4 space-y-4 shadow-elevation-1">
           <div className="space-y-2">
-            <label className="subheadline text-system-label font-medium">検索</label>
+            <label className="subheadline text-system-label font-medium">
+              検索
+            </label>
             <input
               type="text"
               placeholder="候補地名で検索..."
@@ -167,14 +199,21 @@ export default function PlaceList() {
               className="input"
             />
           </div>
-          
+
           <div className="space-y-2">
-            <label className="subheadline text-system-label font-medium">カテゴリフィルター</label>
-            <CategoryFilter selected={selectedCategories} onChange={setSelectedCategories} />
+            <label className="subheadline text-system-label font-medium">
+              カテゴリフィルター
+            </label>
+            <CategoryFilter
+              selected={selectedCategories}
+              onChange={setSelectedCategories}
+            />
           </div>
-          
+
           <div className="space-y-2">
-            <label className="subheadline text-system-label font-medium">日程フィルター</label>
+            <label className="subheadline text-system-label font-medium">
+              日程フィルター
+            </label>
             <div className="flex items-center gap-2">
               <DaySelector
                 selectedDay={selectedDay}
@@ -193,11 +232,13 @@ export default function PlaceList() {
               )}
             </div>
           </div>
-          
+
           {/* メモ関連フィルター */}
           <div className="space-y-3 border-t border-system-separator/30 pt-4">
-            <label className="subheadline text-system-label font-medium">メモフィルター</label>
-            
+            <label className="subheadline text-system-label font-medium">
+              メモフィルター
+            </label>
+
             {/* メモ検索 */}
             <div className="space-y-2">
               <input
@@ -208,7 +249,7 @@ export default function PlaceList() {
                 className="input text-sm"
               />
             </div>
-            
+
             {/* メモ関連の表示オプション */}
             <div className="space-y-2">
               <label className="flex items-center gap-3 cursor-pointer">
@@ -219,9 +260,11 @@ export default function PlaceList() {
                   className="w-4 h-4 text-coral-500 bg-transparent border-2 border-system-separator rounded 
                            focus:ring-coral-500 focus:ring-2 checked:bg-coral-500 checked:border-coral-500"
                 />
-                <span className="callout text-system-label">メモ付きのみ表示</span>
+                <span className="callout text-system-label">
+                  メモ付きのみ表示
+                </span>
               </label>
-              
+
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -230,7 +273,9 @@ export default function PlaceList() {
                   className="w-4 h-4 text-teal-500 bg-transparent border-2 border-system-separator rounded 
                            focus:ring-teal-500 focus:ring-2 checked:bg-teal-500 checked:border-teal-500"
                 />
-                <span className="callout text-system-label">リンクメモを表示</span>
+                <span className="callout text-system-label">
+                  リンクメモを表示
+                </span>
               </label>
             </div>
           </div>
@@ -239,13 +284,15 @@ export default function PlaceList() {
         {/* ソート */}
         <div className="glass-effect rounded-xl p-4 shadow-elevation-1">
           <div className="space-y-2">
-            <label className="subheadline text-system-label font-medium">並び替え</label>
+            <label className="subheadline text-system-label font-medium">
+              並び替え
+            </label>
             <div className="flex items-center gap-2 flex-wrap">
               {[
-                { key: 'name', label: '名前順' },
-                { key: 'cost', label: 'コスト順' },
-                { key: 'date', label: '追加日順' },
-                { key: 'day', label: '日程順' },
+                { key: "name", label: "名前順" },
+                { key: "cost", label: "コスト順" },
+                { key: "date", label: "追加日順" },
+                { key: "day", label: "日程順" },
               ].map(({ key, label }) => (
                 <button
                   key={key}
@@ -260,15 +307,15 @@ export default function PlaceList() {
                   className={`px-4 py-2 rounded-lg border transition-all duration-150 ease-ios-default
                              hover:scale-105 active:scale-95
                              ${
-                               sortKey === key 
-                                 ? 'bg-coral-500 text-white border-coral-500 shadow-elevation-1' 
-                                 : 'bg-system-secondary-background text-system-secondary-label border-system-separator hover:border-coral-500/30 hover:text-coral-500'
+                               sortKey === key
+                                 ? "bg-coral-500 text-white border-coral-500 shadow-elevation-1"
+                                 : "bg-system-secondary-background text-system-secondary-label border-system-separator hover:border-coral-500/30 hover:text-coral-500"
                              }`}
                 >
                   <span className="callout font-medium">{label}</span>
                   {sortKey === key && (
                     <span className="ml-1 caption-1">
-                      {sortAsc ? '↑' : '↓'}
+                      {sortAsc ? "↑" : "↓"}
                     </span>
                   )}
                 </button>
@@ -290,29 +337,34 @@ export default function PlaceList() {
           {filtered.length > 0 ? (
             <>
               <div className="flex items-center justify-between">
-                <h2 className="headline text-system-label">
-                  候補地一覧
-                </h2>
+                <h2 className="headline text-system-label">候補地一覧</h2>
                 <span className="caption-1 text-system-secondary-label">
                   {filtered.length}件表示
                 </span>
               </div>
               {filtered.map((p) => (
-                <PlaceListItem 
-                  key={p.id} 
-                  place={p} 
+                <PlaceListItem
+                  key={p.id}
+                  place={p}
                   showLinkedMemos={showLinkedMemos}
                 />
               ))}
             </>
           ) : (
             <div className="glass-effect rounded-xl p-8 text-center shadow-elevation-1">
-              <div className="w-16 h-16 bg-system-secondary-background rounded-full 
-                              flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-system-tertiary-label" 
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="M21 21l-4.35-4.35"/>
+              <div
+                className="w-16 h-16 bg-system-secondary-background rounded-full 
+                              flex items-center justify-center mx-auto mb-4"
+              >
+                <svg
+                  className="w-8 h-8 text-system-tertiary-label"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
                 </svg>
               </div>
               <h3 className="headline text-system-secondary-label mb-2">
@@ -330,8 +382,14 @@ export default function PlaceList() {
       </div>
 
       {/* モーダル */}
-      <PlanNameEditModal isOpen={nameModal} onClose={() => setNameModal(false)} />
-      <DateSelectionModal isOpen={dateModal} onClose={() => setDateModal(false)} />
+      <PlanNameEditModal
+        isOpen={nameModal}
+        onClose={() => setNameModal(false)}
+      />
+      <DateSelectionModal
+        isOpen={dateModal}
+        onClose={() => setDateModal(false)}
+      />
     </div>
   );
-} 
+}

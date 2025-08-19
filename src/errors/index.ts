@@ -1,15 +1,23 @@
 /**
  * エラー関連のエクスポート
  */
-export { AppError } from './AppError';
-export { ErrorHandler } from './ErrorHandler';
-export { ErrorCode, ErrorSeverity, getErrorMessage, getErrorSeverity } from './ErrorCodes';
+export { AppError } from "./AppError";
+export { ErrorHandler } from "./ErrorHandler";
+export {
+  ErrorCode,
+  ErrorSeverity,
+  getErrorMessage,
+  getErrorSeverity,
+} from "./ErrorCodes";
 
-import { AppError } from './AppError';
-import { ErrorCode } from './ErrorCodes';
+import { AppError } from "./AppError";
+import { ErrorCode } from "./ErrorCodes";
 
 // 便利なエラー作成関数のエクスポート
-export const createNetworkError = (message?: string, retry?: () => Promise<void>) => {
+export const createNetworkError = (
+  message?: string,
+  retry?: () => Promise<void>,
+) => {
   return new AppError(ErrorCode.NETWORK_ERROR, message, { retry });
 };
 
@@ -18,7 +26,9 @@ export const createValidationError = (message: string, details?: any) => {
 };
 
 export const createNotFoundError = (resource: string, id?: string) => {
-  const msg = id ? `${resource}が見つかりません (ID: ${id})` : `${resource}が見つかりません`;
+  const msg = id
+    ? `${resource}が見つかりません (ID: ${id})`
+    : `${resource}が見つかりません`;
   return new AppError(ErrorCode.NOT_FOUND, msg, { context: { resource, id } });
 };
 

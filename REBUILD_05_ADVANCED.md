@@ -1,12 +1,15 @@
 # Phase 5: 高度な機能 - 詳細実装指示
 
 ## 目標
+
 共有機能、コスト管理、高度なUI機能を実装し、VoyageSketchを完全な旅行計画アプリケーションとして完成させる。
 
 ## 実装期間
+
 2-3週間
 
 ## 前提条件
+
 - Phase 1-4が完了済み
 - 基本的な計画・メモ・ルート機能が動作中
 - Firebase Authentication・Firestoreが設定済み
@@ -16,11 +19,12 @@
 ### 1. 計画共有・招待システム
 
 #### A. 招待リンク生成・管理サービス (`src/services/api/shareService.ts`)
+
 ```typescript
-import { 
-  doc, 
-  setDoc, 
-  getDoc, 
+import {
+  doc,
+  setDoc,
+  getDoc,
   updateDoc,
   collection,
   addDoc,
@@ -28,17 +32,17 @@ import {
   where,
   getDocs,
   serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '@/services/firebase';
-import { v4 as uuidv4 } from 'uuid';
-import { planService } from './planService';
-import type { Plan, PlanMember } from '@/types/core';
+} from "firebase/firestore";
+import { db } from "@/services/firebase";
+import { v4 as uuidv4 } from "uuid";
+import { planService } from "./planService";
+import type { Plan, PlanMember } from "@/types/core";
 
 export interface ShareLink {
   id: string;
   planId: string;
   createdBy: string;
-  role: PlanMember['role'];
+  role: PlanMember["role"];
   expiresAt: Date | null;
   maxUses: number | null;
   currentUses: number;
@@ -57,28 +61,30 @@ class ShareService {
   async createShareLink(
     planId: string,
     createdBy: string,
-    role: PlanMember['role'] = 'viewer',
+    role: PlanMember["role"] = "viewer",
     options: {
       expiresIn?: number; // 時間（ミリ秒）
       maxUses?: number;
-    } = {}
+    } = {},
   ): Promise<ShareLink> {
     const linkId = uuidv4();
     const now = new Date();
-    
+
     const shareLink: ShareLink = {
       id: linkId,
       planId,
       createdBy,
       role,
-      expiresAt: options.expiresIn ? new Date(now.getTime() + options.expiresIn) : null,
+      expiresAt: options.expiresIn
+        ? new Date(now.getTime() + options.expiresIn)
+        : null,
       maxUses: options.maxUses || null,
       currentUses: 0,
       isActive: true,
       createdAt: now,
     };
 
-    const linkRef = doc(db, 'shareLinks', linkId);
+    const linkRef = doc(db, "shareLinks", linkId);
     await setDoc(linkRef, {
       ...shareLink,
       createdAt: serverTimestamp(),
@@ -89,8 +95,8 @@ class ShareService {
   }
 
   async getShareLink(linkId: string): Promise<ShareLink | null> {
-    const linkDoc = await getDoc(doc(db, 'shareLinks', linkId));
-    
+    const linkDoc = await getDoc(doc(db, "shareLinks", linkId));
+
     if (!linkDoc.exists()) {
       return null;
     }
@@ -107,50 +113,59 @@ class ShareService {
   async validateAndUseShareLink(
     linkId: string,
     userId: string,
-    userEmail: string
+    userEmail: string,
   ): Promise<{
     isValid: boolean;
     plan?: Plan;
     error?: string;
   }> {
     const shareLink = await this.getShareLink(linkId);
-    
+
     if (!shareLink) {
-      return { isValid: false, error: '招待リンクが見つかりません' };
+      return { isValid: false, error: "招待リンクが見つかりません" };
     }
 
     if (!shareLink.isActive) {
-      return { isValid: false, error: '招待リンクが無効です' };
+      return { isValid: false, error: "招待リンクが無効です" };
     }
 
     // 有効期限チェック
     if (shareLink.expiresAt && shareLink.expiresAt < new Date()) {
-      return { isValid: false, error: '招待リンクの有効期限が切れています' };
+      return { isValid: false, error: "招待リンクの有効期限が切れています" };
     }
 
     // 使用回数チェック
     if (shareLink.maxUses && shareLink.currentUses >= shareLink.maxUses) {
-      return { isValid: false, error: '招待リンクの使用回数上限に達しています' };
+      return {
+        isValid: false,
+        error: "招待リンクの使用回数上限に達しています",
+      };
     }
 
     // プランを取得
     const plan = await planService.getPlan(shareLink.planId);
     if (!plan) {
-      return { isValid: false, error: '計画が見つかりません' };
+      return { isValid: false, error: "計画が見つかりません" };
     }
 
     // 既にメンバーかチェック
-    const isAlreadyMember = plan.members.some(member => member.userId === userId);
+    const isAlreadyMember = plan.members.some(
+      (member) => member.userId === userId,
+    );
     if (isAlreadyMember) {
       return { isValid: true, plan }; // 既にメンバーでもOK
     }
 
     try {
       // メンバーに追加
-      await planService.addMemberToPlan(shareLink.planId, userId, shareLink.role);
+      await planService.addMemberToPlan(
+        shareLink.planId,
+        userId,
+        shareLink.role,
+      );
 
       // 招待受諾記録を保存
-      await addDoc(collection(db, 'inviteAcceptances'), {
+      await addDoc(collection(db, "inviteAcceptances"), {
         linkId,
         userId,
         userEmail,
@@ -158,36 +173,36 @@ class ShareService {
       });
 
       // 使用回数を増加
-      await updateDoc(doc(db, 'shareLinks', linkId), {
+      await updateDoc(doc(db, "shareLinks", linkId), {
         currentUses: shareLink.currentUses + 1,
       });
 
       return { isValid: true, plan };
     } catch (error) {
-      console.error('Failed to process share link:', error);
-      return { 
-        isValid: false, 
-        error: 'メンバー追加処理に失敗しました' 
+      console.error("Failed to process share link:", error);
+      return {
+        isValid: false,
+        error: "メンバー追加処理に失敗しました",
       };
     }
   }
 
   async deactivateShareLink(linkId: string): Promise<void> {
-    await updateDoc(doc(db, 'shareLinks', linkId), {
+    await updateDoc(doc(db, "shareLinks", linkId), {
       isActive: false,
     });
   }
 
   async getPlanShareLinks(planId: string): Promise<ShareLink[]> {
     const linksQuery = query(
-      collection(db, 'shareLinks'),
-      where('planId', '==', planId),
-      where('isActive', '==', true)
+      collection(db, "shareLinks"),
+      where("planId", "==", planId),
+      where("isActive", "==", true),
     );
 
     const snapshot = await getDocs(linksQuery);
-    
-    return snapshot.docs.map(doc => {
+
+    return snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
         ...data,
@@ -208,10 +223,11 @@ export const shareService = new ShareService();
 ```
 
 #### B. 共有モーダルコンポーネント (`src/components/plans/ShareModal.tsx`)
+
 ```typescript
 import React, { useState, useEffect } from 'react';
-import { 
-  XMarkIcon, 
+import {
+  XMarkIcon,
   LinkIcon,
   ClipboardIcon,
   UsersIcon,
@@ -264,7 +280,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     setIsCreating(true);
     try {
       const options: { expiresIn?: number; maxUses?: number } = {};
-      
+
       // 有効期限の設定
       if (expiresIn !== 'never') {
         const hours = parseInt(expiresIn);
@@ -293,7 +309,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   const copyToClipboard = async (linkId: string) => {
     const url = shareService.generateShareUrl(linkId);
-    
+
     try {
       await navigator.clipboard.writeText(url);
       setCopiedLinkId(linkId);
@@ -360,7 +376,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           {/* 新しい招待リンク作成 */}
           <div className="border border-gray-200 rounded-lg p-4">
             <h4 className="font-medium text-gray-900 mb-4">新しい招待リンクを作成</h4>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -422,7 +438,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           {/* 既存の招待リンク */}
           <div>
             <h4 className="font-medium text-gray-900 mb-4">既存の招待リンク</h4>
-            
+
             {shareLinks.length === 0 ? (
               <p className="text-sm text-gray-500 text-center py-4">
                 まだ招待リンクがありません
@@ -440,19 +456,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
                             {getRoleLabel(link.role)}
                           </span>
-                          
+
                           <div className="flex items-center text-xs text-gray-500">
                             <CalendarIcon className="w-3 h-3 mr-1" />
                             {formatExpiresAt(link.expiresAt)}
                           </div>
-                          
+
                           <div className="flex items-center text-xs text-gray-500">
                             <HashtagIcon className="w-3 h-3 mr-1" />
                             {link.currentUses}
                             {link.maxUses ? `/${link.maxUses}` : ''} 回使用
                           </div>
                         </div>
-                        
+
                         <div className="bg-gray-50 rounded p-2 font-mono text-xs break-all">
                           {shareService.generateShareUrl(link.id)}
                         </div>
@@ -469,7 +485,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                           {copiedLinkId === link.id ? 'コピー済み!' : 'コピー'}
                         </span>
                       </button>
-                      
+
                       <button
                         onClick={() => deactivateLink(link.id)}
                         className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
@@ -512,14 +528,21 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 ### 2. コスト管理システム
 
 #### A. コスト管理ストア (`src/stores/costStore.ts`)
+
 ```typescript
-import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
+import { create } from "zustand";
+import { immer } from "zustand/middleware/immer";
 
 export interface CostItem {
   id: string;
   placeId: string;
-  category: 'accommodation' | 'food' | 'transport' | 'activity' | 'shopping' | 'other';
+  category:
+    | "accommodation"
+    | "food"
+    | "transport"
+    | "activity"
+    | "shopping"
+    | "other";
   name: string;
   amount: number;
   currency: string;
@@ -531,7 +554,7 @@ export interface CostItem {
 
 export interface CostSummary {
   totalAmount: number;
-  byCategory: Record<CostItem['category'], number>;
+  byCategory: Record<CostItem["category"], number>;
   byPlace: Record<string, number>;
   currency: string;
 }
@@ -561,35 +584,41 @@ export const useCostStore = create<CostState & CostActions>()(
     error: null,
 
     // Actions
-    setCosts: (costs) => set((state) => {
-      state.costs = costs;
-    }),
+    setCosts: (costs) =>
+      set((state) => {
+        state.costs = costs;
+      }),
 
-    addCost: (cost) => set((state) => {
-      state.costs.push(cost);
-    }),
+    addCost: (cost) =>
+      set((state) => {
+        state.costs.push(cost);
+      }),
 
-    updateCost: (costId, updates) => set((state) => {
-      const index = state.costs.findIndex(c => c.id === costId);
-      if (index !== -1) {
-        Object.assign(state.costs[index], updates);
-      }
-    }),
+    updateCost: (costId, updates) =>
+      set((state) => {
+        const index = state.costs.findIndex((c) => c.id === costId);
+        if (index !== -1) {
+          Object.assign(state.costs[index], updates);
+        }
+      }),
 
-    deleteCost: (costId) => set((state) => {
-      state.costs = state.costs.filter(c => c.id !== costId);
-    }),
+    deleteCost: (costId) =>
+      set((state) => {
+        state.costs = state.costs.filter((c) => c.id !== costId);
+      }),
 
-    setLoading: (loading) => set((state) => {
-      state.isLoading = loading;
-    }),
+    setLoading: (loading) =>
+      set((state) => {
+        state.isLoading = loading;
+      }),
 
-    setError: (error) => set((state) => {
-      state.error = error;
-    }),
+    setError: (error) =>
+      set((state) => {
+        state.error = error;
+      }),
 
     getCostsByPlace: (placeId) => {
-      return get().costs.filter(cost => cost.placeId === placeId);
+      return get().costs.filter((cost) => cost.placeId === placeId);
     },
 
     getCostSummary: () => {
@@ -605,13 +634,13 @@ export const useCostStore = create<CostState & CostActions>()(
           other: 0,
         },
         byPlace: {},
-        currency: 'JPY', // デフォルト通貨
+        currency: "JPY", // デフォルト通貨
       };
 
-      costs.forEach(cost => {
+      costs.forEach((cost) => {
         summary.totalAmount += cost.amount;
         summary.byCategory[cost.category] += cost.amount;
-        
+
         if (!summary.byPlace[cost.placeId]) {
           summary.byPlace[cost.placeId] = 0;
         }
@@ -620,11 +649,12 @@ export const useCostStore = create<CostState & CostActions>()(
 
       return summary;
     },
-  }))
+  })),
 );
 ```
 
 #### B. コスト追加モーダル (`src/components/costs/CostModal.tsx`)
+
 ```typescript
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, CurrencyYenIcon } from '@heroicons/react/24/outline';
@@ -687,7 +717,7 @@ export const CostModal: React.FC<CostModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim() || !amount || !user) return;
 
     setIsSubmitting(true);
@@ -866,6 +896,7 @@ export const CostModal: React.FC<CostModalProps> = ({
 ```
 
 #### C. コスト円グラフ (`src/components/costs/CostPieChart.tsx`)
+
 ```typescript
 import React, { useMemo } from 'react';
 import { useCostStore } from '@/stores/costStore';
@@ -894,7 +925,7 @@ export const CostPieChart: React.FC = () => {
         const percentage = total > 0 ? (amount / total) * 100 : 0;
         const startAngle = cumulativePercentage * 3.6; // 360度 / 100%
         const endAngle = (cumulativePercentage + percentage) * 3.6;
-        
+
         cumulativePercentage += percentage;
 
         return {
@@ -928,7 +959,7 @@ export const CostPieChart: React.FC = () => {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">コスト内訳</h3>
-      
+
       <div className="flex flex-col lg:flex-row items-center space-y-6 lg:space-y-0 lg:space-x-8">
         {/* 円グラフ */}
         <div className="relative">
@@ -963,7 +994,7 @@ export const CostPieChart: React.FC = () => {
               );
             })}
           </svg>
-          
+
           {/* 中央の総額表示 */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <p className="text-sm text-gray-600">総額</p>
@@ -1006,6 +1037,7 @@ export const CostPieChart: React.FC = () => {
 ### 3. 高度なUI機能
 
 #### A. チュートリアルシステム (`src/components/tutorial/TutorialOverlay.tsx`)
+
 ```typescript
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
@@ -1040,15 +1072,15 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
     const step = steps[currentStep];
     const element = document.querySelector(step.target) as HTMLElement;
-    
+
     if (element) {
       setTargetElement(element);
-      
+
       // 要素の位置を計算
       const rect = element.getBoundingClientRect();
       const scrollX = window.pageXOffset;
       const scrollY = window.pageYOffset;
-      
+
       let x = 0;
       let y = 0;
 
@@ -1210,11 +1242,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 ```
 
 #### B. アプリ設定画面 (`src/components/settings/SettingsPage.tsx`)
+
 ```typescript
 import React, { useState } from 'react';
-import { 
-  UserIcon, 
-  MapIcon, 
+import {
+  UserIcon,
+  MapIcon,
   BellIcon,
   GlobeAltIcon,
   ShieldCheckIcon,
@@ -1309,8 +1342,8 @@ export const SettingsPage: React.FC = () => {
       title: 'ヘルプ・サポート',
       icon: QuestionMarkCircleIcon,
       items: [
-        { 
-          label: 'チュートリアルを再生', 
+        {
+          label: 'チュートリアルを再生',
           action: () => setShowTutorial(true)
         },
         { label: 'よくある質問', action: () => {} },
@@ -1406,24 +1439,28 @@ export const SettingsPage: React.FC = () => {
 ## 完成チェックリスト
 
 ### 共有機能
+
 - [ ] 招待リンクの生成・管理が動作する
 - [ ] 権限設定（閲覧者・編集者）が機能する
 - [ ] 有効期限・使用回数制限が動作する
 - [ ] 招待リンクからの参加が正常に動作する
 
 ### コスト管理
+
 - [ ] コストの追加・編集・削除が動作する
 - [ ] カテゴリ別の集計が正しく表示される
 - [ ] 円グラフが適切に描画される
 - [ ] 通貨フォーマットが正しく表示される
 
 ### 高度なUI機能
+
 - [ ] チュートリアルが適切に動作する
 - [ ] 設定画面が正常に表示される
 - [ ] レスポンシブデザインが適用されている
 - [ ] アクセシビリティが考慮されている
 
 ### 全体統合
+
 - [ ] 全ての機能が連携して動作する
 - [ ] パフォーマンスが良好
 - [ ] エラーハンドリングが適切

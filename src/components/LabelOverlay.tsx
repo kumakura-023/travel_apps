@@ -1,11 +1,11 @@
-import { OverlayView } from '@react-google-maps/api';
-import { MapLabel } from '../types';
-import { useEffect, useState, useRef, useMemo } from 'react';
-import { useLabelsStore } from '../store/labelsStore';
-import { useSavedPlacesStore } from '../store/savedPlacesStore';
-import { useUIStore } from '../store/uiStore';
-import { useDeviceDetect } from '../hooks/useDeviceDetect';
-import { setGlobalScrollLock } from '../utils/scrollLock';
+import { OverlayView } from "@react-google-maps/api";
+import { MapLabel } from "../types";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { useLabelsStore } from "../store/labelsStore";
+import { useSavedPlacesStore } from "../store/savedPlacesStore";
+import { useUIStore } from "../store/uiStore";
+import { useDeviceDetect } from "../hooks/useDeviceDetect";
+import { setGlobalScrollLock } from "../utils/scrollLock";
 
 interface Props {
   label: MapLabel;
@@ -17,13 +17,21 @@ interface Props {
   onResizeEnd?: (size: { width: number; height: number }) => void;
 }
 
-type InteractionMode = 'idle' | 'dragging' | 'resizing' | 'editing';
+type InteractionMode = "idle" | "dragging" | "resizing" | "editing";
 
-export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onMoveEnd, onResizeEnd }: Props) {
+export default function LabelOverlay({
+  label,
+  map,
+  onEdit,
+  onMove,
+  onResize,
+  onMoveEnd,
+  onResizeEnd,
+}: Props) {
   const { isMobile } = useDeviceDetect();
   const setMapInteraction = useUIStore((s) => s.setMapInteraction);
 
-  const [mode, setMode] = useState<InteractionMode>('idle');
+  const [mode, setMode] = useState<InteractionMode>("idle");
   const [currentZoom, setCurrentZoom] = useState<number>(map?.getZoom() ?? 14);
 
   const interactionStartRef = useRef({
@@ -40,39 +48,47 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
   const isPointerDownRef = useRef(false);
 
   // 現在の位置とサイズを保持
-  const currentPositionRef = useRef<{ lat: number; lng: number }>(label.position);
+  const currentPositionRef = useRef<{ lat: number; lng: number }>(
+    label.position,
+  );
   const currentSizeRef = useRef<{ width: number; height: number }>({
     width: label.width,
-    height: label.height
+    height: label.height,
   });
 
   const deleteLabel = useLabelsStore((s) => s.deleteLabel);
 
   const linkedPlace = useMemo(
-    () => (label.linkedPlaceId ? useSavedPlacesStore.getState().getFilteredPlaces().find((p) => p.id === label.linkedPlaceId) : null),
+    () =>
+      label.linkedPlaceId
+        ? useSavedPlacesStore
+            .getState()
+            .getFilteredPlaces()
+            .find((p) => p.id === label.linkedPlaceId)
+        : null,
     [label.linkedPlaceId],
   );
 
   // Unified interaction management (map lock, scroll lock, event listeners)
   useEffect(() => {
-    const isInteracting = mode !== 'idle';
+    const isInteracting = mode !== "idle";
     setMapInteraction(!isInteracting);
     setGlobalScrollLock(isInteracting);
 
     const handlePointerMove = (ev: PointerEvent) => {
-      if (mode === 'resizing') {
+      if (mode === "resizing") {
         ev.stopPropagation();
         const dx = ev.clientX - interactionStartRef.current.clientX;
         const dy = ev.clientY - interactionStartRef.current.clientY;
         const newWidth = Math.max(60, interactionStartRef.current.width + dx);
         const newHeight = Math.max(28, interactionStartRef.current.height + dy);
-        
+
         // 現在のサイズを保存
         currentSizeRef.current = { width: newWidth, height: newHeight };
-        
+
         onResize({ width: newWidth, height: newHeight });
         interactionStartRef.current.moved = true;
-      } else if (mode === 'dragging') {
+      } else if (mode === "dragging") {
         if (!map) return;
         const proj = map.getProjection();
         if (!proj || !interactionStartRef.current.world) return;
@@ -80,14 +96,17 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
         const scale = 2 ** zoom;
         const dx = (ev.clientX - interactionStartRef.current.clientX) / scale;
         const dy = (ev.clientY - interactionStartRef.current.clientY) / scale;
-        const newWorld = new google.maps.Point(interactionStartRef.current.world.x + dx, interactionStartRef.current.world.y + dy);
+        const newWorld = new google.maps.Point(
+          interactionStartRef.current.world.x + dx,
+          interactionStartRef.current.world.y + dy,
+        );
         const latLng = proj.fromPointToLatLng(newWorld);
         if (latLng) {
           const newPosition = { lat: latLng.lat(), lng: latLng.lng() };
-          
+
           // 現在の位置を保存
           currentPositionRef.current = newPosition;
-          
+
           onMove(newPosition);
         }
         interactionStartRef.current.moved = true;
@@ -98,45 +117,46 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
       isPointerDownRef.current = false;
       // 操作終了時の処理
       if (interactionStartRef.current.moved) {
-        if (mode === 'dragging' && onMoveEnd) {
+        if (mode === "dragging" && onMoveEnd) {
           // 保存された最新の位置で同期
           onMoveEnd(currentPositionRef.current);
-        } else if (mode === 'resizing' && onResizeEnd) {
+        } else if (mode === "resizing" && onResizeEnd) {
           // 保存された最新のサイズで同期
           onResizeEnd(currentSizeRef.current);
           // On mobile, end editing mode after resize operation
           if (isMobile) {
-            setMode('idle');
+            setMode("idle");
             return;
           }
         }
       }
-      
+
       // For non-mobile or non-resize operations, always set to idle
-      if (!isMobile || mode !== 'editing') {
-        setMode('idle');
+      if (!isMobile || mode !== "editing") {
+        setMode("idle");
       }
       // For mobile editing mode without resize/drag, keep editing mode active
     };
 
     if (isInteracting) {
-      window.addEventListener('pointermove', handlePointerMove);
-      window.addEventListener('pointerup', handlePointerUp);
-      window.addEventListener('pointercancel', handlePointerUp);
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+      window.addEventListener("pointercancel", handlePointerUp);
     }
 
     // Exit editing mode when map is clicked
     let mapClickListener: google.maps.MapsEventListener | null = null;
-    if (mode === 'editing') {
-      mapClickListener = map?.addListener('click', () => {
-        setMode('idle');
-      }) || null;
+    if (mode === "editing") {
+      mapClickListener =
+        map?.addListener("click", () => {
+          setMode("idle");
+        }) || null;
     }
 
     return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-      window.removeEventListener('pointercancel', handlePointerUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
       mapClickListener?.remove();
     };
   }, [mode, map, onMove, onResize]);
@@ -144,7 +164,9 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
   // Zoom listener
   useEffect(() => {
     if (!map) return;
-    const zoomListener = map.addListener('zoom_changed', () => setCurrentZoom(map.getZoom() ?? 14));
+    const zoomListener = map.addListener("zoom_changed", () =>
+      setCurrentZoom(map.getZoom() ?? 14),
+    );
     setCurrentZoom(map.getZoom() ?? 14);
     return () => google.maps.event.removeListener(zoomListener);
   }, [map]);
@@ -160,15 +182,20 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
   const handleContainerPointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
     e.stopPropagation();
-    
+
     // リサイズ中はメモの移動を開始しない
-    if (mode === 'resizing') return;
-    
+    if (mode === "resizing") return;
+
     isPointerDownRef.current = true;
     interactionStartRef.current = {
       clientX: e.clientX,
       clientY: e.clientY,
-      world: map?.getProjection()?.fromLatLngToPoint(new google.maps.LatLng(label.position.lat, label.position.lng)) || null,
+      world:
+        map
+          ?.getProjection()
+          ?.fromLatLngToPoint(
+            new google.maps.LatLng(label.position.lat, label.position.lng),
+          ) || null,
       width: label.width || 120,
       height: label.height || 40,
       moved: false,
@@ -176,7 +203,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
 
     if (isMobile) {
       longPressTimerRef.current = setTimeout(() => {
-        setMode('editing'); // Enter editing mode first
+        setMode("editing"); // Enter editing mode first
         longPressTimerRef.current = null;
       }, 500);
     }
@@ -185,15 +212,15 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
 
   const handleContainerPointerMove = (e: React.PointerEvent) => {
     if (!isPointerDownRef.current) return;
-    
+
     // リサイズ中はメモの移動を開始しない
-    if (mode === 'resizing') return;
+    if (mode === "resizing") return;
 
     if (isMobile) {
       if (longPressTimerRef.current) {
         clearTimeout(longPressTimerRef.current);
         longPressTimerRef.current = null;
-        setMode('dragging'); // If moved before long press timer, start dragging
+        setMode("dragging"); // If moved before long press timer, start dragging
       }
     } else {
       // For desktop, if mouse moves after down, start dragging.
@@ -201,7 +228,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
       const dx = Math.abs(e.clientX - interactionStartRef.current.clientX);
       const dy = Math.abs(e.clientY - interactionStartRef.current.clientY);
       if (dx > 5 || dy > 5) {
-        setMode('dragging');
+        setMode("dragging");
       }
     }
   };
@@ -209,7 +236,8 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
   const handleContainerPointerUp = (e: React.PointerEvent) => {
     isPointerDownRef.current = false;
 
-    if (longPressTimerRef.current) { // Mobile short tap
+    if (longPressTimerRef.current) {
+      // Mobile short tap
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
@@ -217,19 +245,20 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
     // Check for double-click/tap on all devices
     const now = Date.now();
     if (now - lastTapTimeRef.current < 300) {
-      if (mode !== 'dragging') { // Prevent edit on drag-end
+      if (mode !== "dragging") {
+        // Prevent edit on drag-end
         onEdit();
         lastTapTimeRef.current = 0; // Reset after double-click to prevent triple-click issues
         return; // Done
       }
     }
     lastTapTimeRef.current = now;
-    
+
     // For drag/resize, the global pointerup listener handles setting mode to 'idle'.
     // For long press editing mode on mobile, keep the mode as 'editing' to maintain button visibility
-    if (mode === 'dragging') {
+    if (mode === "dragging") {
       // The global handler will set it to idle.
-    } else if (mode === 'editing' && isMobile) {
+    } else if (mode === "editing" && isMobile) {
       // Keep editing mode active on mobile to maintain button accessibility
       // Mode will be reset to 'idle' only when map is clicked (handled in useEffect)
     } else {
@@ -248,7 +277,7 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
       width: label.width || 120,
       height: label.height || 40,
     };
-    setMode('resizing');
+    setMode("resizing");
   };
 
   const scale = Math.pow(2, currentZoom - 14);
@@ -257,29 +286,36 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
   if (currentZoom < MIN_ZOOM_VISIBLE) return null;
 
   // positionが未定義の場合はレンダリングしない
-  if (!label.position || typeof label.position.lat !== 'number' || typeof label.position.lng !== 'number') {
-    console.error('LabelOverlay: Invalid position', label);
+  if (
+    !label.position ||
+    typeof label.position.lat !== "number" ||
+    typeof label.position.lng !== "number"
+  ) {
+    console.error("LabelOverlay: Invalid position", label);
     return null;
   }
 
   const controlsVisible = true; // 常にボタンを表示
 
   return (
-    <OverlayView position={label.position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+    <OverlayView
+      position={label.position}
+      mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+    >
       <div
         className={`glass-effect rounded-lg shadow-elevation-2 select-none 
                    flex items-center justify-center relative transition-all duration-150 ease-ios-default
-                   border-2 ${mode !== 'idle' ? 'border-blue-500' : 'border-white/30'}
-                   ${linkedPlace ? 'bg-gradient-to-br from-coral-500/15 to-coral-500/8' : 'bg-gradient-to-br from-teal-500/10 to-teal-500/5'}
-                   ${mode === 'dragging' || (isMobile && mode === 'editing') ? 'cursor-move' : ''}`}
+                   border-2 ${mode !== "idle" ? "border-blue-500" : "border-white/30"}
+                   ${linkedPlace ? "bg-gradient-to-br from-coral-500/15 to-coral-500/8" : "bg-gradient-to-br from-teal-500/10 to-teal-500/5"}
+                   ${mode === "dragging" || (isMobile && mode === "editing") ? "cursor-move" : ""}`}
         style={{
           fontSize: label.fontSize * scale,
           fontFamily: label.fontFamily,
           color: label.color,
           width: label.width * scale,
           height: label.height * scale,
-          pointerEvents: 'auto',
-          transform: 'translate(-50%, -50%)',
+          pointerEvents: "auto",
+          transform: "translate(-50%, -50%)",
         }}
         onPointerDown={handleContainerPointerDown}
         onPointerMove={handleContainerPointerMove}
@@ -292,15 +328,15 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
                          caption-1 flex items-center justify-center rounded-full cursor-pointer
                          hover:bg-coral-600 active:scale-95 transition-all duration-150 ease-ios-default
                          shadow-elevation-2"
-              style={{ 
-                position: 'absolute',
-                top: '-10px',
-                right: '-10px',
-                width: isMobile ? '28px' : '24px',
-                height: isMobile ? '28px' : '24px',
+              style={{
+                position: "absolute",
+                top: "-10px",
+                right: "-10px",
+                width: isMobile ? "28px" : "24px",
+                height: isMobile ? "28px" : "24px",
                 // メモ領域に対する比率を一定に保つ
                 transform: `scale(${Math.max(0.8, Math.min(1, 1 / scale))})`,
-                transformOrigin: 'center',
+                transformOrigin: "center",
               }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -328,17 +364,17 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
                 } as React.PointerEvent;
                 handleResizePointerDown(pointerEvent);
               }}
-              style={{ 
-                position: 'absolute',
-                bottom: '-10px',
-                right: '-10px',
-                width: isMobile ? '28px' : '24px',
-                height: isMobile ? '28px' : '24px',
+              style={{
+                position: "absolute",
+                bottom: "-10px",
+                right: "-10px",
+                width: isMobile ? "28px" : "24px",
+                height: isMobile ? "28px" : "24px",
                 // メモ領域に対する比率を一定に保つ
                 transform: `scale(${Math.max(0.8, Math.min(1, 1 / scale))})`,
-                transformOrigin: 'center',
+                transformOrigin: "center",
                 // タッチ操作を無効化してスクロールを防止
-                touchAction: 'none',
+                touchAction: "none",
               }}
             />
           </>
@@ -360,10 +396,18 @@ export default function LabelOverlay({ label, map, onEdit, onMove, onResize, onM
           )}
           <span
             className="footnote font-medium tracking-tight text-center leading-tight"
-            style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-            title={linkedPlace ? `${linkedPlace.name}にリンク: ${label.text}` : label.text}
+            style={{
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+            title={
+              linkedPlace
+                ? `${linkedPlace.name}にリンク: ${label.text}`
+                : label.text
+            }
           >
-            {label.text || 'メモ'}
+            {label.text || "メモ"}
           </span>
         </div>
       </div>

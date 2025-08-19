@@ -1,4 +1,6 @@
-export function priceLevelToCost(priceLevel: number | undefined | null): number {
+export function priceLevelToCost(
+  priceLevel: number | undefined | null,
+): number {
   // Google Places API price_level: 0 (無料) – 4 (高価)
   // 金額はあくまで概算。必要に応じて調整可能。
   switch (priceLevel) {
@@ -15,4 +17,4 @@ export function priceLevelToCost(priceLevel: number | undefined | null): number 
     default:
       return 0;
   }
-} 
+}

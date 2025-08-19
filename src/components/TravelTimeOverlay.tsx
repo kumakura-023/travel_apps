@@ -1,9 +1,14 @@
-import { Circle, Marker, InfoWindow } from '@react-google-maps/api';
-import { useGoogleMaps } from '../hooks/useGoogleMaps';
-import { useTravelTimeStore } from '../store/travelTimeStore';
-import { useSavedPlacesStore } from '../store/savedPlacesStore';
-import { useEffect, useRef } from 'react';
-import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit } from 'react-icons/md';
+import { Circle, Marker, InfoWindow } from "@react-google-maps/api";
+import { useGoogleMaps } from "../hooks/useGoogleMaps";
+import { useTravelTimeStore } from "../store/travelTimeStore";
+import { useSavedPlacesStore } from "../store/savedPlacesStore";
+import { useEffect, useRef } from "react";
+import {
+  MdClose,
+  MdDirectionsWalk,
+  MdDirectionsCar,
+  MdDirectionsTransit,
+} from "react-icons/md";
 
 export default function TravelTimeOverlay() {
   const { map } = useGoogleMaps();
@@ -54,19 +59,22 @@ export default function TravelTimeOverlay() {
   useEffect(() => {
     if (!map) return;
     if (!selectingOrigin) return;
-    const listener = map.addListener('click', (e: google.maps.MapMouseEvent) => {
-      if (e.latLng) {
-        setOrigin({ lat: e.latLng.lat(), lng: e.latLng.lng() });
-        setSelectingOrigin(false);
-      }
-    });
+    const listener = map.addListener(
+      "click",
+      (e: google.maps.MapMouseEvent) => {
+        if (e.latLng) {
+          setOrigin({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+          setSelectingOrigin(false);
+        }
+      },
+    );
     return () => listener.remove();
   }, [map, selectingOrigin, setOrigin, setSelectingOrigin]);
 
   // Handle Ctrl+Click for two-point route selection
   useEffect(() => {
     if (!map) return;
-    const listener = map.addListener('click', (e: any) => {
+    const listener = map.addListener("click", (e: any) => {
       if ((e.domEvent as MouseEvent).ctrlKey && e.latLng) {
         useTravelTimeStore.getState().addRoutePoint({
           lat: e.latLng.lat(),
@@ -82,34 +90,46 @@ export default function TravelTimeOverlay() {
 
   // Rough radius estimation: 80m per minute walking, 125m driving, 200m transit.
   // 車の値を都市部での実際の移動速度に合わせて調整（信号待ちや渋滞を考慮）
-  const modeFactor = mode === 'WALKING' ? 80 : mode === 'DRIVING' ? 125 : 200;
+  const modeFactor = mode === "WALKING" ? 80 : mode === "DRIVING" ? 125 : 200;
   const radius = modeFactor * timeRange;
 
   // アイコンとラベルを取得
   const getModeIcon = () => {
     switch (mode) {
-      case 'WALKING': return <MdDirectionsWalk className="w-4 h-4" />;
-      case 'DRIVING': return <MdDirectionsCar className="w-4 h-4" />;
-      case 'TRANSIT': return <MdDirectionsTransit className="w-4 h-4" />;
-      default: return <MdDirectionsWalk className="w-4 h-4" />;
+      case "WALKING":
+        return <MdDirectionsWalk className="w-4 h-4" />;
+      case "DRIVING":
+        return <MdDirectionsCar className="w-4 h-4" />;
+      case "TRANSIT":
+        return <MdDirectionsTransit className="w-4 h-4" />;
+      default:
+        return <MdDirectionsWalk className="w-4 h-4" />;
     }
   };
 
   const getModeLabel = () => {
     switch (mode) {
-      case 'WALKING': return '徒歩';
-      case 'DRIVING': return '車';
-      case 'TRANSIT': return '公共交通機関';
-      default: return '徒歩';
+      case "WALKING":
+        return "徒歩";
+      case "DRIVING":
+        return "車";
+      case "TRANSIT":
+        return "公共交通機関";
+      default:
+        return "徒歩";
     }
   };
 
   const getModeColor = () => {
     switch (mode) {
-      case 'WALKING': return '#4ECDC4'; // teal-500
-      case 'DRIVING': return '#3B82F6'; // blue-500
-      case 'TRANSIT': return '#8B5CF6'; // violet-500
-      default: return '#4ECDC4';
+      case "WALKING":
+        return "#4ECDC4"; // teal-500
+      case "DRIVING":
+        return "#3B82F6"; // blue-500
+      case "TRANSIT":
+        return "#8B5CF6"; // violet-500
+      default:
+        return "#4ECDC4";
     }
   };
 
@@ -143,30 +163,33 @@ export default function TravelTimeOverlay() {
       {/* 情報カード */}
       <InfoWindow
         position={origin}
-        options={{ 
+        options={{
           disableAutoPan: true,
           pixelOffset: new google.maps.Size(0, -10),
-          closeBoxURL: '', // デフォルトの閉じるボタンを非表示
+          closeBoxURL: "", // デフォルトの閉じるボタンを非表示
         }}
       >
         <div className="p-0 max-w-none">
           <div className="glass-effect rounded-xl shadow-elevation-3 border border-white/30 overflow-hidden">
             {/* ヘッダー部分 */}
-            <div 
+            <div
               className="flex items-center justify-between px-4 py-3 border-b border-white/20"
               style={{
                 background: `linear-gradient(135deg, ${modeColor}15, ${modeColor}08)`,
               }}
             >
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-white shadow-elevation-2"
                   style={{ backgroundColor: modeColor }}
                 >
                   {getModeIcon()}
                 </div>
                 <div className="flex flex-col">
-                  <span className="footnote font-semibold tracking-tight" style={{ color: modeColor }}>
+                  <span
+                    className="footnote font-semibold tracking-tight"
+                    style={{ color: modeColor }}
+                  >
                     {getModeLabel()}
                   </span>
                   <span className="caption-2 text-system-secondary-label">
@@ -174,7 +197,7 @@ export default function TravelTimeOverlay() {
                   </span>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <div className="text-right">
                   <span className="headline font-bold text-system-label">
@@ -206,16 +229,16 @@ export default function TravelTimeOverlay() {
       {/* TODO: Show badges for each place based on direction duration */}
       {places.map((p) => (
         <Marker
-          key={p.id + '_time'}
+          key={p.id + "_time"}
           position={p.coordinates}
           label={{
             text: p.name,
-            fontSize: '10px',
-            color: '#000',
+            fontSize: "10px",
+            color: "#000",
           }}
           opacity={1}
         />
       ))}
     </>
   );
-} 
+}

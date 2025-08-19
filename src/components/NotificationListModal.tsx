@@ -1,34 +1,43 @@
-import React, { useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { useNotificationStore } from '../store/notificationStore';
-import { useAuthStore } from '../hooks/useAuth';
-import { usePlanStore } from '../store/planStore';
-import { getCategoryColor, getCategoryEmoji, getCategoryDisplayName } from '../utils/categoryIcons';
-import { TrashIcon } from '@heroicons/react/24/outline';
-import { useSelectedPlaceStore } from '../store/selectedPlaceStore';
-import { getMapService } from '../services/ServiceContainer';
+import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
+import { useNotificationStore } from "../store/notificationStore";
+import { useAuthStore } from "../hooks/useAuth";
+import { usePlanStore } from "../store/planStore";
+import {
+  getCategoryColor,
+  getCategoryEmoji,
+  getCategoryDisplayName,
+} from "../utils/categoryIcons";
+import { TrashIcon } from "@heroicons/react/24/outline";
+import { useSelectedPlaceStore } from "../store/selectedPlaceStore";
+import { getMapService } from "../services/ServiceContainer";
 
 interface NotificationListModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, onClose }) => {
+const NotificationListModal: React.FC<NotificationListModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const { user } = useAuthStore();
   const { plan } = usePlanStore();
-  const { 
-    notifications, 
-    getNotificationsByPlan, 
+  const {
+    notifications,
+    getNotificationsByPlan,
     isReadByUser,
     markAsRead,
     markAllAsRead,
     removeNotification,
-    clearExpiredNotifications
+    clearExpiredNotifications,
   } = useNotificationStore();
   const { setPlace } = useSelectedPlaceStore();
 
-  const currentUserId = user?.uid || '';
-  const planNotifications = plan ? getNotificationsByPlan(plan.id, currentUserId) : [];
+  const currentUserId = user?.uid || "";
+  const planNotifications = plan
+    ? getNotificationsByPlan(plan.id, currentUserId)
+    : [];
 
   useEffect(() => {
     if (isOpen) {
@@ -41,7 +50,10 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, o
   const handleNotificationClick = async (notification: any) => {
     const mapService = getMapService();
     if (mapService) {
-      await mapService.panTo(notification.position.lat, notification.position.lng);
+      await mapService.panTo(
+        notification.position.lat,
+        notification.position.lng,
+      );
       await mapService.setZoom(17);
     }
 
@@ -79,20 +91,20 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, o
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return 'たった今';
+    if (minutes < 1) return "たった今";
     if (minutes < 60) return `${minutes}分前`;
     if (hours < 24) return `${hours}時間前`;
     if (days < 3) return `${days}日前`;
-    return new Date(timestamp).toLocaleDateString('ja-JP');
+    return new Date(timestamp).toLocaleDateString("ja-JP");
   };
 
   return createPortal(
-    <div 
+    <div
       className="fixed inset-0 bg-black/60 backdrop-blur-md z-[1000] flex items-center justify-center p-4
                  animate-modal-fade-in"
       onClick={onClose}
     >
-      <div 
+      <div
         className="glass-effect rounded-2xl w-full max-w-md p-6 space-y-5 
                    shadow-[0_32px_64px_0_rgba(0,0,0,0.4)] 
                    animate-modal-zoom-in"
@@ -102,9 +114,15 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, o
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-coral-500/10 rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-coral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              <svg
+                className="w-4 h-4 text-coral-500"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
             </div>
             <h2 className="headline text-system-label">通知</h2>
@@ -113,14 +131,20 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, o
             onClick={onClose}
             className="w-8 h-8 rounded-full hover:bg-system-secondary-background transition-colors duration-150 flex items-center justify-center"
           >
-            <svg className="w-5 h-5 text-system-secondary-label" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6L6 18M6 6l12 12"/>
+            <svg
+              className="w-5 h-5 text-system-secondary-label"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* すべて既読にするボタン */}
-        {planNotifications.some(n => !isReadByUser(n, currentUserId)) && (
+        {planNotifications.some((n) => !isReadByUser(n, currentUserId)) && (
           <button
             onClick={handleMarkAllAsRead}
             className="w-full py-2 text-coral-500 hover:bg-coral-50 rounded-lg transition-colors duration-150 text-sm font-medium"
@@ -138,41 +162,54 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, o
           ) : (
             planNotifications.map((notification) => {
               const isRead = isReadByUser(notification, currentUserId);
-              const categoryColor = getCategoryColor(notification.placeCategory);
-              const categoryEmoji = getCategoryEmoji(notification.placeCategory);
-              const categoryName = getCategoryDisplayName(notification.placeCategory);
+              const categoryColor = getCategoryColor(
+                notification.placeCategory,
+              );
+              const categoryEmoji = getCategoryEmoji(
+                notification.placeCategory,
+              );
+              const categoryName = getCategoryDisplayName(
+                notification.placeCategory,
+              );
 
               return (
                 <div
                   key={notification.id}
                   className={`list-item rounded-lg cursor-pointer transition-all duration-150 p-4 ${
-                    !isRead ? 'bg-coral-50 border border-coral-200' : 'hover:bg-system-secondary-background'
+                    !isRead
+                      ? "bg-coral-50 border border-coral-200"
+                      : "hover:bg-system-secondary-background"
                   }`}
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3 flex-1 min-w-0">
                       {/* カテゴリアイコン */}
-                      <div style={{
-                        width: '36px',
-                        height: '36px',
-                        background: categoryColor,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '18px',
-                        color: 'white',
-                        boxShadow: `0 2px 8px ${categoryColor}33`,
-                        flexShrink: 0,
-                      }}>
+                      <div
+                        style={{
+                          width: "36px",
+                          height: "36px",
+                          background: categoryColor,
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "18px",
+                          color: "white",
+                          boxShadow: `0 2px 8px ${categoryColor}33`,
+                          flexShrink: 0,
+                        }}
+                      >
                         {categoryEmoji}
                       </div>
 
                       {/* 通知内容 */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2">
-                          <span className="caption-1" style={{ color: categoryColor }}>
+                          <span
+                            className="caption-1"
+                            style={{ color: categoryColor }}
+                          >
                             {categoryName}
                           </span>
                           {!isRead && (
@@ -183,9 +220,14 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, o
                           {notification.placeName}
                         </h4>
                         <p className="caption-1 text-system-secondary-label mt-1">
-                          <span className="font-medium">{notification.addedBy.displayName}</span>
+                          <span className="font-medium">
+                            {notification.addedBy.displayName}
+                          </span>
                           <span>さんが追加</span>
-                          <span className="text-system-tertiary-label"> • {formatRelativeTime(notification.timestamp)}</span>
+                          <span className="text-system-tertiary-label">
+                            {" "}
+                            • {formatRelativeTime(notification.timestamp)}
+                          </span>
                         </p>
                       </div>
                     </div>
@@ -222,8 +264,8 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, o
 
         {/* 閉じるボタン */}
         <div className="flex justify-end pt-4 border-t border-white/20">
-          <button 
-            className="btn-text text-system-secondary-label hover:text-system-label" 
+          <button
+            className="btn-text text-system-secondary-label hover:text-system-label"
             onClick={onClose}
           >
             閉じる
@@ -231,7 +273,7 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({ isOpen, o
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 

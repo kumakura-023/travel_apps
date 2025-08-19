@@ -1,6 +1,7 @@
 # PlanNameDisplay常時表示検証
 
 ## 検証目的
+
 PlanNameDisplayを必ず表示するように変更することで、問題の本質が「planがnullになっている」ことであることを確認する。
 
 ## 検証方法
@@ -27,9 +28,9 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
     return (
       <>
         <div
-          className={`fixed z-30 
-                      glass-effect-border rounded-xl 
-                      px-4 py-3 
+          className={`fixed z-30
+                      glass-effect-border rounded-xl
+                      px-4 py-3
                       text-system-label
                       transition-all duration-150 ease-ios-default
                       ${
@@ -43,7 +44,7 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
           <div className="flex flex-col items-center space-y-2">
             <button
               onClick={() => setNameModal(true)}
-              className="text-coral-500 hover:text-coral-600 font-medium text-[18px] 
+              className="text-coral-500 hover:text-coral-600 font-medium text-[18px]
                          transition-all duration-150 ease-ios-default"
             >
               + 新しいプランを作成

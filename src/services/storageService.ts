@@ -1,9 +1,9 @@
-import { v4 as uuidv4 } from 'uuid';
-import { TravelPlan } from '../types';
-import { serializePlan, deserializePlan } from '../utils/planSerializer';
+import { v4 as uuidv4 } from "uuid";
+import { TravelPlan } from "../types";
+import { serializePlan, deserializePlan } from "../utils/planSerializer";
 
-const STORAGE_KEY_PREFIX = 'travel_plan_';
-const ACTIVE_PLAN_KEY = 'active_plan_id';
+const STORAGE_KEY_PREFIX = "travel_plan_";
+const ACTIVE_PLAN_KEY = "active_plan_id";
 
 /**
  * 保存済みプランのキーを返す
@@ -15,12 +15,12 @@ function getPlanStorageKey(id: string) {
 /**
  * 新しい空のプランを作成
  */
-export function createEmptyPlan(name: string = '新しいプラン'): TravelPlan {
+export function createEmptyPlan(name: string = "新しいプラン"): TravelPlan {
   const now = new Date();
   return {
     id: uuidv4(),
     name,
-    description: '',
+    description: "",
     places: [],
     labels: [],
     totalCost: 0,
@@ -51,7 +51,7 @@ export function loadPlan(id: string): TravelPlan | null {
   try {
     return deserializePlan(raw);
   } catch (e) {
-    console.error('プランの読み込みに失敗しました', e);
+    console.error("プランの読み込みに失敗しました", e);
     return null;
   }
 }
@@ -70,11 +70,11 @@ export function getAllPlans(): TravelPlan[] {
       const plan = deserializePlan(raw);
       plans.push(plan);
     } catch (e) {
-      console.warn('プランのデシリアライズに失敗', e);
+      console.warn("プランのデシリアライズに失敗", e);
     }
   }
   // 作成日の降順
-  return plans.sort((a, b) => (b.createdAt.getTime() - a.createdAt.getTime()));
+  return plans.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 /**
@@ -91,7 +91,10 @@ export function deletePlan(id: string) {
 /**
  * プランを複製
  */
-export function duplicatePlan(sourceId: string, newName?: string): TravelPlan | null {
+export function duplicatePlan(
+  sourceId: string,
+  newName?: string,
+): TravelPlan | null {
   const source = loadPlan(sourceId);
   if (!source) return null;
   const copy: TravelPlan = {
@@ -138,11 +141,11 @@ export function setActivePlan(id: string | null) {
  */
 export async function savePlanHybrid(
   plan: TravelPlan,
-  options: { mode: 'cloud' | 'local'; uid?: string }
+  options: { mode: "cloud" | "local"; uid?: string },
 ) {
-  if (options.mode === 'cloud') {
-    if (!options.uid) throw new Error('uid is required for cloud save');
-    const { savePlanCloud } = await import('./planCloudService');
+  if (options.mode === "cloud") {
+    if (!options.uid) throw new Error("uid is required for cloud save");
+    const { savePlanCloud } = await import("./planCloudService");
     return savePlanCloud(options.uid, plan);
   }
   return savePlan(plan);
@@ -151,20 +154,21 @@ export async function savePlanHybrid(
 /**
  * Cloud / Local からアクティブプランを取得
  */
-export async function loadActivePlanHybrid(
-  options: { mode: 'cloud' | 'local'; uid?: string }
-): Promise<TravelPlan | null> {
-  if (options.mode === 'cloud') {
-    if (!options.uid) throw new Error('uid is required for cloud load');
-    const { loadActivePlan } = await import('./planCloudService');
+export async function loadActivePlanHybrid(options: {
+  mode: "cloud" | "local";
+  uid?: string;
+}): Promise<TravelPlan | null> {
+  if (options.mode === "cloud") {
+    if (!options.uid) throw new Error("uid is required for cloud load");
+    const { loadActivePlan } = await import("./planCloudService");
     return loadActivePlan(options.uid);
   }
   return getActivePlan();
 }
 
 // 地図の状態保存機能
-const MAP_STATE_KEY = 'map_last_state';
-const LAST_ACTION_POSITION_KEY = 'last_action_position';
+const MAP_STATE_KEY = "map_last_state";
+const LAST_ACTION_POSITION_KEY = "last_action_position";
 
 export interface MapState {
   center: { lat: number; lng: number };
@@ -179,15 +183,15 @@ export function saveMapState(center: google.maps.LatLngLiteral, zoom: number) {
   const state: MapState = {
     center,
     zoom,
-    lastUpdated: new Date()
+    lastUpdated: new Date(),
   };
   localStorage.setItem(MAP_STATE_KEY, JSON.stringify(state));
-  
+
   if (import.meta.env.DEV) {
-    console.log('地図の状態を保存:', {
+    console.log("地図の状態を保存:", {
       center,
       zoom,
-      timestamp: new Date().toLocaleTimeString()
+      timestamp: new Date().toLocaleTimeString(),
     });
   }
 }
@@ -199,25 +203,25 @@ export function loadMapState(): MapState | null {
   const saved = localStorage.getItem(MAP_STATE_KEY);
   if (!saved) {
     if (import.meta.env.DEV) {
-      console.log('保存された地図の状態なし');
+      console.log("保存された地図の状態なし");
     }
     return null;
   }
   try {
     const state = JSON.parse(saved);
     state.lastUpdated = new Date(state.lastUpdated);
-    
+
     if (import.meta.env.DEV) {
-      console.log('地図の状態を読み込み:', {
+      console.log("地図の状態を読み込み:", {
         center: state.center,
         zoom: state.zoom,
-        lastUpdated: state.lastUpdated
+        lastUpdated: state.lastUpdated,
       });
     }
-    
+
     return state;
   } catch (e) {
-    console.error('地図の状態読み込みエラー:', e);
+    console.error("地図の状態読み込みエラー:", e);
     return null;
   }
 }
@@ -228,14 +232,14 @@ export function loadMapState(): MapState | null {
 export function saveLastActionPosition(position: google.maps.LatLngLiteral) {
   const data = {
     position,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
   localStorage.setItem(LAST_ACTION_POSITION_KEY, JSON.stringify(data));
-  
+
   if (import.meta.env.DEV) {
-    console.log('最後の操作位置を保存:', {
+    console.log("最後の操作位置を保存:", {
       position,
-      timestamp: new Date().toLocaleTimeString()
+      timestamp: new Date().toLocaleTimeString(),
     });
   }
 }
@@ -243,24 +247,27 @@ export function saveLastActionPosition(position: google.maps.LatLngLiteral) {
 /**
  * 最後の操作位置を読み込み
  */
-export function loadLastActionPosition(): { position: google.maps.LatLngLiteral; timestamp: string } | null {
+export function loadLastActionPosition(): {
+  position: google.maps.LatLngLiteral;
+  timestamp: string;
+} | null {
   const saved = localStorage.getItem(LAST_ACTION_POSITION_KEY);
   if (!saved) {
     if (import.meta.env.DEV) {
-      console.log('保存された操作位置なし');
+      console.log("保存された操作位置なし");
     }
     return null;
   }
   try {
     const data = JSON.parse(saved);
-    
+
     if (import.meta.env.DEV) {
-      console.log('最後の操作位置を読み込み:', data);
+      console.log("最後の操作位置を読み込み:", data);
     }
-    
+
     return data;
   } catch (e) {
-    console.error('操作位置読み込みエラー:', e);
+    console.error("操作位置読み込みエラー:", e);
     return null;
   }
-} 
+}

@@ -14,37 +14,44 @@ VoyageSketchプロジェクトの複雑に絡み合った機能を単一責任�
 ## 📋 ドキュメント一覧
 
 ### Phase 1: 同期システム改善（高優先度）
+
 - [01-sync-system.md](./01-sync-system.md) - 同期システムの責任分離
-- [02-auto-save-simplification.md](./02-auto-save-simplification.md) - 自動保存の簡略化  
+- [02-auto-save-simplification.md](./02-auto-save-simplification.md) - 自動保存の簡略化
 - [03-conflict-resolution.md](./03-conflict-resolution.md) - 競合解決の独立化
 
 ### Phase 2: プラン管理改善（中優先度）
+
 - [04-plan-management.md](./04-plan-management.md) - プラン管理の一元化
 - [05-plan-lifecycle.md](./05-plan-lifecycle.md) - ライフサイクル管理の整理
 - [06-plan-store-cleanup.md](./06-plan-store-cleanup.md) - ストアの責任明確化
 
 ### Phase 3: アーキテクチャ改善（低優先度）
+
 - [07-store-dependencies.md](./07-store-dependencies.md) - ストア間依存の解消
 - [08-component-store-coupling.md](./08-component-store-coupling.md) - コンポーネント結合度の低減
 - [09-service-layer.md](./09-service-layer.md) - サービス層の境界明確化
 
 ### Phase 4: 品質保証
+
 - [10-testing-strategy.md](./10-testing-strategy.md) - テスト戦略の策定
 - [11-migration-plan.md](./11-migration-plan.md) - 段階的移行計画
 
 ## 🔍 特定された主要な問題
 
 ### 1. 同期システムの複雑性
+
 **現状**: `useAutoSave` (272行) + `SyncManager` + `useRealtimePlanListener` が相互依存  
 **影響**: デバッグ困難、修正リスク高、テスト困難  
 **対策**: 責任ごとに分離（SaveService, SyncCoordinator, RealtimeWatcher, ConflictResolver）
 
 ### 2. プラン管理の分散
+
 **現状**: PlanManager, PlanCoordinator, planStore, usePlanLoad で責任分散  
 **影響**: 処理の重複、一貫性の欠如、複雑な初期化  
 **対策**: UnifiedPlanService による一元化
 
 ### 3. ストア間の循環依存
+
 **現状**: 36個のコンポーネントが複数ストアに直接依存  
 **影響**: 変更の影響範囲が不明確、テスト困難  
 **対策**: イベント駆動アーキテクチャ + カスタムフック
@@ -52,16 +59,19 @@ VoyageSketchプロジェクトの複雑に絡み合った機能を単一責任�
 ## 📈 期待される効果
 
 ### コード品質向上
+
 - **行数削減**: useAutoSave 272行 → 60行 (75%削減)
 - **複雑度削減**: 複数の責任 → 単一責任
 - **依存関係**: 循環依存 → 一方向依存
 
 ### 開発効率向上
+
 - **デバッグ時間**: 問題箇所の特定が容易
 - **新機能追加**: 影響範囲が明確
 - **保守性**: 変更時のリスクが低下
 
 ### 品質保証
+
 - **テスト容易性**: 各機能を独立してテスト
 - **リファクタリング安全性**: テストによる動作保証
 - **バグ検出**: 早期発見・修正
@@ -71,7 +81,7 @@ VoyageSketchプロジェクトの複雑に絡み合った機能を単一責任�
 ```
 Week 1-2:  テスト環境構築・現状記録
 Week 3-4:  同期システム分離
-Week 5-6:  プラン管理一元化  
+Week 5-6:  プラン管理一元化
 Week 7-9:  ストア再設計・依存解消
 Week 10-11: コンポーネント結合度低減・最終統合
 ```
@@ -81,12 +91,14 @@ Week 10-11: コンポーネント結合度低減・最終統合
 ## 🔄 移行戦略
 
 ### 段階的移行
+
 1. **既存システム保持**: 新システムと並行稼働
 2. **漸進的切り替え**: コンポーネント単位で移行
 3. **十分な検証**: 各段階でのテスト実施
 4. **ロールバック準備**: 問題発生時の切り戻し手順
 
 ### リスク管理
+
 - **高リスク**: データ喪失・同期不整合 → 並行稼働・十分なテスト
 - **中リスク**: パフォーマンス劣化 → 継続的モニタリング
 - **低リスク**: 学習コスト → 段階的導入・研修実施
@@ -94,12 +106,14 @@ Week 10-11: コンポーネント結合度低減・最終統合
 ## 🎯 成功指標
 
 ### 技術指標
+
 - コード行数削減: 30%
 - テストカバレッジ: 80%以上
 - ビルド時間: 現状維持
 - バンドルサイズ: 現状維持または削減
 
 ### 品質指標
+
 - 新規バグ発生率: 現状以下
 - パフォーマンス: Core Web Vitals維持
 - ユーザー体験: レスポンス時間維持
@@ -117,7 +131,5 @@ Week 10-11: コンポーネント結合度低減・最終統合
 - [開発原則](../../CLAUDE.md#開発原則) - 設計方針と原則
 
 ---
-
-
 
 **注意**: このリファクタリングは大規模な変更を伴います。実装前に必ずチーム全体での合意形成と十分な計画検討を行ってください。

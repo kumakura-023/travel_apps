@@ -1,20 +1,20 @@
 /**
  * 場所関連のイベント定義
  */
-import { Place } from '../types';
-import { EventBus, EventHandler, Unsubscribe } from './EventBus';
+import { Place } from "../types";
+import { EventBus, EventHandler, Unsubscribe } from "./EventBus";
 
 /**
  * 場所関連のイベント名
  */
 export const PlaceEventNames = {
-  PLACE_ADDED: 'place:added',
-  PLACE_UPDATED: 'place:updated',
-  PLACE_DELETED: 'place:deleted',
-  PLACE_SELECTED: 'place:selected',
-  PLACE_DESELECTED: 'place:deselected',
-  PLACES_CLEARED: 'places:cleared',
-  PLACES_BATCH_UPDATED: 'places:batchUpdated',
+  PLACE_ADDED: "place:added",
+  PLACE_UPDATED: "place:updated",
+  PLACE_DELETED: "place:deleted",
+  PLACE_SELECTED: "place:selected",
+  PLACE_DESELECTED: "place:deselected",
+  PLACES_CLEARED: "places:cleared",
+  PLACES_BATCH_UPDATED: "places:batchUpdated",
 } as const;
 
 /**
@@ -23,7 +23,7 @@ export const PlaceEventNames = {
 export interface PlaceEventPayloads {
   [PlaceEventNames.PLACE_ADDED]: {
     place: Place;
-    source?: 'user' | 'sync' | 'import';
+    source?: "user" | "sync" | "import";
   };
   [PlaceEventNames.PLACE_UPDATED]: {
     placeId: string;
@@ -47,7 +47,7 @@ export interface PlaceEventPayloads {
   };
   [PlaceEventNames.PLACES_BATCH_UPDATED]: {
     places: Place[];
-    operation: 'add' | 'update' | 'delete' | 'mixed';
+    operation: "add" | "update" | "delete" | "mixed";
   };
 }
 
@@ -60,10 +60,13 @@ export class PlaceEventBus {
   /**
    * 場所追加イベントを発火
    */
-  emitPlaceAdded(place: Place, source?: 'user' | 'sync' | 'import'): Promise<void> {
+  emitPlaceAdded(
+    place: Place,
+    source?: "user" | "sync" | "import",
+  ): Promise<void> {
     return this.eventBus.emit(PlaceEventNames.PLACE_ADDED, {
       place,
-      source: source || 'user',
+      source: source || "user",
     });
   }
 
@@ -74,7 +77,7 @@ export class PlaceEventBus {
     placeId: string,
     place: Place,
     changes: Partial<Place>,
-    previousPlace: Place
+    previousPlace: Place,
   ): Promise<void> {
     return this.eventBus.emit(PlaceEventNames.PLACE_UPDATED, {
       placeId,
@@ -87,7 +90,11 @@ export class PlaceEventBus {
   /**
    * 場所削除イベントを発火
    */
-  emitPlaceDeleted(placeId: string, place: Place, allPlaces: Place[]): Promise<void> {
+  emitPlaceDeleted(
+    placeId: string,
+    place: Place,
+    allPlaces: Place[],
+  ): Promise<void> {
     return this.eventBus.emit(PlaceEventNames.PLACE_DELETED, {
       placeId,
       place,
@@ -106,7 +113,9 @@ export class PlaceEventBus {
    * 場所選択解除イベントを発火
    */
   emitPlaceDeselected(previousPlace: Place | null): Promise<void> {
-    return this.eventBus.emit(PlaceEventNames.PLACE_DESELECTED, { previousPlace });
+    return this.eventBus.emit(PlaceEventNames.PLACE_DESELECTED, {
+      previousPlace,
+    });
   }
 
   /**
@@ -121,7 +130,7 @@ export class PlaceEventBus {
    */
   emitPlacesBatchUpdated(
     places: Place[],
-    operation: 'add' | 'update' | 'delete' | 'mixed'
+    operation: "add" | "update" | "delete" | "mixed",
   ): Promise<void> {
     return this.eventBus.emit(PlaceEventNames.PLACES_BATCH_UPDATED, {
       places,
@@ -133,7 +142,9 @@ export class PlaceEventBus {
    * 場所追加イベントを購読
    */
   onPlaceAdded(
-    handler: EventHandler<PlaceEventPayloads[typeof PlaceEventNames.PLACE_ADDED]>
+    handler: EventHandler<
+      PlaceEventPayloads[typeof PlaceEventNames.PLACE_ADDED]
+    >,
   ): Unsubscribe {
     return this.eventBus.on(PlaceEventNames.PLACE_ADDED, handler);
   }
@@ -142,7 +153,9 @@ export class PlaceEventBus {
    * 場所更新イベントを購読
    */
   onPlaceUpdated(
-    handler: EventHandler<PlaceEventPayloads[typeof PlaceEventNames.PLACE_UPDATED]>
+    handler: EventHandler<
+      PlaceEventPayloads[typeof PlaceEventNames.PLACE_UPDATED]
+    >,
   ): Unsubscribe {
     return this.eventBus.on(PlaceEventNames.PLACE_UPDATED, handler);
   }
@@ -151,7 +164,9 @@ export class PlaceEventBus {
    * 場所削除イベントを購読
    */
   onPlaceDeleted(
-    handler: EventHandler<PlaceEventPayloads[typeof PlaceEventNames.PLACE_DELETED]>
+    handler: EventHandler<
+      PlaceEventPayloads[typeof PlaceEventNames.PLACE_DELETED]
+    >,
   ): Unsubscribe {
     return this.eventBus.on(PlaceEventNames.PLACE_DELETED, handler);
   }
@@ -160,7 +175,9 @@ export class PlaceEventBus {
    * 場所選択イベントを購読
    */
   onPlaceSelected(
-    handler: EventHandler<PlaceEventPayloads[typeof PlaceEventNames.PLACE_SELECTED]>
+    handler: EventHandler<
+      PlaceEventPayloads[typeof PlaceEventNames.PLACE_SELECTED]
+    >,
   ): Unsubscribe {
     return this.eventBus.on(PlaceEventNames.PLACE_SELECTED, handler);
   }
@@ -169,7 +186,9 @@ export class PlaceEventBus {
    * 場所選択解除イベントを購読
    */
   onPlaceDeselected(
-    handler: EventHandler<PlaceEventPayloads[typeof PlaceEventNames.PLACE_DESELECTED]>
+    handler: EventHandler<
+      PlaceEventPayloads[typeof PlaceEventNames.PLACE_DESELECTED]
+    >,
   ): Unsubscribe {
     return this.eventBus.on(PlaceEventNames.PLACE_DESELECTED, handler);
   }
@@ -178,7 +197,9 @@ export class PlaceEventBus {
    * 場所クリアイベントを購読
    */
   onPlacesCleared(
-    handler: EventHandler<PlaceEventPayloads[typeof PlaceEventNames.PLACES_CLEARED]>
+    handler: EventHandler<
+      PlaceEventPayloads[typeof PlaceEventNames.PLACES_CLEARED]
+    >,
   ): Unsubscribe {
     return this.eventBus.on(PlaceEventNames.PLACES_CLEARED, handler);
   }
@@ -187,7 +208,9 @@ export class PlaceEventBus {
    * 場所バッチ更新イベントを購読
    */
   onPlacesBatchUpdated(
-    handler: EventHandler<PlaceEventPayloads[typeof PlaceEventNames.PLACES_BATCH_UPDATED]>
+    handler: EventHandler<
+      PlaceEventPayloads[typeof PlaceEventNames.PLACES_BATCH_UPDATED]
+    >,
   ): Unsubscribe {
     return this.eventBus.on(PlaceEventNames.PLACES_BATCH_UPDATED, handler);
   }

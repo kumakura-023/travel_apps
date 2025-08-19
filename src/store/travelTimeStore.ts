@@ -1,6 +1,6 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-export type TravelMode = 'WALKING' | 'DRIVING' | 'TRANSIT';
+export type TravelMode = "WALKING" | "DRIVING" | "TRANSIT";
 
 interface LatLngLiteral {
   lat: number;
@@ -35,21 +35,22 @@ export const useTravelTimeStore = create<TravelTimeState>((set) => ({
   enabled: false,
   origin: null,
   selectingOrigin: false,
-  mode: 'WALKING',
+  mode: "WALKING",
   timeRange: 15,
   routePoints: [],
-  setEnabled: (enabled) => set((state) => {
-    // タブから移動時間以外に切り替わった時、すべてクリアする
-    if (!enabled && state.enabled) {
-      return {
-        enabled,
-        origin: null,
-        selectingOrigin: false,
-        routePoints: [],
-      };
-    }
-    return { enabled };
-  }),
+  setEnabled: (enabled) =>
+    set((state) => {
+      // タブから移動時間以外に切り替わった時、すべてクリアする
+      if (!enabled && state.enabled) {
+        return {
+          enabled,
+          origin: null,
+          selectingOrigin: false,
+          routePoints: [],
+        };
+      }
+      return { enabled };
+    }),
   setOrigin: (origin) => set({ origin }),
   setSelectingOrigin: (selectingOrigin) => set({ selectingOrigin }),
   setMode: (mode) => set({ mode }),
@@ -60,9 +61,10 @@ export const useTravelTimeStore = create<TravelTimeState>((set) => ({
       return { routePoints: next };
     }),
   clearRoutePoints: () => set({ routePoints: [] }),
-  clearAll: () => set({
-    origin: null,
-    selectingOrigin: false,
-    routePoints: [],
-  }),
-})); 
+  clearAll: () =>
+    set({
+      origin: null,
+      selectingOrigin: false,
+      routePoints: [],
+    }),
+}));

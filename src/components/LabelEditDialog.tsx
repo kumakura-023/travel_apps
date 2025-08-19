@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
-import { MapLabel } from '../types';
-import { useSavedPlacesStore } from '../store/savedPlacesStore';
+import { useState, useMemo } from "react";
+import { MapLabel } from "../types";
+import { useSavedPlacesStore } from "../store/savedPlacesStore";
 
 interface Props {
   label: MapLabel;
@@ -16,54 +16,72 @@ export default function LabelEditDialog({ label, onSave, onClose }: Props) {
   const [width, setWidth] = useState(label.width);
   const [height, setHeight] = useState(label.height);
   const [fontFamily, setFontFamily] = useState(label.fontFamily);
-  const [linkedPlaceId, setLinkedPlaceId] = useState(label.linkedPlaceId || '');
+  const [linkedPlaceId, setLinkedPlaceId] = useState(label.linkedPlaceId || "");
 
   // メモの位置から近い候補地を取得（2km以内）
   const nearbyPlaces = useMemo(() => {
-    const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const calculateDistance = (
+      lat1: number,
+      lng1: number,
+      lat2: number,
+      lng2: number,
+    ) => {
       const R = 6371; // 地球の半径（km）
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLng = (lng2 - lng1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLng/2) * Math.sin(dLng/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLng = ((lng2 - lng1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLng / 2) *
+          Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     };
 
     return places
-      .map(place => ({
+      .map((place) => ({
         ...place,
         distance: calculateDistance(
-          label.position.lat, label.position.lng,
-          place.coordinates.lat, place.coordinates.lng
-        )
+          label.position.lat,
+          label.position.lng,
+          place.coordinates.lat,
+          place.coordinates.lng,
+        ),
       }))
-      .filter(place => place.distance <= 2) // 2km以内
+      .filter((place) => place.distance <= 2) // 2km以内
       .sort((a, b) => a.distance - b.distance);
   }, [places, label.position]);
 
   const handleSave = () => {
-    onSave({ 
-      text, 
-      color, 
-      fontSize, 
-      width, 
-      height, 
+    onSave({
+      text,
+      color,
+      fontSize,
+      width,
+      height,
       fontFamily,
       linkedPlaceId: linkedPlaceId || undefined,
-      status: 'synced', // 保存時にステータスを'synced'に更新
+      status: "synced", // 保存時にステータスを'synced'に更新
     });
     onClose();
   };
 
   return (
-    <div className="modal-backdrop flex items-center justify-center" onClick={onClose}>
-      <div className="glass-effect rounded-xl w-[320px] p-5 space-y-4 animate-spring" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="modal-backdrop flex items-center justify-center"
+      onClick={onClose}
+    >
+      <div
+        className="glass-effect rounded-xl w-[320px] p-5 space-y-4 animate-spring"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h3 className="headline text-center text-system-label">メモ編集</h3>
         <div className="space-y-4 max-h-[70vh] overflow-y-auto scrollbar-hide">
           <label className="block">
-            <span className="subheadline text-system-label mb-2 block">テキスト</span>
+            <span className="subheadline text-system-label mb-2 block">
+              テキスト
+            </span>
             <textarea
               className="input resize-none"
               value={text}
@@ -73,7 +91,9 @@ export default function LabelEditDialog({ label, onSave, onClose }: Props) {
             />
           </label>
           <label className="block">
-            <span className="subheadline text-system-label mb-2 block">文字色</span>
+            <span className="subheadline text-system-label mb-2 block">
+              文字色
+            </span>
             <input
               type="color"
               className="w-full h-10 border-0 rounded-lg cursor-pointer bg-system-secondary-background"
@@ -82,7 +102,9 @@ export default function LabelEditDialog({ label, onSave, onClose }: Props) {
             />
           </label>
           <label className="block">
-            <span className="subheadline text-system-label mb-2 block">フォントサイズ</span>
+            <span className="subheadline text-system-label mb-2 block">
+              フォントサイズ
+            </span>
             <input
               type="range"
               min={4}
@@ -110,7 +132,9 @@ export default function LabelEditDialog({ label, onSave, onClose }: Props) {
             </div>
           </label>
           <label className="block">
-            <span className="subheadline text-system-label mb-2 block">高さ</span>
+            <span className="subheadline text-system-label mb-2 block">
+              高さ
+            </span>
             <input
               type="range"
               min={16}
@@ -124,7 +148,9 @@ export default function LabelEditDialog({ label, onSave, onClose }: Props) {
             </div>
           </label>
           <label className="block">
-            <span className="subheadline text-system-label mb-2 block">フォント</span>
+            <span className="subheadline text-system-label mb-2 block">
+              フォント
+            </span>
             <select
               className="input appearance-none bg-right"
               value={fontFamily}
@@ -135,14 +161,20 @@ export default function LabelEditDialog({ label, onSave, onClose }: Props) {
               <option value="monospace">Monospace</option>
             </select>
           </label>
-          
+
           {/* 候補地とのリンク */}
           <div className="border-t border-system-separator/30 pt-4">
             <label className="block">
               <span className="subheadline text-system-label mb-2 block flex items-center gap-2">
-                <svg className="w-4 h-4 text-teal-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                <svg
+                  className="w-4 h-4 text-teal-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                 </svg>
                 候補地とリンク
               </span>
@@ -172,7 +204,10 @@ export default function LabelEditDialog({ label, onSave, onClose }: Props) {
           </div>
         </div>
         <div className="flex gap-3 pt-2">
-          <button className="btn-secondary flex-1 ease-ios-default duration-ios-fast" onClick={onClose}>
+          <button
+            className="btn-secondary flex-1 ease-ios-default duration-ios-fast"
+            onClick={onClose}
+          >
             キャンセル
           </button>
           <button
@@ -185,4 +220,4 @@ export default function LabelEditDialog({ label, onSave, onClose }: Props) {
       </div>
     </div>
   );
-} 
+}

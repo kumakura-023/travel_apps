@@ -16,10 +16,12 @@
 ### タスク1-1: 重複ファイルの削除
 
 **対象ファイル**:
+
 - `src/services/planListServiceNoSort.ts` を削除
 - `src/components/Map.tsx` を削除（MapContainerを直接使用）
 
 **実装手順**:
+
 1. `planListServiceNoSort.ts`の参照箇所を検索
 2. すべての参照を`planListService.ts`に変更
 3. ファイルを削除
@@ -29,10 +31,12 @@
 ### タスク1-2: DIシステムの統一
 
 **現状**: 2つのDIシステムが混在
+
 - `src/services/ServiceContainer.ts`
 - `src/di/DIContainer.ts`
 
 **実装手順**:
+
 1. `DIContainer.ts`の機能を`ServiceContainer.ts`に統合
 2. すべての参照を`ServiceContainer`に統一
 3. `DIContainer.ts`を削除
@@ -43,6 +47,7 @@
 **現状**: 1000行以上の巨大コンポーネント
 
 **新しい構造**:
+
 ```
 src/components/placeDetail/
 ├── PlaceDetailPanel.tsx (メインコンテナ - 100行以下)
@@ -58,6 +63,7 @@ src/components/placeDetail/
 ```
 
 **実装手順**:
+
 1. 新しいディレクトリ構造を作成
 2. PlaceDetailPanelから各セクションを抽出
 3. ビジネスロジックをカスタムフックに移動
@@ -67,10 +73,12 @@ src/components/placeDetail/
 ### タスク1-4: ストア名の統一
 
 **変更内容**:
+
 - `placeStore.ts` → `selectedPlaceStore.ts`
 - `placesStore.ts` → `savedPlacesStore.ts`
 
 **実装手順**:
+
 1. ファイル名を変更
 2. ストア名とフック名を変更
    - `useSelectedPlaceStore` → `useSelectedPlaceStore`（変更なし）
@@ -83,6 +91,7 @@ src/components/placeDetail/
 ### タスク2-1: サービスインターフェースの完全実装
 
 **作成するインターフェース**:
+
 ```typescript
 // src/interfaces/ISyncService.ts
 interface ISyncService {
@@ -108,18 +117,21 @@ interface IDirectionsService {
 ```
 
 **実装手順**:
+
 1. 各インターフェースファイルを作成
 2. 既存サービスにインターフェースを実装
 3. ServiceContainerでインターフェースベースの登録に変更
 4. 依存箇所をインターフェース参照に変更
 
-### タスク2-2: Safe*コンポーネントの統一
+### タスク2-2: Safe\*コンポーネントの統一
 
 **対象**:
+
 - `SafeRouteOverlay` + `RouteDisplay`
 - `SafeTravelTimeOverlay` + `TravelTimeOverlay`
 
 **新しい実装**:
+
 ```typescript
 // src/components/hoc/withErrorBoundary.tsx
 export function withErrorBoundary<P extends object>(
@@ -141,42 +153,44 @@ export const TravelTimeOverlay = withErrorBoundary(TravelTimeDisplay);
 ```
 
 **実装手順**:
+
 1. `withErrorBoundary` HOCを作成
-2. Safe*コンポーネントの参照を新しい実装に変更
-3. 元のSafe*コンポーネントを削除
+2. Safe\*コンポーネントの参照を新しい実装に変更
+3. 元のSafe\*コンポーネントを削除
 
 ### タスク2-3: ビジネスロジックのサービス層への移動
 
 **対象ストア**: すべてのZustandストア
 
 **例: placesStoreのリファクタリング**:
+
 ```typescript
 // src/services/PlaceManagementService.ts
 export class PlaceManagementService {
   constructor(
     private placeRepository: IPlaceRepository,
-    private eventBus: IEventBus
+    private eventBus: IEventBus,
   ) {}
 
   async addPlace(data: PlaceData): Promise<Place> {
     // バリデーション
     this.validatePlaceData(data);
-    
+
     // ビジネスロジック
     const place = this.createPlace(data);
-    
+
     // 永続化
     await this.placeRepository.save(place);
-    
+
     // イベント発行
-    this.eventBus.emit('place:added', place);
-    
+    this.eventBus.emit("place:added", place);
+
     return place;
   }
-  
+
   private validatePlaceData(data: PlaceData): void {
     if (!data.coordinates) {
-      throw new PlaceValidationError('Coordinates are required');
+      throw new PlaceValidationError("Coordinates are required");
     }
   }
 }
@@ -190,6 +204,7 @@ export const useSavedPlacesStore = create<PlacesState>((set) => ({
 ```
 
 **実装手順**:
+
 1. 各ストアに対応するサービスクラスを作成
 2. ビジネスロジックをサービスに移動
 3. ストアを純粋な状態管理に変更
@@ -200,10 +215,12 @@ export const useSavedPlacesStore = create<PlacesState>((set) => ({
 ### タスク3-1: ルート関連ストアの統合
 
 **現状**:
+
 - `routeSearchStore.ts`
 - `routeConnectionsStore.ts`
 
 **新しい統合ストア**:
+
 ```typescript
 // src/store/routeStore.ts
 interface RouteState {
@@ -213,13 +230,13 @@ interface RouteState {
     origin: Place | null;
     destination: Place | null;
   };
-  
+
   // ルート結果
   routes: Map<string, RouteResult>;
-  
+
   // 接続情報
   connections: Connection[];
-  
+
   // アクション
   openSearchPanel: () => void;
   closeSearchPanel: () => void;
@@ -229,6 +246,7 @@ interface RouteState {
 ```
 
 **実装手順**:
+
 1. 新しい統合ストアを作成
 2. 既存ストアのデータと機能を移行
 3. 参照箇所を新しいストアに変更
@@ -237,6 +255,7 @@ interface RouteState {
 ### タスク3-2: エラーハンドリングの統一
 
 **実装内容**:
+
 ```typescript
 // src/errors/AppError.ts
 export class AppError extends Error {
@@ -244,7 +263,7 @@ export class AppError extends Error {
     public code: ErrorCode,
     message: string,
     public details?: any,
-    public retry?: () => Promise<void>
+    public retry?: () => Promise<void>,
   ) {
     super(message);
   }
@@ -253,19 +272,19 @@ export class AppError extends Error {
 // src/errors/ErrorCodes.ts
 export enum ErrorCode {
   // ネットワーク
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  API_ERROR = 'API_ERROR',
-  
+  NETWORK_ERROR = "NETWORK_ERROR",
+  API_ERROR = "API_ERROR",
+
   // 同期
-  SYNC_CONFLICT = 'SYNC_CONFLICT',
-  SYNC_FAILED = 'SYNC_FAILED',
-  
+  SYNC_CONFLICT = "SYNC_CONFLICT",
+  SYNC_FAILED = "SYNC_FAILED",
+
   // バリデーション
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  
+  VALIDATION_ERROR = "VALIDATION_ERROR",
+
   // 権限
-  PERMISSION_DENIED = 'PERMISSION_DENIED',
-  UNAUTHORIZED = 'UNAUTHORIZED',
+  PERMISSION_DENIED = "PERMISSION_DENIED",
+  UNAUTHORIZED = "UNAUTHORIZED",
 }
 
 // src/errors/ErrorHandler.ts
@@ -283,6 +302,7 @@ export class ErrorHandler {
 ```
 
 **実装手順**:
+
 1. エラークラス階層を作成
 2. エラーコードを定義
 3. 統一エラーハンドラーを実装
@@ -292,34 +312,36 @@ export class ErrorHandler {
 ### タスク3-3: イベントシステムの導入
 
 **実装内容**:
+
 ```typescript
 // src/events/EventBus.ts
 export class EventBus {
   private listeners = new Map<string, Set<EventHandler>>();
-  
+
   on(event: string, handler: EventHandler): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
     this.listeners.get(event)!.add(handler);
   }
-  
+
   off(event: string, handler: EventHandler): void {
     this.listeners.get(event)?.delete(handler);
   }
-  
+
   emit(event: string, data?: any): void {
-    this.listeners.get(event)?.forEach(handler => handler(data));
+    this.listeners.get(event)?.forEach((handler) => handler(data));
   }
 }
 
 // 使用例
-eventBus.on('place:added', (place) => {
+eventBus.on("place:added", (place) => {
   // 場所が追加されたときの処理
 });
 ```
 
 **実装手順**:
+
 1. EventBusクラスを作成
 2. ServiceContainerに登録
 3. ストアのコールバックをイベントに置き換え
@@ -328,20 +350,24 @@ eventBus.on('place:added', (place) => {
 ## 実装順序と優先度
 
 ### 即座に実施（1週間以内）
+
 1. タスク1-1: 重複ファイルの削除
 2. タスク1-2: DIシステムの統一
 3. タスク1-4: ストア名の統一
 
 ### 短期（2週間以内）
+
 1. タスク1-3: PlaceDetailPanelの分割
-2. タスク2-2: Safe*コンポーネントの統一
+2. タスク2-2: Safe\*コンポーネントの統一
 
 ### 中期（1ヶ月以内）
+
 1. タスク2-1: サービスインターフェースの完全実装
 2. タスク2-3: ビジネスロジックのサービス層への移動
 3. タスク3-2: エラーハンドリングの統一
 
 ### 長期（2ヶ月以内）
+
 1. タスク3-1: ルート関連ストアの統合
 2. タスク3-3: イベントシステムの導入
 

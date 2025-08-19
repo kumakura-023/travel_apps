@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface BrowserPromptState {
   showExternalBrowserPrompt: boolean;
@@ -7,5 +7,6 @@ interface BrowserPromptState {
 
 export const useBrowserPromptStore = create<BrowserPromptState>((set) => ({
   showExternalBrowserPrompt: false,
-  setShowExternalBrowserPrompt: (show) => set({ showExternalBrowserPrompt: show }),
+  setShowExternalBrowserPrompt: (show) =>
+    set({ showExternalBrowserPrompt: show }),
 }));

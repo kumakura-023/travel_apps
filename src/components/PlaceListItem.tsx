@@ -1,10 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import { Place, MapLabel } from '../types';
-import { getCategoryDisplayName, getCategoryColor } from '../utils/categoryIcons';
-import { formatCurrency } from '../utils/formatCurrency';
-import { useSavedPlacesStore } from '../store/savedPlacesStore';
-import { useLabelsStore } from '../store/labelsStore';
-import DaySelector from './DaySelector';
+import React, { useState, useMemo } from "react";
+import { Place, MapLabel } from "../types";
+import {
+  getCategoryDisplayName,
+  getCategoryColor,
+} from "../utils/categoryIcons";
+import { formatCurrency } from "../utils/formatCurrency";
+import { useSavedPlacesStore } from "../store/savedPlacesStore";
+import { useLabelsStore } from "../store/labelsStore";
+import DaySelector from "./DaySelector";
 
 interface Props {
   place: Place;
@@ -12,7 +15,10 @@ interface Props {
 }
 
 /** 単一Placeのカード表示 + 費用・日程編集 */
-export default function PlaceListItem({ place, showLinkedMemos = true }: Props) {
+export default function PlaceListItem({
+  place,
+  showLinkedMemos = true,
+}: Props) {
   const updatePlace = useSavedPlacesStore((s) => s.updatePlace);
   const { labels, addLabel, updateLabel, deleteLabel } = useLabelsStore();
   const [editing, setEditing] = useState(false);
@@ -20,12 +26,12 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
   const [tempCost, setTempCost] = useState(place.estimatedCost);
   const [tempDay, setTempDay] = useState(place.scheduledDay);
   const [showMemoPanel, setShowMemoPanel] = useState(false);
-  const [newMemoText, setNewMemoText] = useState('');
+  const [newMemoText, setNewMemoText] = useState("");
 
   // この候補地にリンクされたメモを取得
-  const linkedMemos = useMemo(() => 
-    labels.filter(label => label.linkedPlaceId === place.id),
-    [labels, place.id]
+  const linkedMemos = useMemo(
+    () => labels.filter((label) => label.linkedPlaceId === place.id),
+    [labels, place.id],
   );
 
   const saveCost = () => {
@@ -43,9 +49,9 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
       addLabel({
         text: newMemoText.trim(),
         position: place.coordinates,
-        linkedPlaceId: place.id
+        linkedPlaceId: place.id,
       });
-      setNewMemoText('');
+      setNewMemoText("");
       setShowMemoPanel(false);
     }
   };
@@ -55,7 +61,7 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
   };
 
   const deleteMemo = (memoId: string) => {
-    if (confirm('このメモを削除しますか？')) {
+    if (confirm("このメモを削除しますか？")) {
       deleteLabel(memoId);
     }
   };
@@ -68,11 +74,14 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2 mb-1">
-            <div 
+            <div
               className="w-3 h-3 rounded-full flex-shrink-0"
               style={{ backgroundColor: categoryColor }}
             />
-            <h3 className="headline text-system-label truncate" title={place.name}>
+            <h3
+              className="headline text-system-label truncate"
+              title={place.name}
+            >
               {place.name}
             </h3>
           </div>
@@ -85,7 +94,7 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
             </p>
           )}
         </div>
-        
+
         {/* 日程・費用表示・編集部分 */}
         <div className="flex-shrink-0 space-y-2">
           {/* 日程表示・編集 */}
@@ -127,7 +136,9 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
                 onClick={() => setEditingDay(true)}
                 title="日程を編集"
               >
-                {place.scheduledDay ? `${place.scheduledDay}日目` : '日程未設定'}
+                {place.scheduledDay
+                  ? `${place.scheduledDay}日目`
+                  : "日程未設定"}
               </button>
             )}
           </div>
@@ -178,14 +189,16 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
           </div>
         </div>
       </div>
-      
+
       {/* メモ部分 */}
       <div className="space-y-2">
         {/* 候補地自身のメモ */}
         {place.memo && (
           <div className="bg-system-secondary-background rounded-lg p-3">
             <div className="flex items-center justify-between mb-1">
-              <span className="caption-1 text-system-tertiary-label font-medium">候補地メモ</span>
+              <span className="caption-1 text-system-tertiary-label font-medium">
+                候補地メモ
+              </span>
             </div>
             <p className="footnote text-system-secondary-label whitespace-pre-wrap line-clamp-3">
               {place.memo}
@@ -197,14 +210,20 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
         {showLinkedMemos && linkedMemos.length > 0 && (
           <div className="space-y-2">
             {linkedMemos.map((memo) => (
-              <div 
-                key={memo.id} 
+              <div
+                key={memo.id}
                 className="bg-teal-500/5 border border-teal-500/20 rounded-lg p-3"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="caption-1 text-teal-600 font-medium flex items-center gap-1">
-                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+                    <svg
+                      className="w-3 h-3"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
                     </svg>
                     リンクメモ
                   </span>
@@ -237,7 +256,9 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
         {showMemoPanel ? (
           <div className="bg-coral-500/5 border border-coral-500/20 rounded-lg p-3 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="caption-1 text-coral-600 font-medium">新しいメモを追加</span>
+              <span className="caption-1 text-coral-600 font-medium">
+                新しいメモを追加
+              </span>
               <button
                 onClick={() => setShowMemoPanel(false)}
                 className="caption-2 text-gray-500 hover:text-gray-600"
@@ -274,21 +295,27 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
                        text-system-secondary-label hover:text-coral-500 hover:border-coral-500/50
                        transition-all duration-150 ease-ios-default flex items-center justify-center gap-2"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 5v14M5 12h14"/>
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M12 5v14M5 12h14" />
             </svg>
             <span className="caption-1 font-medium">メモを追加</span>
           </button>
         )}
       </div>
-      
+
       {/* 追加情報 */}
       <div className="flex items-center justify-between pt-2 border-t border-system-separator">
         <span className="caption-1 text-system-tertiary-label">
-          追加日: {place.createdAt.toLocaleDateString('ja-JP')}
+          追加日: {place.createdAt.toLocaleDateString("ja-JP")}
         </span>
         <div className="flex items-center space-x-1">
-          <div 
+          <div
             className="w-2 h-2 rounded-full"
             style={{ backgroundColor: categoryColor }}
           />
@@ -299,4 +326,4 @@ export default function PlaceListItem({ place, showLinkedMemos = true }: Props) 
       </div>
     </div>
   );
-} 
+}

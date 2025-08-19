@@ -1,79 +1,79 @@
-import { EventBus, StoreEvent } from '../../events/StoreEvents';
-import { TravelPlan, Place, Label } from '../../types';
+import { EventBus, StoreEvent } from "../../events/StoreEvents";
+import { TravelPlan, Place, Label } from "../../types";
 
 export class PlanEventService {
   constructor(private eventBus: EventBus<StoreEvent>) {}
 
   planLoaded(plan: TravelPlan): void {
     this.eventBus.emit({
-      type: 'PLAN_LOADED',
+      type: "PLAN_LOADED",
       planId: plan.id,
-      plan
+      plan,
     });
   }
 
   planUpdated(planId: string, changes: Partial<TravelPlan>): void {
     this.eventBus.emit({
-      type: 'PLAN_UPDATED',
+      type: "PLAN_UPDATED",
       planId,
-      changes
+      changes,
     });
   }
 
   planDeleted(planId: string): void {
     this.eventBus.emit({
-      type: 'PLAN_DELETED',
-      planId
+      type: "PLAN_DELETED",
+      planId,
     });
   }
 
   placeAdded(planId: string, place: Place): void {
     this.eventBus.emit({
-      type: 'PLACE_ADDED',
+      type: "PLACE_ADDED",
       planId,
-      place
+      place,
     });
   }
 
   placeUpdated(planId: string, placeId: string, changes: Partial<Place>): void {
     this.eventBus.emit({
-      type: 'PLACE_UPDATED',
+      type: "PLACE_UPDATED",
       planId,
       placeId,
-      changes
+      changes,
     });
   }
 
   placeDeleted(planId: string, placeId: string): void {
     this.eventBus.emit({
-      type: 'PLACE_DELETED',
+      type: "PLACE_DELETED",
       planId,
-      placeId
+      placeId,
     });
   }
 
   labelAdded(planId: string, label: Label): void {
     this.eventBus.emit({
-      type: 'LABEL_ADDED',
+      type: "LABEL_ADDED",
       planId,
-      label
+      label,
     });
   }
 
   labelUpdated(planId: string, labelId: string, changes: Partial<Label>): void {
     this.eventBus.emit({
-      type: 'LABEL_UPDATED',
+      type: "LABEL_UPDATED",
       planId,
       labelId,
-      changes
+      changes,
     });
   }
 
   labelDeleted(planId: string, labelId: string): void {
     this.eventBus.emit({
-      type: 'LABEL_DELETED',
+      type: "LABEL_DELETED",
       planId,
-      labelId
+      labelId,
     });
   }
 }

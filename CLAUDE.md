@@ -1,7 +1,6 @@
 CLAUDE.md
 このファイルは、このリポジトリでClaude Code (claude.ai/code) と作業する際のガイダンスを提供します。
 
-
 基本設定
 言語: 日本語で回答します
 バージョン管理: version_rule.mdを参照して適切なバージョンでchangelogに修正内容を追記します
@@ -77,14 +76,14 @@ Places API
 Directions API
 コード構成
 src/
-├── components/     # React UIコンポーネント
-├── hooks/         # カスタムReactフック
-├── store/         # Zustand状態ストア
-├── services/      # ビジネスロジック & DIコンテナ
-├── interfaces/    # TypeScriptインターフェース
-├── adapters/      # 外部APIアダプター
-├── types/         # 型定義
-└── utils/         # ユーティリティ関数
+├── components/ # React UIコンポーネント
+├── hooks/ # カスタムReactフック
+├── store/ # Zustand状態ストア
+├── services/ # ビジネスロジック & DIコンテナ
+├── interfaces/ # TypeScriptインターフェース
+├── adapters/ # 外部APIアダプター
+├── types/ # 型定義
+└── utils/ # ユーティリティ関数
 開発原則
 コード整理
 関数は小さく、フォーカスされた状態を保つ:

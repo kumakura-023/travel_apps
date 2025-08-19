@@ -1,15 +1,18 @@
-import React from 'react';
-import { PlaceCategory } from '../types';
-import { getCategoryDisplayName, getCategoryColor } from '../utils/categoryIcons';
-import { useUIStore } from '../store/uiStore';
+import React from "react";
+import { PlaceCategory } from "../types";
+import {
+  getCategoryDisplayName,
+  getCategoryColor,
+} from "../utils/categoryIcons";
+import { useUIStore } from "../store/uiStore";
 
 const ALL_CATEGORIES: PlaceCategory[] = [
-  'hotel',
-  'restaurant',
-  'sightseeing',
-  'shopping',
-  'transport',
-  'other',
+  "hotel",
+  "restaurant",
+  "sightseeing",
+  "shopping",
+  "transport",
+  "other",
 ];
 
 interface CategoryFilterModalProps {
@@ -17,7 +20,10 @@ interface CategoryFilterModalProps {
   onClose: () => void;
 }
 
-const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({ isOpen, onClose }) => {
+const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const { selectedCategories, setSelectedCategories } = useUIStore();
 
   const toggle = (cat: PlaceCategory) => {
@@ -48,7 +54,9 @@ const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({ isOpen, onClo
                        hover:bg-system-tertiary-background
                        flex items-center justify-center transition-colors"
           >
-            <span className="text-system-secondary-label font-medium text-sm">×</span>
+            <span className="text-system-secondary-label font-medium text-sm">
+              ×
+            </span>
           </button>
         </div>
 
@@ -65,7 +73,7 @@ const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({ isOpen, onClo
                          text-coral-500 hover:bg-coral-500/20 
                          transition-colors text-xs font-medium"
             >
-              {isAllSelected ? '全選択' : 'クリア'}
+              {isAllSelected ? "全選択" : "クリア"}
             </button>
           </div>
 
@@ -74,7 +82,7 @@ const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({ isOpen, onClo
             {ALL_CATEGORIES.map((cat) => {
               const active = selectedCategories.includes(cat);
               const categoryColor = getCategoryColor(cat);
-              
+
               return (
                 <button
                   key={cat}
@@ -86,21 +94,30 @@ const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({ isOpen, onClo
                              shadow-sm hover:shadow-md
                              ${
                                active
-                                 ? 'text-white border-transparent shadow-md'
-                                 : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50'
+                                 ? "text-white border-transparent shadow-md"
+                                 : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50"
                              }`}
                   style={active ? { backgroundColor: categoryColor } : {}}
                 >
-                  <div 
-                    className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center ${active ? 'bg-white/20' : ''}`}
-                    style={!active ? { backgroundColor: categoryColor + '20', border: `1px solid ${categoryColor}` } : {}}
+                  <div
+                    className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center ${active ? "bg-white/20" : ""}`}
+                    style={
+                      !active
+                        ? {
+                            backgroundColor: categoryColor + "20",
+                            border: `1px solid ${categoryColor}`,
+                          }
+                        : {}
+                    }
                   >
-                    <div 
-                      className={`w-2.5 h-2.5 rounded-full ${active ? 'bg-white' : ''}`}
+                    <div
+                      className={`w-2.5 h-2.5 rounded-full ${active ? "bg-white" : ""}`}
                       style={!active ? { backgroundColor: categoryColor } : {}}
                     />
                   </div>
-                  <span className="text-center leading-tight text-xs font-medium">{getCategoryDisplayName(cat)}</span>
+                  <span className="text-center leading-tight text-xs font-medium">
+                    {getCategoryDisplayName(cat)}
+                  </span>
                 </button>
               );
             })}
@@ -109,10 +126,9 @@ const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({ isOpen, onClo
           {/* フィルター状態表示 */}
           <div className="pt-1">
             <p className="text-xs text-center text-system-tertiary-label">
-              {selectedCategories.length === 0 
-                ? '全カテゴリを表示中'
-                : `${selectedCategories.length}個でフィルタリング中`
-              }
+              {selectedCategories.length === 0
+                ? "全カテゴリを表示中"
+                : `${selectedCategories.length}個でフィルタリング中`}
             </p>
           </div>
         </div>

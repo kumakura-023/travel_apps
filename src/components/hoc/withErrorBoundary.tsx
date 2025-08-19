@@ -1,4 +1,4 @@
-import React, { Component, ComponentType, ReactNode } from 'react';
+import React, { Component, ComponentType, ReactNode } from "react";
 
 /**
  * エラーバウンダリのプロパティ
@@ -29,47 +29,50 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({ error }) => (
 /**
  * エラーバウンダリ高階コンポーネント
  * コンポーネントをエラーバウンダリでラップし、エラー時にフォールバックUIを表示
- * 
+ *
  * @param Component ラップするコンポーネント
  * @param FallbackComponent エラー時に表示するフォールバックコンポーネント
  * @returns エラーバウンダリでラップされたコンポーネント
  */
 export function withErrorBoundary<P extends object>(
   Component: ComponentType<P>,
-  FallbackComponent: ComponentType<ErrorFallbackProps> = DefaultErrorFallback
+  FallbackComponent: ComponentType<ErrorFallbackProps> = DefaultErrorFallback,
 ) {
-  return class ErrorBoundaryWrapper extends React.Component<P, ErrorBoundaryState> {
+  return class ErrorBoundaryWrapper extends React.Component<
+    P,
+    ErrorBoundaryState
+  > {
     constructor(props: P) {
       super(props);
       this.state = {
         hasError: false,
-        error: null
+        error: null,
       };
     }
 
     static getDerivedStateFromError(error: Error): ErrorBoundaryState {
       return {
         hasError: true,
-        error
+        error,
       };
     }
 
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-      console.error('Error caught by boundary:', error, errorInfo);
+      console.error("Error caught by boundary:", error, errorInfo);
     }
 
     resetErrorBoundary = (): void => {
       this.setState({
         hasError: false,
-        error: null
+        error: null,
       });
     };
 
     render(): ReactNode {
       if (this.state.hasError && this.state.error) {
         return (
-          <FallbackComponent 
-            error={this.state.error} 
+          <FallbackComponent
+            error={this.state.error}
             resetErrorBoundary={this.resetErrorBoundary}
           />
         );
@@ -90,29 +93,32 @@ export class ErrorBoundary extends Component<
   },
   ErrorBoundaryState
 > {
-  constructor(props: { children: ReactNode; fallback?: ComponentType<ErrorFallbackProps> }) {
+  constructor(props: {
+    children: ReactNode;
+    fallback?: ComponentType<ErrorFallbackProps>;
+  }) {
     super(props);
     this.state = {
       hasError: false,
-      error: null
+      error: null,
     };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error("Error caught by boundary:", error, errorInfo);
   }
 
   resetErrorBoundary = (): void => {
     this.setState({
       hasError: false,
-      error: null
+      error: null,
     });
   };
 
@@ -120,7 +126,7 @@ export class ErrorBoundary extends Component<
     if (this.state.hasError && this.state.error) {
       const FallbackComponent = this.props.fallback || DefaultErrorFallback;
       return (
-        <FallbackComponent 
+        <FallbackComponent
           error={this.state.error}
           resetErrorBoundary={this.resetErrorBoundary}
         />

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 /**
  * プルツーリフレッシュを防止するカスタムフック
@@ -33,10 +33,10 @@ export function usePullToRefreshPrevention(
 
       const currentY = e.touches[0].clientY;
       const deltaY = currentY - startY.current;
-      
+
       const atTop = element.scrollTop === 0;
       const isPullDown = deltaY > 10;
-      
+
       if (atTop && isPullDown) {
         e.preventDefault(); // P2R 完全阻止
         if (!isOverscrollCallbackTriggered.current) {
@@ -52,16 +52,16 @@ export function usePullToRefreshPrevention(
       isOverscrollCallbackTriggered.current = false;
     };
 
-    element.addEventListener('touchstart', handleTouchStart, { passive: true });
-    element.addEventListener('touchmove', handleTouchMove, { passive: false });
-    element.addEventListener('touchend', handleTouchEnd, { passive: true });
+    element.addEventListener("touchstart", handleTouchStart, { passive: true });
+    element.addEventListener("touchmove", handleTouchMove, { passive: false });
+    element.addEventListener("touchend", handleTouchEnd, { passive: true });
 
     return () => {
-      element.removeEventListener('touchstart', handleTouchStart);
-      element.removeEventListener('touchmove', handleTouchMove);
-      element.removeEventListener('touchend', handleTouchEnd);
+      element.removeEventListener("touchstart", handleTouchStart);
+      element.removeEventListener("touchmove", handleTouchMove);
+      element.removeEventListener("touchend", handleTouchEnd);
     };
   }, [isMobile, isPanelActive, isDragging, onOverscrollDown, targetElement]);
 
   return { contentRef };
-} 
+}

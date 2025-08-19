@@ -14,6 +14,7 @@
 ## 💡 AI への追加指示テンプレート
 
 ### 問題が発生した場合の修正依頼：
+
 ```
 [エラー内容をペースト]
 上記のエラーを修正してください。
@@ -22,6 +23,7 @@
 ```
 
 ### 機能追加の依頼：
+
 ```
 [現在のステップ] が完成しました。
 さらに以下の機能を追加してください：
@@ -31,6 +33,7 @@
 ```
 
 ### デザイン改善の依頼：
+
 ```
 現在のUIをより洗練されたものにしてください：
 - Material Design 3 の最新ガイドラインに準拠
@@ -40,6 +43,7 @@
 ```
 
 ### パフォーマンス改善の依頼：
+
 ```
 Lighthouse でパフォーマンスを測定したところ、
 以下の問題が見つかりました：
@@ -54,18 +58,21 @@ Lighthouse でパフォーマンスを測定したところ、
 完成後、以下の手順でデプロイ：
 
 ### Vercel の場合：
+
 1. GitHub にプッシュ
 2. Vercel でプロジェクトをインポート
 3. 環境変数を設定（VITE_GOOGLE_MAPS_API_KEY）
 4. デプロイ実行
 
 ### Netlify の場合：
+
 1. ビルドコマンド: `npm run build`
 2. 公開ディレクトリ: `dist`
 3. 環境変数を設定
 4. デプロイ実行
 
 ### 本番環境の Google Maps API 設定：
+
 1. Google Cloud Console でAPIキーを作成
 2. HTTPリファラーを制限（本番URL のみ許可）
 3. 必要なAPI を有効化：
@@ -78,6 +85,7 @@ Lighthouse でパフォーマンスを測定したところ、
 ## 📊 想定される完成品の仕様
 
 ### 技術仕様
+
 - **フレームワーク**: React 18 + TypeScript
 - **ビルドサイズ**: < 500KB (gzip)
 - **初回ロード**: < 3秒（3G環境）
@@ -85,12 +93,14 @@ Lighthouse でパフォーマンスを測定したところ、
 - **対応デバイス**: スマホ、タブレット、デスクトップ
 
 ### 機能仕様
+
 - **地点登録数**: 最大100地点/計画
 - **計画保存数**: 最大20計画（LocalStorage制限）
 - **オフライン**: 基本機能は動作可能
 - **共有**: URLによる読み取り専用共有
 
 ### UX仕様
+
 - **操作性**: Google Maps と同等の直感的な操作
 - **レスポンス**: 全ての操作が100ms以内に反応
 - **アニメーション**: 60fps を維持
@@ -101,18 +111,19 @@ Lighthouse でパフォーマンスを測定したところ、
 ## 🎨 デザインシステム
 
 ### カラーパレット
+
 ```css
 :root {
   /* Primary Colors */
   --primary-blue: #1a73e8;
   --primary-blue-dark: #1557b0;
   --primary-blue-light: #4285f4;
-  
+
   /* Secondary Colors */
   --success-green: #188038;
   --warning-yellow: #f9ab00;
   --error-red: #d33b27;
-  
+
   /* Neutral Colors */
   --gray-900: #202124;
   --gray-700: #5f6368;
@@ -120,33 +131,44 @@ Lighthouse でパフォーマンスを測定したところ、
   --gray-300: #dadce0;
   --gray-100: #f1f3f4;
   --white: #ffffff;
-  
+
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
-  --shadow-md: 0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15);
-  --shadow-lg: 0 2px 3px 0 rgba(60,64,67,.3), 0 6px 10px 4px rgba(60,64,67,.15);
+  --shadow-sm:
+    0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  --shadow-md:
+    0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+  --shadow-lg:
+    0 2px 3px 0 rgba(60, 64, 67, 0.3), 0 6px 10px 4px rgba(60, 64, 67, 0.15);
 }
 ```
 
 ### タイポグラフィ
+
 ```css
 /* Google Sans を優先、なければシステムフォント */
-font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+font-family:
+  "Google Sans",
+  -apple-system,
+  BlinkMacSystemFont,
+  "Segoe UI",
+  Roboto,
+  sans-serif;
 
 /* サイズ */
---text-xs: 0.75rem;   /* 12px */
---text-sm: 0.875rem;  /* 14px */
---text-base: 1rem;    /* 16px */
---text-lg: 1.125rem;  /* 18px */
---text-xl: 1.25rem;   /* 20px */
+--text-xs: 0.75rem; /* 12px */
+--text-sm: 0.875rem; /* 14px */
+--text-base: 1rem; /* 16px */
+--text-lg: 1.125rem; /* 18px */
+--text-xl: 1.25rem; /* 20px */
 ```
 
 ### アニメーション
+
 ```css
 /* 基本のイージング */
---ease-standard: cubic-bezier(0.4, 0.0, 0.2, 1);
---ease-deceleration: cubic-bezier(0.0, 0.0, 0.2, 1);
---ease-acceleration: cubic-bezier(0.4, 0.0, 1, 1);
+--ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+--ease-deceleration: cubic-bezier(0, 0, 0.2, 1);
+--ease-acceleration: cubic-bezier(0.4, 0, 1, 1);
 
 /* デュレーション */
 --duration-fast: 200ms;
@@ -209,6 +231,7 @@ font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
 これで完全な開発計画になったよ！各ステップのプロンプトをAIに投げていけば、プロ品質の旅行計画Webアプリが作れるはず。
 
 特にWebアプリ版として改善した点：
+
 - **レスポンシブ対応**: PC/タブレット/スマホ全てで最適な表示
 - **PWA対応**: インストール可能でオフラインでも動作
 - **デプロイ対応**: Vercel/Netlifyですぐに公開可能
@@ -217,11 +240,13 @@ font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
 何か他に追加したい機能や、特定の部分についてもっと詳しく知りたいことがあれば教えて！# 旅行計画Webアプリ - AI駆動開発計画
 
 ## 開発方針
+
 ブラウザで動作する旅行計画Webアプリを作成します。
 各ステップで AI に以下のプロンプトをコピペするだけで、段階的にアプリが完成します。
 各プロンプトは独立しており、前のコードを含めて完全なファイルを生成します。
 
 ## 技術スタック
+
 - **フロントエンド**: React + TypeScript（SPA）
 - **地図**: Google Maps JavaScript API
 - **スタイリング**: Tailwind CSS
@@ -234,13 +259,14 @@ font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
 ## 🚀 Step 1: プロジェクト初期設定
 
 ### プロンプト
+
 ```
 React + TypeScript + Vite で旅行計画Webアプリのプロジェクトを作成してください。
 
 要件:
 1. ブラウザで動作するSPA（シングルページアプリケーション）
 2. Google Maps JavaScript API を使用
-3. Tailwind CSS でスタイリング  
+3. Tailwind CSS でスタイリング
 4. Zustand で状態管理
 5. レスポンシブデザイン（デスクトップ/タブレット/スマホ対応）
 6. 以下のプロジェクト構造を作成:
@@ -277,6 +303,7 @@ React + TypeScript + Vite で旅行計画Webアプリのプロジェクトを作
 ```
 
 ### 動作確認
+
 - `npm install` → `npm run dev`
 - ブラウザで http://localhost:5173 を開いて地図が表示される
 - マウス操作とタッチ操作の両方で地図を操作できる
@@ -286,6 +313,7 @@ React + TypeScript + Vite で旅行計画Webアプリのプロジェクトを作
 ## 🗺️ Step 2: 検索バーと基本UI
 
 ### プロンプト
+
 ```
 前のコードに以下の機能を追加してください:
 
@@ -328,6 +356,7 @@ Material Design の elevation を使用して、Google Maps のような洗練�
 ## 📍 Step 3: 地点の追加と表示
 
 ### プロンプト
+
 ```
 検索した場所を旅行の候補地として保存できる機能を追加してください:
 
@@ -364,6 +393,7 @@ Material Design の elevation を使用して、Google Maps のような洗練�
 ## 💬 Step 4: 付箋表示と地点詳細
 
 ### プロンプト
+
 ```
 マーカーの情報表示機能を追加してください:
 
@@ -415,6 +445,7 @@ Material Design の elevation を使用して、Google Maps のような洗練�
 ## 🚗 Step 5: タブUIと移動時間表示
 
 ### プロンプト
+
 ```
 画面下部にタブナビゲーションを追加し、移動時間機能を実装してください:
 
@@ -473,6 +504,7 @@ Material Design の elevation を使用して、Google Maps のような洗練�
 ## 📋 Step 6: リスト表示とコスト集計
 
 ### プロンプト
+
 ```
 3つ目のタブとしてリスト表示とコスト管理機能を追加してください:
 
@@ -513,6 +545,7 @@ Material Design のリストコンポーネントを参考に、
 ## 💾 Step 7: データ保存と計画管理
 
 ### プロンプト
+
 ```
 旅行計画の保存と管理機能を追加してください:
 
@@ -585,6 +618,7 @@ Material Design のリストコンポーネントを参考に、
 ## ✨ Step 8: 最終仕上げとデプロイ
 
 ### プロンプト
+
 ```
 Webアプリを完成させ、本番環境にデプロイできるようにしてください:
 
@@ -674,6 +708,7 @@ Google Maps クオリティのWebアプリに仕上げてください。
 ## 💡 AI への追加指示テンプレート
 
 問題が発生した場合の修正依頼：
+
 ```
 [エラー内容をペースト]
 上記のエラーを修正してください。
@@ -681,6 +716,7 @@ Google Maps クオリティのWebアプリに仕上げてください。
 ```
 
 機能追加の依頼：
+
 ```
 [現在のステップ] が完成しました。
 さらに以下の機能を追加してください：
@@ -689,6 +725,7 @@ Google Maps クオリティのWebアプリに仕上げてください。
 ```
 
 デザイン改善の依頼：
+
 ```
 現在のUIをより洗練されたものにしてください：
 - Material Design 3 の最新ガイドラインに準拠

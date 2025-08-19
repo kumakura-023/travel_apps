@@ -1,6 +1,6 @@
 // 型定義: 旅行時間機能
 // 移動手段
-export type TravelMode = 'walking' | 'driving' | 'transit';
+export type TravelMode = "walking" | "driving" | "transit";
 
 // Google Maps LatLngLiteral と同様の簡易型
 export interface LatLng {
@@ -14,4 +14,4 @@ export interface TravelCircle {
   center: LatLng;
   mode: TravelMode;
   minutes: number;
-} 
+}

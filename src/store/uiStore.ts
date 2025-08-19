@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { PlaceCategory } from '../types';
+import { create } from "zustand";
+import { PlaceCategory } from "../types";
 
 interface UIState {
   isTabNavigationVisible: boolean;
@@ -21,21 +21,28 @@ export const useUIStore = create<UIState>((set) => ({
   isMapInteractionEnabled: true, // デフォルトは有効
   selectedCategories: [], // 初期状態では全カテゴリを表示
   isCategoryFilterModalOpen: false, // モーダルは初期状態では閉じている
-  toggleTabNavigation: () => set((state) => ({ 
-    isTabNavigationVisible: !state.isTabNavigationVisible 
-  })),
+  toggleTabNavigation: () =>
+    set((state) => ({
+      isTabNavigationVisible: !state.isTabNavigationVisible,
+    })),
   hideTabNavigation: () => set({ isTabNavigationVisible: false }),
   showTabNavigation: () => set({ isTabNavigationVisible: true }),
   setMapInteraction: (enabled) => set({ isMapInteractionEnabled: enabled }),
-  setSelectedCategories: (categories) => set({ selectedCategories: categories }),
-  toggleCategory: (category) => set((state) => {
-    const isSelected = state.selectedCategories.includes(category);
-    if (isSelected) {
-      return { selectedCategories: state.selectedCategories.filter(c => c !== category) };
-    } else {
-      return { selectedCategories: [...state.selectedCategories, category] };
-    }
-  }),
+  setSelectedCategories: (categories) =>
+    set({ selectedCategories: categories }),
+  toggleCategory: (category) =>
+    set((state) => {
+      const isSelected = state.selectedCategories.includes(category);
+      if (isSelected) {
+        return {
+          selectedCategories: state.selectedCategories.filter(
+            (c) => c !== category,
+          ),
+        };
+      } else {
+        return { selectedCategories: [...state.selectedCategories, category] };
+      }
+    }),
   openCategoryFilterModal: () => set({ isCategoryFilterModalOpen: true }),
   closeCategoryFilterModal: () => set({ isCategoryFilterModalOpen: false }),
-})); 
+}));

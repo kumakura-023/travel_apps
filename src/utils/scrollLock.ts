@@ -19,42 +19,42 @@ export function setGlobalScrollLock(locked: boolean): void {
   if (locked) {
     // 現在のスクロール位置を記録
     scrollY = window.scrollY;
-    
+
     // 現在のスタイルを記録
     const body = document.body;
     const documentElement = document.documentElement;
-    
+
     originalBodyOverflow = body.style.overflow;
     originalBodyPosition = body.style.position;
     originalBodyTop = body.style.top;
     originalBodyHeight = body.style.height;
     originalBodyOverscrollBehaviorY = body.style.overscrollBehaviorY;
     originalDocumentElementOverflow = documentElement.style.overflow;
-    
+
     // スクロールを無効化
-    documentElement.style.overflow = 'hidden';
-    body.style.overflow = 'hidden';
-    body.style.position = 'fixed';
+    documentElement.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
     body.style.top = `-${scrollY}px`;
-    body.style.height = '100%';
-    body.style.width = '100%';
-    body.style.overscrollBehaviorY = 'contain';
+    body.style.height = "100%";
+    body.style.width = "100%";
+    body.style.overscrollBehaviorY = "contain";
   } else {
     // 元のスタイルを復元
     const body = document.body;
     const documentElement = document.documentElement;
-    
-    documentElement.style.overflow = originalDocumentElementOverflow || '';
-    body.style.overflow = originalBodyOverflow || '';
-    body.style.position = originalBodyPosition || '';
-    body.style.top = originalBodyTop || '';
-    body.style.height = originalBodyHeight || '';
-    body.style.width = '';
-    body.style.overscrollBehaviorY = originalBodyOverscrollBehaviorY || '';
-    
+
+    documentElement.style.overflow = originalDocumentElementOverflow || "";
+    body.style.overflow = originalBodyOverflow || "";
+    body.style.position = originalBodyPosition || "";
+    body.style.top = originalBodyTop || "";
+    body.style.height = originalBodyHeight || "";
+    body.style.width = "";
+    body.style.overscrollBehaviorY = originalBodyOverscrollBehaviorY || "";
+
     // スクロール位置を復元
     window.scrollTo(0, scrollY);
-    
+
     // 記録をクリア
     originalBodyOverflow = null;
     originalBodyPosition = null;
@@ -64,4 +64,4 @@ export function setGlobalScrollLock(locked: boolean): void {
     originalDocumentElementOverflow = null;
     scrollY = 0;
   }
-} 
+}

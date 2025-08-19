@@ -24,12 +24,12 @@ Ctrl+クリック（デスクトップ）／長押し（モバイル想定）で
 「離れた 2 地点間の移動時間を瞬時に確認したい」
 というニーズが高かったため、タブ切替式で直感的に利用できる移動時間機能を実装しました。
 🧩 コンポーネント設計
-コンポーネント	役割	主な Props / Hooks
-TabNavigation	地図／移動時間／リストを切替えるレスポンシブタブ	active, onChange
-TravelTimeControls	起点選択・交通手段選択・時間スライダー UI	Zustand store を内部で利用
-TravelTimeOverlay	移動時間円・起点マーカー・POI バッジ描画	Zustand store, useGoogleMaps
-RouteDisplay	2 地点間ルート＆所要時間バッジ表示、解除ボタン	Zustand store, Directions API
-AddLabelToggle	既存：ラベル追加モードトグル	-
+コンポーネント 役割 主な Props / Hooks
+TabNavigation 地図／移動時間／リストを切替えるレスポンシブタブ active, onChange
+TravelTimeControls 起点選択・交通手段選択・時間スライダー UI Zustand store を内部で利用
+TravelTimeOverlay 移動時間円・起点マーカー・POI バッジ描画 Zustand store, useGoogleMaps
+RouteDisplay 2 地点間ルート＆所要時間バッジ表示、解除ボタン Zustand store, Directions API
+AddLabelToggle 既存：ラベル追加モードトグル -
 ストア / サービス
 store/travelTimeStore.ts：移動時間機能の全状態を保持
 services/directionsService.ts：Directions API 呼び出し＋5 分キャッシュ
@@ -48,9 +48,9 @@ Directions API の無料枠を超えるとリクエスト失敗
 モバイルの長押し選択は未実装（今後 Gesture 対応予定）
 ⚙️ コンポーネント使用時のオプション
 TabNavigation
-Prop	型	説明
-active	'map' \| 'travelTime' \| 'list'	アクティブタブ
-onChange	(tab) => void	タブ変更ハンドラ
+Prop 型 説明
+active 'map' \| 'travelTime' \| 'list' アクティブタブ
+onChange (tab) => void タブ変更ハンドラ
 TravelTimeControls
 内部で Zustand を使用するため外部 Props はなし。
 表示位置・z-index は Tailwind クラスで調整可能。

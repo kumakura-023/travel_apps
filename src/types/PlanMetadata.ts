@@ -16,13 +16,13 @@ export interface PlanMetadata {
     };
     timestamp: Date;
     userId: string;
-    actionType: 'place' | 'label';
+    actionType: "place" | "label";
   };
 }
 
 export interface PlanSettings {
   autoSave: boolean;
-  conflictResolution: 'manual' | 'auto-merge' | 'last-write-wins';
+  conflictResolution: "manual" | "auto-merge" | "last-write-wins";
   shareSettings: {
     isPublic: boolean;
     allowComments: boolean;

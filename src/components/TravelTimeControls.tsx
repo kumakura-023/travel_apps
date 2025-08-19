@@ -1,14 +1,19 @@
-import React from 'react';
-import { MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit, MdDelete } from 'react-icons/md';
-import { useDeviceDetect } from '../hooks/useDeviceDetect';
-import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
-import useMediaQuery from '../hooks/useMediaQuery';
+import React from "react";
+import {
+  MdDirectionsWalk,
+  MdDirectionsCar,
+  MdDirectionsTransit,
+  MdDelete,
+} from "react-icons/md";
+import { useDeviceDetect } from "../hooks/useDeviceDetect";
+import { useTravelTimeMode } from "../hooks/useTravelTimeMode";
+import useMediaQuery from "../hooks/useMediaQuery";
 
 export default function TravelTimeControls() {
   const { isDesktop } = useDeviceDetect();
-  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+  const isTablet = useMediaQuery("(min-width: 768px) and (max-width: 1023px)");
   const isMobile = !isDesktop && !isTablet;
-  
+
   const {
     selectingOrigin,
     startSelecting,
@@ -31,14 +36,27 @@ export default function TravelTimeControls() {
     clearAll: s.clearAll,
   }));
 
-  const containerClasses = isDesktop || isTablet
-    ? 'fixed top-[25%] right-4 transform -translate-y-1/2 glass-effect-border rounded-xl p-5 z-50 w-64 space-y-4'
-    : 'fixed top-[25%] right-4 transform -translate-y-1/2 glass-effect-border rounded-xl p-4 z-50 w-56 space-y-3';
+  const containerClasses =
+    isDesktop || isTablet
+      ? "fixed top-[25%] right-4 transform -translate-y-1/2 glass-effect-border rounded-xl p-5 z-50 w-64 space-y-4"
+      : "fixed top-[25%] right-4 transform -translate-y-1/2 glass-effect-border rounded-xl p-4 z-50 w-56 space-y-3";
 
   const travelModes = [
-    { key: 'walking', icon: <MdDirectionsWalk className="w-5 h-5" />, aria: '徒歩' },
-    { key: 'driving', icon: <MdDirectionsCar className="w-5 h-5" />, aria: '車' },
-    { key: 'transit', icon: <MdDirectionsTransit className="w-5 h-5" />, aria: '公共交通機関' },
+    {
+      key: "walking",
+      icon: <MdDirectionsWalk className="w-5 h-5" />,
+      aria: "徒歩",
+    },
+    {
+      key: "driving",
+      icon: <MdDirectionsCar className="w-5 h-5" />,
+      aria: "車",
+    },
+    {
+      key: "transit",
+      icon: <MdDirectionsTransit className="w-5 h-5" />,
+      aria: "公共交通機関",
+    },
   ] as const;
 
   return (
@@ -49,13 +67,16 @@ export default function TravelTimeControls() {
         <button
           className={`w-full px-4 py-3 rounded-lg font-medium text-[15px] tracking-[-0.24px]
                      transition-all duration-150 ease-ios-default
-                     ${selectingOrigin 
-                       ? 'bg-coral-500/20 text-coral-600 hover:bg-coral-500/30 border border-coral-500/30' 
-                       : 'bg-coral-500 text-white hover:bg-coral-600 border border-coral-500/20'
+                     ${
+                       selectingOrigin
+                         ? "bg-coral-500/20 text-coral-600 hover:bg-coral-500/30 border border-coral-500/30"
+                         : "bg-coral-500 text-white hover:bg-coral-600 border border-coral-500/20"
                      }`}
-          onClick={() => (selectingOrigin ? cancelSelecting() : startSelecting())}
+          onClick={() =>
+            selectingOrigin ? cancelSelecting() : startSelecting()
+          }
         >
-          {selectingOrigin ? 'キャンセル' : '起点を選択'}
+          {selectingOrigin ? "キャンセル" : "起点を選択"}
         </button>
 
         {/* 移動手段選択 */}
@@ -70,8 +91,8 @@ export default function TravelTimeControls() {
                            hover:scale-105 active:scale-95
                            ${
                              mode === m.key
-                               ? 'bg-coral-500 border-coral-500 text-white'
-                               : 'bg-white/80 border-system-separator text-system-secondary-label hover:border-coral-500/30 hover:text-coral-500 hover:bg-white/90'
+                               ? "bg-coral-500 border-coral-500 text-white"
+                               : "bg-white/80 border-system-separator text-system-secondary-label hover:border-coral-500/30 hover:text-coral-500 hover:bg-white/90"
                            }`}
                 onClick={() => setMode(m.key as any)}
                 aria-label={m.aria}

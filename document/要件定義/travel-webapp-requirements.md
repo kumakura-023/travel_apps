@@ -3,20 +3,24 @@
 ## 1. プロジェクト概要
 
 ### 1.1 目的
+
 Google Maps の使いやすさをベースにしながら、旅行計画に特化した機能を提供するWebアプリケーションを開発する。既存のマップアプリケーションでは不足している以下の点を解決する：
+
 - 旅行候補地のカテゴリ別視覚化
 - 移動時間の直感的な可視化
 - 旅行費用の一元管理
 - 複数の旅行計画の保存と管理
 
 ### 1.2 ターゲットユーザー
+
 - 個人旅行者（国内・海外旅行の計画を立てる人）
 - 家族旅行を計画する人
 - 友人グループでの旅行を企画する人
 
 ### 1.3 動作環境
+
 - **対応ブラウザ**: Chrome, Firefox, Safari, Edge（最新2バージョン）
-- **対応デバイス**: 
+- **対応デバイス**:
   - デスクトップPC（1280px以上）
   - タブレット（768px〜1279px）
   - スマートフォン（767px以下）
@@ -27,6 +31,7 @@ Google Maps の使いやすさをベースにしながら、旅行計画に特�
 ### 2.1 地図表示機能
 
 #### 2.1.1 基本的な地図操作
+
 - Google Maps JavaScript API を使用した地図表示
 - マウスホイール/ピンチ操作によるズーム（範囲：3〜20）
 - ドラッグによる地図移動
@@ -34,6 +39,7 @@ Google Maps の使いやすさをベースにしながら、旅行計画に特�
 - 地図タイプの切り替え（地図/衛星写真/地形）
 
 #### 2.1.2 マップコントロール
+
 - ズームコントロール（右下配置）
 - 全画面表示ボタン（デスクトップのみ）
 - 現在地表示ボタン
@@ -42,6 +48,7 @@ Google Maps の使いやすさをベースにしながら、旅行計画に特�
 ### 2.2 場所検索機能
 
 #### 2.2.1 検索バー
+
 - 画面上部に固定配置
 - Google Places Autocomplete による候補表示
 - エンターキーでの検索実行
@@ -49,6 +56,7 @@ Google Maps の使いやすさをベースにしながら、旅行計画に特�
 - 検索結果への自動ズーム・移動
 
 #### 2.2.2 検索結果の処理
+
 - 複数の検索結果がある場合はリスト表示
 - 検索結果から「候補地に追加」ボタンで地点登録
 - 検索できない場合のエラーメッセージ表示
@@ -56,27 +64,35 @@ Google Maps の使いやすさをベースにしながら、旅行計画に特�
 ### 2.3 地点管理機能
 
 #### 2.3.1 地点データモデル
+
 ```typescript
 interface Place {
-  id: string;                    // UUID
-  name: string;                  // 地点名
-  address: string;               // 住所
+  id: string; // UUID
+  name: string; // 地点名
+  address: string; // 住所
   coordinates: {
-    lat: number;                 // 緯度
-    lng: number;                 // 経度
+    lat: number; // 緯度
+    lng: number; // 経度
   };
-  category: PlaceCategory;       // カテゴリ
-  memo: string;                  // メモ（最大500文字）
-  estimatedCost: number;         // 予想費用（円）
-  photos: string[];              // 写真URL（最大5枚）
-  createdAt: Date;               // 作成日時
-  updatedAt: Date;               // 更新日時
+  category: PlaceCategory; // カテゴリ
+  memo: string; // メモ（最大500文字）
+  estimatedCost: number; // 予想費用（円）
+  photos: string[]; // 写真URL（最大5枚）
+  createdAt: Date; // 作成日時
+  updatedAt: Date; // 更新日時
 }
 
-type PlaceCategory = 'hotel' | 'restaurant' | 'sightseeing' | 'shopping' | 'transport' | 'other';
+type PlaceCategory =
+  | "hotel"
+  | "restaurant"
+  | "sightseeing"
+  | "shopping"
+  | "transport"
+  | "other";
 ```
 
 #### 2.3.2 カスタムマーカー表示
+
 - カテゴリ別のアイコン表示
   - hotel: ベッドアイコン（青）
   - restaurant: フォーク&ナイフ（オレンジ）
@@ -89,6 +105,7 @@ type PlaceCategory = 'hotel' | 'restaurant' | 'sightseeing' | 'shopping' | 'tran
 - ホバー時に10%拡大アニメーション
 
 #### 2.3.3 付箋風情報表示
+
 - マーカーの右上に配置
 - 地点名を表示（15文字で省略、ツールチップで全文表示）
 - 背景色：薄い黄色（#FFF9C4）
@@ -98,11 +115,13 @@ type PlaceCategory = 'hotel' | 'restaurant' | 'sightseeing' | 'shopping' | 'tran
 ### 2.4 地点詳細編集機能
 
 #### 2.4.1 詳細パネルの表示
+
 - **デスクトップ**: 右サイドパネル（幅400px）
 - **タブレット**: ボトムシート（高さ50%）
 - **モバイル**: フルスクリーンモーダル
 
 #### 2.4.2 編集可能項目
+
 - 地点名（必須、最大50文字）
 - カテゴリ（ドロップダウン選択）
 - メモ（テキストエリア、最大500文字）
@@ -110,6 +129,7 @@ type PlaceCategory = 'hotel' | 'restaurant' | 'sightseeing' | 'shopping' | 'tran
 - 写真（URL入力またはアップロード、最大5枚）
 
 #### 2.4.3 操作機能
+
 - 自動保存（編集後1秒）
 - 削除（確認ダイアログ付き）
 - Google Maps で開く（新規タブ）
@@ -118,17 +138,20 @@ type PlaceCategory = 'hotel' | 'restaurant' | 'sightseeing' | 'shopping' | 'tran
 ### 2.5 移動時間計算機能
 
 #### 2.5.1 移動時間表示モード
+
 - タブで切り替え可能
 - 起点選択機能
 - 移動手段の選択（徒歩/車/公共交通機関）
 - 時間範囲の設定（5〜60分、5分刻み）
 
 #### 2.5.2 時間圏内の可視化
+
 - 指定時間内に到達可能な範囲を半透明の円で表示
 - 圏内の登録地点に移動時間をバッジ表示
 - 圏外の地点は50%の透明度で表示
 
 #### 2.5.3 2地点間の移動時間
+
 - Ctrl+クリック（デスクトップ）または長押し（モバイル）で2地点選択
 - 選択した地点間に曲線と移動時間・距離を表示
 - 複数ルートがある場合は選択可能
@@ -137,6 +160,7 @@ type PlaceCategory = 'hotel' | 'restaurant' | 'sightseeing' | 'shopping' | 'tran
 ### 2.6 リスト表示機能
 
 #### 2.6.1 候補地リスト
+
 - カード形式での一覧表示
 - 表示項目：アイコン、地点名、住所、メモ（50文字で省略）、費用
 - カテゴリフィルター（複数選択可）
@@ -144,37 +168,42 @@ type PlaceCategory = 'hotel' | 'restaurant' | 'sightseeing' | 'shopping' | 'tran
 - ソート機能（名前順/費用順/追加日順）
 
 #### 2.6.2 リストとマップの連携
+
 - リスト項目クリックで地図上の該当地点にフォーカス
 - 地図で選択中の地点をリストでハイライト
 
 ### 2.7 費用管理機能
 
 #### 2.7.1 費用集計
+
 - 総費用の表示（大きく目立つフォント）
 - カテゴリ別の内訳表示
 - 円グラフでの視覚化
 
 #### 2.7.2 費用編集
+
 - リスト画面から直接編集可能
 - 一括編集機能（カテゴリ単位）
 
 ### 2.8 計画管理機能
 
 #### 2.8.1 計画データモデル
+
 ```typescript
 interface TravelPlan {
-  id: string;                    // UUID
-  name: string;                  // 計画名（例：2024年夏 北海道旅行）
-  description: string;           // 説明（任意）
-  places: Place[];               // 登録地点の配列
-  totalCost: number;             // 総費用（自動計算）
-  createdAt: Date;               // 作成日時
-  updatedAt: Date;               // 更新日時
-  isActive: boolean;             // 現在選択中かどうか
+  id: string; // UUID
+  name: string; // 計画名（例：2024年夏 北海道旅行）
+  description: string; // 説明（任意）
+  places: Place[]; // 登録地点の配列
+  totalCost: number; // 総費用（自動計算）
+  createdAt: Date; // 作成日時
+  updatedAt: Date; // 更新日時
+  isActive: boolean; // 現在選択中かどうか
 }
 ```
 
 #### 2.8.2 計画の操作
+
 - 新規作成
 - 名前の変更
 - 計画の複製
@@ -182,6 +211,7 @@ interface TravelPlan {
 - 計画の切り替え
 
 #### 2.8.3 データ保存
+
 - LocalStorage への自動保存（変更後3秒）
 - 保存容量の上限チェック（5MB）
 - エクスポート機能（JSON形式）
@@ -190,6 +220,7 @@ interface TravelPlan {
 ### 2.9 共有機能
 
 #### 2.9.1 URL共有
+
 - 現在の計画を読み取り専用URLで共有
 - URLにエンコードされたデータを含める
 - 有効期限の設定（オプション）
@@ -197,6 +228,7 @@ interface TravelPlan {
 ## 3. 非機能要件
 
 ### 3.1 パフォーマンス要件
+
 - 初回ロード時間：3秒以内（3G環境）
 - 地図操作のレスポンス：60fps維持
 - API呼び出しのタイムアウト：10秒
@@ -204,12 +236,14 @@ interface TravelPlan {
 - 最大保存計画数：20計画
 
 ### 3.2 セキュリティ要件
+
 - Google Maps APIキーの適切な制限
 - XSS対策（ユーザー入力のサニタイズ）
 - HTTPS通信の強制
 - Content Security Policy の設定
 
 ### 3.3 アクセシビリティ要件
+
 - WCAG 2.1 レベルAA準拠
 - キーボード操作の完全サポート
 - スクリーンリーダー対応（ARIA属性）
@@ -217,6 +251,7 @@ interface TravelPlan {
 - フォーカス管理
 
 ### 3.4 ブラウザ互換性
+
 - モダンブラウザの最新2バージョンをサポート
 - IE11は非対応
 - Progressive Enhancement の適用
@@ -224,11 +259,13 @@ interface TravelPlan {
 ## 4. UI/UXデザイン要件
 
 ### 4.1 デザインシステム
+
 - Material Design 3 のガイドラインに準拠
 - Google Maps の操作性を踏襲
 - レスポンシブデザイン（Mobile First）
 
 ### 4.2 カラースキーム
+
 ```css
 /* Primary Colors */
 --primary: #1a73e8;
@@ -236,27 +273,29 @@ interface TravelPlan {
 --primary-light: #4285f4;
 
 /* Category Colors */
---hotel: #1976D2;
---restaurant: #F57C00;
---sightseeing: #388E3C;
---shopping: #7B1FA2;
+--hotel: #1976d2;
+--restaurant: #f57c00;
+--sightseeing: #388e3c;
+--shopping: #7b1fa2;
 --transport: #616161;
---other: #D32F2F;
+--other: #d32f2f;
 
 /* Neutral Colors */
---background: #FFFFFF;
---surface: #F8F9FA;
+--background: #ffffff;
+--surface: #f8f9fa;
 --text-primary: #202124;
---text-secondary: #5F6368;
---border: #DADCE0;
+--text-secondary: #5f6368;
+--border: #dadce0;
 ```
 
 ### 4.3 タイポグラフィ
+
 - フォントファミリー：'Google Sans', -apple-system, sans-serif
 - ベースフォントサイズ：16px
 - 行間：1.5
 
 ### 4.4 アニメーション
+
 - イージング：cubic-bezier(0.4, 0.0, 0.2, 1)
 - 基本duration：300ms
 - 60fpsを維持
@@ -264,6 +303,7 @@ interface TravelPlan {
 ## 5. 技術仕様
 
 ### 5.1 フロントエンド
+
 - **フレームワーク**: React 18.x + TypeScript 5.x
 - **ビルドツール**: Vite 5.x
 - **状態管理**: Zustand 4.x
@@ -272,11 +312,13 @@ interface TravelPlan {
 - **アイコン**: React Icons
 
 ### 5.2 開発環境
+
 - **パッケージマネージャー**: npm 9.x
 - **リンター**: ESLint + Prettier
 - **Git hooks**: Husky + lint-staged
 
 ### 5.3 デプロイ
+
 - **ホスティング**: Vercel または Netlify
 - **CI/CD**: GitHub Actions
 - **環境変数管理**: .env ファイル
@@ -284,11 +326,13 @@ interface TravelPlan {
 ## 6. 制約事項
 
 ### 6.1 技術的制約
+
 - Google Maps API の利用制限（無料枠）
 - LocalStorage の容量制限（5-10MB）
 - ブラウザの同時接続数制限
 
 ### 6.2 法的制約
+
 - Google Maps 利用規約の遵守
 - 個人情報の取り扱い（メモ欄など）
 - 写真の著作権
@@ -296,18 +340,21 @@ interface TravelPlan {
 ## 7. 将来の拡張性
 
 ### 7.1 Phase 2（優先度高）
+
 - ユーザー認証機能
 - クラウドストレージ（Firebase）
 - 共同編集機能
 - ルート最適化
 
 ### 7.2 Phase 3（優先度中）
+
 - 写真アップロード機能
 - 天気情報の統合
 - 予約サイトとの連携
 - 多言語対応
 
 ### 7.3 Phase 4（優先度低）
+
 - AI による旅程提案
 - AR機能
 - オフラインマップ
@@ -316,11 +363,13 @@ interface TravelPlan {
 ## 8. 成功指標
 
 ### 8.1 技術的指標
+
 - Lighthouse パフォーマンススコア：90以上
 - エラー率：0.1%以下
 - 平均応答時間：200ms以下
 
 ### 8.2 ユーザビリティ指標
+
 - タスク完了率：95%以上
 - 平均タスク完了時間：3分以内
 - System Usability Scale：80点以上
@@ -328,14 +377,17 @@ interface TravelPlan {
 ## 9. リスクと対策
 
 ### 9.1 技術的リスク
+
 - **リスク**: Google Maps API の仕様変更
 - **対策**: APIバージョンの固定、代替地図サービスの調査
 
 ### 9.2 UXリスク
+
 - **リスク**: 複雑な操作による学習コストの増加
 - **対策**: チュートリアル機能、プログレッシブディスクロージャー
 
 ### 9.3 パフォーマンスリスク
+
 - **リスク**: 地点数増加による描画性能の低下
 - **対策**: マーカークラスタリング、仮想スクロール
 
@@ -346,7 +398,6 @@ interface TravelPlan {
   - 地点の追加・編集・削除
   - 移動時間表示
   - LocalStorage保存
-  
 - **Phase 2（機能拡張）**: 2-3週間
   - 費用管理機能
   - 計画管理機能

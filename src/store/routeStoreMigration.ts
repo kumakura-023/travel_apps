@@ -3,8 +3,8 @@
  * 既存のコードを段階的に移行するためのアダプター関数
  */
 
-import { useRouteStore } from './routeStore';
-import { RouteConnection } from '../types';
+import { useRouteStore } from "./routeStore";
+import { RouteConnection } from "../types";
 
 /**
  * useRouteSearchStoreの互換性アダプター
@@ -25,7 +25,7 @@ export const useRouteSearchStore = () => {
     selectedOrigin: searchPanel.origin,
     selectedDestination: searchPanel.destination,
     selectionMode: searchPanel.selectionMode,
-    
+
     openRouteSearch: openSearchPanel,
     closeRouteSearch: closeSearchPanel,
     setSelectedOrigin: setSearchOrigin,
@@ -49,7 +49,7 @@ useRouteSearchStore.getState = () => {
     selectedOrigin: state.searchPanel.origin,
     selectedDestination: state.searchPanel.destination,
     selectionMode: state.searchPanel.selectionMode,
-    
+
     openRouteSearch: state.openSearchPanel,
     closeRouteSearch: state.closeSearchPanel,
     setSelectedOrigin: state.setSearchOrigin,
@@ -84,10 +84,14 @@ export const useRouteConnectionsStore = () => {
   const createRouteBetweenPlaces = async (
     originId: string,
     destinationId: string,
-    travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING
+    travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING,
   ): Promise<RouteConnection | null> => {
     // TODO: 実際の実装は別のサービスに移動
-    console.log('createRouteBetweenPlaces called:', { originId, destinationId, travelMode });
+    console.log("createRouteBetweenPlaces called:", {
+      originId,
+      destinationId,
+      travelMode,
+    });
     return null;
   };
 
@@ -99,16 +103,16 @@ export const useRouteConnectionsStore = () => {
       selectedPlaces: placeSelection.selectedPlaces,
       selectionMode: placeSelection.selectionMethod,
     },
-    
+
     addRoute: addConnection,
     removeRoute: removeConnection,
     clearAllRoutes: clearAllConnections,
     createRouteBetweenPlaces,
-    
+
     startSelection: startPlaceSelection,
     completeSelection: completePlaceSelection,
     cancelSelection: cancelPlaceSelection,
-    
+
     getPlaceCoordinates: (placeId: string) => {
       // TODO: サービス層に移動
       return null;
@@ -123,15 +127,19 @@ export const useRouteConnectionsStore = () => {
 // getState関数を提供（静的アクセス用）
 useRouteConnectionsStore.getState = () => {
   const state = useRouteStore.getState();
-  
+
   // directionsServiceを使用したルート作成（旧実装の互換性のため）
   const createRouteBetweenPlaces = async (
     originId: string,
     destinationId: string,
-    travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING
+    travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING,
   ): Promise<RouteConnection | null> => {
     // TODO: 実際の実装は別のサービスに移動
-    console.log('createRouteBetweenPlaces called:', { originId, destinationId, travelMode });
+    console.log("createRouteBetweenPlaces called:", {
+      originId,
+      destinationId,
+      travelMode,
+    });
     return null;
   };
 
@@ -143,16 +151,16 @@ useRouteConnectionsStore.getState = () => {
       selectedPlaces: state.placeSelection.selectedPlaces,
       selectionMode: state.placeSelection.selectionMethod,
     },
-    
+
     addRoute: state.addConnection,
     removeRoute: state.removeConnection,
     clearAllRoutes: state.clearAllConnections,
     createRouteBetweenPlaces,
-    
+
     startSelection: state.startPlaceSelection,
     completeSelection: state.completePlaceSelection,
     cancelSelection: state.cancelPlaceSelection,
-    
+
     getPlaceCoordinates: (placeId: string) => {
       // TODO: サービス層に移動
       return null;

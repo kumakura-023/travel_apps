@@ -1,5 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { FiAlertTriangle, FiRefreshCw, FiHome } from 'react-icons/fi';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { FiAlertTriangle, FiRefreshCw, FiHome } from "react-icons/fi";
 
 interface Props {
   children: ReactNode;
@@ -13,7 +13,7 @@ interface State {
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
-    hasError: false
+    hasError: false,
   };
 
   public static getDerivedStateFromError(error: Error): State {
@@ -21,11 +21,11 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
-    
+    console.error("Uncaught error:", error, errorInfo);
+
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // 本番環境ではエラー監視サービス（Sentry等）にレポート
@@ -50,7 +50,10 @@ class ErrorBoundary extends Component<Props, State> {
             <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
               <div className="text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                  <FiAlertTriangle className="h-6 w-6 text-red-600" aria-hidden="true" />
+                  <FiAlertTriangle
+                    className="h-6 w-6 text-red-600"
+                    aria-hidden="true"
+                  />
                 </div>
                 <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                   エラーが発生しました
@@ -69,7 +72,7 @@ class ErrorBoundary extends Component<Props, State> {
                     <FiRefreshCw className="mr-2 h-4 w-4" />
                     ページを再読み込み
                   </button>
-                  
+
                   <button
                     onClick={this.handleReset}
                     className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -89,11 +92,15 @@ class ErrorBoundary extends Component<Props, State> {
                     <div className="font-bold">Error:</div>
                     <div className="mb-2">{this.state.error.message}</div>
                     <div className="font-bold">Stack:</div>
-                    <div className="whitespace-pre-wrap">{this.state.error.stack}</div>
+                    <div className="whitespace-pre-wrap">
+                      {this.state.error.stack}
+                    </div>
                     {this.state.errorInfo && (
                       <>
                         <div className="font-bold mt-2">Component Stack:</div>
-                        <div className="whitespace-pre-wrap">{this.state.errorInfo.componentStack}</div>
+                        <div className="whitespace-pre-wrap">
+                          {this.state.errorInfo.componentStack}
+                        </div>
                       </>
                     )}
                   </div>
@@ -109,4 +116,4 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-export default ErrorBoundary; 
+export default ErrorBoundary;

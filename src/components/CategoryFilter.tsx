@@ -1,6 +1,9 @@
-import React from 'react';
-import { PlaceCategory } from '../types';
-import { getCategoryDisplayName, getCategoryColor } from '../utils/categoryIcons';
+import React from "react";
+import { PlaceCategory } from "../types";
+import {
+  getCategoryDisplayName,
+  getCategoryColor,
+} from "../utils/categoryIcons";
 
 interface Props {
   selected: PlaceCategory[];
@@ -9,12 +12,12 @@ interface Props {
 
 // 利用可能カテゴリ一覧
 const ALL_CATEGORIES: PlaceCategory[] = [
-  'hotel',
-  'restaurant',
-  'sightseeing',
-  'shopping',
-  'transport',
-  'other',
+  "hotel",
+  "restaurant",
+  "sightseeing",
+  "shopping",
+  "transport",
+  "other",
 ];
 
 /**
@@ -35,7 +38,7 @@ export default function CategoryFilter({ selected, onChange }: Props) {
       {ALL_CATEGORIES.map((cat) => {
         const active = selected.includes(cat);
         const categoryColor = getCategoryColor(cat);
-        
+
         return (
           <button
             key={cat}
@@ -46,13 +49,13 @@ export default function CategoryFilter({ selected, onChange }: Props) {
                        flex items-center space-x-2
                        ${
                          active
-                           ? 'text-white border-transparent shadow-elevation-1'
-                           : 'bg-system-secondary-background text-system-secondary-label border-system-separator hover:border-opacity-50 hover:text-system-label'
+                           ? "text-white border-transparent shadow-elevation-1"
+                           : "bg-system-secondary-background text-system-secondary-label border-system-separator hover:border-opacity-50 hover:text-system-label"
                        }`}
             style={active ? { backgroundColor: categoryColor } : {}}
           >
-            <div 
-              className={`w-2 h-2 rounded-full ${active ? 'bg-white/30' : ''}`}
+            <div
+              className={`w-2 h-2 rounded-full ${active ? "bg-white/30" : ""}`}
               style={!active ? { backgroundColor: categoryColor } : {}}
             />
             <span>{getCategoryDisplayName(cat)}</span>
@@ -61,4 +64,4 @@ export default function CategoryFilter({ selected, onChange }: Props) {
       })}
     </div>
   );
-} 
+}

@@ -1,10 +1,19 @@
-import React, { useEffect, useRef } from 'react';
-import { Marker } from '@react-google-maps/api';
-import { TravelCircle } from '../types/travelTime';
-import { minutesToRadius, getTravelModeColor } from '../utils/travelTimeCalculator';
-import { MdClose, MdDirectionsWalk, MdDirectionsCar, MdDirectionsTransit, MdAccessTime } from 'react-icons/md';
-import { useTravelTimeMode } from '../hooks/useTravelTimeMode';
-import { useGoogleMaps } from '../hooks/useGoogleMaps';
+import React, { useEffect, useRef } from "react";
+import { Marker } from "@react-google-maps/api";
+import { TravelCircle } from "../types/travelTime";
+import {
+  minutesToRadius,
+  getTravelModeColor,
+} from "../utils/travelTimeCalculator";
+import {
+  MdClose,
+  MdDirectionsWalk,
+  MdDirectionsCar,
+  MdDirectionsTransit,
+  MdAccessTime,
+} from "react-icons/md";
+import { useTravelTimeMode } from "../hooks/useTravelTimeMode";
+import { useGoogleMaps } from "../hooks/useGoogleMaps";
 
 interface Props {
   circle: TravelCircle;
@@ -36,7 +45,7 @@ export default function TravelTimeCircle({ circle, zoom = 14 }: Props) {
     if (!map) return;
 
     console.log(`Creating circle for ${circle.id}`);
-    
+
     // 既存の円があれば削除
     if (circleRef.current) {
       circleRef.current.setMap(null);
@@ -89,13 +98,13 @@ export default function TravelTimeCircle({ circle, zoom = 14 }: Props) {
       private div: HTMLDivElement | null = null;
 
       onAdd() {
-        this.div = document.createElement('div');
-        this.div.style.position = 'absolute';
-        this.div.style.cursor = 'auto';
-        this.div.style.userSelect = 'none';
-        this.div.style.zIndex = '1000';
+        this.div = document.createElement("div");
+        this.div.style.position = "absolute";
+        this.div.style.cursor = "auto";
+        this.div.style.userSelect = "none";
+        this.div.style.zIndex = "1000";
         this.div.style.transform = `scale(${scale})`;
-        this.div.style.transformOrigin = 'center bottom';
+        this.div.style.transformOrigin = "center bottom";
 
         // Reactコンポーネントの内容をHTMLとして設定
         this.div.innerHTML = `
@@ -168,7 +177,7 @@ export default function TravelTimeCircle({ circle, zoom = 14 }: Props) {
         // 削除ボタンのクリックイベントを追加
         const deleteBtn = this.div.querySelector(`#delete-btn-${circle.id}`);
         if (deleteBtn) {
-          deleteBtn.addEventListener('click', (e) => {
+          deleteBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             handleDelete();
           });
@@ -188,12 +197,12 @@ export default function TravelTimeCircle({ circle, zoom = 14 }: Props) {
         if (!projection) return;
 
         const position = projection.fromLatLngToDivPixel(
-          new google.maps.LatLng(circle.center.lat, circle.center.lng)
+          new google.maps.LatLng(circle.center.lat, circle.center.lng),
         );
 
         if (position) {
-          this.div.style.left = position.x - 75 + 'px'; // 中央揃え
-          this.div.style.top = position.y - 110 + 'px'; // マーカーの上に表示
+          this.div.style.left = position.x - 75 + "px"; // 中央揃え
+          this.div.style.top = position.y - 110 + "px"; // マーカーの上に表示
         }
       }
 
@@ -236,14 +245,14 @@ export default function TravelTimeCircle({ circle, zoom = 14 }: Props) {
   const handleDelete = () => {
     console.log(`=== DELETE BUTTON CLICKED ===`);
     console.log(`Target circle ID: ${circle.id}`);
-    
+
     try {
       // オーバーレイを削除
       if (overlayRef.current) {
         overlayRef.current.setMap(null);
         overlayRef.current = null;
       }
-      
+
       // 円を削除
       if (circleRef.current) {
         console.log(`Removing circle from map...`);
@@ -251,14 +260,13 @@ export default function TravelTimeCircle({ circle, zoom = 14 }: Props) {
         circleRef.current = null;
         console.log(`Circle removed from map successfully`);
       }
-      
+
       // アクティブ状態をクリア
       setActiveCircle(null);
-      
+
       // ストアから削除
       removeCircle(circle.id);
       console.log(`Circle removed from store: ${circle.id}`);
-      
     } catch (error) {
       console.error(`Error in handleDelete:`, error);
     }
@@ -267,28 +275,28 @@ export default function TravelTimeCircle({ circle, zoom = 14 }: Props) {
   // 移動手段のアイコンを取得（テキスト版）
   const getModeIcon = () => {
     switch (circle.mode) {
-      case 'walking':
-        return '🚶';
-      case 'driving':
-        return '🚗';
-      case 'transit':
-        return '🚇';
+      case "walking":
+        return "🚶";
+      case "driving":
+        return "🚗";
+      case "transit":
+        return "🚇";
       default:
-        return '🚶';
+        return "🚶";
     }
   };
 
   // 移動手段のラベルを取得
   const getModeLabel = () => {
     switch (circle.mode) {
-      case 'walking':
-        return '徒歩';
-      case 'driving':
-        return '車';
-      case 'transit':
-        return '公共交通機関';
+      case "walking":
+        return "徒歩";
+      case "driving":
+        return "車";
+      case "transit":
+        return "公共交通機関";
       default:
-        return '徒歩';
+        return "徒歩";
     }
   };
 
@@ -323,7 +331,7 @@ export default function TravelTimeCircle({ circle, zoom = 14 }: Props) {
         handleDelete();
       }}
       icon={{
-        url: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
+        url: "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png",
         scaledSize: new google.maps.Size(27, 43),
         anchor: new google.maps.Point(13, 43),
       }}
@@ -332,4 +340,4 @@ export default function TravelTimeCircle({ circle, zoom = 14 }: Props) {
       }}
     />
   );
-} 
+}

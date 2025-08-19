@@ -1,6 +1,7 @@
 # UIリファクタリング詳細計画
 
 ## 概要
+
 このドキュメントは、リファクタリング計画に基づいて、各UIコンポーネントがどのように再構成されるかの詳細を記載します。
 
 ## フェーズ1: 緊急対応（1-2週間）の詳細
@@ -8,11 +9,13 @@
 ### 1. PlaceDetailPanelの分割詳細
 
 #### 現在の構造（1000行以上の単一ファイル）
+
 ```
 src/components/PlaceDetailPanel.tsx
 ```
 
 #### リファクタリング後の構造
+
 ```
 src/components/placeDetail/
 ├── PlaceDetailPanel.tsx          # メインコンテナ（100行以下）
@@ -34,13 +37,14 @@ src/components/placeDetail/
 #### 各コンポーネントの責任
 
 **PlaceDetailPanel.tsx（メインコンテナ）**
+
 ```typescript
 // 責任: レイアウトと子コンポーネントの調整のみ
 export const PlaceDetailPanel: React.FC = () => {
   const { place, isLoading } = usePlaceDetail();
-  
+
   if (!place) return null;
-  
+
   return (
     <div className="place-detail-panel">
       <PlaceDetailHeader place={place} />
@@ -55,6 +59,7 @@ export const PlaceDetailPanel: React.FC = () => {
 ```
 
 **PlaceDetailHeader.tsx**
+
 ```typescript
 // 責任: 場所名、カテゴリ、評価の表示
 interface Props {
@@ -63,6 +68,7 @@ interface Props {
 ```
 
 **PlaceDetailInfo.tsx**
+
 ```typescript
 // 責任: 住所、営業時間、ウェブサイトなどの基本情報
 interface Props {
@@ -71,6 +77,7 @@ interface Props {
 ```
 
 **PlaceDetailCost.tsx**
+
 ```typescript
 // 責任: 費用の表示と編集
 interface Props {
@@ -80,6 +87,7 @@ interface Props {
 ```
 
 **PlaceDetailMemo.tsx**
+
 ```typescript
 // 責任: メモの表示と編集（既存のMemoEditorを使用）
 interface Props {
@@ -88,6 +96,7 @@ interface Props {
 ```
 
 **PlaceDetailImages.tsx**
+
 ```typescript
 // 責任: 画像ギャラリーの表示（既存のImageGalleryを使用）
 interface Props {
@@ -96,6 +105,7 @@ interface Props {
 ```
 
 **PlaceDetailActions.tsx**
+
 ```typescript
 // 責任: 削除、ルート検索などのアクションボタン
 interface Props {
@@ -106,60 +116,65 @@ interface Props {
 ### 2. 名前の統一詳細
 
 #### PlaceDetailsPanel → PlaceSearchPanel
+
 ```typescript
 // 現在
-src/components/PlaceDetailsPanel.tsx
+src / components / PlaceDetailsPanel.tsx;
 
 // リファクタリング後
-src/components/PlaceSearchPanel.tsx
+src / components / PlaceSearchPanel.tsx;
 ```
 
 #### ストア名の変更
+
 ```typescript
 // 現在
-src/store/placeStore.ts    // 選択中の場所
-src/store/placesStore.ts   // 保存済み場所リスト
+src / store / placeStore.ts; // 選択中の場所
+src / store / placesStore.ts; // 保存済み場所リスト
 
 // リファクタリング後
-src/store/selectedPlaceStore.ts  // 選択中の場所
-src/store/savedPlacesStore.ts    // 保存済み場所リスト
+src / store / selectedPlaceStore.ts; // 選択中の場所
+src / store / savedPlacesStore.ts; // 保存済み場所リスト
 
 // フック名も変更
-useSelectedPlaceStore()  // 変更なし
-useSavedPlacesStore()    // usePlacesStore() から変更
+useSelectedPlaceStore(); // 変更なし
+useSavedPlacesStore(); // usePlacesStore() から変更
 ```
 
 ## フェーズ2: アーキテクチャ改善（2-3週間）の詳細
 
-### 1. Safe*コンポーネントの統一詳細
+### 1. Safe\*コンポーネントの統一詳細
 
 #### 現在の構造
+
 ```typescript
 // 個別のSafeコンポーネント
-src/components/SafeRouteOverlay.tsx
-src/components/SafeTravelTimeOverlay.tsx
+src / components / SafeRouteOverlay.tsx;
+src / components / SafeTravelTimeOverlay.tsx;
 ```
 
 #### リファクタリング後の構造
+
 ```typescript
 // HOCパターンで統一
-src/components/hoc/withErrorBoundary.tsx
+src / components / hoc / withErrorBoundary.tsx;
 
 // 使用例
 export const RouteOverlay = withErrorBoundary(RouteDisplay, {
   fallback: RouteErrorFallback,
-  onError: (error) => console.error('Route display error:', error)
+  onError: (error) => console.error("Route display error:", error),
 });
 
 export const TravelTimeOverlay = withErrorBoundary(TravelTimeDisplay, {
   fallback: TravelTimeErrorFallback,
-  onError: (error) => console.error('Travel time error:', error)
+  onError: (error) => console.error("Travel time error:", error),
 });
 ```
 
 ### 2. ビジネスロジックのサービス層への移動詳細
 
 #### 現在の状態（ストアにビジネスロジックが混在）
+
 ```typescript
 // src/store/placesStore.ts
 export const usePlacesStore = create((set, get) => ({
@@ -169,24 +184,25 @@ export const usePlacesStore = create((set, get) => ({
     const isValid = validatePlace(place);
     const isDuplicate = checkDuplicate(place);
     // ...
-  }
+  },
 }));
 ```
 
 #### リファクタリング後（サービス層とストアの分離）
+
 ```typescript
 // src/services/PlaceManagementService.ts
 export class PlaceManagementService {
   constructor(
     private placeRepository: IPlaceRepository,
-    private eventBus: IEventBus
+    private eventBus: IEventBus,
   ) {}
 
   async addPlace(data: PlaceData): Promise<Place> {
     this.validatePlaceData(data);
     const place = this.createPlace(data);
     await this.placeRepository.save(place);
-    this.eventBus.emit('place:added', place);
+    this.eventBus.emit("place:added", place);
     return place;
   }
 }
@@ -195,12 +211,14 @@ export class PlaceManagementService {
 export const useSavedPlacesStore = create<PlacesState>((set) => ({
   places: [],
   setPlaces: (places) => set({ places }),
-  addPlace: (place) => set((state) => ({ 
-    places: [...state.places, place] 
-  })),
-  updatePlace: (id, place) => set((state) => ({
-    places: state.places.map(p => p.id === id ? place : p)
-  }))
+  addPlace: (place) =>
+    set((state) => ({
+      places: [...state.places, place],
+    })),
+  updatePlace: (id, place) =>
+    set((state) => ({
+      places: state.places.map((p) => (p.id === id ? place : p)),
+    })),
 }));
 ```
 
@@ -209,12 +227,14 @@ export const useSavedPlacesStore = create<PlacesState>((set) => ({
 ### 1. ルート関連ストアの統合詳細
 
 #### 現在の構造（2つの独立したストア）
+
 ```typescript
-src/store/routeSearchStore.ts    // 検索UI状態
-src/store/routeConnectionsStore.ts // ルート接続情報
+src / store / routeSearchStore.ts; // 検索UI状態
+src / store / routeConnectionsStore.ts; // ルート接続情報
 ```
 
 #### リファクタリング後（統合されたストア）
+
 ```typescript
 // src/store/routeStore.ts
 interface RouteState {
@@ -225,14 +245,14 @@ interface RouteState {
     destination: Place | null;
     travelMode: TravelMode;
   };
-  
+
   // ルート結果
   routes: Map<string, RouteResult>;
   activeRouteId: string | null;
-  
+
   // 接続情報
   connections: Connection[];
-  
+
   // アクション
   openSearchPanel: (origin?: Place, destination?: Place) => void;
   closeSearchPanel: () => void;
@@ -247,6 +267,7 @@ interface RouteState {
 ### 2. コンポーネント構造の最適化
 
 #### タブナビゲーション関連の統合
+
 ```typescript
 // 現在（3つのコンポーネント）
 src/components/TabNavigation.tsx
@@ -266,6 +287,7 @@ src/components/navigation/
 ### Atomic Design適用後の分類
 
 #### Atoms（最小単位）
+
 ```
 src/components/atoms/
 ├── Button/
@@ -279,6 +301,7 @@ src/components/atoms/
 ```
 
 #### Molecules（基本的な組み合わせ）
+
 ```
 src/components/molecules/
 ├── FormField/        # Label + Input
@@ -289,6 +312,7 @@ src/components/molecules/
 ```
 
 #### Organisms（複雑な組み合わせ）
+
 ```
 src/components/organisms/
 ├── PlaceCard/        # 場所情報カード
@@ -299,6 +323,7 @@ src/components/organisms/
 ```
 
 #### Templates（ページレイアウト）
+
 ```
 src/components/templates/
 ├── MainLayout/       # メインレイアウト
@@ -308,6 +333,7 @@ src/components/templates/
 ```
 
 #### Pages（完全なページ）
+
 ```
 src/components/pages/
 ├── MapPage/          # 地図ページ
@@ -319,34 +345,38 @@ src/components/pages/
 ## 移行スケジュール
 
 ### 即座に実施（1週間以内）
+
 1. 重複ファイルの削除
 2. ストア名の統一
 3. PlaceDetailsPanel → PlaceSearchPanelの名前変更
 
 ### 短期（2週間以内）
+
 1. PlaceDetailPanelの分割
-2. Safe*コンポーネントのHOC化
+2. Safe\*コンポーネントのHOC化
 3. タブナビゲーション関連の統合
 
 ### 中期（1ヶ月以内）
+
 1. ビジネスロジックのサービス層への移動
 2. ルート関連ストアの統合
 3. エラーハンドリングの統一
 
 ### 長期（2ヶ月以内）
+
 1. Atomic Designの段階的導入
 2. コンポーネントライブラリの構築
 3. Storybookの導入
 
 ## 成功指標
 
-| 指標 | 現在 | 目標 |
-|------|------|------|
-| 最大コンポーネント行数 | 1000行以上 | 300行以下 |
-| ビジネスロジックの分離 | ストアに混在 | サービス層に集約 |
-| 重複コード | 複数箇所 | ゼロ |
-| 命名の一貫性 | 不統一 | 統一された命名規則 |
-| テストカバレッジ | 未測定 | 80%以上 |
+| 指標                   | 現在         | 目標               |
+| ---------------------- | ------------ | ------------------ |
+| 最大コンポーネント行数 | 1000行以上   | 300行以下          |
+| ビジネスロジックの分離 | ストアに混在 | サービス層に集約   |
+| 重複コード             | 複数箇所     | ゼロ               |
+| 命名の一貫性           | 不統一       | 統一された命名規則 |
+| テストカバレッジ       | 未測定       | 80%以上            |
 
 ## 注意事項
 

@@ -10,4 +10,4 @@ export interface BookingLinkParams {
 
 export interface BookingLinks {
   [key: string]: string;
-} 
+}

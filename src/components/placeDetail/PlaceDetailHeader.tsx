@@ -1,5 +1,5 @@
-import React from 'react';
-import { FiX } from 'react-icons/fi';
+import React from "react";
+import { FiX } from "react-icons/fi";
 
 interface PlaceDetailHeaderProps {
   isDesktop: boolean;
@@ -26,15 +26,15 @@ export default function PlaceDetailHeader({
       tabIndex={0}
       onClick={bottomSheet?.handleToggle}
       onKeyDown={(e) => {
-        if (e.code === 'Space' || e.key === ' ') {
+        if (e.code === "Space" || e.key === " ") {
           e.preventDefault();
           bottomSheet?.handleToggle();
         }
-        if (e.key === 'ArrowUp') {
+        if (e.key === "ArrowUp") {
           e.preventDefault();
           bottomSheet?.expand();
         }
-        if (e.key === 'ArrowDown') {
+        if (e.key === "ArrowDown") {
           e.preventDefault();
           bottomSheet?.collapse();
         }

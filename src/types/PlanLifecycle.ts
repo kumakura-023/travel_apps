@@ -1,13 +1,13 @@
-import { TravelPlan } from './index';
+import { TravelPlan } from "./index";
 
-export type PlanLifecycleState = 
-  | 'uninitialized'
-  | 'initializing'
-  | 'loading'
-  | 'active'
-  | 'switching'
-  | 'error'
-  | 'cleanup';
+export type PlanLifecycleState =
+  | "uninitialized"
+  | "initializing"
+  | "loading"
+  | "active"
+  | "switching"
+  | "error"
+  | "cleanup";
 
 export interface PlanLifecycleContext {
   state: PlanLifecycleState;

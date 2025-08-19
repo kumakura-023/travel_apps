@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { RouteConnection, Place } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import { create } from "zustand";
+import { RouteConnection, Place } from "../types";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * ルート検索の選択地点
@@ -36,48 +36,53 @@ interface RouteState {
     isOpen: boolean;
     origin: SelectedPoint | null;
     destination: SelectedPoint | null;
-    selectionMode: 'origin' | 'destination' | null;
+    selectionMode: "origin" | "destination" | null;
   };
-  
+
   // ルート結果（Map形式で効率的に管理）
   routes: Map<string, RouteResult>;
-  
+
   // 接続情報（RouteConnectionの配列）
   connections: RouteConnection[];
-  
+
   // 地点選択状態
   placeSelection: {
     isSelecting: boolean;
     selectedPlaceId: string | null;
     selectedPlaces: string[];
-    selectionMethod: 'ctrl-click' | 'long-press' | null;
+    selectionMethod: "ctrl-click" | "long-press" | null;
   };
-  
+
   // 検索パネルアクション
   openSearchPanel: () => void;
   closeSearchPanel: () => void;
   setSearchOrigin: (point: SelectedPoint | null) => void;
   setSearchDestination: (point: SelectedPoint | null) => void;
-  setSelectionMode: (mode: 'origin' | 'destination' | null) => void;
+  setSelectionMode: (mode: "origin" | "destination" | null) => void;
   selectPointFromMap: (point: SelectedPoint) => void;
-  
+
   // ルート管理アクション
-  addRoute: (route: Omit<RouteResult, 'id' | 'createdAt'>) => string;
+  addRoute: (route: Omit<RouteResult, "id" | "createdAt">) => string;
   removeRoute: (id: string) => void;
   clearAllRoutes: () => void;
   getRoute: (id: string) => RouteResult | undefined;
-  
+
   // 接続管理アクション
-  addConnection: (connection: Omit<RouteConnection, 'id' | 'createdAt'>) => void;
+  addConnection: (
+    connection: Omit<RouteConnection, "id" | "createdAt">,
+  ) => void;
   removeConnection: (connectionId: string) => void;
   clearAllConnections: () => void;
-  
+
   // 地点選択アクション
-  startPlaceSelection: (placeId: string, method: 'ctrl-click' | 'long-press') => void;
+  startPlaceSelection: (
+    placeId: string,
+    method: "ctrl-click" | "long-press",
+  ) => void;
   completePlaceSelection: (destinationPlaceId: string) => void;
   cancelPlaceSelection: () => void;
   isPlaceSelected: (placeId: string) => boolean;
-  
+
   // ユーティリティ
   getRoutesByPlace: (placeId: string) => RouteResult[];
   getConnectionsByPlace: (placeId: string) => RouteConnection[];
@@ -107,7 +112,7 @@ export const useRouteStore = create<RouteState>((set, get) => ({
   // 検索パネルアクション
   openSearchPanel: () => {
     set((state) => ({
-      searchPanel: { ...state.searchPanel, isOpen: true }
+      searchPanel: { ...state.searchPanel, isOpen: true },
     }));
   },
 
@@ -118,47 +123,47 @@ export const useRouteStore = create<RouteState>((set, get) => ({
         origin: null,
         destination: null,
         selectionMode: null,
-      }
+      },
     }));
   },
 
   setSearchOrigin: (point) => {
     set((state) => ({
-      searchPanel: { ...state.searchPanel, origin: point }
+      searchPanel: { ...state.searchPanel, origin: point },
     }));
   },
 
   setSearchDestination: (point) => {
     set((state) => ({
-      searchPanel: { ...state.searchPanel, destination: point }
+      searchPanel: { ...state.searchPanel, destination: point },
     }));
   },
 
   setSelectionMode: (mode) => {
     set((state) => ({
-      searchPanel: { ...state.searchPanel, selectionMode: mode }
+      searchPanel: { ...state.searchPanel, selectionMode: mode },
     }));
   },
 
   selectPointFromMap: (point) => {
     const state = get();
     const { selectionMode } = state.searchPanel;
-    
-    if (selectionMode === 'origin') {
+
+    if (selectionMode === "origin") {
       set((s) => ({
         searchPanel: {
           ...s.searchPanel,
           origin: point,
           selectionMode: null,
-        }
+        },
       }));
-    } else if (selectionMode === 'destination') {
+    } else if (selectionMode === "destination") {
       set((s) => ({
         searchPanel: {
           ...s.searchPanel,
           destination: point,
           selectionMode: null,
-        }
+        },
       }));
     }
   },
@@ -171,13 +176,13 @@ export const useRouteStore = create<RouteState>((set, get) => ({
       id,
       createdAt: new Date(),
     };
-    
+
     set((state) => {
       const newRoutes = new Map(state.routes);
       newRoutes.set(id, newRoute);
       return { routes: newRoutes };
     });
-    
+
     return id;
   },
 
@@ -204,15 +209,15 @@ export const useRouteStore = create<RouteState>((set, get) => ({
       id: uuidv4(),
       createdAt: new Date(),
     };
-    
+
     set((state) => ({
-      connections: [...state.connections, newConnection]
+      connections: [...state.connections, newConnection],
     }));
   },
 
   removeConnection: (connectionId) => {
     set((state) => ({
-      connections: state.connections.filter(c => c.id !== connectionId)
+      connections: state.connections.filter((c) => c.id !== connectionId),
     }));
   },
 
@@ -228,27 +233,30 @@ export const useRouteStore = create<RouteState>((set, get) => ({
         selectedPlaceId: placeId,
         selectedPlaces: [placeId],
         selectionMethod: method,
-      }
+      },
     });
   },
 
   completePlaceSelection: (destinationPlaceId) => {
     const state = get();
     const { selectedPlaceId } = state.placeSelection;
-    
+
     if (!selectedPlaceId || selectedPlaceId === destinationPlaceId) {
       state.cancelPlaceSelection();
       return;
     }
-    
+
     // 選択完了処理（実際のルート作成は別のサービスで行う）
     set((s) => ({
       placeSelection: {
         ...s.placeSelection,
-        selectedPlaces: [...s.placeSelection.selectedPlaces, destinationPlaceId],
-      }
+        selectedPlaces: [
+          ...s.placeSelection.selectedPlaces,
+          destinationPlaceId,
+        ],
+      },
     }));
-    
+
     // 選択状態をリセット
     state.cancelPlaceSelection();
   },
@@ -260,7 +268,7 @@ export const useRouteStore = create<RouteState>((set, get) => ({
         selectedPlaceId: null,
         selectedPlaces: [],
         selectionMethod: null,
-      }
+      },
     });
   },
 
@@ -271,15 +279,16 @@ export const useRouteStore = create<RouteState>((set, get) => ({
   // ユーティリティ
   getRoutesByPlace: (placeId) => {
     const routes = Array.from(get().routes.values());
-    return routes.filter(route => 
-      // TODO: placeIdとルートの関連付けロジックを実装
-      false
+    return routes.filter(
+      (route) =>
+        // TODO: placeIdとルートの関連付けロジックを実装
+        false,
     );
   },
 
   getConnectionsByPlace: (placeId) => {
     return get().connections.filter(
-      conn => conn.originId === placeId || conn.destinationId === placeId
+      (conn) => conn.originId === placeId || conn.destinationId === placeId,
     );
   },
 }));

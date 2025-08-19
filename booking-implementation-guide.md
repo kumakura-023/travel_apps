@@ -8,6 +8,7 @@ Google Maps上のPOI（Point of Interest）をクリックした際に、ホテ�
 ## 2. 技術アーキテクチャ
 
 ### 2.1 使用技術
+
 - **Google Maps JavaScript API**: POI情報の取得
 - **Google Places API**: 施設詳細情報の取得
 - **React + TypeScript**: UI実装
@@ -15,6 +16,7 @@ Google Maps上のPOI（Point of Interest）をクリックした際に、ホテ�
 - **Tailwind CSS**: スタイリング
 
 ### 2.2 データフロー
+
 ```
 1. ユーザーが地図上のPOIをクリック
 2. Places APIで詳細情報を取得
@@ -54,32 +56,33 @@ src/
 
 export interface BookingLinkParams {
   // 共通パラメータ
-  name: string;                    // 施設名
-  latitude?: number;               // 緯度
-  longitude?: number;              // 経度
-  
+  name: string; // 施設名
+  latitude?: number; // 緯度
+  longitude?: number; // 経度
+
   // ホテル用パラメータ
-  checkIn?: Date;                  // チェックイン日
-  checkOut?: Date;                 // チェックアウト日
-  adults?: number;                 // 大人の人数（デフォルト: 2）
-  children?: number;               // 子供の人数（デフォルト: 0）
-  rooms?: number;                  // 部屋数（デフォルト: 1）
-  
+  checkIn?: Date; // チェックイン日
+  checkOut?: Date; // チェックアウト日
+  adults?: number; // 大人の人数（デフォルト: 2）
+  children?: number; // 子供の人数（デフォルト: 0）
+  rooms?: number; // 部屋数（デフォルト: 1）
+
   // レストラン用パラメータ
-  reservationDate?: Date;          // 予約日
-  reservationTime?: string;        // 予約時間（HH:mm形式）
-  partySize?: number;              // 人数
+  reservationDate?: Date; // 予約日
+  reservationTime?: string; // 予約時間（HH:mm形式）
+  partySize?: number; // 人数
 }
 
 export interface BookingLinks {
-  [key: string]: string;           // サイト名: URL
+  [key: string]: string; // サイト名: URL
 }
 
-export interface PlaceDetailsWithBooking extends google.maps.places.PlaceResult {
+export interface PlaceDetailsWithBooking
+  extends google.maps.places.PlaceResult {
   bookingInfo?: {
-    isBookable: boolean;           // 予約可能かどうか
-    type: 'hotel' | 'restaurant'; // 施設タイプ
-    supportedSites: string[];      // 対応予約サイト
+    isBookable: boolean; // 予約可能かどうか
+    type: "hotel" | "restaurant"; // 施設タイプ
+    supportedSites: string[]; // 対応予約サイト
     priceRange?: {
       min: number;
       max: number;
@@ -90,11 +93,11 @@ export interface PlaceDetailsWithBooking extends google.maps.places.PlaceResult 
 
 // 予約サイトの設定
 export interface BookingSiteConfig {
-  id: string;                      // サイト識別子
-  name: string;                    // 表示名
-  icon: string;                    // アイコンパス
-  regions: string[];               // 対応地域
-  types: ('hotel' | 'restaurant')[]; // 対応施設タイプ
+  id: string; // サイト識別子
+  name: string; // 表示名
+  icon: string; // アイコンパス
+  regions: string[]; // 対応地域
+  types: ("hotel" | "restaurant")[]; // 対応施設タイプ
 }
 ```
 
@@ -107,75 +110,75 @@ export class BookingService {
   // サポートする予約サイトの設定
   private static readonly BOOKING_SITES: BookingSiteConfig[] = [
     {
-      id: 'booking',
-      name: 'Booking.com',
-      icon: '/icons/booking-com.svg',
-      regions: ['global'],
-      types: ['hotel']
+      id: "booking",
+      name: "Booking.com",
+      icon: "/icons/booking-com.svg",
+      regions: ["global"],
+      types: ["hotel"],
     },
     {
-      id: 'rakuten',
-      name: '楽天トラベル',
-      icon: '/icons/rakuten-travel.svg',
-      regions: ['jp'],
-      types: ['hotel']
+      id: "rakuten",
+      name: "楽天トラベル",
+      icon: "/icons/rakuten-travel.svg",
+      regions: ["jp"],
+      types: ["hotel"],
     },
     {
-      id: 'jalan',
-      name: 'じゃらん',
-      icon: '/icons/jalan.svg',
-      regions: ['jp'],
-      types: ['hotel']
+      id: "jalan",
+      name: "じゃらん",
+      icon: "/icons/jalan.svg",
+      regions: ["jp"],
+      types: ["hotel"],
     },
     {
-      id: 'hotels',
-      name: 'Hotels.com',
-      icon: '/icons/hotels-com.svg',
-      regions: ['global'],
-      types: ['hotel']
+      id: "hotels",
+      name: "Hotels.com",
+      icon: "/icons/hotels-com.svg",
+      regions: ["global"],
+      types: ["hotel"],
     },
     {
-      id: 'expedia',
-      name: 'Expedia',
-      icon: '/icons/expedia.svg',
-      regions: ['global'],
-      types: ['hotel']
+      id: "expedia",
+      name: "Expedia",
+      icon: "/icons/expedia.svg",
+      regions: ["global"],
+      types: ["hotel"],
     },
     {
-      id: 'agoda',
-      name: 'Agoda',
-      icon: '/icons/agoda.svg',
-      regions: ['asia', 'global'],
-      types: ['hotel']
+      id: "agoda",
+      name: "Agoda",
+      icon: "/icons/agoda.svg",
+      regions: ["asia", "global"],
+      types: ["hotel"],
     },
     {
-      id: 'gurunavi',
-      name: 'ぐるなび',
-      icon: '/icons/gurunavi.svg',
-      regions: ['jp'],
-      types: ['restaurant']
+      id: "gurunavi",
+      name: "ぐるなび",
+      icon: "/icons/gurunavi.svg",
+      regions: ["jp"],
+      types: ["restaurant"],
     },
     {
-      id: 'tabelog',
-      name: '食べログ',
-      icon: '/icons/tabelog.svg',
-      regions: ['jp'],
-      types: ['restaurant']
+      id: "tabelog",
+      name: "食べログ",
+      icon: "/icons/tabelog.svg",
+      regions: ["jp"],
+      types: ["restaurant"],
     },
     {
-      id: 'hotpepper',
-      name: 'ホットペッパーグルメ',
-      icon: '/icons/hotpepper.svg',
-      regions: ['jp'],
-      types: ['restaurant']
+      id: "hotpepper",
+      name: "ホットペッパーグルメ",
+      icon: "/icons/hotpepper.svg",
+      regions: ["jp"],
+      types: ["restaurant"],
     },
     {
-      id: 'opentable',
-      name: 'OpenTable',
-      icon: '/icons/opentable.svg',
-      regions: ['global'],
-      types: ['restaurant']
-    }
+      id: "opentable",
+      name: "OpenTable",
+      icon: "/icons/opentable.svg",
+      regions: ["global"],
+      types: ["restaurant"],
+    },
   ];
 
   /**
@@ -183,22 +186,26 @@ export class BookingService {
    */
   static generateHotelBookingLinks(params: BookingLinkParams): BookingLinks {
     const links: BookingLinks = {};
-    
+
     // 各予約サイトのリンクを生成
-    if (this.isAvailableInRegion('booking', params.latitude, params.longitude)) {
+    if (
+      this.isAvailableInRegion("booking", params.latitude, params.longitude)
+    ) {
       links.booking = this.buildBookingUrl(params);
     }
-    
-    if (this.isAvailableInRegion('rakuten', params.latitude, params.longitude)) {
+
+    if (
+      this.isAvailableInRegion("rakuten", params.latitude, params.longitude)
+    ) {
       links.rakuten = this.buildRakutenUrl(params);
     }
-    
-    if (this.isAvailableInRegion('jalan', params.latitude, params.longitude)) {
+
+    if (this.isAvailableInRegion("jalan", params.latitude, params.longitude)) {
       links.jalan = this.buildJalanUrl(params);
     }
-    
+
     // 他のサイトも同様に...
-    
+
     return links;
   }
 
@@ -207,33 +214,39 @@ export class BookingService {
    */
   private static buildBookingUrl(params: BookingLinkParams): string {
     const searchParams = new URLSearchParams();
-    
+
     // 必須パラメータ
-    searchParams.set('ss', params.name);
-    
+    searchParams.set("ss", params.name);
+
     // 日付パラメータ
     if (params.checkIn) {
-      searchParams.set('checkin', this.formatDate(params.checkIn, 'yyyy-MM-dd'));
+      searchParams.set(
+        "checkin",
+        this.formatDate(params.checkIn, "yyyy-MM-dd"),
+      );
     }
     if (params.checkOut) {
-      searchParams.set('checkout', this.formatDate(params.checkOut, 'yyyy-MM-dd'));
+      searchParams.set(
+        "checkout",
+        this.formatDate(params.checkOut, "yyyy-MM-dd"),
+      );
     }
-    
+
     // 人数・部屋数
-    searchParams.set('group_adults', (params.adults || 2).toString());
-    searchParams.set('group_children', (params.children || 0).toString());
-    searchParams.set('no_rooms', (params.rooms || 1).toString());
-    
+    searchParams.set("group_adults", (params.adults || 2).toString());
+    searchParams.set("group_children", (params.children || 0).toString());
+    searchParams.set("no_rooms", (params.rooms || 1).toString());
+
     // 位置情報（より正確な検索のため）
     if (params.latitude && params.longitude) {
-      searchParams.set('latitude', params.latitude.toString());
-      searchParams.set('longitude', params.longitude.toString());
+      searchParams.set("latitude", params.latitude.toString());
+      searchParams.set("longitude", params.longitude.toString());
     }
-    
+
     // その他のパラメータ
-    searchParams.set('sb_travel_purpose', 'leisure');
-    searchParams.set('selected_currency', 'JPY');
-    
+    searchParams.set("sb_travel_purpose", "leisure");
+    searchParams.set("selected_currency", "JPY");
+
     return `https://www.booking.com/searchresults.ja.html?${searchParams.toString()}`;
   }
 
@@ -242,27 +255,33 @@ export class BookingService {
    */
   private static buildRakutenUrl(params: BookingLinkParams): string {
     const searchParams = new URLSearchParams();
-    
+
     // 施設名検索
-    searchParams.set('f_query', params.name);
-    
+    searchParams.set("f_query", params.name);
+
     // 日付（YYYYMMDD形式）
     if (params.checkIn) {
-      searchParams.set('f_checkin', this.formatDate(params.checkIn, 'yyyyMMdd'));
+      searchParams.set(
+        "f_checkin",
+        this.formatDate(params.checkIn, "yyyyMMdd"),
+      );
     }
     if (params.checkOut) {
-      searchParams.set('f_checkout', this.formatDate(params.checkOut, 'yyyyMMdd'));
+      searchParams.set(
+        "f_checkout",
+        this.formatDate(params.checkOut, "yyyyMMdd"),
+      );
     }
-    
+
     // 人数
-    searchParams.set('f_adult_num', (params.adults || 2).toString());
+    searchParams.set("f_adult_num", (params.adults || 2).toString());
     if (params.children && params.children > 0) {
-      searchParams.set('f_child_num', params.children.toString());
+      searchParams.set("f_child_num", params.children.toString());
     }
-    
+
     // 部屋数
-    searchParams.set('f_room_num', (params.rooms || 1).toString());
-    
+    searchParams.set("f_room_num", (params.rooms || 1).toString());
+
     return `https://travel.rakuten.co.jp/search/result?${searchParams.toString()}`;
   }
 
@@ -271,40 +290,52 @@ export class BookingService {
    */
   private static buildJalanUrl(params: BookingLinkParams): string {
     const searchParams = new URLSearchParams();
-    
-    searchParams.set('keyword', params.name);
-    
+
+    searchParams.set("keyword", params.name);
+
     // 日付（YYYYMMDD形式）
     if (params.checkIn) {
-      searchParams.set('checkInDate', this.formatDate(params.checkIn, 'yyyyMMdd'));
+      searchParams.set(
+        "checkInDate",
+        this.formatDate(params.checkIn, "yyyyMMdd"),
+      );
     }
     if (params.checkOut) {
-      searchParams.set('checkOutDate', this.formatDate(params.checkOut, 'yyyyMMdd'));
+      searchParams.set(
+        "checkOutDate",
+        this.formatDate(params.checkOut, "yyyyMMdd"),
+      );
     }
-    
+
     // 人数・部屋数
-    searchParams.set('adultNum', (params.adults || 2).toString());
-    searchParams.set('roomNum', (params.rooms || 1).toString());
-    
+    searchParams.set("adultNum", (params.adults || 2).toString());
+    searchParams.set("roomNum", (params.rooms || 1).toString());
+
     return `https://www.jalan.net/uw/uwp2011/uww2011init.do?${searchParams.toString()}`;
   }
 
   /**
    * レストラン予約リンクを生成
    */
-  static generateRestaurantBookingLinks(params: BookingLinkParams): BookingLinks {
+  static generateRestaurantBookingLinks(
+    params: BookingLinkParams,
+  ): BookingLinks {
     const links: BookingLinks = {};
-    
-    if (this.isAvailableInRegion('gurunavi', params.latitude, params.longitude)) {
+
+    if (
+      this.isAvailableInRegion("gurunavi", params.latitude, params.longitude)
+    ) {
       links.gurunavi = this.buildGurunaviUrl(params);
     }
-    
-    if (this.isAvailableInRegion('tabelog', params.latitude, params.longitude)) {
+
+    if (
+      this.isAvailableInRegion("tabelog", params.latitude, params.longitude)
+    ) {
       links.tabelog = this.buildTabelogUrl(params);
     }
-    
+
     // 他のレストラン予約サイトも同様に...
-    
+
     return links;
   }
 
@@ -312,23 +343,23 @@ export class BookingService {
    * 地域判定
    */
   private static isAvailableInRegion(
-    siteId: string, 
-    lat?: number, 
-    lng?: number
+    siteId: string,
+    lat?: number,
+    lng?: number,
   ): boolean {
-    const site = this.BOOKING_SITES.find(s => s.id === siteId);
+    const site = this.BOOKING_SITES.find((s) => s.id === siteId);
     if (!site) return false;
-    
+
     // グローバル対応サイトは常に利用可能
-    if (site.regions.includes('global')) return true;
-    
+    if (site.regions.includes("global")) return true;
+
     // 位置情報がない場合はデフォルトで日本として扱う
-    if (!lat || !lng) return site.regions.includes('jp');
-    
+    if (!lat || !lng) return site.regions.includes("jp");
+
     // 位置情報から地域を判定（簡易版）
     const isInJapan = lat >= 20 && lat <= 46 && lng >= 122 && lng <= 154;
-    
-    return isInJapan && site.regions.includes('jp');
+
+    return isInJapan && site.regions.includes("jp");
   }
 
   /**
@@ -336,13 +367,13 @@ export class BookingService {
    */
   private static formatDate(date: Date, format: string): string {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
     switch (format) {
-      case 'yyyy-MM-dd':
+      case "yyyy-MM-dd":
         return `${year}-${month}-${day}`;
-      case 'yyyyMMdd':
+      case "yyyyMMdd":
         return `${year}${month}${day}`;
       default:
         return date.toISOString();
@@ -356,14 +387,15 @@ export class BookingService {
 ```typescript
 // src/hooks/usePOIHandler.ts
 
-import { useEffect, useState, useCallback } from 'react';
-import { useMapStore } from '../store/mapStore';
-import { PlacesService } from '../services/placesService';
-import { PlaceDetailsWithBooking } from '../types/booking';
+import { useEffect, useState, useCallback } from "react";
+import { useMapStore } from "../store/mapStore";
+import { PlacesService } from "../services/placesService";
+import { PlaceDetailsWithBooking } from "../types/booking";
 
 export const usePOIHandler = () => {
   const { map } = useMapStore();
-  const [selectedPOI, setSelectedPOI] = useState<PlaceDetailsWithBooking | null>(null);
+  const [selectedPOI, setSelectedPOI] =
+    useState<PlaceDetailsWithBooking | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -371,16 +403,19 @@ export const usePOIHandler = () => {
     if (!map) return;
 
     // POIクリックイベントリスナー
-    const clickListener = map.addListener('click', async (event: google.maps.MapMouseEvent) => {
-      // POIがクリックされた場合のみ処理
-      if (!event.placeId) return;
-      
-      // デフォルトの情報ウィンドウを無効化
-      event.stop();
-      
-      // 詳細情報を取得
-      await fetchPOIDetails(event.placeId);
-    });
+    const clickListener = map.addListener(
+      "click",
+      async (event: google.maps.MapMouseEvent) => {
+        // POIがクリックされた場合のみ処理
+        if (!event.placeId) return;
+
+        // デフォルトの情報ウィンドウを無効化
+        event.stop();
+
+        // 詳細情報を取得
+        await fetchPOIDetails(event.placeId);
+      },
+    );
 
     return () => {
       google.maps.event.removeListener(clickListener);
@@ -390,54 +425,56 @@ export const usePOIHandler = () => {
   const fetchPOIDetails = useCallback(async (placeId: string) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // Places APIで詳細情報を取得
       const placeDetails = await PlacesService.getPlaceDetails(placeId);
-      
+
       // 予約情報を付加
       const detailsWithBooking = await enrichWithBookingInfo(placeDetails);
-      
+
       setSelectedPOI(detailsWithBooking);
     } catch (err) {
-      console.error('Failed to fetch POI details:', err);
-      setError('施設情報の取得に失敗しました');
+      console.error("Failed to fetch POI details:", err);
+      setError("施設情報の取得に失敗しました");
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   const enrichWithBookingInfo = async (
-    place: google.maps.places.PlaceResult
+    place: google.maps.places.PlaceResult,
   ): Promise<PlaceDetailsWithBooking> => {
     // 施設タイプを判定
     const types = place.types || [];
-    const isHotel = types.some(type => 
-      ['lodging', 'hotel', 'motel', 'resort'].includes(type)
+    const isHotel = types.some((type) =>
+      ["lodging", "hotel", "motel", "resort"].includes(type),
     );
-    const isRestaurant = types.some(type => 
-      ['restaurant', 'cafe', 'bar', 'food'].includes(type)
+    const isRestaurant = types.some((type) =>
+      ["restaurant", "cafe", "bar", "food"].includes(type),
     );
-    
+
     if (!isHotel && !isRestaurant) {
       return place as PlaceDetailsWithBooking;
     }
-    
+
     // 予約情報を付加
     return {
       ...place,
       bookingInfo: {
         isBookable: true,
-        type: isHotel ? 'hotel' : 'restaurant',
-        supportedSites: isHotel 
-          ? ['booking', 'rakuten', 'jalan', 'hotels', 'expedia', 'agoda']
-          : ['gurunavi', 'tabelog', 'hotpepper', 'opentable'],
-        priceRange: place.price_level ? {
-          min: place.price_level * 1000,
-          max: place.price_level * 3000,
-          currency: 'JPY'
-        } : undefined
-      }
+        type: isHotel ? "hotel" : "restaurant",
+        supportedSites: isHotel
+          ? ["booking", "rakuten", "jalan", "hotels", "expedia", "agoda"]
+          : ["gurunavi", "tabelog", "hotpepper", "opentable"],
+        priceRange: place.price_level
+          ? {
+              min: place.price_level * 1000,
+              max: place.price_level * 3000,
+              currency: "JPY",
+            }
+          : undefined,
+      },
     };
   };
 
@@ -450,7 +487,7 @@ export const usePOIHandler = () => {
     selectedPOI,
     isLoading,
     error,
-    clearSelection
+    clearSelection,
   };
 };
 ```
@@ -469,7 +506,7 @@ export class PlacesService {
   private static getService(): google.maps.places.PlacesService {
     if (!this.service) {
       // ダミーのdiv要素を使用してサービスを初期化
-      const dummyElement = document.createElement('div');
+      const dummyElement = document.createElement("div");
       this.service = new google.maps.places.PlacesService(dummyElement);
     }
     return this.service;
@@ -479,33 +516,33 @@ export class PlacesService {
    * Place詳細情報を取得
    */
   static async getPlaceDetails(
-    placeId: string
+    placeId: string,
   ): Promise<google.maps.places.PlaceResult> {
     return new Promise((resolve, reject) => {
       const service = this.getService();
-      
+
       const request: google.maps.places.PlaceDetailsRequest = {
         placeId,
         fields: [
-          'place_id',
-          'name',
-          'formatted_address',
-          'geometry',
-          'types',
-          'website',
-          'formatted_phone_number',
-          'international_phone_number',
-          'rating',
-          'user_ratings_total',
-          'price_level',
-          'photos',
-          'reviews',
-          'opening_hours',
-          'utc_offset_minutes'
+          "place_id",
+          "name",
+          "formatted_address",
+          "geometry",
+          "types",
+          "website",
+          "formatted_phone_number",
+          "international_phone_number",
+          "rating",
+          "user_ratings_total",
+          "price_level",
+          "photos",
+          "reviews",
+          "opening_hours",
+          "utc_offset_minutes",
         ],
-        language: 'ja' // 日本語で情報を取得
+        language: "ja", // 日本語で情報を取得
       };
-      
+
       service.getDetails(request, (place, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && place) {
           resolve(place);
@@ -522,18 +559,18 @@ export class PlacesService {
   static async searchNearby(
     location: google.maps.LatLng,
     radius: number,
-    type: string
+    type: string,
   ): Promise<google.maps.places.PlaceResult[]> {
     return new Promise((resolve, reject) => {
       const service = this.getService();
-      
+
       const request: google.maps.places.PlaceSearchRequest = {
         location,
         radius,
         type,
-        language: 'ja'
+        language: "ja",
       };
-      
+
       service.nearbySearch(request, (results, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && results) {
           resolve(results);
@@ -586,7 +623,7 @@ export const HotelDetailsPanel: React.FC<HotelDetailsPanelProps> = ({
       children: currentPlan?.travelers?.children || 0,
       rooms: currentPlan?.travelers?.rooms || 1
     };
-    
+
     return BookingService.generateHotelBookingLinks(params);
   }, [place, currentPlan]);
 
@@ -607,9 +644,9 @@ export const HotelDetailsPanel: React.FC<HotelDetailsPanelProps> = ({
   // 旅行計画に追加
   const handleAddToItinerary = async () => {
     if (!place.name || !place.geometry?.location) return;
-    
+
     setIsAddingToItinerary(true);
-    
+
     try {
       await addPlace({
         name: place.name,
@@ -623,12 +660,12 @@ export const HotelDetailsPanel: React.FC<HotelDetailsPanelProps> = ({
         estimatedCost: 0,
         googlePlaceId: place.place_id
       });
-      
+
       trackEvent('place_added_from_poi', {
         place_id: place.place_id,
         category: 'hotel'
       });
-      
+
       // 成功メッセージ表示（トースト通知など）
       console.log('Added to itinerary successfully');
     } catch (error) {
@@ -661,7 +698,7 @@ export const HotelDetailsPanel: React.FC<HotelDetailsPanelProps> = ({
             <X size={20} />
           </button>
         </div>
-        
+
         {/* タブ */}
         <div className="flex border-t">
           <button
@@ -933,26 +970,26 @@ export const HotelDetailsPanel: React.FC<HotelDetailsPanelProps> = ({
 ```typescript
 // src/components/RestaurantDetailsPanel.tsx
 
-import React, { useState, useMemo } from 'react';
-import { BookingService } from '../services/bookingService';
-import { PlaceDetailsWithBooking } from '../types/booking';
+import React, { useState, useMemo } from "react";
+import { BookingService } from "../services/bookingService";
+import { PlaceDetailsWithBooking } from "../types/booking";
 
 export const RestaurantDetailsPanel: React.FC<{
   place: PlaceDetailsWithBooking;
   onClose: () => void;
 }> = ({ place, onClose }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedTime, setSelectedTime] = useState<string>('19:00');
+  const [selectedTime, setSelectedTime] = useState<string>("19:00");
   const [partySize, setPartySize] = useState<number>(2);
 
   const bookingLinks = useMemo(() => {
     return BookingService.generateRestaurantBookingLinks({
-      name: place.name || '',
+      name: place.name || "",
       latitude: place.geometry?.location?.lat(),
       longitude: place.geometry?.location?.lng(),
       reservationDate: selectedDate,
       reservationTime: selectedTime,
-      partySize
+      partySize,
     });
   }, [place, selectedDate, selectedTime, partySize]);
 
@@ -1048,21 +1085,21 @@ export const RestaurantDetailsPanel: React.FC<{
 // src/utils/errorHandling.ts
 
 export enum BookingErrorType {
-  PLACES_API_ERROR = 'PLACES_API_ERROR',
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  RATE_LIMIT_ERROR = 'RATE_LIMIT_ERROR',
-  INVALID_PLACE_TYPE = 'INVALID_PLACE_TYPE',
-  MISSING_REQUIRED_DATA = 'MISSING_REQUIRED_DATA'
+  PLACES_API_ERROR = "PLACES_API_ERROR",
+  NETWORK_ERROR = "NETWORK_ERROR",
+  RATE_LIMIT_ERROR = "RATE_LIMIT_ERROR",
+  INVALID_PLACE_TYPE = "INVALID_PLACE_TYPE",
+  MISSING_REQUIRED_DATA = "MISSING_REQUIRED_DATA",
 }
 
 export class BookingError extends Error {
   constructor(
     public type: BookingErrorType,
     public message: string,
-    public details?: any
+    public details?: any,
   ) {
     super(message);
-    this.name = 'BookingError';
+    this.name = "BookingError";
   }
 }
 
@@ -1070,21 +1107,21 @@ export const handleBookingError = (error: unknown): string => {
   if (error instanceof BookingError) {
     switch (error.type) {
       case BookingErrorType.PLACES_API_ERROR:
-        return '施設情報の取得に失敗しました。しばらく待ってから再度お試しください。';
+        return "施設情報の取得に失敗しました。しばらく待ってから再度お試しください。";
       case BookingErrorType.NETWORK_ERROR:
-        return 'ネットワークエラーが発生しました。接続を確認してください。';
+        return "ネットワークエラーが発生しました。接続を確認してください。";
       case BookingErrorType.RATE_LIMIT_ERROR:
-        return 'リクエスト制限に達しました。しばらく待ってから再度お試しください。';
+        return "リクエスト制限に達しました。しばらく待ってから再度お試しください。";
       case BookingErrorType.INVALID_PLACE_TYPE:
-        return 'この施設は予約に対応していません。';
+        return "この施設は予約に対応していません。";
       case BookingErrorType.MISSING_REQUIRED_DATA:
-        return '必要な情報が不足しています。';
+        return "必要な情報が不足しています。";
       default:
-        return 'エラーが発生しました。';
+        return "エラーが発生しました。";
     }
   }
-  
-  return 'エラーが発生しました。';
+
+  return "エラーが発生しました。";
 };
 ```
 
@@ -1109,21 +1146,21 @@ export class PlaceCache {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
-      ttl: ttl || this.DEFAULT_TTL
+      ttl: ttl || this.DEFAULT_TTL,
     });
   }
 
   static get<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) return null;
-    
+
     // TTLチェック
     if (Date.now() - entry.timestamp > entry.ttl) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return entry.data;
   }
 
@@ -1134,18 +1171,18 @@ export class PlaceCache {
 
 // 使用例
 export const getCachedPlaceDetails = async (
-  placeId: string
+  placeId: string,
 ): Promise<google.maps.places.PlaceResult> => {
   const cacheKey = `place_${placeId}`;
   const cached = PlaceCache.get<google.maps.places.PlaceResult>(cacheKey);
-  
+
   if (cached) {
     return cached;
   }
-  
+
   const details = await PlacesService.getPlaceDetails(placeId);
   PlaceCache.set(cacheKey, details);
-  
+
   return details;
 };
 ```
@@ -1189,25 +1226,27 @@ export const LazyBookingPanel: React.FC<{
 ```typescript
 // src/services/__tests__/bookingService.test.ts
 
-import { BookingService } from '../bookingService';
+import { BookingService } from "../bookingService";
 
-describe('BookingService', () => {
-  describe('generateHotelBookingLinks', () => {
-    it('should generate correct Booking.com URL', () => {
+describe("BookingService", () => {
+  describe("generateHotelBookingLinks", () => {
+    it("should generate correct Booking.com URL", () => {
       const params = {
-        name: 'ヒルトン東京',
-        checkIn: new Date('2024-03-01'),
-        checkOut: new Date('2024-03-03'),
+        name: "ヒルトン東京",
+        checkIn: new Date("2024-03-01"),
+        checkOut: new Date("2024-03-03"),
         adults: 2,
-        rooms: 1
+        rooms: 1,
       };
-      
+
       const links = BookingService.generateHotelBookingLinks(params);
-      
-      expect(links.booking).toContain('booking.com');
-      expect(links.booking).toContain('ss=%E3%83%92%E3%83%AB%E3%83%88%E3%83%B3%E6%9D%B1%E4%BA%AC');
-      expect(links.booking).toContain('checkin=2024-03-01');
-      expect(links.booking).toContain('checkout=2024-03-03');
+
+      expect(links.booking).toContain("booking.com");
+      expect(links.booking).toContain(
+        "ss=%E3%83%92%E3%83%AB%E3%83%88%E3%83%B3%E6%9D%B1%E4%BA%AC",
+      );
+      expect(links.booking).toContain("checkin=2024-03-01");
+      expect(links.booking).toContain("checkout=2024-03-03");
     });
   });
 });
@@ -1223,12 +1262,12 @@ describe('BookingService', () => {
 export const useAnalytics = () => {
   const trackEvent = (eventName: string, parameters?: Record<string, any>) => {
     // Google Analytics 4
-    if (typeof gtag !== 'undefined') {
-      gtag('event', eventName, parameters);
+    if (typeof gtag !== "undefined") {
+      gtag("event", eventName, parameters);
     }
-    
+
     // カスタムアナリティクス
-    console.log('[Analytics]', eventName, parameters);
+    console.log("[Analytics]", eventName, parameters);
   };
 
   return { trackEvent };
@@ -1236,11 +1275,11 @@ export const useAnalytics = () => {
 
 // トラッキングイベント定義
 export const BOOKING_EVENTS = {
-  POI_CLICKED: 'poi_clicked',
-  BOOKING_PANEL_OPENED: 'booking_panel_opened',
-  BOOKING_SITE_CLICKED: 'booking_site_clicked',
-  PLACE_ADDED_FROM_POI: 'place_added_from_poi',
-  BOOKING_TAB_VIEWED: 'booking_tab_viewed'
+  POI_CLICKED: "poi_clicked",
+  BOOKING_PANEL_OPENED: "booking_panel_opened",
+  BOOKING_SITE_CLICKED: "booking_site_clicked",
+  PLACE_ADDED_FROM_POI: "place_added_from_poi",
+  BOOKING_TAB_VIEWED: "booking_tab_viewed",
 };
 ```
 

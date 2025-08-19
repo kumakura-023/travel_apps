@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface SelectedPlaceState {
   place: google.maps.places.PlaceResult | null;
@@ -8,4 +8,4 @@ interface SelectedPlaceState {
 export const useSelectedPlaceStore = create<SelectedPlaceState>((set) => ({
   place: null,
   setPlace: (place) => set({ place }),
-})); 
+}));

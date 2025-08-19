@@ -1,16 +1,17 @@
 # 修正内容v19 実装タスク
 
 ## 概要
+
 他のユーザが追加した候補地の通知機能を実装する。PlaceSimpleOverlay風のUIで確認ボタンを押すまで残る通知を表示し、TabNavigationから通知一覧にアクセスできるようにする。
 
 ## タスク一覧
 
 ### 1. 通知管理ストアの新規作成
+
 **ファイル**: `src/store/notificationStore.ts`
 
-
-
 **実装内容**:
+
 ```typescript
 interface PlaceNotification {
   id: string;
@@ -31,17 +32,23 @@ interface NotificationStore {
   notifications: PlaceNotification[];
   currentUserId: string | null;
   getUnreadCount: (userId: string) => number;
-  addNotification: (notification: Omit<PlaceNotification, 'id' | 'timestamp' | 'readBy'>) => void;
+  addNotification: (
+    notification: Omit<PlaceNotification, "id" | "timestamp" | "readBy">,
+  ) => void;
   markAsRead: (notificationId: string, userId: string) => void;
   markAllAsRead: (userId: string) => void;
   removeNotification: (notificationId: string) => void;
   clearAllNotifications: () => void;
-  getNotificationsByPlan: (planId: string, userId: string) => PlaceNotification[];
+  getNotificationsByPlan: (
+    planId: string,
+    userId: string,
+  ) => PlaceNotification[];
   isReadByUser: (notification: PlaceNotification, userId: string) => boolean;
 }
 ```
 
 **実装詳細**:
+
 - Zustandを使用して状態管理
 - 通知の永続化（localStorage）
 - ユーザーごとの未読数を計算（readBy配列を使用）
@@ -51,9 +58,11 @@ interface NotificationStore {
 - **重要**: 各ユーザーが独立して既読管理できるよう、readBy配列にユーザーIDを追加
 
 ### 2. PlaceNotificationOverlayコンポーネントの作成
+
 **ファイル**: `src/components/PlaceNotificationOverlay.tsx`
 
 **実装内容**:
+
 ```tsx
 interface PlaceNotificationOverlayProps {
   notification: PlaceNotification;
@@ -63,6 +72,7 @@ interface PlaceNotificationOverlayProps {
 ```
 
 **デザイン仕様**:
+
 - PlaceSimpleOverlayと同様の白背景・角丸デザイン
 - 上部にカテゴリアイコンと場所名
 - 中央に「○○さんが追加しました」のテキスト
@@ -72,13 +82,16 @@ interface PlaceNotificationOverlayProps {
 - ホバー時に少し拡大するアニメーション
 
 **表示位置**:
+
 - 候補地の位置より少し上にオフセット（PlaceDetailOverlayと同じ計算）
 - 他のオーバーレイと重ならないように調整
 
 ### 3. NotificationListModalコンポーネントの作成
+
 **ファイル**: `src/components/NotificationListModal.tsx`
 
 **実装内容**:
+
 ```tsx
 interface NotificationListModalProps {
   isOpen: boolean;
@@ -87,6 +100,7 @@ interface NotificationListModalProps {
 ```
 
 **デザイン仕様**:
+
 - PlanNameEditModalと同様のモーダルデザイン
 - ヘッダー: "通知" + 閉じるボタン
 - 通知リスト:
@@ -100,9 +114,11 @@ interface NotificationListModalProps {
 - リストはスクロール可能（最大高さ400px）
 
 ### 4. TabNavigationへの通知アイコン追加
+
 **ファイル**: `src/components/TabNavigation.tsx`
 
 **実装内容**:
+
 - 既存のタブ（地図・リスト・設定）の右側に通知アイコンを追加
 - ベルアイコン（Heroicons: BellIcon）を使用
 - 未読カウントのバッジ表示:
@@ -114,9 +130,11 @@ interface NotificationListModalProps {
 - デスクトップ版ではアイコンのみ表示
 
 ### 5. 候補地追加時の通知生成処理
+
 **ファイル**: `src/store/savedPlacesStore.ts`の`addSavedPlace`メソッド修正
 
 **実装内容**:
+
 ```typescript
 // addSavedPlaceメソッド内に追加
 if (currentUser && place.addedBy?.uid !== currentUser.uid) {
@@ -127,24 +145,27 @@ if (currentUser && place.addedBy?.uid !== currentUser.uid) {
     placeCategory: place.category,
     addedBy: {
       uid: place.addedBy.uid,
-      displayName: place.addedBy.displayName || 'ユーザー'
+      displayName: place.addedBy.displayName || "ユーザー",
     },
     planId: activePlanId,
-    position: place.position
+    position: place.position,
   });
   // 注: readByは空配列で自動的に初期化される
 }
 ```
 
 **注意点**:
+
 - 自分が追加した候補地は通知しない
 - クラウド同期で受信した候補地のみ通知対象
 - プラン切り替え時は新しいプランの通知のみ表示
 
 ### 6. MapOverlayManagerへの統合
+
 **ファイル**: `src/components/MapOverlayManager.tsx`
 
 **実装内容**:
+
 - 通知オーバーレイの管理を追加
 - PlaceDetailOverlay、PlaceSimpleOverlayと同じ階層で表示
 - 現在のユーザーが未読の通知のみ地図上に表示（readBy配列にユーザーIDが含まれていない）
@@ -154,6 +175,7 @@ if (currentUser && place.addedBy?.uid !== currentUser.uid) {
   3. PlaceDetailPanelを開いて詳細表示
 
 **表示優先順位**:
+
 1. RouteInfoOverlay
 2. PlaceNotificationOverlay（未読のみ）
 3. PlaceDetailOverlay
@@ -161,33 +183,39 @@ if (currentUser && place.addedBy?.uid !== currentUser.uid) {
 5. MapLabelOverlay
 
 ### 7. クラウド同期対応
+
 **ファイル**: `src/services/cloudSync.ts`の修正
 
 **実装内容**:
+
 - 通知データはローカルのみで管理（Firestoreには保存しない）
 - 候補地の追加をリアルタイムで検知:
   ```typescript
   // onSnapshot内で候補地の追加を検知
-  const addedPlaces = newPlaces.filter(place => 
-    !oldPlaces.find(p => p.id === place.id)
+  const addedPlaces = newPlaces.filter(
+    (place) => !oldPlaces.find((p) => p.id === place.id),
   );
   ```
 - WebSocketまたはFirestoreのリアルタイムリスナーで即座に反映
 
 ### 8. 通知の既読管理と削除機能
+
 **ファイル**: 各コンポーネントでの実装
 
 **既読管理**:
+
 - PlaceNotificationOverlayの「確認」ボタンクリック時に現在のユーザーIDをreadByに追加
 - NotificationListModal内の「確認」ボタンクリック時に現在のユーザーIDをreadByに追加
 - 該当する候補地のPlaceDetailPanelを開いた時に現在のユーザーIDをreadByに追加
 - **重要**: 他のユーザーの既読状態には一切影響を与えない
 
 **削除機能**:
+
 - NotificationListModal内の削除アイコンクリック
 - 72時間経過した通知の自動削除（アプリ起動時にチェック）
 
 **バッチ処理**:
+
 - 「すべて既読にする」機能（現在のユーザーIDをすべての通知のreadBy配列に追加）
 - プラン削除時に関連通知も削除
 - **注意**: 「すべて既読にする」も現在のユーザーのみに適用
@@ -246,9 +274,11 @@ if (currentUser && place.addedBy?.uid !== currentUser.uid) {
 # 修正内容v20 実装タスク
 
 ## 問題概要
+
 招待URLから参加するとFirestoreのインデックスエラーが発生し、招待されたプランに参加できない。プラン一覧にプランが表示されず、ゲスト側のユーザーがアクセスできない。
 
 ## エラー内容
+
 ```
 [planListService] Error listening to plans: FirebaseError: The query requires an index.
 [PlanCoordinator] Available plans: 0
@@ -256,38 +286,42 @@ if (currentUser && place.addedBy?.uid !== currentUser.uid) {
 ```
 
 ## 根本原因
+
 1. **memberIds配列の不整合**: Cloud Functionsでユーザーをプランに追加する際、membersオブジェクトは更新するがmemberIds配列を更新していない
 2. **Firestoreインデックスの不足**: memberIds（array-contains）とupdatedAt（desc）の複合インデックスが必要だが作成されていない
 
 ## タスク一覧
 
 ### 1. Cloud Functions: acceptInviteToken関数の修正
+
 **ファイル**: `functions/src/index.ts`
 
 **修正箇所**: 169-174行目のupdate処理
 
 **変更前のコード**:
+
 ```typescript
 await planDoc.ref.update({
   [`members.${uid}`]: {
-    role: 'editor',
+    role: "editor",
     joinedAt: admin.firestore.FieldValue.serverTimestamp(),
   },
 });
 ```
 
 **変更後のコード**:
+
 ```typescript
 // 既存のmemberIds配列を取得
 const existingMemberIds = planData.memberIds || [];
-const updatedMemberIds = existingMemberIds.includes(uid) 
-  ? existingMemberIds 
+const updatedMemberIds = existingMemberIds.includes(uid)
+  ? existingMemberIds
   : [...existingMemberIds, uid];
 
 // membersとmemberIds両方を更新
 await planDoc.ref.update({
   [`members.${uid}`]: {
-    role: 'editor',
+    role: "editor",
     joinedAt: admin.firestore.FieldValue.serverTimestamp(),
   },
   memberIds: updatedMemberIds,
@@ -296,11 +330,13 @@ await planDoc.ref.update({
 ```
 
 ### 2. Cloud Functions: inviteUserToPlan関数の修正
+
 **ファイル**: `functions/src/index.ts`
 
 **修正箇所**: 83-88行目のupdate処理
 
 **変更前のコード**:
+
 ```typescript
 await planRef.update({
   [`members.${invitee.uid}`]: {
@@ -311,11 +347,12 @@ await planRef.update({
 ```
 
 **変更後のコード**:
+
 ```typescript
 // planDataから既存のmemberIds配列を取得
 const existingMemberIds = planData.memberIds || [];
-const updatedMemberIds = existingMemberIds.includes(invitee.uid) 
-  ? existingMemberIds 
+const updatedMemberIds = existingMemberIds.includes(invitee.uid)
+  ? existingMemberIds
   : [...existingMemberIds, invitee.uid];
 
 // membersとmemberIds両方を更新
@@ -330,9 +367,11 @@ await planRef.update({
 ```
 
 ### 3. Firestoreインデックスの作成
+
 **実施方法**: Firebase Consoleで手動作成
 
 **手順**:
+
 1. Firebase Consoleにアクセス
 2. Firestore Databaseセクションに移動
 3. 「インデックス」タブを選択
@@ -340,6 +379,7 @@ await planRef.update({
 5. 以下の設定で複合インデックスを作成:
 
 **インデックス設定**:
+
 ```
 コレクション: plans
 フィールド1: memberIds (配列に含まれる)
@@ -349,6 +389,7 @@ await planRef.update({
 
 **代替方法（CLIを使用）**:
 `firestore.indexes.json`に以下を追加してデプロイ:
+
 ```json
 {
   "indexes": [
@@ -371,103 +412,130 @@ await planRef.update({
 ```
 
 ### 4. 既存プランのmemberIds修復スクリプト
+
 **ファイル**: 新規作成 `functions/src/repairMemberIds.ts`
 
 **実装内容**:
+
 ```typescript
-import * as admin from 'firebase-admin';
+import * as admin from "firebase-admin";
 
 // 一度だけ実行するスクリプト
 export async function repairExistingPlansMemberIds() {
   const db = admin.firestore();
-  const plansRef = db.collection('plans');
+  const plansRef = db.collection("plans");
   const snapshot = await plansRef.get();
-  
+
   const batch = db.batch();
   let updateCount = 0;
-  
+
   snapshot.forEach((doc) => {
     const data = doc.data();
     const members = data.members || {};
     const existingMemberIds = data.memberIds || [];
-    
+
     // membersオブジェクトからメンバーIDを抽出
     const actualMemberIds = Object.keys(members);
-    
+
     // memberIds配列が不完全な場合は修復
-    const needsUpdate = actualMemberIds.some(id => !existingMemberIds.includes(id));
-    
+    const needsUpdate = actualMemberIds.some(
+      (id) => !existingMemberIds.includes(id),
+    );
+
     if (needsUpdate) {
       batch.update(doc.ref, {
         memberIds: actualMemberIds,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
       updateCount++;
-      console.log(`Repairing plan ${doc.id}: adding memberIds ${actualMemberIds}`);
+      console.log(
+        `Repairing plan ${doc.id}: adding memberIds ${actualMemberIds}`,
+      );
     }
   });
-  
+
   if (updateCount > 0) {
     await batch.commit();
     console.log(`Successfully repaired ${updateCount} plans`);
   } else {
-    console.log('No plans needed repair');
+    console.log("No plans needed repair");
   }
-  
+
   return { repaired: updateCount };
 }
 ```
 
 **実行方法**:
+
 1. Cloud Function として一時的にデプロイ
 2. Firebase Console から手動実行
 3. 実行後は削除（一度だけ実行すればよい）
 
 ### 5. planCloudService.tsの修正（オプション - 念のため）
+
 **ファイル**: `src/services/planCloudService.ts`
 
 **修正箇所**: 155-161行目のaddUserToPlan関数
 
 **変更前のコード**:
+
 ```typescript
-export async function addUserToPlan(planId: string, newUserId: string, role: 'editor' | 'viewer' = 'editor') {
-    const planRef = planDocRef(planId);
-    await setDoc(planRef, {
-        members: {
-            [newUserId]: { role, joinedAt: new Date() }
-        }
-    }, { merge: true });
+export async function addUserToPlan(
+  planId: string,
+  newUserId: string,
+  role: "editor" | "viewer" = "editor",
+) {
+  const planRef = planDocRef(planId);
+  await setDoc(
+    planRef,
+    {
+      members: {
+        [newUserId]: { role, joinedAt: new Date() },
+      },
+    },
+    { merge: true },
+  );
 }
 ```
 
 **変更後のコード**:
+
 ```typescript
-export async function addUserToPlan(planId: string, newUserId: string, role: 'editor' | 'viewer' = 'editor') {
-    const planRef = planDocRef(planId);
-    
-    // 既存のプランデータを取得
-    const planSnap = await getDoc(planRef);
-    const planData = planSnap.exists() ? planSnap.data() : {};
-    const existingMemberIds = planData.memberIds || [];
-    
-    // memberIds配列を更新
-    const updatedMemberIds = existingMemberIds.includes(newUserId) 
-      ? existingMemberIds 
-      : [...existingMemberIds, newUserId];
-    
-    await setDoc(planRef, {
-        members: {
-            [newUserId]: { role, joinedAt: new Date() }
-        },
-        memberIds: updatedMemberIds,
-        updatedAt: serverTimestamp()
-    }, { merge: true });
+export async function addUserToPlan(
+  planId: string,
+  newUserId: string,
+  role: "editor" | "viewer" = "editor",
+) {
+  const planRef = planDocRef(planId);
+
+  // 既存のプランデータを取得
+  const planSnap = await getDoc(planRef);
+  const planData = planSnap.exists() ? planSnap.data() : {};
+  const existingMemberIds = planData.memberIds || [];
+
+  // memberIds配列を更新
+  const updatedMemberIds = existingMemberIds.includes(newUserId)
+    ? existingMemberIds
+    : [...existingMemberIds, newUserId];
+
+  await setDoc(
+    planRef,
+    {
+      members: {
+        [newUserId]: { role, joinedAt: new Date() },
+      },
+      memberIds: updatedMemberIds,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
 }
 ```
 
 ## テスト項目
 
 ### 1. 招待URL経由の参加テスト
+
 1. ユーザーAがプランを作成
 2. ユーザーAが招待URLを生成
 3. ユーザーBが招待URLにアクセス
@@ -476,21 +544,25 @@ export async function addUserToPlan(planId: string, newUserId: string, role: 'ed
 6. **確認**: エラーログが出力されない
 
 ### 2. メール招待経由の参加テスト
+
 1. ユーザーAがユーザーCのメールアドレスで招待
 2. **確認**: ユーザーCのプラン一覧にプランが表示される
 3. **確認**: memberIds配列にユーザーCのUIDが含まれる
 
 ### 3. インデックスエラーの解消確認
+
 1. planListServiceのクエリ実行
 2. **確認**: `failed-precondition`エラーが発生しない
 3. **確認**: ソート付きクエリが正常に動作する
 
 ### 4. 既存プランの修復確認
+
 1. 修復スクリプト実行前: memberIds配列が不完全なプランを確認
 2. 修復スクリプトを実行
 3. **確認**: すべてのプランでmemberIds配列がmembersオブジェクトと一致
 
 ### 5. プラン一覧の表示確認
+
 1. 複数のプランに参加しているユーザーでテスト
 2. **確認**: すべての参加プランが一覧に表示される
 3. **確認**: 更新日時順でソートされている
@@ -529,6 +601,7 @@ export async function addUserToPlan(planId: string, newUserId: string, role: 'ed
 ## 追加修正タスク（修正内容v20 - 続き）
 
 ### 判明した新たな問題
+
 エラーログ分析により、以下の追加問題が判明：
 
 1. **既存プランにmemberIds配列が存在しない**
@@ -541,32 +614,30 @@ export async function addUserToPlan(planId: string, newUserId: string, role: 'ed
 ### 緊急修正タスク
 
 #### 1. planListService.tsの完全フォールバック処理実装
+
 **ファイル**: `src/services/planListService.ts`
 
 **修正箇所**: listenUserPlans関数全体
 
 **変更後のコード**:
+
 ```typescript
 export function listenUserPlans(
   user: User,
   onUpdate: (plans: PlanListItem[]) => void,
   onError?: (error: Error) => void,
-  useSort: boolean = true
+  useSort: boolean = true,
 ): Unsubscribe {
-  
-  const plansRef = collection(db, 'plans');
-  
+  const plansRef = collection(db, "plans");
+
   // まずmemberIds配列でクエリを試みる
   const q = useSort
     ? query(
         plansRef,
-        where('memberIds', 'array-contains', user.uid),
-        orderBy('updatedAt', 'desc')
+        where("memberIds", "array-contains", user.uid),
+        orderBy("updatedAt", "desc"),
       )
-    : query(
-        plansRef,
-        where('memberIds', 'array-contains', user.uid)
-      );
+    : query(plansRef, where("memberIds", "array-contains", user.uid));
 
   return onSnapshot(
     q,
@@ -574,10 +645,10 @@ export function listenUserPlans(
       const plans: PlanListItem[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        
+
         let placeCount = 0;
         let totalCost = 0;
-        
+
         try {
           if (data.payload) {
             const payload = JSON.parse(data.payload);
@@ -585,12 +656,12 @@ export function listenUserPlans(
             totalCost = payload.totalCost || 0;
           }
         } catch (e) {
-          console.error('[planListService] Failed to parse payload:', e);
+          console.error("[planListService] Failed to parse payload:", e);
         }
-        
+
         plans.push({
           id: doc.id,
-          name: data.name || '名称未設定',
+          name: data.name || "名称未設定",
           ownerId: data.ownerId,
           memberCount: Object.keys(data.members || {}).length,
           placeCount,
@@ -599,37 +670,42 @@ export function listenUserPlans(
           createdAt: data.createdAt?.toDate() || new Date(),
         });
       });
-      
+
       if (!useSort) {
         plans.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
       }
-      
+
       onUpdate(plans);
     },
     (error) => {
-      console.error('[planListService] Error listening to plans:', error);
-      
+      console.error("[planListService] Error listening to plans:", error);
+
       // memberIds配列でのクエリが失敗した場合、全プランを取得してクライアント側でフィルタリング
-      if (error.code === 'failed-precondition' || error.message.includes('memberIds')) {
-        console.log('[planListService] Falling back to full collection scan with client-side filtering');
-        
+      if (
+        error.code === "failed-precondition" ||
+        error.message.includes("memberIds")
+      ) {
+        console.log(
+          "[planListService] Falling back to full collection scan with client-side filtering",
+        );
+
         // 全プランを取得
         const allPlansQuery = query(plansRef);
-        
+
         return onSnapshot(
           allPlansQuery,
           (snapshot) => {
             const plans: PlanListItem[] = [];
-            
+
             snapshot.forEach((doc) => {
               const data = doc.data();
               const members = data.members || {};
-              
+
               // クライアント側でメンバーチェック
               if (members[user.uid] || data.ownerId === user.uid) {
                 let placeCount = 0;
                 let totalCost = 0;
-                
+
                 try {
                   if (data.payload) {
                     const payload = JSON.parse(data.payload);
@@ -637,12 +713,15 @@ export function listenUserPlans(
                     totalCost = payload.totalCost || 0;
                   }
                 } catch (e) {
-                  console.error('[planListService] Failed to parse payload:', e);
+                  console.error(
+                    "[planListService] Failed to parse payload:",
+                    e,
+                  );
                 }
-                
+
                 plans.push({
                   id: doc.id,
-                  name: data.name || '名称未設定',
+                  name: data.name || "名称未設定",
                   ownerId: data.ownerId,
                   memberCount: Object.keys(members).length,
                   placeCount,
@@ -652,26 +731,31 @@ export function listenUserPlans(
                 });
               }
             });
-            
+
             // クライアント側でソート
             plans.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-            
-            console.log(`[planListService] Found ${plans.length} plans for user after client-side filtering`);
+
+            console.log(
+              `[planListService] Found ${plans.length} plans for user after client-side filtering`,
+            );
             onUpdate(plans);
           },
           (fallbackError) => {
-            console.error('[planListService] Fallback query also failed:', fallbackError);
+            console.error(
+              "[planListService] Fallback query also failed:",
+              fallbackError,
+            );
             if (onError) {
               onError(fallbackError);
             }
-          }
+          },
         );
       }
-      
+
       if (onError) {
         onError(error);
       }
-    }
+    },
   );
 }
 ```
@@ -679,6 +763,7 @@ export function listenUserPlans(
 #### 2. 修復スクリプトの実行手順
 
 **手順1: Cloud Functionsのデプロイ**
+
 ```bash
 # functions ディレクトリに移動
 cd functions
@@ -696,6 +781,7 @@ firebase deploy --only functions
 **手順2: 修復関数の実行（3つの方法）**
 
 **方法A: Firebase Console から実行**
+
 1. Firebase Console にアクセス
 2. Functions セクションに移動
 3. `repairExistingPlansMemberIds` 関数を探す
@@ -703,6 +789,7 @@ firebase deploy --only functions
 5. 空のデータ `{}` を入力して実行
 
 **方法B: クライアントアプリから実行（一時的なボタン追加）**
+
 ```typescript
 // 一時的に設定画面などに追加
 import { httpsCallable } from 'firebase/functions';
@@ -725,6 +812,7 @@ const repairPlans = async () => {
 ```
 
 **方法C: Firebase CLIから実行**
+
 ```bash
 # Firebase CLIでログイン
 firebase login
@@ -739,23 +827,28 @@ repairExistingPlansMemberIds({})
 #### 3. 動作確認手順（詳細版）
 
 **ステップ1: 修復前の確認**
+
 1. ブラウザの開発者ツールを開く
 2. Consoleタブでエラーメッセージを確認
 3. `[PlanCoordinator] Available plans: 0` が表示されることを確認
 
 **ステップ2: 修復スクリプトの実行**
+
 1. 上記の方法のいずれかで修復スクリプトを実行
 2. 実行結果を確認（修復されたプラン数が表示される）
 
 **ステップ3: planListService.ts の更新**
+
 1. 上記の完全フォールバック処理を実装
 2. ビルドしてデプロイ
+
 ```bash
 npm run build
 # デプロイまたはローカルテスト
 ```
 
 **ステップ4: 動作確認**
+
 1. アプリをリロード
 2. Consoleで以下を確認：
    - `[planListService] Falling back to full collection scan` が表示される場合は、フォールバック処理が動作
@@ -763,6 +856,7 @@ npm run build
 3. プラン一覧にプランが表示されることを確認
 
 **ステップ5: 招待機能の再テスト**
+
 1. 新しい招待URLを生成
 2. 別のユーザーアカウントで招待URLにアクセス
 3. プランに参加できることを確認
@@ -771,6 +865,7 @@ npm run build
 #### 4. インデックス作成の確認
 
 **Firebase Console での確認手順**:
+
 1. Firebase Console > Firestore Database
 2. 「インデックス」タブを選択
 3. 以下のインデックスが存在することを確認：
@@ -779,25 +874,32 @@ npm run build
 4. ステータスが「有効」になっていることを確認
 
 **インデックスが存在しない場合**:
+
 1. コンソールのエラーメッセージ内のリンクをクリック
 2. または手動で作成（上記の設定で）
 
 ### トラブルシューティング
 
 #### 問題1: 修復スクリプト実行後もプランが表示されない
+
 **解決策**:
+
 1. Firestore で直接プランドキュメントを確認
 2. memberIds配列が正しく追加されているか確認
 3. membersオブジェクトにユーザーIDが含まれているか確認
 
 #### 問題2: フォールバック処理でパフォーマンスが悪い
+
 **解決策**:
+
 1. 修復スクリプトが正常に完了していることを確認
 2. インデックスが作成され有効になっていることを確認
 3. 一時的な問題なので、修復完了後は発生しない
 
 #### 問題3: 新規作成したプランが表示されない
+
 **解決策**:
+
 1. planCloudService.ts でmemberIds配列が正しく設定されているか確認
 2. Cloud Functions が最新版にデプロイされているか確認
 
@@ -814,24 +916,29 @@ npm run build
 ## 新規プラン作成エラーの修正タスク
 
 ### 問題概要
+
 Firebaseから全データを削除後、新規プランを作成しようとすると以下のエラーが発生：
+
 ```
 [PlanCoordinator] Creating new plan: 新しいプラン_2025/8/6
-[PlanCoordinator] Failed to create new plan: 
+[PlanCoordinator] Failed to create new plan:
 [PlanNameEditModal] Failed to create new plan:
 ```
 
 ### 根本原因
+
 PlanService.tsの`getCurrentUserId()`メソッドが未実装で、常に`Error('User not authenticated')`をスローしている。
 
 ### 修正タスク
 
 #### 1. PlanService.tsのgetCurrentUserIdメソッド実装
+
 **ファイル**: `src/services/plan/PlanService.ts`
 
 **修正箇所**: 273-276行目
 
 **変更前のコード**:
+
 ```typescript
 private async getCurrentUserId(): Promise<string> {
   // TODO: userRepositoryにgetCurrentUserメソッドを追加する必要がある
@@ -840,21 +947,23 @@ private async getCurrentUserId(): Promise<string> {
 ```
 
 **変更後のコード**:
+
 ```typescript
 private async getCurrentUserId(): Promise<string> {
   // Firebaseから現在のユーザーを取得
   const { auth } = await import('../../firebase');
   const currentUser = auth.currentUser;
-  
+
   if (!currentUser) {
     throw new Error('User not authenticated');
   }
-  
+
   return currentUser.uid;
 }
 ```
 
 **代替実装（userRepositoryを使用する場合）**:
+
 ```typescript
 private async getCurrentUserId(): Promise<string> {
   // userRepositoryがgetCurrentUserメソッドを持っている場合
@@ -867,13 +976,15 @@ private async getCurrentUserId(): Promise<string> {
 ```
 
 #### 2. IUserRepositoryインターフェースの拡張（オプション）
+
 **ファイル**: `src/repositories/interfaces/IUserRepository.ts`
 
 **追加するメソッド**:
+
 ```typescript
 export interface IUserRepository {
   // 既存のメソッド...
-  
+
   /**
    * 現在ログイン中のユーザーを取得
    */
@@ -882,18 +993,20 @@ export interface IUserRepository {
 ```
 
 #### 3. FirebaseUserRepositoryの実装（オプション）
+
 **ファイル**: `src/repositories/firebase/FirebaseUserRepository.ts`（存在する場合）
 
 **追加する実装**:
+
 ```typescript
 async getCurrentUser(): Promise<{ id: string; email?: string } | null> {
   const { auth } = await import('../../firebase');
   const currentUser = auth.currentUser;
-  
+
   if (!currentUser) {
     return null;
   }
-  
+
   return {
     id: currentUser.uid,
     email: currentUser.email || undefined

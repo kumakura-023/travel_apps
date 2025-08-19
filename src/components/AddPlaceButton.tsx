@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useSavedPlacesStore } from '../store/savedPlacesStore';
-import { classifyCategory } from '../utils/categoryClassifier';
-import { estimateCost } from '../utils/estimateCost';
-import DaySelector from './DaySelector';
+import React, { useState } from "react";
+import { useSavedPlacesStore } from "../store/savedPlacesStore";
+import { classifyCategory } from "../utils/categoryClassifier";
+import { estimateCost } from "../utils/estimateCost";
+import DaySelector from "./DaySelector";
 
 interface Props {
   place: google.maps.places.PlaceResult;
@@ -19,19 +19,21 @@ export default function AddPlaceButton({ place }: Props) {
 
     const add = (priceLevel: number | undefined | null) => {
       addPlace({
-        name: place.name || '名称未設定',
-        address: place.formatted_address || '',
+        name: place.name || "名称未設定",
+        address: place.formatted_address || "",
         coordinates: {
           lat: place.geometry!.location!.lat(),
           lng: place.geometry!.location!.lng(),
         },
         category,
-        memo: '',
+        memo: "",
         estimatedCost: estimateCost(priceLevel, category),
         photos: [],
         scheduledDay: selectedDay,
       });
-      alert(`候補地を追加しました${selectedDay ? ` (${selectedDay}日目に予定)` : ''}`);
+      alert(
+        `候補地を追加しました${selectedDay ? ` (${selectedDay}日目に予定)` : ""}`,
+      );
       setShowDaySelector(false);
       setSelectedDay(undefined);
     };
@@ -39,14 +41,19 @@ export default function AddPlaceButton({ place }: Props) {
     if (place.price_level !== undefined && place.price_level !== null) {
       add(place.price_level);
     } else if (place.place_id) {
-      const service = new google.maps.places.PlacesService(document.createElement('div'));
-      service.getDetails({ placeId: place.place_id, fields: ['price_level'] }, (detail, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && detail) {
-          add((detail as any).price_level);
-        } else {
-          add(undefined);
-        }
-      });
+      const service = new google.maps.places.PlacesService(
+        document.createElement("div"),
+      );
+      service.getDetails(
+        { placeId: place.place_id, fields: ["price_level"] },
+        (detail, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && detail) {
+            add((detail as any).price_level);
+          } else {
+            add(undefined);
+          }
+        },
+      );
     } else {
       add(undefined);
     }
@@ -67,16 +74,10 @@ export default function AddPlaceButton({ place }: Props) {
 
   return (
     <div className="mt-6 space-y-4">
-      <DaySelector
-        selectedDay={selectedDay}
-        onDayChange={setSelectedDay}
-      />
-      
+      <DaySelector selectedDay={selectedDay} onDayChange={setSelectedDay} />
+
       <div className="flex gap-2">
-        <button
-          onClick={handleAdd}
-          className="btn-primary flex-1"
-        >
+        <button onClick={handleAdd} className="btn-primary flex-1">
           追加する
         </button>
         <button
@@ -92,4 +93,4 @@ export default function AddPlaceButton({ place }: Props) {
       </div>
     </div>
   );
-} 
+}

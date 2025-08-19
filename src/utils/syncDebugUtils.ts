@@ -1,4 +1,4 @@
-import { TravelPlan } from '../types';
+import { TravelPlan } from "../types";
 
 /**
  * 同期処理の詳細なデバッグ情報を収集・分析するユーティリティ
@@ -7,7 +7,7 @@ import { TravelPlan } from '../types';
 export class SyncDebugUtils {
   private debugLogs: Array<{
     timestamp: number;
-    type: 'save' | 'receive' | 'conflict' | 'ignore' | 'delete';
+    type: "save" | "receive" | "conflict" | "ignore" | "delete";
     data: any;
   }> = [];
   private lastReceiveLogTime = 0;
@@ -16,27 +16,27 @@ export class SyncDebugUtils {
   /**
    * デバッグログを記録
    */
-  log(type: 'save' | 'receive' | 'conflict' | 'ignore' | 'delete', data: any) {
+  log(type: "save" | "receive" | "conflict" | "ignore" | "delete", data: any) {
     // RECEIVEログの出力頻度制限
-    if (type === 'receive') {
+    if (type === "receive") {
       const now = Date.now();
       if (now - this.lastReceiveLogTime < this.receiveLogThrottle) {
         return; // スロットリング中はログを出力しない
       }
       this.lastReceiveLogTime = now;
     }
-    
+
     const logEntry = {
       timestamp: Date.now(),
       type,
       data: {
         ...data,
         time: new Date().toISOString(),
-      }
+      },
     };
-    
+
     this.debugLogs.push(logEntry);
-    
+
     // ログが多くなりすぎないよう、最新100件のみ保持
     if (this.debugLogs.length > 100) {
       this.debugLogs = this.debugLogs.slice(-100);
@@ -61,46 +61,54 @@ export class SyncDebugUtils {
     syncSuccessRate: number;
     syncEfficiency: number;
   } {
-    const saves = this.debugLogs.filter(log => log.type === 'save');
-    const receives = this.debugLogs.filter(log => log.type === 'receive');
-    const conflicts = this.debugLogs.filter(log => log.type === 'conflict');
-    const ignores = this.debugLogs.filter(log => log.type === 'ignore');
-    const deletes = this.debugLogs.filter(log => log.type === 'delete');
+    const saves = this.debugLogs.filter((log) => log.type === "save");
+    const receives = this.debugLogs.filter((log) => log.type === "receive");
+    const conflicts = this.debugLogs.filter((log) => log.type === "conflict");
+    const ignores = this.debugLogs.filter((log) => log.type === "ignore");
+    const deletes = this.debugLogs.filter((log) => log.type === "delete");
 
     // 即座同期とバッチ同期を分類
-    const immediateSyncs = saves.filter(log => log.data.type === 'immediate_sync').length;
-    const batchSyncs = saves.filter(log => log.data.type === 'batch_sync').length;
+    const immediateSyncs = saves.filter(
+      (log) => log.data.type === "immediate_sync",
+    ).length;
+    const batchSyncs = saves.filter(
+      (log) => log.data.type === "batch_sync",
+    ).length;
 
-    const lastSaveTime = saves.length > 0 ? saves[saves.length - 1].timestamp : undefined;
-    const lastReceiveTime = receives.length > 0 ? receives[receives.length - 1].timestamp : undefined;
+    const lastSaveTime =
+      saves.length > 0 ? saves[saves.length - 1].timestamp : undefined;
+    const lastReceiveTime =
+      receives.length > 0 ? receives[receives.length - 1].timestamp : undefined;
 
     // 保存間隔の平均を計算
     const saveIntervals = [];
     for (let i = 1; i < saves.length; i++) {
       saveIntervals.push(saves[i].timestamp - saves[i - 1].timestamp);
     }
-    const averageTimeBetweenSaves = saveIntervals.length > 0 
-      ? saveIntervals.reduce((sum, interval) => sum + interval, 0) / saveIntervals.length 
-      : 0;
+    const averageTimeBetweenSaves =
+      saveIntervals.length > 0
+        ? saveIntervals.reduce((sum, interval) => sum + interval, 0) /
+          saveIntervals.length
+        : 0;
 
     // 受信間隔の平均を計算
     const receiveIntervals = [];
     for (let i = 1; i < receives.length; i++) {
       receiveIntervals.push(receives[i].timestamp - receives[i - 1].timestamp);
     }
-    const averageTimeBetweenReceives = receiveIntervals.length > 0 
-      ? receiveIntervals.reduce((sum, interval) => sum + interval, 0) / receiveIntervals.length 
-      : 0;
+    const averageTimeBetweenReceives =
+      receiveIntervals.length > 0
+        ? receiveIntervals.reduce((sum, interval) => sum + interval, 0) /
+          receiveIntervals.length
+        : 0;
 
     // 同期成功率を計算（競合解決された受信 / 総受信）
-    const syncSuccessRate = receives.length > 0 
-      ? (conflicts.length / receives.length) * 100 
-      : 0;
+    const syncSuccessRate =
+      receives.length > 0 ? (conflicts.length / receives.length) * 100 : 0;
 
     // 同期効率を計算（保存回数 / 受信回数）
-    const syncEfficiency = receives.length > 0 
-      ? (saves.length / receives.length) * 100 
-      : 0;
+    const syncEfficiency =
+      receives.length > 0 ? (saves.length / receives.length) * 100 : 0;
 
     return {
       totalSaves: saves.length,
@@ -139,15 +147,15 @@ export class SyncDebugUtils {
     timingIssues: Array<{ issue: string; count: number }>;
     positionUpdates: Array<{ type: string; count: number }>;
   } {
-    const ignores = this.debugLogs.filter(log => log.type === 'ignore');
-    const conflicts = this.debugLogs.filter(log => log.type === 'conflict');
+    const ignores = this.debugLogs.filter((log) => log.type === "ignore");
+    const conflicts = this.debugLogs.filter((log) => log.type === "conflict");
 
     // 無視された更新の理由を分析
-    const ignoredReasons = ignores.map(log => log.data.reason || 'unknown');
+    const ignoredReasons = ignores.map((log) => log.data.reason || "unknown");
     const ignoredUpdates = this.countOccurrences(ignoredReasons);
 
     // 競合パターンを分析
-    const conflictPatterns = conflicts.map(log => {
+    const conflictPatterns = conflicts.map((log) => {
       const localPlaces = log.data.originalPlaces || 0;
       const remotePlaces = log.data.remotePlaces || 0;
       const resolvedPlaces = log.data.resolvedPlaces || 0;
@@ -157,39 +165,45 @@ export class SyncDebugUtils {
 
     // タイミング問題を分析
     const timingIssues = [];
-    const saves = this.debugLogs.filter(log => log.type === 'save');
-    const receives = this.debugLogs.filter(log => log.type === 'receive');
+    const saves = this.debugLogs.filter((log) => log.type === "save");
+    const receives = this.debugLogs.filter((log) => log.type === "receive");
 
     // 保存直後の受信をチェック
     let rapidReceives = 0;
     for (let i = 0; i < saves.length; i++) {
       const saveTime = saves[i].timestamp;
-      const rapidReceive = receives.find(receive => 
-        Math.abs(receive.timestamp - saveTime) < 1000
+      const rapidReceive = receives.find(
+        (receive) => Math.abs(receive.timestamp - saveTime) < 1000,
       );
       if (rapidReceive) rapidReceives++;
     }
 
     if (rapidReceives > 0) {
-      timingIssues.push({ issue: '保存直後の受信', count: rapidReceives });
+      timingIssues.push({ issue: "保存直後の受信", count: rapidReceives });
     }
 
     // 位置情報更新の分析
     const positionUpdates = [];
-    const immediateSyncs = this.debugLogs.filter(log => 
-      log.type === 'save' && log.data.type === 'immediate_cloud_sync'
+    const immediateSyncs = this.debugLogs.filter(
+      (log) => log.type === "save" && log.data.type === "immediate_cloud_sync",
     );
-    
+
     if (immediateSyncs.length > 0) {
-      positionUpdates.push({ 
-        type: '即座同期実行', 
-        count: immediateSyncs.length 
+      positionUpdates.push({
+        type: "即座同期実行",
+        count: immediateSyncs.length,
       });
     }
 
     return {
-      ignoredUpdates: ignoredUpdates.map(([reason, count]) => ({ reason, count })),
-      conflictPatterns: conflictPatternCounts.map(([pattern, count]) => ({ pattern, count })),
+      ignoredUpdates: ignoredUpdates.map(([reason, count]) => ({
+        reason,
+        count,
+      })),
+      conflictPatterns: conflictPatternCounts.map(([pattern, count]) => ({
+        pattern,
+        count,
+      })),
       timingIssues,
       positionUpdates,
     };
@@ -200,7 +214,7 @@ export class SyncDebugUtils {
    */
   private countOccurrences(array: string[]): Array<[string, number]> {
     const counts = new Map<string, number>();
-    array.forEach(item => {
+    array.forEach((item) => {
       counts.set(item, (counts.get(item) || 0) + 1);
     });
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
@@ -216,13 +230,15 @@ export class SyncDebugUtils {
   /**
    * 詳細な同期レポートを出力
    */
-  printDetailedReport() {
-  }
+  printDetailedReport() {}
 
   /**
    * 同期品質を評価
    */
-  private evaluateSyncQuality(status: any, patterns: any): {
+  private evaluateSyncQuality(
+    status: any,
+    patterns: any,
+  ): {
     overall: string;
     issues: string[];
     recommendations: string[];
@@ -232,62 +248,71 @@ export class SyncDebugUtils {
 
     // 同期効率の評価
     if (status.syncEfficiency < 50) {
-      issues.push('同期効率が低い（保存頻度が少ない）');
-      recommendations.push('自動保存の間隔を短縮することを検討');
+      issues.push("同期効率が低い（保存頻度が少ない）");
+      recommendations.push("自動保存の間隔を短縮することを検討");
     }
 
     // 自己更新の無視が多い場合
-    const selfUpdateIgnores = patterns.ignoredUpdates.find((u: any) => u.reason === '自己更新');
+    const selfUpdateIgnores = patterns.ignoredUpdates.find(
+      (u: any) => u.reason === "自己更新",
+    );
     if (selfUpdateIgnores && selfUpdateIgnores.count > 10) {
-      issues.push('自己更新の無視が多すぎる');
-      recommendations.push('自己更新判定の閾値を調整することを検討');
+      issues.push("自己更新の無視が多すぎる");
+      recommendations.push("自己更新判定の閾値を調整することを検討");
     }
 
     // 保存直後の受信が多い場合
-    const rapidReceives = patterns.timingIssues.find((t: any) => t.issue === '保存直後の受信');
+    const rapidReceives = patterns.timingIssues.find(
+      (t: any) => t.issue === "保存直後の受信",
+    );
     if (rapidReceives && rapidReceives.count > 5) {
-      issues.push('保存直後の受信が頻繁に発生');
-      recommendations.push('リモート更新中の自動保存停止時間を延長することを検討');
+      issues.push("保存直後の受信が頻繁に発生");
+      recommendations.push(
+        "リモート更新中の自動保存停止時間を延長することを検討",
+      );
     }
 
     // 即座同期の効果を評価
-    const immediateSyncs = this.debugLogs.filter(log => 
-      log.type === 'save' && log.data.type === 'immediate_cloud_sync'
+    const immediateSyncs = this.debugLogs.filter(
+      (log) => log.type === "save" && log.data.type === "immediate_cloud_sync",
     );
-    const batchSyncs = this.debugLogs.filter(log => 
-      log.type === 'save' && log.data.type === 'batch_sync'
+    const batchSyncs = this.debugLogs.filter(
+      (log) => log.type === "save" && log.data.type === "batch_sync",
     );
-    
+
     if (immediateSyncs.length > 0) {
-      const immediateSuccessRate = immediateSyncs.filter(log => 
-        log.data.timestamp && log.data.places !== undefined
-      ).length / immediateSyncs.length * 100;
-      
+      const immediateSuccessRate =
+        (immediateSyncs.filter(
+          (log) => log.data.timestamp && log.data.places !== undefined,
+        ).length /
+          immediateSyncs.length) *
+        100;
+
       if (immediateSuccessRate < 80) {
-        issues.push('即座同期の成功率が低い');
-        recommendations.push('ネットワーク接続とFirebase設定を確認');
+        issues.push("即座同期の成功率が低い");
+        recommendations.push("ネットワーク接続とFirebase設定を確認");
       }
     }
 
     // 競合解決の頻度を評価
-    const conflicts = this.debugLogs.filter(log => log.type === 'conflict');
+    const conflicts = this.debugLogs.filter((log) => log.type === "conflict");
     if (conflicts.length > 20) {
-      issues.push('競合解決が頻繁に発生');
-      recommendations.push('同時編集の頻度を減らすか、競合解決ロジックを改善');
+      issues.push("競合解決が頻繁に発生");
+      recommendations.push("同時編集の頻度を減らすか、競合解決ロジックを改善");
     }
 
     // 全体的な評価
-    let overall = '良好';
+    let overall = "良好";
     if (issues.length > 2) {
-      overall = '要改善';
+      overall = "要改善";
     } else if (issues.length > 0) {
-      overall = '注意';
+      overall = "注意";
     }
 
     return {
       overall,
       issues,
-      recommendations
+      recommendations,
     };
   }
 
@@ -301,61 +326,69 @@ export class SyncDebugUtils {
     averageResponseTime: number;
     conflictsAfterImmediate: number;
   } {
-    const immediateSyncs = this.debugLogs.filter(log => 
-      log.type === 'save' && log.data.type === 'immediate_cloud_sync'
+    const immediateSyncs = this.debugLogs.filter(
+      (log) => log.type === "save" && log.data.type === "immediate_cloud_sync",
     );
-    const batchSyncs = this.debugLogs.filter(log => 
-      log.type === 'save' && log.data.type === 'batch_sync'
+    const batchSyncs = this.debugLogs.filter(
+      (log) => log.type === "save" && log.data.type === "batch_sync",
     );
-    
-    const immediateSuccessRate = immediateSyncs.length > 0 
-      ? immediateSyncs.filter(log => log.data.timestamp && log.data.places !== undefined).length / immediateSyncs.length * 100
-      : 0;
-    
+
+    const immediateSuccessRate =
+      immediateSyncs.length > 0
+        ? (immediateSyncs.filter(
+            (log) => log.data.timestamp && log.data.places !== undefined,
+          ).length /
+            immediateSyncs.length) *
+          100
+        : 0;
+
     // 即座同期後の競合発生回数を計算
     let conflictsAfterImmediate = 0;
     for (let i = 0; i < immediateSyncs.length; i++) {
       const syncTime = immediateSyncs[i].timestamp;
-      const conflictAfter = this.debugLogs.find(log => 
-        log.type === 'conflict' && 
-        log.timestamp > syncTime && 
-        log.timestamp < syncTime + 5000 // 5秒以内
+      const conflictAfter = this.debugLogs.find(
+        (log) =>
+          log.type === "conflict" &&
+          log.timestamp > syncTime &&
+          log.timestamp < syncTime + 5000, // 5秒以内
       );
       if (conflictAfter) conflictsAfterImmediate++;
     }
-    
+
     // 平均応答時間を計算（即座同期のタイムスタンプ差分）
     let totalResponseTime = 0;
     let responseTimeCount = 0;
     for (let i = 1; i < immediateSyncs.length; i++) {
-      const timeDiff = immediateSyncs[i].timestamp - immediateSyncs[i-1].timestamp;
-      if (timeDiff > 0 && timeDiff < 10000) { // 10秒以内の差分のみ
+      const timeDiff =
+        immediateSyncs[i].timestamp - immediateSyncs[i - 1].timestamp;
+      if (timeDiff > 0 && timeDiff < 10000) {
+        // 10秒以内の差分のみ
         totalResponseTime += timeDiff;
         responseTimeCount++;
       }
     }
-    const averageResponseTime = responseTimeCount > 0 ? totalResponseTime / responseTimeCount : 0;
-    
+    const averageResponseTime =
+      responseTimeCount > 0 ? totalResponseTime / responseTimeCount : 0;
+
     return {
       immediateSyncs: immediateSyncs.length,
       batchSyncs: batchSyncs.length,
       immediateSuccessRate,
       averageResponseTime,
-      conflictsAfterImmediate
+      conflictsAfterImmediate,
     };
   }
 
   /**
    * 詳細な同期レポートを生成
    */
-  generateDetailedReport(): void {
-  }
+  generateDetailedReport(): void {}
 
   /**
    * 同期品質評価と改善提案を生成
    */
   generateQualityReport(): {
-    overall: '良好' | '注意' | '要改善';
+    overall: "良好" | "注意" | "要改善";
     issues: string[];
     recommendations: string[];
   } {
@@ -363,56 +396,63 @@ export class SyncDebugUtils {
     const recommendations: string[] = [];
 
     // 保存直後の受信問題を分析
-    const immediateReceives = this.debugLogs.filter(log => 
-      log.type === 'receive' && 
-      log.data.timeDiff && 
-      log.data.timeDiff < 5000 // 5秒以内の受信
+    const immediateReceives = this.debugLogs.filter(
+      (log) =>
+        log.type === "receive" && log.data.timeDiff && log.data.timeDiff < 5000, // 5秒以内の受信
     ).length;
 
     if (immediateReceives > 5) {
-      issues.push('保存直後の受信が頻繁に発生');
-      recommendations.push('リモート更新中の自動保存停止時間を延長することを検討');
+      issues.push("保存直後の受信が頻繁に発生");
+      recommendations.push(
+        "リモート更新中の自動保存停止時間を延長することを検討",
+      );
     }
 
     // 競合解決の成功率を分析
-    const totalConflicts = this.debugLogs.filter(log => log.type === 'conflict').length;
-    const successfulConflicts = this.debugLogs.filter(log => 
-      log.type === 'conflict' && 
-      log.data.hasChanges === false
+    const totalConflicts = this.debugLogs.filter(
+      (log) => log.type === "conflict",
+    ).length;
+    const successfulConflicts = this.debugLogs.filter(
+      (log) => log.type === "conflict" && log.data.hasChanges === false,
     ).length;
 
     if (totalConflicts > 0 && successfulConflicts / totalConflicts < 0.8) {
-      issues.push('競合解決の成功率が低い');
-      recommendations.push('競合解決ロジックの見直しを検討');
+      issues.push("競合解決の成功率が低い");
+      recommendations.push("競合解決ロジックの見直しを検討");
     }
 
     // 位置情報更新の分析を追加
-    const positionUpdates = this.debugLogs.filter(log => 
-      log.type === 'conflict' && 
-      log.data.positionUpdates > 0
+    const positionUpdates = this.debugLogs.filter(
+      (log) => log.type === "conflict" && log.data.positionUpdates > 0,
     ).length;
 
     if (positionUpdates > 0) {
-      issues.push('位置情報の競合が発生');
-      recommendations.push('位置情報更新時の同期タイミングを最適化');
+      issues.push("位置情報の競合が発生");
+      recommendations.push("位置情報更新時の同期タイミングを最適化");
     }
 
     // 同期効率の分析
-    const saveCount = this.debugLogs.filter(log => log.type === 'save').length;
-    const receiveCount = this.debugLogs.filter(log => log.type === 'receive').length;
-    const ignoreCount = this.debugLogs.filter(log => log.type === 'ignore').length;
+    const saveCount = this.debugLogs.filter(
+      (log) => log.type === "save",
+    ).length;
+    const receiveCount = this.debugLogs.filter(
+      (log) => log.type === "receive",
+    ).length;
+    const ignoreCount = this.debugLogs.filter(
+      (log) => log.type === "ignore",
+    ).length;
 
     if (saveCount > 0 && (receiveCount + ignoreCount) / saveCount > 2) {
-      issues.push('同期効率が低い（受信・無視が保存より多い）');
-      recommendations.push('自己更新判定の調整を検討');
+      issues.push("同期効率が低い（受信・無視が保存より多い）");
+      recommendations.push("自己更新判定の調整を検討");
     }
 
     // 全体的な評価
-    let overall: '良好' | '注意' | '要改善' = '良好';
+    let overall: "良好" | "注意" | "要改善" = "良好";
     if (issues.length >= 3) {
-      overall = '要改善';
+      overall = "要改善";
     } else if (issues.length >= 1) {
-      overall = '注意';
+      overall = "注意";
     }
 
     return { overall, issues, recommendations };
@@ -422,4 +462,4 @@ export class SyncDebugUtils {
 /**
  * グローバルなデバッグユーティリティインスタンス
  */
-export const syncDebugUtils = new SyncDebugUtils(); 
+export const syncDebugUtils = new SyncDebugUtils();

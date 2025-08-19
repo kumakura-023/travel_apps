@@ -1,6 +1,6 @@
-import { Place } from '../../types';
-import { PlaceRepository } from '../../interfaces/PlaceRepository';
-import { v4 as uuidv4 } from 'uuid';
+import { Place } from "../../types";
+import { PlaceRepository } from "../../interfaces/PlaceRepository";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * 場所データの検証エラー
@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class PlaceValidationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'PlaceValidationError';
+    this.name = "PlaceValidationError";
   }
 }
 
@@ -28,7 +28,7 @@ export interface IEventBus {
 export class PlaceManagementService {
   constructor(
     private placeRepository: PlaceRepository,
-    private eventBus: IEventBus
+    private eventBus: IEventBus,
   ) {}
 
   /**
@@ -37,19 +37,19 @@ export class PlaceManagementService {
   async addPlace(data: Partial<Place>): Promise<Place> {
     // バリデーション
     this.validatePlaceData(data);
-    
+
     // 場所を作成
     const placeData = this.createPlace(data);
-    
+
     // リポジトリに追加
     const place = this.placeRepository.add(placeData);
-    
+
     // 永続化
     await this.placeRepository.save();
-    
+
     // イベントを発行
-    this.eventBus.emit('place:added', place);
-    
+    this.eventBus.emit("place:added", place);
+
     return place;
   }
 
@@ -59,17 +59,17 @@ export class PlaceManagementService {
   async updatePlace(id: string, update: Partial<Place>): Promise<Place> {
     // 更新を実行
     const updatedPlace = this.placeRepository.update(id, update);
-    
+
     if (!updatedPlace) {
       throw new Error(`Place not found: ${id}`);
     }
-    
+
     // 永続化
     await this.placeRepository.save();
-    
+
     // イベントを発行
-    this.eventBus.emit('place:updated', updatedPlace);
-    
+    this.eventBus.emit("place:updated", updatedPlace);
+
     return updatedPlace;
   }
 
@@ -79,9 +79,9 @@ export class PlaceManagementService {
   async deletePlace(id: string): Promise<void> {
     // 論理削除を実行
     await this.updatePlace(id, { deleted: true });
-    
+
     // イベントを発行
-    this.eventBus.emit('place:deleted', { id });
+    this.eventBus.emit("place:deleted", { id });
   }
 
   /**
@@ -104,14 +104,14 @@ export class PlaceManagementService {
    */
   async clearPlaces(): Promise<void> {
     const places = await this.getAllPlaces();
-    
+
     // すべての場所を論理削除
     for (const place of places) {
       await this.updatePlace(place.id, { deleted: true });
     }
-    
+
     // イベントを発行
-    this.eventBus.emit('places:cleared');
+    this.eventBus.emit("places:cleared");
   }
 
   /**
@@ -119,32 +119,34 @@ export class PlaceManagementService {
    */
   private validatePlaceData(data: Partial<Place>): void {
     if (!data.coordinates) {
-      throw new PlaceValidationError('Coordinates are required');
+      throw new PlaceValidationError("Coordinates are required");
     }
-    
-    if (!data.name || data.name.trim() === '') {
-      throw new PlaceValidationError('Name is required');
+
+    if (!data.name || data.name.trim() === "") {
+      throw new PlaceValidationError("Name is required");
     }
-    
+
     if (data.coordinates.lat < -90 || data.coordinates.lat > 90) {
-      throw new PlaceValidationError('Invalid latitude');
+      throw new PlaceValidationError("Invalid latitude");
     }
-    
+
     if (data.coordinates.lng < -180 || data.coordinates.lng > 180) {
-      throw new PlaceValidationError('Invalid longitude');
+      throw new PlaceValidationError("Invalid longitude");
     }
   }
 
   /**
    * 場所を作成
    */
-  private createPlace(data: Partial<Place>): Omit<Place, 'id' | 'createdAt' | 'updatedAt'> {
+  private createPlace(
+    data: Partial<Place>,
+  ): Omit<Place, "id" | "createdAt" | "updatedAt"> {
     return {
-      name: data.name || '',
-      address: data.address || '',
+      name: data.name || "",
+      address: data.address || "",
       coordinates: data.coordinates!,
-      category: data.category || 'other',
-      memo: data.memo || '',
+      category: data.category || "other",
+      memo: data.memo || "",
       estimatedCost: data.estimatedCost || 0,
       photos: data.photos || [],
       labelHidden: data.labelHidden ?? true,
@@ -156,7 +158,7 @@ export class PlaceManagementService {
       labelHeight: data.labelHeight,
       labelColor: data.labelColor,
       labelFontFamily: data.labelFontFamily,
-      deleted: data.deleted
+      deleted: data.deleted,
     };
   }
 }

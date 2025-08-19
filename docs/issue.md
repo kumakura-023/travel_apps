@@ -1,6 +1,5 @@
 各UIの名称はUI_name.mdを参照してください。
 
-
 修正内容（v1）
 ・mapを縮小したときのオーバーレイが小さい。オーバーレイの下限を現状のサイズの2倍にしてください。
 ・mapを縮小したとき、ある閾値を超えるとオーバーレイが非表示になり、色がついた円のみ保存地点に表示されます。このとき、候補地のカテゴリと名称だけわかるような新しいオーバーレイを実装してください。
@@ -13,28 +12,28 @@
 ・最後の位置でアプリを起動する機能が機能していません。アプリをリロードするたびに東京周辺に戻ってしまいます。
 ・候補地を追加すると以下のエラーが出るようになってしまいました。
 vendor-DWvC8KHc.js:32 ReferenceError: isExpanded is not defined
-    at bI (index-ChLh2yuA.js:3696:4564)
-    at mo (vendor-DWvC8KHc.js:30:16959)
-    at Ha (vendor-DWvC8KHc.js:32:43694)
-    at Va (vendor-DWvC8KHc.js:32:39499)
-    at ud (vendor-DWvC8KHc.js:32:39430)
-    at Zr (vendor-DWvC8KHc.js:32:39289)
-    at Mu (vendor-DWvC8KHc.js:32:35710)
-    at Ii (vendor-DWvC8KHc.js:32:36511)
-    at pt (vendor-DWvC8KHc.js:30:3258)
-    at vendor-DWvC8KHc.js:32:34060
+at bI (index-ChLh2yuA.js:3696:4564)
+at mo (vendor-DWvC8KHc.js:30:16959)
+at Ha (vendor-DWvC8KHc.js:32:43694)
+at Va (vendor-DWvC8KHc.js:32:39499)
+at ud (vendor-DWvC8KHc.js:32:39430)
+at Zr (vendor-DWvC8KHc.js:32:39289)
+at Mu (vendor-DWvC8KHc.js:32:35710)
+at Ii (vendor-DWvC8KHc.js:32:36511)
+at pt (vendor-DWvC8KHc.js:30:3258)
+at vendor-DWvC8KHc.js:32:34060
 ku @ vendor-DWvC8KHc.js:32Understand this error
 index-ChLh2yuA.js:3829 Uncaught error: ReferenceError: isExpanded is not defined
-    at bI (index-ChLh2yuA.js:3696:4564)
-    at mo (vendor-DWvC8KHc.js:30:16959)
-    at Ha (vendor-DWvC8KHc.js:32:43694)
-    at Va (vendor-DWvC8KHc.js:32:39499)
-    at ud (vendor-DWvC8KHc.js:32:39430)
-    at Zr (vendor-DWvC8KHc.js:32:39289)
-    at Mu (vendor-DWvC8KHc.js:32:35710)
-    at Ii (vendor-DWvC8KHc.js:32:36511)
-    at pt (vendor-DWvC8KHc.js:30:3258)
-    at vendor-DWvC8KHc.js:32:34060 Object
+at bI (index-ChLh2yuA.js:3696:4564)
+at mo (vendor-DWvC8KHc.js:30:16959)
+at Ha (vendor-DWvC8KHc.js:32:43694)
+at Va (vendor-DWvC8KHc.js:32:39499)
+at ud (vendor-DWvC8KHc.js:32:39430)
+at Zr (vendor-DWvC8KHc.js:32:39289)
+at Mu (vendor-DWvC8KHc.js:32:35710)
+at Ii (vendor-DWvC8KHc.js:32:36511)
+at pt (vendor-DWvC8KHc.js:30:3258)
+at vendor-DWvC8KHc.js:32:34060 Object
 
     修正内容 v3
     各UIの名称は/UI_name.mdを確認してください。
@@ -79,7 +78,7 @@ Sw @ index-CDAkFli6.js:3265
 Rw @ index-CDAkFli6.js:3265
 Mw @ index-CDAkFli6.js:3280
 initAndGetManager @ index-CDAkFli6.js:3325
-_initialize @ index-CDAkFli6.js:3325
+\_initialize @ index-CDAkFli6.js:3325
 (anonymous) @ index-CDAkFli6.js:3160
 execute @ index-CDAkFli6.js:3160
 execute @ index-CDAkFli6.js:3190
@@ -91,7 +90,7 @@ await in initializeCurrentUser
 (anonymous) @ index-CDAkFli6.js:2740
 Promise.then
 queue @ index-CDAkFli6.js:2740
-_initializeWithPersistence @ index-CDAkFli6.js:2740
+\_initializeWithPersistence @ index-CDAkFli6.js:2740
 Nb @ index-CDAkFli6.js:2770
 (anonymous) @ index-CDAkFli6.js:3355
 getOrInitializeService @ index-CDAkFli6.js:170
@@ -103,9 +102,9 @@ voyagesketch.vercel.app/:1 <meta name="apple-mobile-web-app-capable" content="ye
 index-CDAkFli6.js:3856 PWA install prompt available
 voyagesketch.vercel.app/:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
 index-CDAkFli6.js:3696 リダイレクト認証エラー: FirebaseError: Firebase: Error (auth/internal-error).
-    at Jl (index-CDAkFli6.js:2365:783)
-    at bt (index-CDAkFli6.js:2365:68)
-    at r.onerror (index-CDAkFli6.js:3370:1023)
+at Jl (index-CDAkFli6.js:2365:783)
+at bt (index-CDAkFli6.js:2365:68)
+at r.onerror (index-CDAkFli6.js:3370:1023)
 
     このエラーを解決してください。
 
@@ -115,10 +114,8 @@ index-CDAkFli6.js:3696 リダイレクト認証エラー: FirebaseError: Firebas
 修正内容 v9
 タスク20で実装したアプリ起動時の開始位置保存ですが、機能していません。それぞれのユーザがそれぞれの最後の保存地点から再開するようになっていて、共有がされていません。
 
-
 修正内容 v10
 ・同一アカウントで、異なるデバイスA,Bにログインしている状態で、Aからプランの名前、削除、追加を行ったときBにその変更が反映されません。修正してください。
-
 
 修正内容 v11
 タスク20で実装した、プラン参加者全員に最後に追加された候補地・メモを記憶し、アプリ更新時・立ち上げ時に記憶した地点でmapが開かれるという機能が確認できません。原因を特定して修正してください。
@@ -127,12 +124,12 @@ index-CDAkFli6.js:3696 リダイレクト認証エラー: FirebaseError: Firebas
 プランを削除した後リロードすると削除したプランが復活する.
 削除ボタン：PlanNameEditModal内、プラン管理画面の「このプランを削除する」ボタン
 　　　//詳細
-        前提条件・・・プランA、プランBが保存されていて、プランAがアクティブ
-        削除実行後、プランBがアクティブになる。その後
-                                    何もせずリロード→プランが復活。
-                                    プランBに候補地を追加してからリロード→プランが正常に削除される。
-     //分析
-        クラウド同期のトリガが発行されていない可能性がある。
+前提条件・・・プランA、プランBが保存されていて、プランAがアクティブ
+削除実行後、プランBがアクティブになる。その後
+何もせずリロード→プランが復活。
+プランBに候補地を追加してからリロード→プランが正常に削除される。
+//分析
+クラウド同期のトリガが発行されていない可能性がある。
 
 修正内容 v13
 プランを削除した後必ず新しいプランが作られるので、そのバグを治して。
@@ -155,15 +152,15 @@ travel_app\docs\UI_name.md参照。PlaceCircleBackground、PlaceCircle UIを削�
 
 修正内容 v19
 ・新規機能　ほかのユーザが追加した候補地の確認
-    詳細　あるプランに対してほかのユーザが候補地を追加したときに、その候補地の内容の確認が簡単にできるようにしたい。
-    　　　PlaceSimpleOverlayみたいなUIで「確認」ボタンを押すまで残るみたいな感じ。TabNavigationにアクセス用のアイコンを追加して
-        　そのモーダルを開くと確認できるようにしたい。
+詳細　あるプランに対してほかのユーザが候補地を追加したときに、その候補地の内容の確認が簡単にできるようにしたい。
+　　　PlaceSimpleOverlayみたいなUIで「確認」ボタンを押すまで残るみたいな感じ。TabNavigationにアクセス用のアイコンを追加して
+　そのモーダルを開くと確認できるようにしたい。
 
 修正内容 v20
 ・招待URLから参加すると以下のログが出力され、招待されたはずのプランに参加できない。招待URLから参加したとき、プラン一覧にプランが追加され、ゲスト側のユーザもいつでもアクセスできるようにしてください。
 index-f3hn6yqQ.js:3472 [planListService] Error listening to plans: FirebaseError: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/voyagesketch/firestore/ind…2luZGV4ZXMvXxABGg0KCW1lbWJlcklkcxgBGg0KCXVwZGF0ZWRBdBACGgwKCF9fbmFtZV9fEAI
 
-index-f3hn6yqQ.js:3472 [planListService] Firestore index required. Please create the composite index for: 
+index-f3hn6yqQ.js:3472 [planListService] Firestore index required. Please create the composite index for:
 Object
 index-f3hn6yqQ.js:3472 [planListService] You can create the index by visiting the URL in the error message or Firebase Console
 index-f3hn6yqQ.js:3472 [planListStore] Error with sorted query: FirebaseError: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/voyagesketch/firestore/ind…2luZGV4ZXMvXxABGg0KCW1lbWJlcklkcxgBGg0KCXVwZGF0ZWRBdBACGgwKCF9fbmFtZV9fEAI

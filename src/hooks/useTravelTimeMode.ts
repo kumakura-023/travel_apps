@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { TravelCircle, TravelMode, LatLng } from '../types/travelTime';
-import { v4 as uuidv4 } from 'uuid';
+import { create } from "zustand";
+import { TravelCircle, TravelMode, LatLng } from "../types/travelTime";
+import { v4 as uuidv4 } from "uuid";
 
 interface TravelTimeModeState {
   // 起点選択モードか
@@ -28,7 +28,7 @@ const MAX_CIRCLES = 5;
 
 export const useTravelTimeMode = create<TravelTimeModeState>((set, get) => ({
   selectingOrigin: false,
-  mode: 'walking',
+  mode: "walking",
   minutes: 15,
   circles: [],
   activeCircleId: null,
@@ -50,16 +50,17 @@ export const useTravelTimeMode = create<TravelTimeModeState>((set, get) => ({
     set((s) => {
       const filteredCircles = s.circles.filter((c) => c.id !== id);
       console.log(`Circles: ${s.circles.length} -> ${filteredCircles.length}`);
-      
+
       // 削除対象がactiveCircleIdだった場合はクリア
-      const newActiveCircleId = s.activeCircleId === id ? null : s.activeCircleId;
-      
+      const newActiveCircleId =
+        s.activeCircleId === id ? null : s.activeCircleId;
+
       return {
         circles: filteredCircles,
         activeCircleId: newActiveCircleId,
       };
     });
-    
+
     // 削除後の状態を確認
     setTimeout(() => {
       const state = get();
@@ -70,20 +71,20 @@ export const useTravelTimeMode = create<TravelTimeModeState>((set, get) => ({
   setMinutes: (minutes) => set({ minutes }),
   setActiveCircle: (id) => set({ activeCircleId: id }),
   clearAll: () => {
-    console.log('clearAll called');
+    console.log("clearAll called");
     const currentState = get();
     console.log(`Clearing ${currentState.circles.length} circles`);
-    
-    set({ 
-      circles: [], 
-      activeCircleId: null, 
+
+    set({
+      circles: [],
+      activeCircleId: null,
       selectingOrigin: false,
     });
-    
+
     // クリア後の確認
     setTimeout(() => {
       const state = get();
       console.log(`After clearAll - circles: ${state.circles.length}`);
     }, 100);
   },
-})); 
+}));

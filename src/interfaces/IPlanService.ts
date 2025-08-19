@@ -1,4 +1,4 @@
-import { TravelPlan, Place, MapLabel } from '../types';
+import { TravelPlan, Place, MapLabel } from "../types";
 
 /**
  * プラン作成データ
@@ -11,7 +11,7 @@ export interface PlanData {
 }
 
 /**
- * プラン更新データ  
+ * プラン更新データ
  */
 export interface PlanUpdateData {
   name?: string;

@@ -1,9 +1,11 @@
 # タスク33:メモ追加時の同期エラー修正
 
 ## 問題の概要
+
 TabNavigationのメモボタンをクリックしてメモ配置モードでマップ上をクリックすると、メモが追加されない。
 
 ## 原因分析（ログから確実に特定）
+
 1. error.mdのログを見ると、実際にはメモ（label）は正常に作成されている
    - `[labelsStore] Saving last action position for new label` というログがある
    - labelIdも生成されている: `faa896d8-f989-4e66-9583-fad08a9e6b79`
@@ -13,6 +15,7 @@ TabNavigationのメモボタンをクリックしてメモ配置モードでマ�
    - 依存配列も空`[]`になっており、他のuseEffectと異なる
 
 ## 根本原因
+
 メモは一時的にローカルのlabelsStoreとplanStoreに追加されるが、Firestoreに保存されないため、次の同期タイミングでFirestoreの古いデータに上書きされて消えてしまう。
 
 ## 修正内容
@@ -22,6 +25,7 @@ TabNavigationのメモボタンをクリックしてメモ配置モードでマ�
 #### 修正箇所: 70-83行目のsetOnLabelAdded処理
 
 **修正前:**
+
 ```typescript
 useEffect(() => {
   const { setOnLabelAdded } = useLabelsStore.getState();
@@ -40,6 +44,7 @@ useEffect(() => {
 ```
 
 **修正後:**
+
 ```typescript
 useEffect(() => {
   const { setOnLabelAdded } = useLabelsStore.getState();
@@ -54,18 +59,18 @@ useEffect(() => {
       usePlanStore.getState().setPlan(planToSave);
       // 新しい同期システムがある場合はそれを使用、なければ従来の方法
       if (saveWithSyncManager) {
-        saveWithSyncManager(planToSave, 'place_added'); // 注: operationTypeにlabel_addedがない場合はplace_addedを使用
+        saveWithSyncManager(planToSave, "place_added"); // 注: operationTypeにlabel_addedがない場合はplace_addedを使用
       } else {
         saveImmediately(planToSave);
         saveImmediatelyCloud(planToSave);
       }
     }
-    syncDebugUtils.log('save', {
-      type: 'immediate_sync',
-      reason: 'label_added',
+    syncDebugUtils.log("save", {
+      type: "immediate_sync",
+      reason: "label_added",
       labelText: newLabel.text,
       labelId: newLabel.id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   });
 }, [plan, saveImmediately, saveImmediatelyCloud, saveWithSyncManager]);
@@ -76,16 +81,19 @@ useEffect(() => {
 `saveWithSyncManager`のoperationTypeにlabel操作を追加することを推奨：
 
 **修正前（12行目）:**
+
 ```typescript
 saveWithSyncManager?: (plan: TravelPlan, operationType?: 'place_added' | 'place_deleted' | 'place_updated' | 'memo_updated' | 'plan_updated') => void
 ```
 
 **修正後:**
+
 ```typescript
 saveWithSyncManager?: (plan: TravelPlan, operationType?: 'place_added' | 'place_deleted' | 'place_updated' | 'memo_updated' | 'plan_updated' | 'label_added' | 'label_updated' | 'label_deleted') => void
 ```
 
 そして、各label操作で適切なoperationTypeを使用：
+
 - labelAdded: `'label_added'`
 - labelUpdated: `'label_updated'` (現在は'place_updated'を使用)
 - labelDeleted: `'label_deleted'` (現在は'place_updated'を使用)
@@ -114,15 +122,15 @@ saveWithSyncManager?: (plan: TravelPlan, operationType?: 'place_added' | 'place_
 # タスク34: メモの位置移動・サイズ変更の同期エラー修正
 
 ## 問題の概要
+
 メモの追加は同期されるようになったが、メモの位置移動やサイズ変更が同期されない。
 
 ## 原因分析（コードから確実に特定）
+
 1. **MapLabel型の定義**（src/types/index.ts:78行目）
    - `status?: 'new' | 'synced'` というフィールドがある
-   
 2. **新規メモ作成時**（src/store/labelsStore.ts:39行目）
    - `status: 'new'` で作成される
-   
 3. **メモ更新時の同期条件**（src/hooks/usePlanSyncEvents.ts:110行目）
    - `if (updatedLabel.status === 'synced')` という条件がある
    - つまり、statusが'synced'のメモのみが同期される
@@ -134,6 +142,7 @@ saveWithSyncManager?: (plan: TravelPlan, operationType?: 'place_added' | 'place_
    - 結果、位置やサイズの変更がFirestoreに保存されない
 
 ## 根本原因
+
 メモのstatusが一度も'synced'に更新されないため、位置やサイズの変更が同期されない。
 
 ## 修正内容
@@ -157,7 +166,7 @@ useEffect(() => {
       // statusの条件を削除して、常に同期する
       // 新しい同期システムがある場合はそれを使用、なければ従来の方法
       if (saveWithSyncManager) {
-        saveWithSyncManager(planToSave, 'label_updated');
+        saveWithSyncManager(planToSave, "label_updated");
       } else {
         saveImmediately(planToSave);
         saveImmediatelyCloud(planToSave);
@@ -187,16 +196,16 @@ useEffect(() => {
       usePlanStore.getState().setPlan(planToSave);
       // 新しい同期システムがある場合はそれを使用、なければ従来の方法
       if (saveWithSyncManager) {
-        saveWithSyncManager(planToSave, 'label_added');
+        saveWithSyncManager(planToSave, "label_added");
       } else {
         saveImmediately(planToSave);
         saveImmediatelyCloud(planToSave);
       }
-      
+
       // 保存成功後、statusを'synced'に更新
       setTimeout(() => {
         const { updateLabel } = useLabelsStore.getState();
-        updateLabel(newLabel.id, { status: 'synced' });
+        updateLabel(newLabel.id, { status: "synced" });
       }, 100);
     }
     // 以下省略
@@ -209,6 +218,7 @@ useEffect(() => {
 **方法1（status条件の削除）を推奨します。**
 
 理由：
+
 1. シンプルで確実
 2. status管理の複雑さを避けられる
 3. 現状、statusフィールドは他で使用されていない様子
@@ -235,6 +245,7 @@ useEffect(() => {
 ## 修正の影響範囲
 
 この修正は、メモ（ラベル）の更新処理のみに影響します。
+
 - メモの追加機能には影響しない（すでに修正済み）
 - メモの削除機能には影響しない（別のuseEffectで処理）
 - 候補地の操作には影響しない
@@ -242,21 +253,25 @@ useEffect(() => {
 # タスク35: メモ操作中の同期競合とマップ動作問題の修正
 
 ## 問題の概要
+
 1. メモの操作（ドラッグ・リサイズ）中に同期が発生し、操作途中で前の状態に戻ってしまう
 2. メモの操作中にマップが動いてしまい、UXが悪い
 
 ## 原因分析（コードから確実に特定）
 
 ### 1. 同期タイミングの問題
+
 - **頻繁な更新**: LabelOverlay.tsx（60、72行目）で、マウス移動のたびにonMove/onResizeが呼ばれる
 - **即座の同期**: SyncManager.ts（36行目）で`debouncedOperations`に`label_updated`が含まれていない
 - **全体の上書き**: useRealtimePlanListener.ts（153、157行目）で、同期時にラベル全体を上書きする
 
-### 2. マップ動作の問題  
+### 2. マップ動作の問題
+
 - **静的な設定**: MapContainer.tsx（79行目）で`gestureHandling`は初期化時のみ設定される
 - **動的更新なし**: メモ操作中にisMapInteractionEnabledが変更されても、GoogleMapのオプションは更新されない
 
 ## 根本原因
+
 1. メモ操作中の頻繁な同期により、他のクライアントのデータで操作中の位置が上書きされる
 2. GoogleMapのgestureHandlingが動的に更新されないため、メモ操作中もマップが動く
 
@@ -265,6 +280,7 @@ useEffect(() => {
 ### 修正案1: 操作終了時のみ同期する（推奨）
 
 **1. MapOverlayManager.tsxの修正（94-103行目）:**
+
 ```typescript
 // 修正前
 {labels.map((l) => (
@@ -308,6 +324,7 @@ useEffect(() => {
 **2. LabelOverlay.tsxの修正:**
 
 propsインターフェースに追加（10-16行目）:
+
 ```typescript
 interface Props {
   label: MapLabel;
@@ -321,6 +338,7 @@ interface Props {
 ```
 
 handlePointerUp関数の修正（77-98行目）:
+
 ```typescript
 const handlePointerUp = () => {
   isPointerDownRef.current = false;
@@ -347,6 +365,7 @@ const handlePointerUp = () => {
 ```
 
 **3. labelsStore.tsの修正（updateLabel関数）:**
+
 ```typescript
 updateLabel: (id, update, localOnly = false) => {
   set((s) => {
@@ -374,12 +393,13 @@ updateLabel: (id, update, localOnly = false) => {
 **MapContainer.tsxの修正:**
 
 useEffectを追加して、isMapInteractionEnabledの変更を監視:
+
 ```typescript
 // 79行目の後に追加
 useEffect(() => {
   if (map) {
     map.setOptions({
-      gestureHandling: isMapInteractionEnabled ? 'greedy' : 'none'
+      gestureHandling: isMapInteractionEnabled ? "greedy" : "none",
     });
   }
 }, [map, isMapInteractionEnabled]);
@@ -388,6 +408,7 @@ useEffect(() => {
 ### 修正案3: デバウンス対応（代替案）
 
 **SyncManager.tsの修正（36-40行目）:**
+
 ```typescript
 debouncedOperations: ['memo_updated', 'place_updated', 'label_updated'],
 operationDebounceDelays: {
@@ -402,6 +423,7 @@ operationDebounceDelays: {
 **修正案1（操作終了時のみ同期）を推奨します。**
 
 理由：
+
 1. ユーザー体験が最も良い（操作中は滑らか、終了時に確実に保存）
 2. ネットワークトラフィックを削減
 3. 同期競合を根本的に解決
@@ -435,17 +457,21 @@ operationDebounceDelays: {
 # タスク36: メモ操作終了時の位置・サイズリセット問題の修正
 
 ## 問題の概要
+
 メモの操作（ドラッグ・リサイズ）が終了した瞬間に、操作前の状態に戻ってしまう。操作中は正しく追従するが、手を離すと元の位置・サイズに戻る。
 
 ## 原因分析（コードから確実に特定）
 
 ### LabelOverlay.tsx のhandlePointerUp関数（80-95行目）の問題
+
 1. **ドラッグ終了時（87行目）**：
+
    ```typescript
-   const latLng = map?.getProjection()?.fromPointToLatLng(
-     interactionStartRef.current.world!
-   );
+   const latLng = map
+     ?.getProjection()
+     ?.fromPointToLatLng(interactionStartRef.current.world!);
    ```
+
    - `interactionStartRef.current.world`は**操作開始時の位置**
    - 操作中に更新されていない
    - 結果：操作開始時の位置に戻ってしまう
@@ -454,14 +480,16 @@ operationDebounceDelays: {
    ```typescript
    onResizeEnd({
      width: label.width,
-     height: label.height
+     height: label.height,
    });
    ```
+
    - `label.width`と`label.height`は**propsの値**
    - ローカル更新（localOnly=true）なので、propsは古い値のまま
    - 結果：操作開始時のサイズに戻ってしまう
 
 ## 根本原因
+
 操作終了時に渡す位置・サイズが、操作中に更新した最新の値ではなく、操作開始時の値を使っているため。
 
 ## 修正内容
@@ -469,31 +497,33 @@ operationDebounceDelays: {
 ### LabelOverlay.tsx の修正
 
 **1. 現在の位置・サイズを保持するrefを追加（29行目の後）:**
+
 ```typescript
 // 現在の位置とサイズを保持
 const currentPositionRef = useRef<{ lat: number; lng: number }>(label.position);
 const currentSizeRef = useRef<{ width: number; height: number }>({
   width: label.width,
-  height: label.height
+  height: label.height,
 });
 ```
 
 **2. handlePointerMove関数の修正（55-77行目）:**
+
 ```typescript
 const handlePointerMove = (ev: PointerEvent) => {
-  if (mode === 'resizing') {
+  if (mode === "resizing") {
     ev.stopPropagation();
     const dx = ev.clientX - interactionStartRef.current.clientX;
     const dy = ev.clientY - interactionStartRef.current.clientY;
     const newWidth = Math.max(60, interactionStartRef.current.width + dx);
     const newHeight = Math.max(28, interactionStartRef.current.height + dy);
-    
+
     // 現在のサイズを保存
     currentSizeRef.current = { width: newWidth, height: newHeight };
-    
+
     onResize({ width: newWidth, height: newHeight });
     interactionStartRef.current.moved = true;
-  } else if (mode === 'dragging') {
+  } else if (mode === "dragging") {
     if (!map) return;
     const proj = map.getProjection();
     if (!proj || !interactionStartRef.current.world) return;
@@ -502,16 +532,16 @@ const handlePointerMove = (ev: PointerEvent) => {
     const dx = (ev.clientX - interactionStartRef.current.clientX) / scale;
     const dy = (ev.clientY - interactionStartRef.current.clientY) / scale;
     const newWorld = new google.maps.Point(
-      interactionStartRef.current.world.x + dx, 
-      interactionStartRef.current.world.y + dy
+      interactionStartRef.current.world.x + dx,
+      interactionStartRef.current.world.y + dy,
     );
     const latLng = proj.fromPointToLatLng(newWorld);
     if (latLng) {
       const newPosition = { lat: latLng.lat(), lng: latLng.lng() };
-      
+
       // 現在の位置を保存
       currentPositionRef.current = newPosition;
-      
+
       onMove(newPosition);
     }
     interactionStartRef.current.moved = true;
@@ -520,34 +550,36 @@ const handlePointerMove = (ev: PointerEvent) => {
 ```
 
 **3. handlePointerUp関数の修正（80-102行目）:**
+
 ```typescript
 const handlePointerUp = () => {
   isPointerDownRef.current = false;
   // 操作終了時の処理
   if (interactionStartRef.current.moved) {
-    if (mode === 'dragging' && onMoveEnd) {
+    if (mode === "dragging" && onMoveEnd) {
       // 保存された最新の位置で同期
       onMoveEnd(currentPositionRef.current);
-    } else if (mode === 'resizing' && onResizeEnd) {
+    } else if (mode === "resizing" && onResizeEnd) {
       // 保存された最新のサイズで同期
       onResizeEnd(currentSizeRef.current);
       // On mobile, end editing mode after resize operation
       if (isMobile) {
-        setMode('idle');
+        setMode("idle");
         return;
       }
     }
   }
-  
+
   // For non-mobile or non-resize operations, always set to idle
-  if (!isMobile || mode !== 'editing') {
-    setMode('idle');
+  if (!isMobile || mode !== "editing") {
+    setMode("idle");
   }
   // For mobile editing mode without resize/drag, keep editing mode active
 };
 ```
 
 **4. propsの変更時にrefを更新（useEffectを追加）:**
+
 ```typescript
 // labelの位置・サイズが外部から変更された場合にrefを更新
 useEffect(() => {

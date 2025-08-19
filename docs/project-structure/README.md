@@ -7,11 +7,13 @@ VoyageSketchは、依存性注入とクリーンアーキテクチャの原則�
 ## ドキュメント構成
 
 ### アーキテクチャ関連
+
 - [01-architecture-overview.md](./01-architecture-overview.md) - アーキテクチャ全体像とDI設計
 - [02-service-layer.md](./02-service-layer.md) - サービス層とビジネスロジック
 - [03-state-management.md](./03-state-management.md) - Zustandストアと状態管理
 
 ### 機能別ドキュメント
+
 - [04-map-feature.md](./04-map-feature.md) - 地図機能とGoogle Maps統合
 - [05-place-management.md](./05-place-management.md) - 場所管理機能
 - [06-plan-management.md](./06-plan-management.md) - プラン管理とクラウド同期
@@ -19,12 +21,14 @@ VoyageSketchは、依存性注入とクリーンアーキテクチャの原則�
 - [08-ui-components.md](./08-ui-components.md) - UIコンポーネントと責任分離
 
 ### リファクタリング関連
+
 - [09-refactoring-plan.md](./09-refactoring-plan.md) - リファクタリング計画と実装手順
 - [10-code-issues.md](./10-code-issues.md) - 現在のコードの問題点と改善案
 
 ## プロジェクト基本情報
 
 ### 技術スタック
+
 - **フロントエンド**: React 18 + TypeScript + Vite
 - **状態管理**: Zustand
 - **地図**: Google Maps JavaScript API
@@ -57,19 +61,23 @@ src/
 ## 主要な設計パターン
 
 ### 1. 依存性注入（DI）
+
 - `ServiceContainer`による中央集権的なサービス管理
 - インターフェースベースの設計で疎結合を実現
 - テスタビリティの向上
 
 ### 2. Adapterパターン
+
 - 外部APIをアプリケーション固有のインターフェースでラップ
 - 例: `GoogleMapsServiceAdapter`, `ZustandPlaceRepositoryAdapter`
 
 ### 3. Repository パターン
+
 - データアクセスロジックの抽象化
 - 例: `FirestorePlanRepository`, `LocalStoragePlanRepository`
 
 ### 4. 単一責任原則（SRP）
+
 - 各コンポーネントとサービスは明確に定義された1つの責任を持つ
 - UIコンポーネントはプレゼンテーションに専念
 

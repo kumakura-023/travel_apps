@@ -1,20 +1,21 @@
-import * as React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import ErrorBoundary from './components/ErrorBoundary';
-import './index.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import InviteAcceptPage from './components/InviteAcceptPage';
+import * as React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import ErrorBoundary from "./components/ErrorBoundary";
+import "./index.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import InviteAcceptPage from "./components/InviteAcceptPage";
 
 // Service Worker登録（本番環境のみ）
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
       .then((registration) => {
-        console.log('SW registered: ', registration);
+        console.log("SW registered: ", registration);
       })
       .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
+        console.log("SW registration failed: ", registrationError);
       });
   });
 }
@@ -22,18 +23,18 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 // PWAインストールプロンプト
 let deferredPrompt: any;
 
-window.addEventListener('beforeinstallprompt', (e) => {
+window.addEventListener("beforeinstallprompt", (e) => {
   // デフォルトのインストールプロンプトを抑制
   e.preventDefault();
   // 後で使用するためにイベントを保存
   deferredPrompt = e;
-  
+
   // インストールボタンを表示
-  console.log('PWA install prompt available');
+  console.log("PWA install prompt available");
 });
 
-window.addEventListener('appinstalled', () => {
-  console.log('PWA was installed');
+window.addEventListener("appinstalled", () => {
+  console.log("PWA was installed");
   deferredPrompt = null;
 });
 
@@ -42,17 +43,17 @@ window.addEventListener('appinstalled', () => {
   if (deferredPrompt) {
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then((choiceResult: any) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
+      if (choiceResult.outcome === "accepted") {
+        console.log("User accepted the install prompt");
       } else {
-        console.log('User dismissed the install prompt');
+        console.log("User dismissed the install prompt");
       }
       deferredPrompt = null;
     });
   }
 };
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
@@ -63,4 +64,4 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       </BrowserRouter>
     </ErrorBoundary>
   </React.StrictMode>,
-); 
+);

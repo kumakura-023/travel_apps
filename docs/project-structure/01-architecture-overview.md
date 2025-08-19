@@ -11,15 +11,16 @@ VoyageSketchの中核となる依存性注入システム。アプリケーシ�
 ```typescript
 // サービス識別子
 export const SERVICE_IDENTIFIERS = {
-  MAP_SERVICE: Symbol('MapService'),
-  PLACE_SERVICE: Symbol('PlaceService'),
-  PLACE_REPOSITORY: Symbol('PlaceRepository'),
+  MAP_SERVICE: Symbol("MapService"),
+  PLACE_SERVICE: Symbol("PlaceService"),
+  PLACE_REPOSITORY: Symbol("PlaceRepository"),
 } as const;
 ```
 
 ### 主要コンポーネント
 
 #### 1. ServiceContainer（DIコンテナ）
+
 - **責任**: サービスの登録、解決、ライフサイクル管理
 - **場所**: `src/services/ServiceContainer.ts`
 - **機能**:
@@ -28,6 +29,7 @@ export const SERVICE_IDENTIFIERS = {
   - 動的なサービス登録（Google Maps読み込み後など）
 
 #### 2. DIContainer（新しいDIシステム）
+
 - **場所**: `src/di/DIContainer.ts`
 - **注意**: 現在2つのDIシステムが混在している（要統合）
 
@@ -36,11 +38,13 @@ export const SERVICE_IDENTIFIERS = {
 **目的**: 外部APIをアプリケーション固有のインターフェースに適合させる
 
 #### GoogleMapsServiceAdapter
+
 - **場所**: `src/adapters/GoogleMapsServiceAdapter.ts`
 - **インターフェース**: `MapService`
 - **責任**: Google Maps APIの抽象化
 
 #### ZustandPlaceRepositoryAdapter
+
 - **場所**: `src/adapters/ZustandPlaceRepositoryAdapter.ts`
 - **インターフェース**: `PlaceRepository`
 - **責任**: Zustandストアをリポジトリインターフェースに適合
@@ -48,6 +52,7 @@ export const SERVICE_IDENTIFIERS = {
 ### インターフェース定義
 
 #### MapService
+
 - **場所**: `src/interfaces/MapService.ts`
 - **責任**: 地図操作の抽象化
 - **主要メソッド**:
@@ -56,6 +61,7 @@ export const SERVICE_IDENTIFIERS = {
   - `getZoom()/setZoom()` - ズーム操作
 
 #### PlaceService
+
 - **場所**: `src/interfaces/PlaceService.ts`
 - **責任**: 場所検索とデータ取得
 - **主要メソッド**:
@@ -64,6 +70,7 @@ export const SERVICE_IDENTIFIERS = {
   - `searchNearbyPlaces()` - 近隣検索
 
 #### PlaceRepository
+
 - **場所**: `src/interfaces/PlaceRepository.ts`
 - **責任**: 場所データの永続化
 - **主要メソッド**:
@@ -75,6 +82,7 @@ export const SERVICE_IDENTIFIERS = {
 ### コーディネーター層
 
 #### PlanCoordinator
+
 - **場所**: `src/coordinators/PlanCoordinator.ts`
 - **責任**: プラン関連の操作を調整
 - **特徴**: 複数のサービスとストアを連携
@@ -82,14 +90,17 @@ export const SERVICE_IDENTIFIERS = {
 ### リポジトリ層
 
 #### FirestorePlanRepository
+
 - **場所**: `src/repositories/FirestorePlanRepository.ts`
 - **責任**: Firestoreとのプランデータ同期
 
 #### LocalStoragePlanRepository
+
 - **場所**: `src/repositories/LocalStoragePlanRepository.ts`
 - **責任**: ローカルストレージへのプラン保存
 
 #### FirestoreUserRepository
+
 - **場所**: `src/repositories/FirestoreUserRepository.ts`
 - **責任**: ユーザーデータの管理
 

@@ -1,4 +1,4 @@
-import { MapService, MapEvent } from '../interfaces/MapService';
+import { MapService, MapEvent } from "../interfaces/MapService";
 
 /**
  * Google Maps APIをMapServiceインターフェースに適合させるアダプター
@@ -6,7 +6,8 @@ import { MapService, MapEvent } from '../interfaces/MapService';
  */
 export class GoogleMapsServiceAdapter implements MapService {
   private mapInstance: google.maps.Map;
-  private eventListeners: Map<string, google.maps.MapsEventListener[]> = new Map();
+  private eventListeners: Map<string, google.maps.MapsEventListener[]> =
+    new Map();
 
   constructor(mapInstance: google.maps.Map) {
     this.mapInstance = mapInstance;
@@ -15,7 +16,7 @@ export class GoogleMapsServiceAdapter implements MapService {
   // 地図の基本操作
   addEventListener(event: string, callback: (e: any) => void): void {
     const listener = this.mapInstance.addListener(event, callback);
-    
+
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, []);
     }
@@ -27,7 +28,7 @@ export class GoogleMapsServiceAdapter implements MapService {
     if (listeners) {
       // Google Maps APIでは個別のリスナーを削除する直接的な方法がないため、
       // 全てのリスナーを削除して再登録する方式を採用
-      listeners.forEach(listener => {
+      listeners.forEach((listener) => {
         google.maps.event.removeListener(listener);
       });
       this.eventListeners.delete(event);
@@ -37,7 +38,7 @@ export class GoogleMapsServiceAdapter implements MapService {
   panTo(lat: number, lng: number, zoom?: number): void {
     const latLng = new google.maps.LatLng(lat, lng);
     this.mapInstance.panTo(latLng);
-    
+
     if (zoom !== undefined) {
       this.setZoom(zoom);
     }
@@ -59,12 +60,12 @@ export class GoogleMapsServiceAdapter implements MapService {
   getCenter(): { lat: number; lng: number } {
     const center = this.mapInstance.getCenter();
     if (!center) {
-      throw new Error('Map center is not available');
+      throw new Error("Map center is not available");
     }
-    
+
     return {
       lat: center.lat(),
-      lng: center.lng()
+      lng: center.lng(),
     };
   }
 
@@ -74,7 +75,12 @@ export class GoogleMapsServiceAdapter implements MapService {
   }
 
   // 追加のヘルパーメソッド
-  getBounds(): { north: number; south: number; east: number; west: number } | null {
+  getBounds(): {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  } | null {
     const bounds = this.mapInstance.getBounds();
     if (!bounds) {
       return null;
@@ -87,14 +93,19 @@ export class GoogleMapsServiceAdapter implements MapService {
       north: ne.lat(),
       south: sw.lat(),
       east: ne.lng(),
-      west: sw.lng()
+      west: sw.lng(),
     };
   }
 
-  fitBounds(bounds: { north: number; south: number; east: number; west: number }): void {
+  fitBounds(bounds: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  }): void {
     const googleBounds = new google.maps.LatLngBounds(
       new google.maps.LatLng(bounds.south, bounds.west),
-      new google.maps.LatLng(bounds.north, bounds.east)
+      new google.maps.LatLng(bounds.north, bounds.east),
     );
     this.mapInstance.fitBounds(googleBounds);
   }
@@ -108,7 +119,7 @@ export class GoogleMapsServiceAdapter implements MapService {
   dispose(): void {
     // 全てのイベントリスナーを削除
     this.eventListeners.forEach((listeners) => {
-      listeners.forEach(listener => {
+      listeners.forEach((listener) => {
         google.maps.event.removeListener(listener);
       });
     });
@@ -123,4 +134,4 @@ export class GoogleMapsServiceFactory {
   static create(mapInstance: google.maps.Map): GoogleMapsServiceAdapter {
     return new GoogleMapsServiceAdapter(mapInstance);
   }
-} 
+}

@@ -1,9 +1,10 @@
-import React from 'react';
-import ModalPortal from './ModalPortal';
-import { useBrowserPromptStore } from '../store/browserPromptStore';
+import React from "react";
+import ModalPortal from "./ModalPortal";
+import { useBrowserPromptStore } from "../store/browserPromptStore";
 
 const ExternalBrowserPrompt: React.FC = () => {
-  const { showExternalBrowserPrompt, setShowExternalBrowserPrompt } = useBrowserPromptStore();
+  const { showExternalBrowserPrompt, setShowExternalBrowserPrompt } =
+    useBrowserPromptStore();
 
   if (!showExternalBrowserPrompt) return null;
 
@@ -15,13 +16,13 @@ const ExternalBrowserPrompt: React.FC = () => {
     const ua = navigator.userAgent.toLowerCase();
     // iOS Safari
     if (/iphone|ipad|ipod/.test(ua)) {
-      window.location.href = currentUrl.replace(/^http:/, 'https:'); // Safariで開く
+      window.location.href = currentUrl.replace(/^http:/, "https:"); // Safariで開く
     } else if (/android/.test(ua)) {
       // Android Chrome
-      window.open(currentUrl, '_blank');
+      window.open(currentUrl, "_blank");
     } else {
       // PCやその他は新しいタブで開く
-      window.open(currentUrl, '_blank');
+      window.open(currentUrl, "_blank");
     }
   };
 
@@ -37,7 +38,8 @@ const ExternalBrowserPrompt: React.FC = () => {
         >
           <div className="space-y-4 text-center">
             <p className="body text-system-secondary-label whitespace-normal">
-              Googleログインはアプリ内ブラウザではご利用いただけません。<br />
+              Googleログインはアプリ内ブラウザではご利用いただけません。
+              <br />
               Chrome や Safari などの外部ブラウザでこのページを開いてください。
             </p>
             <input
@@ -49,7 +51,10 @@ const ExternalBrowserPrompt: React.FC = () => {
             />
           </div>
           <div className="flex justify-end pt-6 gap-3">
-            <button className="btn-system min-w-[120px]" onClick={handleOpenExternal}>
+            <button
+              className="btn-system min-w-[120px]"
+              onClick={handleOpenExternal}
+            >
               外部ブラウザで開く
             </button>
             <button className="btn-primary min-w-[100px]" onClick={handleClose}>

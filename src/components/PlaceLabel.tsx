@@ -1,9 +1,9 @@
-import { OverlayView } from '@react-google-maps/api';
-import { useState, useEffect, useRef } from 'react';
-import { Place } from '../types';
-import LabelEditDialog from './LabelEditDialog';
-import { useSavedPlacesStore } from '../store/savedPlacesStore';
-import { getCategoryColor } from '../utils/categoryIcons';
+import { OverlayView } from "@react-google-maps/api";
+import { useState, useEffect, useRef } from "react";
+import { Place } from "../types";
+import LabelEditDialog from "./LabelEditDialog";
+import { useSavedPlacesStore } from "../store/savedPlacesStore";
+import { getCategoryColor } from "../utils/categoryIcons";
 
 interface Props {
   place: Place;
@@ -34,33 +34,41 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
   const fontSize = baseFontSize * scale;
   const width = baseWidth * scale;
   const height = baseHeight * scale;
-  const color = place.labelColor ?? 'rgba(0, 0, 0, 0.85)';
-  const fontFamily = place.labelFontFamily ?? '-apple-system, BlinkMacSystemFont, sans-serif';
+  const color = place.labelColor ?? "rgba(0, 0, 0, 0.85)";
+  const fontFamily =
+    place.labelFontFamily ?? "-apple-system, BlinkMacSystemFont, sans-serif";
 
-  const displayText = (place.labelText ?? place.name).length > 15 && scale <= 1
-    ? `${(place.labelText ?? place.name).slice(0, 14)}…`
-    : place.labelText ?? place.name;
+  const displayText =
+    (place.labelText ?? place.name).length > 15 && scale <= 1
+      ? `${(place.labelText ?? place.name).slice(0, 14)}…`
+      : (place.labelText ?? place.name);
 
-  const handleSave = (u: Partial<import('../types').MapLabel>) => {
+  const handleSave = (u: Partial<import("../types").MapLabel>) => {
     updatePlace(place.id, {
       labelText: u.text ?? place.labelText ?? place.name,
       labelFontSize: u.fontSize ?? place.labelFontSize ?? 12,
       labelWidth: u.width ?? place.labelWidth ?? 140,
       labelHeight: u.height ?? place.labelHeight ?? 36,
-      labelColor: u.color ?? place.labelColor ?? 'rgba(0, 0, 0, 0.85)',
-      labelFontFamily: u.fontFamily ?? place.labelFontFamily ?? '-apple-system, BlinkMacSystemFont, sans-serif',
+      labelColor: u.color ?? place.labelColor ?? "rgba(0, 0, 0, 0.85)",
+      labelFontFamily:
+        u.fontFamily ??
+        place.labelFontFamily ??
+        "-apple-system, BlinkMacSystemFont, sans-serif",
     });
   };
 
   // resize logic
-  const resizeStart = useRef<{ clientX: number; clientY: number; width: number; height: number }>(
-    {
-      clientX: 0,
-      clientY: 0,
-      width: baseWidth,
-      height: baseHeight,
-    },
-  );
+  const resizeStart = useRef<{
+    clientX: number;
+    clientY: number;
+    width: number;
+    height: number;
+  }>({
+    clientX: 0,
+    clientY: 0,
+    width: baseWidth,
+    height: baseHeight,
+  });
 
   useEffect(() => {
     if (!resizing) return;
@@ -73,22 +81,25 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
       updatePlace(place.id, { labelWidth: newWidth, labelHeight: newHeight });
     };
     const stop = () => setResizing(false);
-    window.addEventListener('mousemove', handleMove);
-    window.addEventListener('mouseup', stop);
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", stop);
     return () => {
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mouseup', stop);
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", stop);
     };
   }, [resizing, scale]);
 
   useEffect(() => {
     const handleDocClick = (ev: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(ev.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(ev.target as Node)
+      ) {
         setShowControls(false);
       }
     };
-    document.addEventListener('click', handleDocClick);
-    return () => document.removeEventListener('click', handleDocClick);
+    document.addEventListener("click", handleDocClick);
+    return () => document.removeEventListener("click", handleDocClick);
   }, []);
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
@@ -103,13 +114,15 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
   };
 
   // drag logic
-  const dragStart = useRef<{ clientX: number; clientY: number; world: google.maps.Point | null }>(
-    {
-      clientX: 0,
-      clientY: 0,
-      world: null,
-    },
-  );
+  const dragStart = useRef<{
+    clientX: number;
+    clientY: number;
+    world: google.maps.Point | null;
+  }>({
+    clientX: 0,
+    clientY: 0,
+    world: null,
+  });
 
   useEffect(() => {
     if (!dragging) return;
@@ -123,17 +136,22 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
       const scale = 2 ** zoomLevel;
       const dx = (ev.clientX - dragStart.current.clientX) / scale;
       const dy = (ev.clientY - dragStart.current.clientY) / scale;
-      const newWorld = new google.maps.Point(dragStart.current.world!.x + dx, dragStart.current.world!.y + dy);
+      const newWorld = new google.maps.Point(
+        dragStart.current.world!.x + dx,
+        dragStart.current.world!.y + dy,
+      );
       const latLng = proj.fromPointToLatLng(newWorld);
       if (!latLng) return;
-      updatePlace(place.id, { labelPosition: { lat: latLng.lat(), lng: latLng.lng() } });
+      updatePlace(place.id, {
+        labelPosition: { lat: latLng.lat(), lng: latLng.lng() },
+      });
     };
     const stopDrag = () => setDragging(false);
-    window.addEventListener('mousemove', handleMove);
-    window.addEventListener('mouseup', stopDrag);
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", stopDrag);
     return () => {
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mouseup', stopDrag);
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", stopDrag);
     };
   }, [dragging, map]);
 
@@ -148,8 +166,8 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
       const dy = Math.abs(ev.clientY - startY);
       if (dx > 5 || dy > 5) {
         // Drag start
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
         handleMouseDown(e);
       }
     };
@@ -159,12 +177,12 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
         // Click
         setShowControls(true);
       }
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
   };
 
   return (
@@ -180,7 +198,7 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
                      hover:shadow-elevation-3 transition-all duration-150 ease-ios-default
                      border border-white/30"
           style={{
-            pointerEvents: 'auto',
+            pointerEvents: "auto",
             fontSize,
             width,
             height,
@@ -188,7 +206,7 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
             color,
             background: `linear-gradient(135deg, ${categoryColor}15, ${categoryColor}08)`,
             borderLeftColor: categoryColor,
-            borderLeftWidth: '3px',
+            borderLeftWidth: "3px",
           }}
           onDoubleClick={(e) => {
             e.stopPropagation();
@@ -213,13 +231,15 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
               ✕
             </span>
           )}
-          
+
           {/* label text */}
-          <span className="footnote font-medium tracking-tight px-2 py-1 
-                          text-center leading-tight truncate">
+          <span
+            className="footnote font-medium tracking-tight px-2 py-1 
+                          text-center leading-tight truncate"
+          >
             {displayText}
           </span>
-          
+
           {/* resize handle */}
           {showControls && (
             <span
@@ -228,7 +248,9 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
                          hover:bg-teal-600 transition-colors duration-150 ease-ios-default
                          shadow-elevation-1"
               onMouseDown={handleResizeMouseDown}
-              style={{ transform: `scale(${Math.min(scale, 1.2)}) translate(50%, 50%)` }}
+              style={{
+                transform: `scale(${Math.min(scale, 1.2)}) translate(50%, 50%)`,
+              }}
             />
           )}
         </div>
@@ -243,8 +265,10 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
             fontSize: place.labelFontSize ?? 12,
             width: place.labelWidth ?? 140,
             height: place.labelHeight ?? 36,
-            color: place.labelColor ?? 'rgba(0, 0, 0, 0.85)',
-            fontFamily: place.labelFontFamily ?? '-apple-system, BlinkMacSystemFont, sans-serif',
+            color: place.labelColor ?? "rgba(0, 0, 0, 0.85)",
+            fontFamily:
+              place.labelFontFamily ??
+              "-apple-system, BlinkMacSystemFont, sans-serif",
             position: labelPos,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -255,4 +279,4 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
       )}
     </>
   );
-} 
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 /**
  * useMediaQuery
@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
  */
 export default function useMediaQuery(query: string): boolean {
   const getMatch = () => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false;
     return window.matchMedia(query).matches;
   };
 
@@ -16,10 +16,10 @@ export default function useMediaQuery(query: string): boolean {
   useEffect(() => {
     const mql = window.matchMedia(query);
     const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
-    mql.addEventListener('change', handler);
+    mql.addEventListener("change", handler);
     setMatches(mql.matches);
-    return () => mql.removeEventListener('change', handler);
+    return () => mql.removeEventListener("change", handler);
   }, [query]);
 
   return matches;
-} 
+}

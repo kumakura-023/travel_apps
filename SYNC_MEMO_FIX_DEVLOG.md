@@ -3,21 +3,27 @@
 ## 2025-07-25
 
 ### 修正開始
+
 SYNC_MEMO_FIX_PLAN.mdに基づいて、メモ同期処理の過剰な実行を修正開始。
 
 ### 現状分析
+
 メモ編集時に以下の問題が発生：
+
 - 編集の度に300msのデバウンス後に同期処理が実行
 - Firebaseの書き込み制限に達してresource-exhaustedエラー
 - 大量の自己更新ログが出力される
 
 ### 修正方針
+
 フェーズ1（緊急対応）から開始：
+
 1. MemoEditorから同期処理を削除
 2. onBlurイベントで同期をトリガー
 3. 編集中フラグを追加し、編集中は同期を抑制
 
 ### MemoEditorコンポーネントの修正完了
+
 MemoEditor.tsxから以下の変更を実施：
 
 1. **デバウンス処理を削除**
@@ -39,6 +45,7 @@ MemoEditor.tsxから以下の変更を実施：
    - UI応答性を維持しつつ、過剰な同期を防止
 
 ### PlaceDetailPanelの編集中フラグ管理を実装
+
 PlaceDetailPanel.tsxとMemoEditor.tsxを連携させて編集中の同期抑制を実装：
 
 1. **PlaceDetailPanelの変更**
@@ -46,7 +53,7 @@ PlaceDetailPanel.tsxとMemoEditor.tsxを連携させて編集中の同期抑制�
    - `handleMemoChange`に`isEditing`パラメータを追加
    - 編集中（isEditing=true）の場合は同期処理をスキップ
 
-2. **MemoEditorのインターフェース更新**  
+2. **MemoEditorのインターフェース更新**
    - `onMemoChange`のシグネチャに`isEditing?: boolean`を追加
    - 編集開始時（onFocus）に`isEditing=true`を通知
    - 編集終了時（onBlur）に`isEditing=false`を通知
@@ -152,11 +159,13 @@ PlaceDetailPanel.tsxとMemoEditor.tsxを連携させて編集中の同期抑制�
 メモ同期の無限ループは解消されたが、新たに「uid is required for cloud save」エラーが発生。
 
 #### エラー内容
+
 - ラベル移動時にクラウド同期でエラー
 - ユーザーが未ログイン状態でクラウド保存を試みている
 - `syncToCloud`メソッドでuidが必要だが提供されていない
 
 #### 調査開始
+
 1. storageServiceのsavePlanHybrid関数を確認
 2. SyncManagerでのuid処理を確認
 3. 適切なエラーハンドリングを実装
@@ -168,13 +177,13 @@ PlaceDetailPanel.tsxとMemoEditor.tsxを連携させて編集中の同期抑制�
    - SyncContextにuidが含まれていなかった
 
 2. **修正内容**
-   
+
    a. **SyncTypes.ts**
    - SyncContextインターフェースに`uid?: string`を追加
-   
-   b. **useAutoSave.ts**  
+
+   b. **useAutoSave.ts**
    - `getSyncContext`関数でuser?.uidをcontextに含めるよう修正
-   
+
    c. **SyncManager.ts**
    - `syncToCloud`メソッドでcontext.uidをsavePlanHybridに渡すよう修正
    - uidがない場合はエラーをスローするように改善

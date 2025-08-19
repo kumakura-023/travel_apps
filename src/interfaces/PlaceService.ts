@@ -25,18 +25,18 @@ export interface PlaceSearchResult {
 export interface PlaceService {
   // 地点検索
   searchPlaces(query: string): Promise<PlaceSearchResult[]>;
-  
+
   // 地点詳細取得
   getPlaceDetails(placeId: string): Promise<PlaceDetails | null>;
-  
+
   // オートコンプリート
   getAutocompleteSuggestions(input: string): Promise<PlaceSearchResult[]>;
-  
+
   // 周辺地点検索
   searchNearbyPlaces(
     location: { lat: number; lng: number },
     radius: number,
-    types?: string[]
+    types?: string[],
   ): Promise<PlaceSearchResult[]>;
 }
 
@@ -55,4 +55,4 @@ export interface PlaceServiceConfig {
  */
 export interface PlaceServiceFactory {
   create(config: PlaceServiceConfig): PlaceService;
-} 
+}

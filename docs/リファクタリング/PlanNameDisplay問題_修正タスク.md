@@ -1,23 +1,32 @@
 # PlanNameDisplay問題 - リファクタリング後の修正タスク
 
 ## 問題の概要
+
 リファクタリング後、新旧の初期化コードが混在して競合状態が発生し、PlanNameDisplayが表示されない。
 
 ## Task 1: 古い初期化コードの削除（必須・最優先）
 
 ### 1.1 App.tsxの修正
+
 ```typescript
 // src/App.tsx - 135-136行目を削除
 
 // 削除前
 usePlanLoad(user, isInitializing);
-useRealtimePlanListener(user, isInitializing, lastCloudSaveTimestamp, setIsRemoteUpdateInProgress, getSelfUpdateFlag);
+useRealtimePlanListener(
+  user,
+  isInitializing,
+  lastCloudSaveTimestamp,
+  setIsRemoteUpdateInProgress,
+  getSelfUpdateFlag,
+);
 
 // 削除後（これらの行を完全に削除）
 // 何も残さない
 ```
 
 ### 1.2 不要なインポートの削除
+
 ```typescript
 // src/App.tsx - 30-32行目のインポートを削除
 // import { usePlanLoad } from './hooks/usePlanLoad';  // 削除
@@ -27,6 +36,7 @@ useRealtimePlanListener(user, isInitializing, lastCloudSaveTimestamp, setIsRemot
 ## Task 2: PlanCoordinatorのデバッグログ追加（推奨）
 
 ### 2.1 初期化メソッドにログを追加
+
 ```typescript
 // src/coordinators/PlanCoordinator.ts - initialize メソッドを修正
 
@@ -36,10 +46,10 @@ async initialize(userId: string): Promise<void> {
     // プランリストを先に初期化（重要）
     console.log('[PlanCoordinator] Refreshing plan list...');
     await usePlanListStore.getState().refreshPlans();
-    
+
     const activePlanId = await this.activePlanService.getActivePlanId(userId);
     console.log('[PlanCoordinator] Retrieved active plan ID:', activePlanId);
-    
+
     if (activePlanId) {
       console.log('[PlanCoordinator] Loading and listening to plan:', activePlanId);
       await this.loadAndListenToPlan(activePlanId);
@@ -64,20 +74,21 @@ async initialize(userId: string): Promise<void> {
 ```
 
 ### 2.2 loadAndListenToPlanメソッドにログを追加
+
 ```typescript
 // src/coordinators/PlanCoordinator.ts - loadAndListenToPlan メソッドに追加
 
 private async loadAndListenToPlan(planId: string): Promise<void> {
   console.log('[PlanCoordinator] loadAndListenToPlan called for:', planId);
-  
+
   usePlanStore.setState({ isLoading: true });
-  
+
   const plan = await this.planService.loadPlan(planId);
   console.log('[PlanCoordinator] Plan loaded:', plan?.id, plan?.name);
-  
+
   if (plan) {
     this.updateStores(plan);
-    
+
     this.currentPlanUnsubscribe = this.planService.listenToPlan(
       planId,
       (updatedPlan) => {
@@ -100,14 +111,16 @@ private async loadAndListenToPlan(planId: string): Promise<void> {
 ## Task 3: PlanListStore初期化の確認（重要）
 
 ### 3.1 PlanCoordinatorのインポートに追加
+
 ```typescript
 // src/coordinators/PlanCoordinator.ts - インポート部分に追加
-import { usePlanListStore } from '../store/planListStore';
+import { usePlanListStore } from "../store/planListStore";
 ```
 
 ## Task 4: エラー時の表示改善（推奨）
 
 ### 4.1 PlanNameDisplay.tsxの改善
+
 ```typescript
 // src/components/PlanNameDisplay.tsx - 既存のコンポーネントを修正
 
@@ -123,9 +136,9 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
   if (activeTab === 'list') return null;
 
   // 基本のクラス名
-  const baseClassName = `fixed z-30 
-                        glass-effect-border rounded-xl 
-                        px-4 py-3 
+  const baseClassName = `fixed z-30
+                        glass-effect-border rounded-xl
+                        px-4 py-3
                         text-system-label
                         transition-all duration-150 ease-ios-default
                         ${
@@ -167,7 +180,7 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
           <div className="flex flex-col items-center space-y-2">
             <button
               onClick={() => setNameModal(true)}
-              className="flex items-center space-x-2 text-coral-500 hover:text-coral-600 
+              className="flex items-center space-x-2 text-coral-500 hover:text-coral-600
                          font-medium transition-all duration-150 ease-ios-default"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -204,16 +217,18 @@ const PlanNameDisplay: React.FC<PlanNameDisplayProps> = ({ activeTab }) => {
 ## Task 5: 古いコードの完全削除（クリーンアップ）
 
 ### 5.1 削除対象ファイル（確認後に削除）
+
 - `src/hooks/usePlanLoad.ts`
 - `src/hooks/useRealtimePlanListener.ts`
 
 ### 5.2 planStore.tsの互換性メソッド削除
+
 ```typescript
 // src/store/planStore.ts - 将来的に削除
 
 // 現在は警告を出すだけだが、動作確認後は以下のメソッドを削除：
 // - setPlan
-// - updatePlan  
+// - updatePlan
 // - listenToPlan
 // - unsubscribeFromPlan
 // - updateLastActionPosition

@@ -1,7 +1,7 @@
-import { AppError } from './AppError';
-import { ErrorCode, ErrorSeverity } from './ErrorCodes';
-import { toast } from 'react-hot-toast';
-import React from 'react';
+import { AppError } from "./AppError";
+import { ErrorCode, ErrorSeverity } from "./ErrorCodes";
+import { toast } from "react-hot-toast";
+import React from "react";
 
 /**
  * エラーハンドリングのオプション
@@ -33,7 +33,7 @@ export class ErrorHandler {
    */
   static handle(
     error: Error | unknown,
-    options: ErrorHandlerOptions = {}
+    options: ErrorHandlerOptions = {},
   ): void {
     const {
       showToast = true,
@@ -43,9 +43,8 @@ export class ErrorHandler {
     } = options;
 
     // AppErrorに変換
-    const appError = error instanceof AppError 
-      ? error 
-      : AppError.fromError(error);
+    const appError =
+      error instanceof AppError ? error : AppError.fromError(error);
 
     // サイレントモードの場合は何もしない
     if (silent) return;
@@ -71,7 +70,7 @@ export class ErrorHandler {
    */
   static async handleAsync<T>(
     promise: Promise<T>,
-    options?: ErrorHandlerOptions
+    options?: ErrorHandlerOptions,
   ): Promise<T | null> {
     try {
       return await promise;
@@ -87,13 +86,9 @@ export class ErrorHandler {
   static async handleWithRetry<T>(
     operation: () => Promise<T>,
     retryOptions: RetryOptions = {},
-    errorOptions?: ErrorHandlerOptions
+    errorOptions?: ErrorHandlerOptions,
   ): Promise<T> {
-    const {
-      maxRetries = 3,
-      delay = 1000,
-      backoff = true,
-    } = retryOptions;
+    const { maxRetries = 3, delay = 1000, backoff = true } = retryOptions;
 
     const operationId = operation.toString();
     let retries = this.retryCount.get(operationId) || 0;
@@ -103,20 +98,21 @@ export class ErrorHandler {
       this.retryCount.delete(operationId); // 成功したらリトライカウントをリセット
       return result;
     } catch (error) {
-      const appError = error instanceof AppError 
-        ? error 
-        : AppError.fromError(error);
+      const appError =
+        error instanceof AppError ? error : AppError.fromError(error);
 
       if (retries < maxRetries && appError.isRetryable) {
         retries++;
         this.retryCount.set(operationId, retries);
 
         const waitTime = backoff ? delay * Math.pow(2, retries - 1) : delay;
-        
-        console.log(`Retrying operation (${retries}/${maxRetries}) after ${waitTime}ms...`);
-        
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-        
+
+        console.log(
+          `Retrying operation (${retries}/${maxRetries}) after ${waitTime}ms...`,
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+
         return this.handleWithRetry(operation, retryOptions, errorOptions);
       }
 
@@ -131,28 +127,28 @@ export class ErrorHandler {
    */
   private static logError(error: AppError): void {
     const logMethod = this.getLogMethod(error.severity);
-    
+
     console.group(`🚨 ${error.name} [${error.code}]`);
-    logMethod('Message:', error.message);
-    logMethod('Severity:', error.severity);
-    logMethod('Timestamp:', error.timestamp);
-    
+    logMethod("Message:", error.message);
+    logMethod("Severity:", error.severity);
+    logMethod("Timestamp:", error.timestamp);
+
     if (error.details) {
-      logMethod('Details:', error.details);
+      logMethod("Details:", error.details);
     }
-    
+
     if (error.context) {
-      logMethod('Context:', error.context);
+      logMethod("Context:", error.context);
     }
-    
+
     if (error.stack) {
-      logMethod('Stack:', error.stack);
+      logMethod("Stack:", error.stack);
     }
-    
+
     if (error.cause) {
-      logMethod('Cause:', error.cause);
+      logMethod("Cause:", error.cause);
     }
-    
+
     console.groupEnd();
   }
 
@@ -177,29 +173,29 @@ export class ErrorHandler {
    */
   private static showErrorToast(error: AppError): void {
     const message = error.getUserMessage();
-    
+
     switch (error.severity) {
       case ErrorSeverity.CRITICAL:
       case ErrorSeverity.ERROR:
         toast.error(message, {
           duration: 5000,
-          position: 'top-center',
+          position: "top-center",
         });
         break;
-        
+
       case ErrorSeverity.WARNING:
         toast(message, {
-          icon: '⚠️',
+          icon: "⚠️",
           duration: 4000,
-          position: 'top-center',
+          position: "top-center",
         });
         break;
-        
+
       case ErrorSeverity.INFO:
         toast(message, {
-          icon: 'ℹ️',
+          icon: "ℹ️",
           duration: 3000,
-          position: 'top-center',
+          position: "top-center",
         });
         break;
     }
@@ -208,22 +204,32 @@ export class ErrorHandler {
     if (error.isRetryable && error.retry) {
       setTimeout(() => {
         toast.custom(
-          (t: any) => (
-            React.createElement('div', { className: 'bg-white p-4 rounded shadow-lg' },
-              React.createElement('p', { className: 'mb-2' }, '操作を再試行しますか？'),
-              React.createElement('button', {
-                onClick: () => {
-                  toast.dismiss(t.id);
-                  error.retry!();
+          (t: any) =>
+            React.createElement(
+              "div",
+              { className: "bg-white p-4 rounded shadow-lg" },
+              React.createElement(
+                "p",
+                { className: "mb-2" },
+                "操作を再試行しますか？",
+              ),
+              React.createElement(
+                "button",
+                {
+                  onClick: () => {
+                    toast.dismiss(t.id);
+                    error.retry!();
+                  },
+                  className:
+                    "mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600",
                 },
-                className: 'mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600'
-              }, '再試行')
-            )
-          ),
+                "再試行",
+              ),
+            ),
           {
             duration: 10000,
-            position: 'top-center',
-          }
+            position: "top-center",
+          },
         );
       }, 100);
     }
@@ -235,7 +241,7 @@ export class ErrorHandler {
   private static sendToAnalytics(error: AppError): void {
     // TODO: Google Analytics、Sentry、LogRocketなどに送信
     if (window.gtag) {
-      window.gtag('event', 'exception', {
+      window.gtag("event", "exception", {
         description: error.message,
         fatal: error.severity === ErrorSeverity.CRITICAL,
         error_code: error.code,
@@ -248,7 +254,7 @@ export class ErrorHandler {
    */
   static setupGlobalHandlers(): void {
     // 未処理のPromiseエラーをキャッチ
-    window.addEventListener('unhandledrejection', (event) => {
+    window.addEventListener("unhandledrejection", (event) => {
       event.preventDefault();
       this.handle(event.reason, {
         showToast: true,
@@ -257,7 +263,7 @@ export class ErrorHandler {
     });
 
     // 通常のエラーをキャッチ
-    window.addEventListener('error', (event) => {
+    window.addEventListener("error", (event) => {
       event.preventDefault();
       this.handle(event.error || event.message, {
         showToast: true,

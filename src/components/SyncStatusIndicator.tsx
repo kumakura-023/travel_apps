@@ -1,15 +1,21 @@
-import React from 'react';
-import { useAutoSave } from '../hooks/useAutoSave';
-import { usePlanStore } from '../store/planStore';
-import { useSavedPlacesStore } from '../store/savedPlacesStore';
-import { useLabelsStore } from '../store/labelsStore';
-import { FaCloudUploadAlt, FaCloud, FaExclamationTriangle } from 'react-icons/fa';
+import React from "react";
+import { useAutoSave } from "../hooks/useAutoSave";
+import { usePlanStore } from "../store/planStore";
+import { useSavedPlacesStore } from "../store/savedPlacesStore";
+import { useLabelsStore } from "../store/labelsStore";
+import {
+  FaCloudUploadAlt,
+  FaCloud,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 
 interface SyncStatusIndicatorProps {
   onSave?: (timestamp: number) => void;
 }
 
-const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({ onSave }) => {
+const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
+  onSave,
+}) => {
   const plan = usePlanStore((s) => s.plan);
   const places = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const labels = useLabelsStore((s) => s.labels);
@@ -39,12 +45,12 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({ onSave }) => 
   );
 
   const title = isOffline
-    ? 'オフライン'
+    ? "オフライン"
     : isSaving
-    ? '同期中...'
-    : isSynced
-    ? '同期済み'
-    : 'ローカル保存のみ';
+      ? "同期中..."
+      : isSynced
+        ? "同期済み"
+        : "ローカル保存のみ";
 
   return (
     <div
@@ -56,4 +62,4 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({ onSave }) => 
   );
 };
 
-export default SyncStatusIndicator; 
+export default SyncStatusIndicator;

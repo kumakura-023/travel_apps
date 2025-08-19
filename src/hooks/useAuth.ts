@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -7,12 +7,12 @@ import {
   getRedirectResult,
   signOut as firebaseSignOut,
   User,
-} from 'firebase/auth';
-import { create } from 'zustand';
-import { auth } from '../firebase';
-import { useBrowserPromptStore } from '../store/browserPromptStore';
+} from "firebase/auth";
+import { create } from "zustand";
+import { auth } from "../firebase";
+import { useBrowserPromptStore } from "../store/browserPromptStore";
 
-const INVITE_TOKEN_KEY = 'pending_invite_token';
+const INVITE_TOKEN_KEY = "pending_invite_token";
 
 // アプリ内ブラウザを検出する関数
 export const isInAppBrowser = (): boolean => {
@@ -20,23 +20,23 @@ export const isInAppBrowser = (): boolean => {
 
   // 代表的なSNS系アプリのUA片と一般的なWebView判定を組み合わせる
   const knownApps =
-    ua.includes('line') ||
-    ua.includes('instagram') ||
-    ua.includes('facebook') ||
-    ua.includes('fbav') ||
-    ua.includes('fban') ||
-    ua.includes('fb_iab') ||
-    ua.includes('twitter') ||
-    ua.includes('whatsapp') ||
-    ua.includes('telegram') ||
-    ua.includes('kakao') ||
-    ua.includes('wechat');
+    ua.includes("line") ||
+    ua.includes("instagram") ||
+    ua.includes("facebook") ||
+    ua.includes("fbav") ||
+    ua.includes("fban") ||
+    ua.includes("fb_iab") ||
+    ua.includes("twitter") ||
+    ua.includes("whatsapp") ||
+    ua.includes("telegram") ||
+    ua.includes("kakao") ||
+    ua.includes("wechat");
 
   // Android WebView は `wv` を含むことが多い
-  const isAndroidWebView = /android/.test(ua) && ua.includes('wv');
+  const isAndroidWebView = /android/.test(ua) && ua.includes("wv");
 
   // iOS のWebViewは Safari を含まない UA になるケースが多い
-  const isIOSWebView = /iphone|ipad|ipod/.test(ua) && !ua.includes('safari');
+  const isIOSWebView = /iphone|ipad|ipod/.test(ua) && !ua.includes("safari");
 
   return knownApps || isAndroidWebView || isIOSWebView;
 };
@@ -57,21 +57,21 @@ export const useAuthStore = create<AuthState>((set) => ({
     const provider = new GoogleAuthProvider();
 
     if (isInAppBrowser()) {
-      console.log('アプリ内ブラウザを検出: 外部ブラウザ案内を表示');
+      console.log("アプリ内ブラウザを検出: 外部ブラウザ案内を表示");
       useBrowserPromptStore.getState().setShowExternalBrowserPrompt(true);
       return;
     }
 
-    console.log('通常のブラウザ: ポップアップ認証を試行');
+    console.log("通常のブラウザ: ポップアップ認証を試行");
     try {
       await signInWithPopup(auth, provider);
     } catch (error) {
-      console.error('ポップアップ認証失敗:', error);
-      console.log('リダイレクト認証へフォールバック');
+      console.error("ポップアップ認証失敗:", error);
+      console.log("リダイレクト認証へフォールバック");
       try {
         await signInWithRedirect(auth, provider);
       } catch (redirectError) {
-        console.error('リダイレクト認証開始に失敗:', redirectError);
+        console.error("リダイレクト認証開始に失敗:", redirectError);
         // 何らかの理由でリダイレクトが開始できなかった場合も
         // 外部ブラウザで開き直すよう案内する
         useBrowserPromptStore.getState().setShowExternalBrowserPrompt(true);
@@ -95,10 +95,10 @@ export function useAuth() {
       try {
         const result = await getRedirectResult(auth);
         if (result) {
-          console.log('リダイレクト認証成功:', result.user.email);
+          console.log("リダイレクト認証成功:", result.user.email);
         }
       } catch (error) {
-        console.error('リダイレクト認証エラー:', error);
+        console.error("リダイレクト認証エラー:", error);
       }
     };
 
@@ -113,7 +113,7 @@ export function useAuth() {
       if (
         u &&
         pendingToken &&
-        !window.location.pathname.startsWith('/invite/')
+        !window.location.pathname.startsWith("/invite/")
       ) {
         window.location.assign(`/invite/${pendingToken}`);
       }
@@ -132,4 +132,4 @@ export function useAuth() {
     signIn: useAuthStore.getState().signIn,
     signOut: useAuthStore.getState().signOut,
   };
-} 
+}

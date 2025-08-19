@@ -1,6 +1,6 @@
-import React from 'react';
-import { createSyncTestUtils } from '../utils/syncTestUtils';
-import { useAuthStore } from '../hooks/useAuth';
+import React from "react";
+import { createSyncTestUtils } from "../utils/syncTestUtils";
+import { useAuthStore } from "../hooks/useAuth";
 
 /**
  * 同期競合解決機能のテストボタン
@@ -9,10 +9,10 @@ import { useAuthStore } from '../hooks/useAuth';
  */
 const SyncTestButton: React.FC = () => {
   const user = useAuthStore((s) => s.user);
-  
+
   const handleTestClick = () => {
-    console.log('🧪 同期競合解決機能テスト開始');
-    console.log('👤 現在のユーザー:', user?.email || '未ログイン');
+    console.log("🧪 同期競合解決機能テスト開始");
+    console.log("👤 現在のユーザー:", user?.email || "未ログイン");
     const testUtils = createSyncTestUtils();
     testUtils.runAllTests();
   };
@@ -35,4 +35,4 @@ const SyncTestButton: React.FC = () => {
   );
 };
 
-export default SyncTestButton; 
+export default SyncTestButton;

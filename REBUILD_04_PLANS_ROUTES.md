@@ -1,12 +1,15 @@
 # Phase 4: 計画・ルート機能 - 詳細実装指示
 
 ## 目標
+
 旅行計画の作成・編集・共有機能とルート計算・表示機能を実装し、ユーザビリティに優れた計画管理システムを構築する。
 
 ## 実装期間
+
 2-3週間
 
 ## 前提条件
+
 - Phase 1-3が完了済み
 - 同期システムが正常動作
 - Google Maps API（Directions API）が利用可能
@@ -16,25 +19,26 @@
 ### 1. 計画管理システムの実装
 
 #### A. 計画CRUD操作サービス (`src/services/api/planService.ts`)
+
 ```typescript
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
   getDoc,
   getDocs,
   query,
   where,
   orderBy,
   serverTimestamp,
-  writeBatch
-} from 'firebase/firestore';
-import { db } from '@/services/firebase';
-import { v4 as uuidv4 } from 'uuid';
-import type { Plan, PlanMember } from '@/types/core';
-import type { FirestorePlan } from '@/types/api';
+  writeBatch,
+} from "firebase/firestore";
+import { db } from "@/services/firebase";
+import { v4 as uuidv4 } from "uuid";
+import type { Plan, PlanMember } from "@/types/core";
+import type { FirestorePlan } from "@/types/api";
 
 class PlanService {
   async createPlan(
@@ -42,27 +46,29 @@ class PlanService {
     description: string,
     userId: string,
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
   ): Promise<Plan> {
-    const newPlan: Omit<FirestorePlan, 'id'> = {
+    const newPlan: Omit<FirestorePlan, "id"> = {
       title,
       description,
       places: [],
       startDate: startDate ? startDate : null,
       endDate: endDate ? endDate : null,
       isPublic: false,
-      members: [{
-        userId,
-        role: 'owner',
-        joinedAt: new Date(),
-      }],
+      members: [
+        {
+          userId,
+          role: "owner",
+          joinedAt: new Date(),
+        },
+      ],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       createdBy: userId,
     };
 
-    const docRef = await addDoc(collection(db, 'plans'), newPlan);
-    
+    const docRef = await addDoc(collection(db, "plans"), newPlan);
+
     return {
       id: docRef.id,
       title,
@@ -71,11 +77,13 @@ class PlanService {
       startDate,
       endDate,
       isPublic: false,
-      members: [{
-        userId,
-        role: 'owner',
-        joinedAt: new Date(),
-      }],
+      members: [
+        {
+          userId,
+          role: "owner",
+          joinedAt: new Date(),
+        },
+      ],
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: userId,
@@ -83,8 +91,8 @@ class PlanService {
   }
 
   async updatePlan(planId: string, updates: Partial<Plan>): Promise<void> {
-    const planRef = doc(db, 'plans', planId);
-    
+    const planRef = doc(db, "plans", planId);
+
     const firestoreUpdates = {
       ...updates,
       updatedAt: serverTimestamp(),
@@ -92,7 +100,7 @@ class PlanService {
       startDate: updates.startDate || null,
       endDate: updates.endDate || null,
       // 場所データの変換
-      places: updates.places?.map(place => ({
+      places: updates.places?.map((place) => ({
         ...place,
         createdAt: place.createdAt,
         updatedAt: place.updatedAt,
@@ -104,19 +112,19 @@ class PlanService {
 
   async deletePlan(planId: string): Promise<void> {
     const batch = writeBatch(db);
-    
+
     // プラン本体の削除
-    const planRef = doc(db, 'plans', planId);
+    const planRef = doc(db, "plans", planId);
     batch.delete(planRef);
-    
+
     // 関連するルートデータの削除
     const routesQuery = query(
-      collection(db, 'routes'),
-      where('planId', '==', planId)
+      collection(db, "routes"),
+      where("planId", "==", planId),
     );
     const routesSnapshot = await getDocs(routesQuery);
-    
-    routesSnapshot.docs.forEach(routeDoc => {
+
+    routesSnapshot.docs.forEach((routeDoc) => {
       batch.delete(routeDoc.ref);
     });
 
@@ -125,18 +133,18 @@ class PlanService {
 
   async getUserPlans(userId: string): Promise<Plan[]> {
     const plansQuery = query(
-      collection(db, 'plans'),
-      where('members', 'array-contains-any', [
-        { userId, role: 'owner' },
-        { userId, role: 'editor' },
-        { userId, role: 'viewer' }
+      collection(db, "plans"),
+      where("members", "array-contains-any", [
+        { userId, role: "owner" },
+        { userId, role: "editor" },
+        { userId, role: "viewer" },
       ]),
-      orderBy('updatedAt', 'desc')
+      orderBy("updatedAt", "desc"),
     );
 
     const snapshot = await getDocs(plansQuery);
-    
-    return snapshot.docs.map(doc => {
+
+    return snapshot.docs.map((doc) => {
       const data = doc.data() as FirestorePlan;
       return {
         ...data,
@@ -145,18 +153,19 @@ class PlanService {
         updatedAt: data.updatedAt?.toDate() || new Date(),
         startDate: data.startDate?.toDate(),
         endDate: data.endDate?.toDate(),
-        places: data.places?.map(place => ({
-          ...place,
-          createdAt: place.createdAt?.toDate() || new Date(),
-          updatedAt: place.updatedAt?.toDate() || new Date(),
-        })) || [],
+        places:
+          data.places?.map((place) => ({
+            ...place,
+            createdAt: place.createdAt?.toDate() || new Date(),
+            updatedAt: place.updatedAt?.toDate() || new Date(),
+          })) || [],
       };
     });
   }
 
   async getPlan(planId: string): Promise<Plan | null> {
-    const planDoc = await getDoc(doc(db, 'plans', planId));
-    
+    const planDoc = await getDoc(doc(db, "plans", planId));
+
     if (!planDoc.exists()) {
       return null;
     }
@@ -169,33 +178,36 @@ class PlanService {
       updatedAt: data.updatedAt?.toDate() || new Date(),
       startDate: data.startDate?.toDate(),
       endDate: data.endDate?.toDate(),
-      places: data.places?.map(place => ({
-        ...place,
-        createdAt: place.createdAt?.toDate() || new Date(),
-        updatedAt: place.updatedAt?.toDate() || new Date(),
-      })) || [],
+      places:
+        data.places?.map((place) => ({
+          ...place,
+          createdAt: place.createdAt?.toDate() || new Date(),
+          updatedAt: place.updatedAt?.toDate() || new Date(),
+        })) || [],
     };
   }
 
   async addMemberToPlan(
-    planId: string, 
-    userId: string, 
-    role: PlanMember['role']
+    planId: string,
+    userId: string,
+    role: PlanMember["role"],
   ): Promise<void> {
-    const planRef = doc(db, 'plans', planId);
+    const planRef = doc(db, "plans", planId);
     const planDoc = await getDoc(planRef);
-    
+
     if (!planDoc.exists()) {
-      throw new Error('Plan not found');
+      throw new Error("Plan not found");
     }
 
     const currentMembers = planDoc.data().members || [];
-    const existingMember = currentMembers.find((m: PlanMember) => m.userId === userId);
-    
+    const existingMember = currentMembers.find(
+      (m: PlanMember) => m.userId === userId,
+    );
+
     if (existingMember) {
       // 既存メンバーの役割を更新
       const updatedMembers = currentMembers.map((m: PlanMember) =>
-        m.userId === userId ? { ...m, role } : m
+        m.userId === userId ? { ...m, role } : m,
       );
       await updateDoc(planRef, { members: updatedMembers });
     } else {
@@ -211,16 +223,18 @@ class PlanService {
   }
 
   async removeMemberFromPlan(planId: string, userId: string): Promise<void> {
-    const planRef = doc(db, 'plans', planId);
+    const planRef = doc(db, "plans", planId);
     const planDoc = await getDoc(planRef);
-    
+
     if (!planDoc.exists()) {
-      throw new Error('Plan not found');
+      throw new Error("Plan not found");
     }
 
     const currentMembers = planDoc.data().members || [];
-    const updatedMembers = currentMembers.filter((m: PlanMember) => m.userId !== userId);
-    
+    const updatedMembers = currentMembers.filter(
+      (m: PlanMember) => m.userId !== userId,
+    );
+
     await updateDoc(planRef, { members: updatedMembers });
   }
 }
@@ -229,21 +243,22 @@ export const planService = new PlanService();
 ```
 
 #### B. 計画管理フック (`src/hooks/plans/usePlanActions.ts`)
+
 ```typescript
-import { useCallback } from 'react';
-import { usePlanStore } from '@/stores/planStore';
-import { useAuthStore } from '@/stores/authStore';
-import { planService } from '@/services/api/planService';
-import { operationManager } from '@/services/sync/OperationManager';
-import { cloudSyncService } from '@/services/sync/CloudSyncService';
-import type { Plan, PlanMember } from '@/types/core';
+import { useCallback } from "react";
+import { usePlanStore } from "@/stores/planStore";
+import { useAuthStore } from "@/stores/authStore";
+import { planService } from "@/services/api/planService";
+import { operationManager } from "@/services/sync/OperationManager";
+import { cloudSyncService } from "@/services/sync/CloudSyncService";
+import type { Plan, PlanMember } from "@/types/core";
 
 export const usePlanActions = () => {
-  const { 
-    plans, 
+  const {
+    plans,
     currentPlan,
-    addPlan, 
-    updatePlan, 
+    addPlan,
+    updatePlan,
     deletePlan,
     setCurrentPlan,
     setPlans,
@@ -252,105 +267,122 @@ export const usePlanActions = () => {
   } = usePlanStore();
   const { user } = useAuthStore();
 
-  const createNewPlan = useCallback(async (
-    title: string,
-    description: string,
-    startDate?: Date,
-    endDate?: Date
-  ): Promise<Plan | null> => {
-    if (!user) return null;
+  const createNewPlan = useCallback(
+    async (
+      title: string,
+      description: string,
+      startDate?: Date,
+      endDate?: Date,
+    ): Promise<Plan | null> => {
+      if (!user) return null;
 
-    setLoading(true);
-    setError(null);
+      setLoading(true);
+      setError(null);
 
-    try {
-      const newPlan = await planService.createPlan(
-        title,
-        description,
-        user.id,
-        startDate,
-        endDate
-      );
+      try {
+        const newPlan = await planService.createPlan(
+          title,
+          description,
+          user.id,
+          startDate,
+          endDate,
+        );
 
-      addPlan(newPlan);
-      return newPlan;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '計画の作成に失敗しました';
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [user, addPlan, setLoading, setError]);
+        addPlan(newPlan);
+        return newPlan;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "計画の作成に失敗しました";
+        setError(errorMessage);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user, addPlan, setLoading, setError],
+  );
 
-  const updatePlanInfo = useCallback(async (
-    planId: string,
-    updates: Partial<Plan>
-  ): Promise<boolean> => {
-    if (!user) return false;
+  const updatePlanInfo = useCallback(
+    async (planId: string, updates: Partial<Plan>): Promise<boolean> => {
+      if (!user) return false;
 
-    setLoading(true);
-    setError(null);
+      setLoading(true);
+      setError(null);
 
-    try {
-      // 操作を作成（同期システム用）
-      const operation = operationManager.createOperation(
-        'plan_update',
-        planId,
-        updates
-      );
+      try {
+        // 操作を作成（同期システム用）
+        const operation = operationManager.createOperation(
+          "plan_update",
+          planId,
+          updates,
+        );
 
-      operationManager.setCurrentUser(user.id);
+        operationManager.setCurrentUser(user.id);
 
-      // ローカル状態を即座に更新
-      updatePlan(planId, updates);
+        // ローカル状態を即座に更新
+        updatePlan(planId, updates);
 
-      // クラウドに同期
-      const updatedPlan = plans.find(p => p.id === planId);
-      if (updatedPlan) {
-        const planToSync = { ...updatedPlan, ...updates, updatedAt: new Date() };
-        await cloudSyncService.syncPlanToCloud(planToSync, operation);
+        // クラウドに同期
+        const updatedPlan = plans.find((p) => p.id === planId);
+        if (updatedPlan) {
+          const planToSync = {
+            ...updatedPlan,
+            ...updates,
+            updatedAt: new Date(),
+          };
+          await cloudSyncService.syncPlanToCloud(planToSync, operation);
+        }
+
+        return true;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "計画の更新に失敗しました";
+        setError(errorMessage);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user, plans, updatePlan, setLoading, setError],
+  );
+
+  const deletePlanById = useCallback(
+    async (planId: string): Promise<boolean> => {
+      if (!user) return false;
+
+      // 削除確認
+      if (
+        !confirm(
+          "この計画を削除してもよろしいですか？この操作は取り消せません。",
+        )
+      ) {
+        return false;
       }
 
-      return true;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '計画の更新に失敗しました';
-      setError(errorMessage);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [user, plans, updatePlan, setLoading, setError]);
+      setLoading(true);
+      setError(null);
 
-  const deletePlanById = useCallback(async (planId: string): Promise<boolean> => {
-    if (!user) return false;
+      try {
+        await planService.deletePlan(planId);
+        deletePlan(planId);
 
-    // 削除確認
-    if (!confirm('この計画を削除してもよろしいですか？この操作は取り消せません。')) {
-      return false;
-    }
+        // 現在選択中の計画が削除された場合
+        if (currentPlan?.id === planId) {
+          setCurrentPlan(null);
+        }
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      await planService.deletePlan(planId);
-      deletePlan(planId);
-      
-      // 現在選択中の計画が削除された場合
-      if (currentPlan?.id === planId) {
-        setCurrentPlan(null);
+        return true;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "計画の削除に失敗しました";
+        setError(errorMessage);
+        return false;
+      } finally {
+        setLoading(false);
       }
-
-      return true;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '計画の削除に失敗しました';
-      setError(errorMessage);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [user, currentPlan, deletePlan, setCurrentPlan, setLoading, setError]);
+    },
+    [user, currentPlan, deletePlan, setCurrentPlan, setLoading, setError],
+  );
 
   const loadUserPlans = useCallback(async (): Promise<void> => {
     if (!user) return;
@@ -362,67 +394,87 @@ export const usePlanActions = () => {
       const userPlans = await planService.getUserPlans(user.id);
       setPlans(userPlans);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '計画の読み込みに失敗しました';
+      const errorMessage =
+        error instanceof Error ? error.message : "計画の読み込みに失敗しました";
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
   }, [user, setPlans, setLoading, setError]);
 
-  const loadPlan = useCallback(async (planId: string): Promise<Plan | null> => {
-    setLoading(true);
-    setError(null);
+  const loadPlan = useCallback(
+    async (planId: string): Promise<Plan | null> => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const plan = await planService.getPlan(planId);
-      if (plan) {
-        setCurrentPlan(plan);
-        return plan;
-      } else {
-        setError('計画が見つかりません');
+      try {
+        const plan = await planService.getPlan(planId);
+        if (plan) {
+          setCurrentPlan(plan);
+          return plan;
+        } else {
+          setError("計画が見つかりません");
+          return null;
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "計画の読み込みに失敗しました";
+        setError(errorMessage);
         return null;
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '計画の読み込みに失敗しました';
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [setCurrentPlan, setLoading, setError]);
+    },
+    [setCurrentPlan, setLoading, setError],
+  );
 
-  const addMember = useCallback(async (
-    planId: string,
-    userId: string,
-    role: PlanMember['role']
-  ): Promise<boolean> => {
-    if (!user) return false;
+  const addMember = useCallback(
+    async (
+      planId: string,
+      userId: string,
+      role: PlanMember["role"],
+    ): Promise<boolean> => {
+      if (!user) return false;
 
-    try {
-      await planService.addMemberToPlan(planId, userId, role);
-      
-      // ローカル状態を更新
-      const updatedMembers = currentPlan?.members ? [...currentPlan.members] : [];
-      const existingIndex = updatedMembers.findIndex(m => m.userId === userId);
-      
-      if (existingIndex >= 0) {
-        updatedMembers[existingIndex] = { ...updatedMembers[existingIndex], role };
-      } else {
-        updatedMembers.push({
-          userId,
-          role,
-          joinedAt: new Date(),
-        });
+      try {
+        await planService.addMemberToPlan(planId, userId, role);
+
+        // ローカル状態を更新
+        const updatedMembers = currentPlan?.members
+          ? [...currentPlan.members]
+          : [];
+        const existingIndex = updatedMembers.findIndex(
+          (m) => m.userId === userId,
+        );
+
+        if (existingIndex >= 0) {
+          updatedMembers[existingIndex] = {
+            ...updatedMembers[existingIndex],
+            role,
+          };
+        } else {
+          updatedMembers.push({
+            userId,
+            role,
+            joinedAt: new Date(),
+          });
+        }
+
+        updatePlan(planId, { members: updatedMembers });
+        return true;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "メンバーの追加に失敗しました";
+        setError(errorMessage);
+        return false;
       }
-
-      updatePlan(planId, { members: updatedMembers });
-      return true;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'メンバーの追加に失敗しました';
-      setError(errorMessage);
-      return false;
-    }
-  }, [user, currentPlan, updatePlan, setError]);
+    },
+    [user, currentPlan, updatePlan, setError],
+  );
 
   return {
     createNewPlan,
@@ -438,10 +490,11 @@ export const usePlanActions = () => {
 ### 2. ルート計算・表示システムの実装
 
 #### A. ルートサービス (`src/services/api/routeService.ts`)
+
 ```typescript
-import { mapService } from './mapService';
-import type { Route } from '@/types/core';
-import type { Place } from '@/types/core';
+import { mapService } from "./mapService";
+import type { Route } from "@/types/core";
+import type { Place } from "@/types/core";
 
 class RouteService {
   private directionsService: google.maps.DirectionsService | null = null;
@@ -449,14 +502,14 @@ class RouteService {
 
   async initializeDirections(map: google.maps.Map): Promise<void> {
     if (!window.google) {
-      throw new Error('Google Maps API is not loaded');
+      throw new Error("Google Maps API is not loaded");
     }
 
     this.directionsService = new google.maps.DirectionsService();
     this.directionsRenderer = new google.maps.DirectionsRenderer({
       suppressMarkers: true, // 場所マーカーと重複しないように
       polylineOptions: {
-        strokeColor: '#3b82f6',
+        strokeColor: "#3b82f6",
         strokeWeight: 4,
         strokeOpacity: 0.8,
       },
@@ -468,14 +521,14 @@ class RouteService {
   async calculateRoute(
     fromPlace: Place,
     toPlace: Place,
-    travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING
+    travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING,
   ): Promise<{
     route: google.maps.DirectionsRoute;
     duration: number;
     distance: number;
   } | null> {
     if (!this.directionsService) {
-      throw new Error('Directions service is not initialized');
+      throw new Error("Directions service is not initialized");
     }
 
     const request: google.maps.DirectionsRequest = {
@@ -492,7 +545,7 @@ class RouteService {
         if (status === google.maps.DirectionsStatus.OK && result) {
           const route = result.routes[0];
           const leg = route.legs[0];
-          
+
           resolve({
             route,
             duration: leg.duration?.value || 0,
@@ -507,7 +560,7 @@ class RouteService {
 
   async calculateMultiWaypointRoute(
     places: Place[],
-    travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING
+    travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING,
   ): Promise<{
     routes: google.maps.DirectionsRoute[];
     totalDuration: number;
@@ -518,19 +571,19 @@ class RouteService {
     }
 
     if (!this.directionsService) {
-      throw new Error('Directions service is not initialized');
+      throw new Error("Directions service is not initialized");
     }
 
-    const waypoints = places.slice(1, -1).map(place => ({
+    const waypoints = places.slice(1, -1).map((place) => ({
       location: { lat: place.lat, lng: place.lng },
       stopover: true,
     }));
 
     const request: google.maps.DirectionsRequest = {
       origin: { lat: places[0].lat, lng: places[0].lng },
-      destination: { 
-        lat: places[places.length - 1].lat, 
-        lng: places[places.length - 1].lng 
+      destination: {
+        lat: places[places.length - 1].lat,
+        lng: places[places.length - 1].lng,
       },
       waypoints,
       travelMode,
@@ -545,8 +598,8 @@ class RouteService {
           let totalDuration = 0;
           let totalDistance = 0;
 
-          routes.forEach(route => {
-            route.legs.forEach(leg => {
+          routes.forEach((route) => {
+            route.legs.forEach((leg) => {
               totalDuration += leg.duration?.value || 0;
               totalDistance += leg.distance?.value || 0;
             });
@@ -558,7 +611,9 @@ class RouteService {
             totalDistance,
           });
         } else {
-          reject(new Error(`Multi-waypoint route calculation failed: ${status}`));
+          reject(
+            new Error(`Multi-waypoint route calculation failed: ${status}`),
+          );
         }
       });
     });
@@ -572,7 +627,9 @@ class RouteService {
 
   clearRoute(): void {
     if (this.directionsRenderer) {
-      this.directionsRenderer.setDirections({ routes: [] } as google.maps.DirectionsResult);
+      this.directionsRenderer.setDirections({
+        routes: [],
+      } as google.maps.DirectionsResult);
     }
   }
 
@@ -602,10 +659,11 @@ export const routeService = new RouteService();
 ```
 
 #### B. ルートストア (`src/stores/routeStore.ts`)
+
 ```typescript
-import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
-import type { Route } from '@/types/core';
+import { create } from "zustand";
+import { immer } from "zustand/middleware/immer";
+import type { Route } from "@/types/core";
 
 interface RouteState {
   routes: Route[];
@@ -639,44 +697,52 @@ export const useRouteStore = create<RouteState & RouteActions>()(
     totalDistance: 0,
 
     // Actions
-    setRoutes: (routes) => set((state) => {
-      state.routes = routes;
-    }),
+    setRoutes: (routes) =>
+      set((state) => {
+        state.routes = routes;
+      }),
 
-    setCurrentRoute: (route) => set((state) => {
-      state.currentRoute = route;
-    }),
+    setCurrentRoute: (route) =>
+      set((state) => {
+        state.currentRoute = route;
+      }),
 
-    setCalculating: (calculating) => set((state) => {
-      state.isCalculating = calculating;
-    }),
+    setCalculating: (calculating) =>
+      set((state) => {
+        state.isCalculating = calculating;
+      }),
 
-    setError: (error) => set((state) => {
-      state.error = error;
-    }),
+    setError: (error) =>
+      set((state) => {
+        state.error = error;
+      }),
 
-    setTravelMode: (mode) => set((state) => {
-      state.travelMode = mode;
-    }),
+    setTravelMode: (mode) =>
+      set((state) => {
+        state.travelMode = mode;
+      }),
 
-    setTravelStats: (duration, distance) => set((state) => {
-      state.totalDuration = duration;
-      state.totalDistance = distance;
-    }),
+    setTravelStats: (duration, distance) =>
+      set((state) => {
+        state.totalDuration = duration;
+        state.totalDistance = distance;
+      }),
 
-    clearRoute: () => set((state) => {
-      state.currentRoute = null;
-      state.totalDuration = 0;
-      state.totalDistance = 0;
-      state.error = null;
-    }),
-  }))
+    clearRoute: () =>
+      set((state) => {
+        state.currentRoute = null;
+        state.totalDuration = 0;
+        state.totalDistance = 0;
+        state.error = null;
+      }),
+  })),
 );
 ```
 
 ### 3. UI コンポーネントの実装
 
 #### A. 計画作成・編集モーダル (`src/components/plans/PlanEditModal.tsx`)
+
 ```typescript
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, CalendarIcon } from '@heroicons/react/24/outline';
@@ -697,7 +763,7 @@ export const PlanEditModal: React.FC<PlanEditModalProps> = ({
   onSuccess,
 }) => {
   const { createNewPlan, updatePlanInfo } = usePlanActions();
-  
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -723,7 +789,7 @@ export const PlanEditModal: React.FC<PlanEditModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!title.trim()) return;
 
     setIsSubmitting(true);
@@ -869,11 +935,12 @@ export const PlanEditModal: React.FC<PlanEditModalProps> = ({
 ```
 
 #### B. ルート表示パネル (`src/components/routes/RoutePanel.tsx`)
+
 ```typescript
 import React, { useEffect, useState } from 'react';
-import { 
-  MapIcon, 
-  ClockIcon, 
+import {
+  MapIcon,
+  ClockIcon,
   ArrowPathIcon,
   TruckIcon,
   UserIcon,
@@ -936,12 +1003,12 @@ export const RoutePanel: React.FC = () => {
 
       if (result) {
         setTravelStats(result.totalDuration, result.totalDistance);
-        
+
         // ルートを地図に表示
         const directionsResult = {
           routes: result.routes,
         } as google.maps.DirectionsResult;
-        
+
         routeService.displayRoute(directionsResult);
       }
     } catch (error) {
@@ -1091,11 +1158,12 @@ export const RoutePanel: React.FC = () => {
 ### 4. 計画リスト・ダッシュボード
 
 #### A. 計画一覧コンポーネント (`src/components/plans/PlanList.tsx`)
+
 ```typescript
 import React, { useEffect, useState } from 'react';
-import { 
-  PlusIcon, 
-  MapPinIcon, 
+import {
+  PlusIcon,
+  MapPinIcon,
   CalendarIcon,
   UsersIcon,
   EllipsisVerticalIcon,
@@ -1110,7 +1178,7 @@ import type { Plan } from '@/types/core';
 export const PlanList: React.FC = () => {
   const { plans, isLoading, error } = usePlanStore();
   const { loadUserPlans, deletePlanById } = usePlanActions();
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [showMenu, setShowMenu] = useState<string | null>(null);
@@ -1213,7 +1281,7 @@ export const PlanList: React.FC = () => {
                     >
                       <EllipsisVerticalIcon className="w-5 h-5" />
                     </button>
-                    
+
                     {showMenu === plan.id && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                         <button
@@ -1295,18 +1363,21 @@ export const PlanList: React.FC = () => {
 ## 完成チェックリスト
 
 ### 計画管理機能
+
 - [ ] 計画の作成・編集・削除が動作する
 - [ ] 計画一覧が適切に表示される
 - [ ] 日付設定が正常に動作する
 - [ ] メンバー管理機能が動作する
 
 ### ルート機能
+
 - [ ] ルート計算が正常に動作する
 - [ ] 移動手段の切り替えが動作する
 - [ ] ルートが地図上に表示される
 - [ ] 所要時間・総距離が正しく計算される
 
 ### UI/UX
+
 - [ ] レスポンシブデザインが適用されている
 - [ ] ローディング状態が適切に表示される
 - [ ] エラーハンドリングが適切に動作する

@@ -1,5 +1,5 @@
-import { TravelPlan } from './index';
-import { ConflictResolutionStrategy } from './ConflictResolution';
+import { TravelPlan } from "./index";
+import { ConflictResolutionStrategy } from "./ConflictResolution";
 
 export interface PlanOperationResult {
   success: boolean;

@@ -1,4 +1,4 @@
-export type SaveStrategy = 'immediate' | 'debounced' | 'manual';
+export type SaveStrategy = "immediate" | "debounced" | "manual";
 
 export interface AutoSaveOptions {
   autoSave?: boolean;

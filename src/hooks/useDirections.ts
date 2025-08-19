@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { fetchTravelTime } from '../services/directionsService';
-import { TravelMode } from '../store/travelTimeStore';
+import { useEffect, useState } from "react";
+import { fetchTravelTime } from "../services/directionsService";
+import { TravelMode } from "../store/travelTimeStore";
 
 interface LatLngLiteral {
   lat: number;
@@ -41,4 +41,4 @@ export function useDirections(
   }, [origin, destinations, mode]);
 
   return { durations, loading, error };
-} 
+}

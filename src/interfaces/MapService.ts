@@ -10,7 +10,7 @@ export interface MapService {
   panTo(lat: number, lng: number, zoom?: number): void;
   getZoom(): number;
   setZoom(zoom: number): void;
-  
+
   // 地図の状態
   isLoaded(): boolean;
   getCenter(): { lat: number; lng: number };
@@ -41,7 +41,7 @@ export interface MapConfiguration {
  * 地図イベントのインターフェース
  */
 export interface MapEvent {
-  type: 'click' | 'zoom_changed' | 'center_changed';
+  type: "click" | "zoom_changed" | "center_changed";
   latLng?: { lat: number; lng: number };
   placeId?: string;
   zoom?: number;
@@ -52,4 +52,4 @@ export interface MapEvent {
  */
 export interface MapServiceFactory {
   create(mapInstance: any): MapService;
-} 
+}

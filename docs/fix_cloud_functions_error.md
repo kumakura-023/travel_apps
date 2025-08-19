@@ -5,7 +5,7 @@
 共有URLを生成しようとした際に以下のエラーが発生しています：
 
 ```
-Refused to connect to 'https://-voyagesketch.cloudfunctions.net/generateInviteToken' 
+Refused to connect to 'https://-voyagesketch.cloudfunctions.net/generateInviteToken'
 because it violates the following Content Security Policy directive
 ```
 
@@ -77,6 +77,7 @@ npm run dev
 ### 6. CSPポリシーについて
 
 CSPポリシーは既に修正済みで、以下が許可されています：
+
 - `https://*.cloudfunctions.net` - Cloud Functions
 - `ws://localhost:*` - 開発環境のWebSocket
 - `wss://localhost:*` - 開発環境のセキュアWebSocket
@@ -96,7 +97,7 @@ CSPポリシーは既に修正済みで、以下が許可されています：
 3. コンソールで以下を実行して環境変数を確認：
 
 ```javascript
-console.log(import.meta.env.VITE_FB_PROJECT_ID)
+console.log(import.meta.env.VITE_FB_PROJECT_ID);
 ```
 
 ### Firebase Functions のデプロイ確認

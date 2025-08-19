@@ -1,8 +1,19 @@
-import { TravelPlan } from '../types';
-import { SyncOperation, SyncMode, SyncPriority, SyncOperationType, SyncConfig, SyncContext } from '../types/SyncTypes';
-import { savePlanHybrid } from './storageService';
-import { syncDebugUtils } from '../utils/syncDebugUtils';
-import { ISyncService, SyncResult, SyncConflict } from '../interfaces/ISyncService';
+import { TravelPlan } from "../types";
+import {
+  SyncOperation,
+  SyncMode,
+  SyncPriority,
+  SyncOperationType,
+  SyncConfig,
+  SyncContext,
+} from "../types/SyncTypes";
+import { savePlanHybrid } from "./storageService";
+import { syncDebugUtils } from "../utils/syncDebugUtils";
+import {
+  ISyncService,
+  SyncResult,
+  SyncConflict,
+} from "../interfaces/ISyncService";
 
 /**
  * 同期システム全体を管理するクラス
@@ -13,16 +24,16 @@ export class SyncManager implements ISyncService {
   private operationQueue: Map<string, SyncOperation> = new Map();
   private debounceTimers: Map<SyncOperationType, NodeJS.Timeout> = new Map();
   private isProcessing = false;
-  
+
   // 書き込み頻度制限機能
   private writeHistory: number[] = [];
   private maxWritesPerMinute: number = 20; // 10から20に増加
   private writeIntervalMs: number = 60000; // 1分
   private pendingWriteQueue: Array<{
-    operation: SyncOperation,
-    plan: TravelPlan,
-    context: SyncContext,
-    timestamp: number
+    operation: SyncOperation;
+    plan: TravelPlan;
+    context: SyncContext;
+    timestamp: number;
   }> = [];
   private emergencyStopFlag = false;
   private consecutiveErrorCount = 0;
@@ -33,17 +44,17 @@ export class SyncManager implements ISyncService {
       debounceDelay: 1000,
       batchSize: 10,
       retryLimit: 3,
-      criticalOperations: ['place_added', 'place_deleted'],
-      debouncedOperations: ['memo_updated', 'place_updated'],
+      criticalOperations: ["place_added", "place_deleted"],
+      debouncedOperations: ["memo_updated", "place_updated"],
       operationDebounceDelays: {
         memo_updated: 30000, // メモ更新は30秒のデバウンス
         place_updated: 1000,
         label_updated: 1000,
-        plan_updated: 1000
+        plan_updated: 1000,
       },
-      ...config
+      ...config,
     };
-    
+
     // 定期的に書き込み履歴をクリーンアップ
     setInterval(() => {
       this.cleanupWriteHistory();
@@ -58,13 +69,13 @@ export class SyncManager implements ISyncService {
     type: SyncOperationType,
     plan: TravelPlan,
     context: SyncContext,
-    data?: any
+    data?: any,
   ): Promise<void> {
     // 緊急停止フラグがセットされている場合は処理を停止
     if (this.emergencyStopFlag) {
       return;
     }
-    
+
     // リモート更新中は同期を停止
     if (context.isRemoteUpdateInProgress) {
       return;
@@ -76,18 +87,17 @@ export class SyncManager implements ISyncService {
       priority: this.determineSyncPriority(type),
       timestamp: Date.now(),
       data,
-      retryCount: 0
+      retryCount: 0,
     };
 
     this.operationQueue.set(operation.id, operation);
-
 
     // 書き込み頻度制限チェック
     if (!this.canWriteNow()) {
       this.queuePendingWrite(operation, plan, context);
       return;
     }
-    
+
     await this.processOperation(operation, plan, context);
   }
 
@@ -96,12 +106,12 @@ export class SyncManager implements ISyncService {
    */
   private determineSyncMode(type: SyncOperationType): SyncMode {
     if (this.config.criticalOperations.includes(type)) {
-      return 'immediate';
+      return "immediate";
     }
     if (this.config.debouncedOperations.includes(type)) {
-      return 'debounced';
+      return "debounced";
     }
-    return 'batch';
+    return "batch";
   }
 
   /**
@@ -109,18 +119,18 @@ export class SyncManager implements ISyncService {
    */
   private determineSyncPriority(type: SyncOperationType): SyncPriority {
     switch (type) {
-      case 'place_added':
-      case 'place_deleted':
-        return 'critical';
-      case 'memo_updated':
-      case 'place_updated':
-        return 'high';
-      case 'label_added':
-      case 'label_updated':
-      case 'label_deleted':
-        return 'normal';
+      case "place_added":
+      case "place_deleted":
+        return "critical";
+      case "memo_updated":
+      case "place_updated":
+        return "high";
+      case "label_added":
+      case "label_updated":
+      case "label_deleted":
+        return "normal";
       default:
-        return 'low';
+        return "low";
     }
   }
 
@@ -130,16 +140,16 @@ export class SyncManager implements ISyncService {
   private async processOperation(
     operation: SyncOperation,
     plan: TravelPlan,
-    context: SyncContext
+    context: SyncContext,
   ): Promise<void> {
     switch (operation.mode) {
-      case 'immediate':
+      case "immediate":
         await this.processImmediate(operation, plan, context);
         break;
-      case 'debounced':
+      case "debounced":
         await this.processDebounced(operation, plan, context);
         break;
-      case 'batch':
+      case "batch":
         await this.processBatch(operation, plan, context);
         break;
     }
@@ -151,26 +161,30 @@ export class SyncManager implements ISyncService {
   private async processImmediate(
     operation: SyncOperation,
     plan: TravelPlan,
-    context: SyncContext
+    context: SyncContext,
   ): Promise<void> {
     try {
       // ローカル保存（即座）
-      await savePlanHybrid(plan, { mode: 'local' });
-      
+      await savePlanHybrid(plan, { mode: "local" });
+
       // クラウド同期（即座）
-      if (context.isOnline && context.hasUser && context.uid && !context.isRemoteUpdateInProgress) {
+      if (
+        context.isOnline &&
+        context.hasUser &&
+        context.uid &&
+        !context.isRemoteUpdateInProgress
+      ) {
         await this.syncToCloud(operation, plan, context);
       }
 
       this.operationQueue.delete(operation.id);
 
-      syncDebugUtils.log('save', {
-        type: 'immediate_sync',
+      syncDebugUtils.log("save", {
+        type: "immediate_sync",
         operation: operation.type,
         timestamp: operation.timestamp,
-        success: true
+        success: true,
       });
-
     } catch (error) {
       await this.handleSyncError(operation, plan, context, error);
     }
@@ -182,7 +196,7 @@ export class SyncManager implements ISyncService {
   private async processDebounced(
     operation: SyncOperation,
     plan: TravelPlan,
-    context: SyncContext
+    context: SyncContext,
   ): Promise<void> {
     // 既存のタイマーをクリア
     const existingTimer = this.debounceTimers.get(operation.type);
@@ -192,40 +206,45 @@ export class SyncManager implements ISyncService {
 
     // ローカル保存は即座実行
     try {
-      await savePlanHybrid(plan, { mode: 'local' });
+      await savePlanHybrid(plan, { mode: "local" });
     } catch (error) {
-      console.warn('ローカル保存失敗:', error);
+      console.warn("ローカル保存失敗:", error);
     }
 
     // 操作タイプ別のデバウンス時間を取得
-    const debounceDelay = this.config.operationDebounceDelays?.[operation.type] || this.config.debounceDelay;
-    
+    const debounceDelay =
+      this.config.operationDebounceDelays?.[operation.type] ||
+      this.config.debounceDelay;
+
     // デバウンスタイマーを設定
-    
+
     // 既存の操作と統合（重複回避）
     const existingOps = Array.from(this.operationQueue.values()).filter(
-      op => op.type === operation.type && op.mode === 'debounced'
+      (op) => op.type === operation.type && op.mode === "debounced",
     );
-    existingOps.forEach(op => this.operationQueue.delete(op.id));
+    existingOps.forEach((op) => this.operationQueue.delete(op.id));
 
     const timer = setTimeout(async () => {
-
       try {
-        if (context.isOnline && context.hasUser && context.uid && !context.isRemoteUpdateInProgress) {
+        if (
+          context.isOnline &&
+          context.hasUser &&
+          context.uid &&
+          !context.isRemoteUpdateInProgress
+        ) {
           await this.syncToCloud(operation, plan, context);
         }
 
         this.operationQueue.delete(operation.id);
         this.debounceTimers.delete(operation.type);
 
-        syncDebugUtils.log('save', {
-          type: 'debounced_sync',
+        syncDebugUtils.log("save", {
+          type: "debounced_sync",
           operation: operation.type,
           timestamp: operation.timestamp,
           delay: debounceDelay,
-          success: true
+          success: true,
         });
-
       } catch (error) {
         await this.handleSyncError(operation, plan, context, error);
       }
@@ -240,18 +259,23 @@ export class SyncManager implements ISyncService {
   private async processBatch(
     operation: SyncOperation,
     plan: TravelPlan,
-    context: SyncContext
+    context: SyncContext,
   ): Promise<void> {
     // ローカル保存は即座実行
     try {
-      await savePlanHybrid(plan, { mode: 'local' });
+      await savePlanHybrid(plan, { mode: "local" });
     } catch (error) {
-      console.warn('ローカル保存失敗:', error);
+      console.warn("ローカル保存失敗:", error);
     }
 
     // バッチ処理は後で実装
     // 現在は即座処理として代替
-    if (context.isOnline && context.hasUser && context.uid && !context.isRemoteUpdateInProgress) {
+    if (
+      context.isOnline &&
+      context.hasUser &&
+      context.uid &&
+      !context.isRemoteUpdateInProgress
+    ) {
       await this.syncToCloud(operation, plan, context);
     }
 
@@ -264,27 +288,25 @@ export class SyncManager implements ISyncService {
   private async syncToCloud(
     operation: SyncOperation,
     plan: TravelPlan,
-    context: SyncContext
+    context: SyncContext,
   ): Promise<void> {
     const saveStartTimestamp = Date.now();
-    
+
     // 書き込み履歴に追加
     this.recordWrite(saveStartTimestamp);
-
 
     try {
       // contextからuidを取得してクラウド保存
       if (!context.uid) {
-        throw new Error('uid is required for cloud save');
+        throw new Error("uid is required for cloud save");
       }
-      
-      await savePlanHybrid(plan, { mode: 'cloud', uid: context.uid });
-      
+
+      await savePlanHybrid(plan, { mode: "cloud", uid: context.uid });
+
       // 成功時はエラーカウンターをリセット
       this.consecutiveErrorCount = 0;
 
       const saveEndTimestamp = Date.now();
-
     } catch (error: any) {
       this.handleFirebaseError(error);
       throw error; // エラーを再スローして上位のエラーハンドリングに任せる
@@ -298,7 +320,7 @@ export class SyncManager implements ISyncService {
     operation: SyncOperation,
     plan: TravelPlan,
     context: SyncContext,
-    error: any
+    error: any,
   ): Promise<void> {
     operation.retryCount = (operation.retryCount || 0) + 1;
 
@@ -308,19 +330,22 @@ export class SyncManager implements ISyncService {
         this.processOperation(operation, plan, context);
       }, 1000 * operation.retryCount);
 
-      console.warn(`同期リトライ ${operation.retryCount}/${this.config.retryLimit}:`, error);
+      console.warn(
+        `同期リトライ ${operation.retryCount}/${this.config.retryLimit}:`,
+        error,
+      );
     } else {
       // 最大リトライ回数に達した場合は操作を削除
       this.operationQueue.delete(operation.id);
-      console.error('同期失敗（最大リトライ回数到達）:', error);
+      console.error("同期失敗（最大リトライ回数到達）:", error);
     }
 
-    syncDebugUtils.log('save', {
-      type: 'sync_error',
+    syncDebugUtils.log("save", {
+      type: "sync_error",
       operation: operation.type,
       error: error.message,
       retryCount: operation.retryCount,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -328,7 +353,7 @@ export class SyncManager implements ISyncService {
    * 待機中の操作をクリア
    */
   clearPendingOperations(): void {
-    this.debounceTimers.forEach(timer => clearTimeout(timer));
+    this.debounceTimers.forEach((timer) => clearTimeout(timer));
     this.debounceTimers.clear();
     this.operationQueue.clear();
   }
@@ -338,7 +363,10 @@ export class SyncManager implements ISyncService {
    */
   private canWriteNow(): boolean {
     this.cleanupWriteHistory();
-    return this.writeHistory.length < this.maxWritesPerMinute && !this.emergencyStopFlag;
+    return (
+      this.writeHistory.length < this.maxWritesPerMinute &&
+      !this.emergencyStopFlag
+    );
   }
 
   // ISyncService インターフェースの実装
@@ -348,12 +376,16 @@ export class SyncManager implements ISyncService {
   /**
    * 同期操作をキューに追加（ISyncServiceインターフェース）
    */
-  queueOperation(operation: SyncOperation, plan: TravelPlan, context: SyncContext): void {
+  queueOperation(
+    operation: SyncOperation,
+    plan: TravelPlan,
+    context: SyncContext,
+  ): void {
     this.operationQueue.set(operation.id, operation);
-    
+
     // 非同期でプロセスを開始
-    this.processOperation(operation, plan, context).catch(error => {
-      console.error('Failed to process operation:', error);
+    this.processOperation(operation, plan, context).catch((error) => {
+      console.error("Failed to process operation:", error);
     });
   }
 
@@ -412,7 +444,7 @@ export class SyncManager implements ISyncService {
    */
   async processPendingOperations(): Promise<void> {
     if (this.isProcessing) return;
-    
+
     this.isProcessing = true;
     try {
       const operations = Array.from(this.operationQueue.values());
@@ -439,7 +471,7 @@ export class SyncManager implements ISyncService {
     this.writeHistory = [];
     this.clearPendingOperations();
   }
-  
+
   /**
    * 書き込み履歴を記録
    */
@@ -447,36 +479,35 @@ export class SyncManager implements ISyncService {
     this.writeHistory.push(timestamp);
     this.cleanupWriteHistory();
   }
-  
+
   /**
    * 古い書き込み履歴をクリーンアップ
    */
   private cleanupWriteHistory(): void {
     const now = Date.now();
-    this.writeHistory = this.writeHistory.filter(timestamp => 
-      now - timestamp < this.writeIntervalMs
+    this.writeHistory = this.writeHistory.filter(
+      (timestamp) => now - timestamp < this.writeIntervalMs,
     );
   }
-  
+
   /**
    * 制限超過時のキューへの追加
    */
   private queuePendingWrite(
     operation: SyncOperation,
     plan: TravelPlan,
-    context: SyncContext
+    context: SyncContext,
   ): void {
     const queueItem = {
       operation,
       plan,
       context,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     this.pendingWriteQueue.push(queueItem);
-    
   }
-  
+
   /**
    * キューに保存された書き込みを処理
    */
@@ -484,70 +515,70 @@ export class SyncManager implements ISyncService {
     if (this.emergencyStopFlag || this.pendingWriteQueue.length === 0) {
       return;
     }
-    
+
     const processableCount = Math.min(
       this.maxWritesPerMinute - this.writeHistory.length,
-      this.pendingWriteQueue.length
+      this.pendingWriteQueue.length,
     );
-    
+
     if (processableCount <= 0) {
       return;
     }
-    
+
     const itemsToProcess = this.pendingWriteQueue.splice(0, processableCount);
-    
-    
+
     for (const item of itemsToProcess) {
       try {
         await this.processOperation(item.operation, item.plan, item.context);
       } catch (error) {
-        console.error('キューからの書き込み処理失敗:', error);
+        console.error("キューからの書き込み処理失敗:", error);
       }
     }
   }
-  
+
   /**
    * Firebaseエラーのハンドリング
    */
   private handleFirebaseError(error: any): void {
     this.consecutiveErrorCount++;
-    
-    const errorMessage = error?.message || error?.toString() || '';
-    const isQuotaError = errorMessage.includes('quota') || 
-                        errorMessage.includes('limit') ||
-                        errorMessage.includes('too many requests') ||
-                        errorMessage.includes('resource-exhausted') ||
-                        errorMessage.includes('Write stream exhausted');
-    
-    
+
+    const errorMessage = error?.message || error?.toString() || "";
+    const isQuotaError =
+      errorMessage.includes("quota") ||
+      errorMessage.includes("limit") ||
+      errorMessage.includes("too many requests") ||
+      errorMessage.includes("resource-exhausted") ||
+      errorMessage.includes("Write stream exhausted");
+
     // クォータエラーまたは連続エラーが多い場合は緊急停止
-    if (isQuotaError || this.consecutiveErrorCount >= this.maxConsecutiveErrors) {
+    if (
+      isQuotaError ||
+      this.consecutiveErrorCount >= this.maxConsecutiveErrors
+    ) {
       this.activateEmergencyStop();
     }
   }
-  
+
   /**
    * 緊急停止モードを有効化
    */
   private activateEmergencyStop(): void {
     this.emergencyStopFlag = true;
-    
-    
+
     // 1分後に自動で停止モードを解除（エラー回復を早める）
     setTimeout(() => {
       this.deactivateEmergencyStop();
     }, 60 * 1000);
   }
-  
+
   /**
    * 緊急停止モードを解除
    */
   private deactivateEmergencyStop(): void {
     this.emergencyStopFlag = false;
     this.consecutiveErrorCount = 0;
-    
   }
-  
+
   /**
    * 緊急停止モードを手動で解除（デバッグ用）
    */
@@ -566,7 +597,7 @@ export class SyncManager implements ISyncService {
       writeHistory: this.writeHistory.length,
       pendingWriteQueue: this.pendingWriteQueue.length,
       emergencyStopFlag: this.emergencyStopFlag,
-      consecutiveErrorCount: this.consecutiveErrorCount
+      consecutiveErrorCount: this.consecutiveErrorCount,
     };
   }
 }

@@ -6,14 +6,14 @@ import {
   collection,
   writeBatch,
   serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../firebase';
-import { TravelPlan } from '../types';
-import { serializePlan, deserializePlan } from '../utils/planSerializer';
+} from "firebase/firestore";
+import { db } from "../firebase";
+import { TravelPlan } from "../types";
+import { serializePlan, deserializePlan } from "../utils/planSerializer";
 
 // Firestore collection references
-const plansCollection = collection(db, 'plans');
-const usersCollection = collection(db, 'users');
+const plansCollection = collection(db, "plans");
+const usersCollection = collection(db, "users");
 
 // Document reference helpers
 const planDocRef = (planId: string) => doc(plansCollection, planId);
@@ -39,12 +39,12 @@ export async function loadActivePlan(uid: string): Promise<TravelPlan | null> {
       // オーナー自身ならmembersに追加
       members = {
         ...members,
-        [uid]: { role: 'owner', joinedAt: new Date() },
+        [uid]: { role: "owner", joinedAt: new Date() },
       };
       shouldUpdateMembers = true;
     } else {
       // オーナーでもメンバーでもなければnull
-      console.warn('User is not a member or owner of the active plan');
+      console.warn("User is not a member or owner of the active plan");
       return null;
     }
   }
@@ -63,7 +63,10 @@ export async function loadActivePlan(uid: string): Promise<TravelPlan | null> {
  * 指定されたプランIDのプランを強制的に読み込む
  * 招待参加後に使用する
  */
-export async function loadPlanById(uid: string, planId: string): Promise<TravelPlan | null> {
+export async function loadPlanById(
+  uid: string,
+  planId: string,
+): Promise<TravelPlan | null> {
   const planRef = planDocRef(planId);
   const planSnap = await getDoc(planRef);
   if (!planSnap.exists()) return null;
@@ -74,7 +77,7 @@ export async function loadPlanById(uid: string, planId: string): Promise<TravelP
   // ユーザーがメンバーまたはオーナーかチェック
   const members = data.members || {};
   if (!members[uid] && data.ownerId !== uid) {
-    console.warn('User is not a member or owner of the plan');
+    console.warn("User is not a member or owner of the plan");
     return null;
   }
 
@@ -100,33 +103,41 @@ export async function savePlanCloud(uid: string, plan: TravelPlan) {
   // Extract member IDs for querying
   const allMembers = {
     ...existingMembers,
-    [uid]: { role: 'owner', joinedAt: clientTimestamp }, // Ensure current user is a member
+    [uid]: { role: "owner", joinedAt: clientTimestamp }, // Ensure current user is a member
   };
   const memberIds = Object.keys(allMembers);
 
   // Upsert the plan document
-  batch.set(planRef, {
-    payload,
-    name: plan.name, // プラン名も保存
-    ownerId: plan.ownerId || uid, // Set owner if not already set
-    members: allMembers,
-    memberIds, // クエリ用のメンバーIDリスト
-    updatedAt: serverTimestamp(), // サーバータイムスタンプを使用
-    lastSavedAt: clientTimestamp.toISOString(),
-  }, { merge: true });
+  batch.set(
+    planRef,
+    {
+      payload,
+      name: plan.name, // プラン名も保存
+      ownerId: plan.ownerId || uid, // Set owner if not already set
+      members: allMembers,
+      memberIds, // クエリ用のメンバーIDリスト
+      updatedAt: serverTimestamp(), // サーバータイムスタンプを使用
+      lastSavedAt: clientTimestamp.toISOString(),
+    },
+    { merge: true },
+  );
 
   // Update the user's active plan
-  batch.set(userRef, {
-    activePlanId: plan.id,
-    updatedAt: clientTimestamp,
-  }, { merge: true });
+  batch.set(
+    userRef,
+    {
+      activePlanId: plan.id,
+      updatedAt: clientTimestamp,
+    },
+    { merge: true },
+  );
 
   await batch.commit();
 }
 
 export function listenPlan(
   planId: string,
-  cb: (plan: TravelPlan | null) => void
+  cb: (plan: TravelPlan | null) => void,
 ) {
   const docRef = planDocRef(planId);
   return onSnapshot(docRef, (snap) => {
@@ -152,24 +163,32 @@ export function listenPlan(
 }
 
 // Function to invite a user (to be called from a Cloud Function for security)
-export async function addUserToPlan(planId: string, newUserId: string, role: 'editor' | 'viewer' = 'editor') {
-    const planRef = planDocRef(planId);
-    
-    // 既存のプランデータを取得
-    const planSnap = await getDoc(planRef);
-    const planData = planSnap.exists() ? planSnap.data() : {};
-    const existingMemberIds = planData.memberIds || [];
-    
-    // memberIds配列を更新
-    const updatedMemberIds = existingMemberIds.includes(newUserId) 
-      ? existingMemberIds 
-      : [...existingMemberIds, newUserId];
-    
-    await setDoc(planRef, {
-        members: {
-            [newUserId]: { role, joinedAt: new Date() }
-        },
-        memberIds: updatedMemberIds,
-        updatedAt: serverTimestamp()
-    }, { merge: true });
-} 
+export async function addUserToPlan(
+  planId: string,
+  newUserId: string,
+  role: "editor" | "viewer" = "editor",
+) {
+  const planRef = planDocRef(planId);
+
+  // 既存のプランデータを取得
+  const planSnap = await getDoc(planRef);
+  const planData = planSnap.exists() ? planSnap.data() : {};
+  const existingMemberIds = planData.memberIds || [];
+
+  // memberIds配列を更新
+  const updatedMemberIds = existingMemberIds.includes(newUserId)
+    ? existingMemberIds
+    : [...existingMemberIds, newUserId];
+
+  await setDoc(
+    planRef,
+    {
+      members: {
+        [newUserId]: { role, joinedAt: new Date() },
+      },
+      memberIds: updatedMemberIds,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}

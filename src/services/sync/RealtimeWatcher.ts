@@ -1,13 +1,16 @@
-import { TravelPlan } from '../../types';
+import { TravelPlan } from "../../types";
 
 export type WatchCallback = (plan: TravelPlan) => void;
 
 export class RealtimeWatcher {
-  private watchers: Map<string, { unsubscribe: () => void; callback: WatchCallback }> = new Map();
+  private watchers: Map<
+    string,
+    { unsubscribe: () => void; callback: WatchCallback }
+  > = new Map();
 
   async watch(planId: string, callback: WatchCallback): Promise<() => void> {
-    const { listenPlan } = await import('../planCloudService');
-    
+    const { listenPlan } = await import("../planCloudService");
+
     const unsubscribe = listenPlan(planId, (updatedPlan) => {
       if (updatedPlan) {
         callback(updatedPlan);

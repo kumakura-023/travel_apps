@@ -34,6 +34,7 @@
 ### 3. 同期システムの根本的見直し
 
 **現在の問題解決アプローチ:**
+
 - 単一責任の同期マネージャー
 - 操作ベースの競合解決
 - UI状態とクラウド状態の完全分離
@@ -41,15 +42,18 @@
 ## 技術スタック（継続使用）
 
 ### フロントエンド
+
 - **React 18** + **TypeScript** + **Vite**
 - **Tailwind CSS**（デザインシステム継続）
 - **Zustand**（シンプル化）
 
 ### バックエンド・データ
+
 - **Firebase/Firestore**（リアルタイム同期）
 - **Google Maps API**（地図・場所・ルート）
 
 ### PWA・ビルド
+
 - **vite-plugin-pwa** + **Workbox**
 
 ## ディレクトリ構造
@@ -86,9 +90,10 @@ src/
 ### 1. メモ機能の同期問題解決策
 
 #### A. 状態の明確な分離
+
 ```typescript
 // UI状態（即座反映）
-const [localMemo, setLocalMemo] = useState('');
+const [localMemo, setLocalMemo] = useState("");
 
 // 同期状態（デバウンス後にクラウド反映）
 const syncMemo = useMemoSync(placeId);
@@ -98,10 +103,11 @@ const resolvedMemo = useConflictResolution(localMemo, syncMemo);
 ```
 
 #### B. 操作ベースの同期
+
 ```typescript
 interface SyncOperation {
   id: string;
-  type: 'memo_update' | 'place_add' | 'plan_update';
+  type: "memo_update" | "place_add" | "plan_update";
   userId: string;
   timestamp: number;
   data: any;
@@ -109,17 +115,20 @@ interface SyncOperation {
 ```
 
 #### C. 単一責任の同期マネージャー
+
 - **責任**: クラウド同期のみ
 - **除外**: UI状態管理、リアルタイム更新の処理
 
 ### 2. パフォーマンス最適化
 
 #### A. コンポーネント分割
+
 - 機能ごとに独立したコンポーネント
 - メモ化とlazy loadingの適切な使用
 - 不要な再レンダリングの防止
 
 #### B. バンドル最適化
+
 - 機能別のcode splitting
 - 地図APIの遅延読み込み
 - 使用頻度に基づくチャンク分割
@@ -127,6 +136,7 @@ interface SyncOperation {
 ### 3. エラーハンドリング
 
 #### A. 段階的エラー処理
+
 ```typescript
 // Level 1: UI通知
 // Level 2: 自動リトライ
@@ -135,6 +145,7 @@ interface SyncOperation {
 ```
 
 #### B. オフライン対応
+
 - Service Workerによるオフライン機能
 - データの楽観的更新
 - 接続復旧時の自動同期
@@ -142,27 +153,32 @@ interface SyncOperation {
 ## 実装順序（推奨）
 
 ### Phase 1: 基盤構築（1-2週間）
+
 1. プロジェクト初期化とボイラープレート
 2. 基本的なルーティングとレイアウト
 3. ストア構造の構築
 4. 型定義の整備
 
 ### Phase 2: コア機能（2-3週間）
+
 1. 地図表示と基本操作
 2. 場所の追加・表示・管理
 3. 基本的な計画作成・編集
 
 ### Phase 3: 同期システム（1-2週間）
+
 1. **新しい同期システムの構築**
 2. **メモ機能の実装（問題解決版）**
 3. リアルタイム更新の実装
 
 ### Phase 4: 高度な機能（2-3週間）
+
 1. ルート計算・表示
 2. コスト管理
 3. 共有・招待機能
 
 ### Phase 5: 仕上げ・最適化（1週間）
+
 1. PWA機能の実装
 2. パフォーマンス最適化
 3. テスト・デバッグ
@@ -170,12 +186,14 @@ interface SyncOperation {
 ## 品質保証
 
 ### 開発時の必須チェック
+
 1. **TypeScript型チェック**: `npm run type-check`
 2. **ESLint**: `npm run lint`
 3. **手動テスト**: 各機能の動作確認
 4. **同期テスト**: 複数ブラウザでの同時編集テスト
 
 ### パフォーマンス指標
+
 - **First Contentful Paint**: < 1.5s
 - **Largest Contentful Paint**: < 2.5s
 - **メモ同期遅延**: < 500ms
@@ -184,12 +202,14 @@ interface SyncOperation {
 ## 成功指標
 
 ### 機能面
+
 - [ ] メモ機能で無限ループが発生しない
 - [ ] リアルタイム同期が正常動作する
 - [ ] 複数ユーザーでの同時編集が可能
 - [ ] オフライン機能が動作する
 
 ### 技術面
+
 - [ ] バンドルサイズが現在より20%以上削減
 - [ ] パフォーマンス指標をすべて満たす
 - [ ] TypeScriptエラーが0件

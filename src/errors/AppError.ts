@@ -1,4 +1,9 @@
-import { ErrorCode, ErrorSeverity, getErrorSeverity, getErrorMessage } from './ErrorCodes';
+import {
+  ErrorCode,
+  ErrorSeverity,
+  getErrorSeverity,
+  getErrorMessage,
+} from "./ErrorCodes";
 
 /**
  * アプリケーション全体で使用する統一エラークラス
@@ -10,7 +15,7 @@ export class AppError extends Error {
   public readonly retry?: () => Promise<void>;
   public readonly timestamp: Date;
   public readonly context?: Record<string, any>;
-  public declare cause?: Error;
+  declare public cause?: Error;
 
   constructor(
     code: ErrorCode,
@@ -20,25 +25,25 @@ export class AppError extends Error {
       retry?: () => Promise<void>;
       context?: Record<string, any>;
       cause?: Error;
-    }
+    },
   ) {
     // メッセージが指定されていない場合はエラーコードから取得
     const errorMessage = message || getErrorMessage(code);
     super(errorMessage);
-    
-    this.name = 'AppError';
+
+    this.name = "AppError";
     this.code = code;
     this.severity = getErrorSeverity(code);
     this.details = options?.details;
     this.retry = options?.retry;
     this.context = options?.context;
     this.timestamp = new Date();
-    
+
     // 元のエラーがある場合は原因として保持
     if (options?.cause) {
       (this as any).cause = options.cause;
     }
-    
+
     // スタックトレースを正しく設定
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, AppError);
@@ -95,11 +100,11 @@ export class AppError extends Error {
     if (error instanceof AppError) {
       return error;
     }
-    
+
     const errorCode = code || ErrorCode.UNKNOWN_ERROR;
     const message = error instanceof Error ? error.message : String(error);
     const cause = error instanceof Error ? error : undefined;
-    
+
     return new AppError(errorCode, message, { cause });
   }
 
@@ -128,11 +133,11 @@ export class AppError extends Error {
    * データが見つからないエラーを作成
    */
   static notFound(resource: string, id?: string): AppError {
-    const message = id 
+    const message = id
       ? `${resource}が見つかりません (ID: ${id})`
       : `${resource}が見つかりません`;
-    return new AppError(ErrorCode.NOT_FOUND, message, { 
-      context: { resource, id } 
+    return new AppError(ErrorCode.NOT_FOUND, message, {
+      context: { resource, id },
     });
   }
 

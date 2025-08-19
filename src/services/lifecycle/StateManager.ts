@@ -1,19 +1,19 @@
-import { TravelPlan } from '../../types';
-import { PlanLifecycleContext } from '../../types/PlanLifecycle';
-import { usePlanStore } from '../../store/planStore';
-import { useSavedPlacesStore } from '../../store/savedPlacesStore';
-import { useLabelsStore } from '../../store/labelsStore';
+import { TravelPlan } from "../../types";
+import { PlanLifecycleContext } from "../../types/PlanLifecycle";
+import { usePlanStore } from "../../store/planStore";
+import { useSavedPlacesStore } from "../../store/savedPlacesStore";
+import { useLabelsStore } from "../../store/labelsStore";
 
 export class StateManager {
   constructor(
-    private onStateChange?: (context: PlanLifecycleContext) => void
+    private onStateChange?: (context: PlanLifecycleContext) => void,
   ) {}
 
   setPlan(plan: TravelPlan): void {
     usePlanStore.getState().setPlan(plan);
     usePlanStore.getState().setLoading(false);
     usePlanStore.getState().setError(null);
-    
+
     useSavedPlacesStore.setState({ places: plan.places || [] });
     useLabelsStore.setState({ labels: plan.labels || [] });
   }
@@ -26,7 +26,11 @@ export class StateManager {
     const newLabels = plan.labels || [];
 
     // プランが実際に変更された場合のみ更新（PlanCoordinatorの最適化ロジックを継承）
-    if (!currentPlan || currentPlan.id !== plan.id || JSON.stringify(currentPlan) !== JSON.stringify(plan)) {
+    if (
+      !currentPlan ||
+      currentPlan.id !== plan.id ||
+      JSON.stringify(currentPlan) !== JSON.stringify(plan)
+    ) {
       usePlanStore.getState().setPlan(plan);
       usePlanStore.getState().setLoading(false);
       usePlanStore.getState().setError(null);

@@ -1,5 +1,5 @@
-import React from 'react';
-import { syncDebugUtils } from '../utils/syncDebugUtils';
+import React from "react";
+import { syncDebugUtils } from "../utils/syncDebugUtils";
 
 /**
  * 同期デバッグレポートを表示するボタン
@@ -8,7 +8,7 @@ import { syncDebugUtils } from '../utils/syncDebugUtils';
  */
 const SyncDebugButton: React.FC = () => {
   const handleDebugClick = () => {
-    console.log('🔍 同期デバッグレポート生成開始');
+    console.log("🔍 同期デバッグレポート生成開始");
     syncDebugUtils.printDetailedReport();
   };
 
@@ -36,4 +36,4 @@ const SyncDebugButton: React.FC = () => {
   );
 };
 
-export default SyncDebugButton; 
+export default SyncDebugButton;

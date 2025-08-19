@@ -1,12 +1,15 @@
-import React from 'react';
-import { TravelPlan } from '../types';
-import { useSavedPlacesStore } from '../store/savedPlacesStore';
-import { useLabelsStore } from '../store/labelsStore';
-import { usePlanStore } from '../store/planStore';
-import { usePlanListStore } from '../store/planListStore';
-import { useAuth } from '../hooks/useAuth';
-import { deletePlanFromCloud, updatePlanName } from '../services/planListService';
-import { FiTrash2, FiEdit2 } from 'react-icons/fi';
+import React from "react";
+import { TravelPlan } from "../types";
+import { useSavedPlacesStore } from "../store/savedPlacesStore";
+import { useLabelsStore } from "../store/labelsStore";
+import { usePlanStore } from "../store/planStore";
+import { usePlanListStore } from "../store/planListStore";
+import { useAuth } from "../hooks/useAuth";
+import {
+  deletePlanFromCloud,
+  updatePlanName,
+} from "../services/planListService";
+import { FiTrash2, FiEdit2 } from "react-icons/fi";
 
 interface PlanListProps {
   onSelect?: () => void;
@@ -17,10 +20,17 @@ interface PlanListProps {
  */
 const PlanList: React.FC<PlanListProps> = ({ onSelect }) => {
   const { user } = useAuth();
-  const { plans, isLoading, error, startListening, stopListening, refreshPlans } = usePlanListStore();
+  const {
+    plans,
+    isLoading,
+    error,
+    startListening,
+    stopListening,
+    refreshPlans,
+  } = usePlanListStore();
   const { listenToPlan } = usePlanStore();
   const [editingId, setEditingId] = React.useState<string | null>(null);
-  const [editingName, setEditingName] = React.useState('');
+  const [editingName, setEditingName] = React.useState("");
 
   React.useEffect(() => {
     if (user) {
@@ -35,38 +45,38 @@ const PlanList: React.FC<PlanListProps> = ({ onSelect }) => {
   }, [user]);
 
   const handleSelect = (planId: string) => {
-    console.log('[PlanList] Selecting plan:', planId);
+    console.log("[PlanList] Selecting plan:", planId);
     listenToPlan(planId);
     if (onSelect) onSelect();
   };
 
   const handleDelete = async (planId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm('このプランを削除しますか？')) return;
-    
+    if (!confirm("このプランを削除しますか？")) return;
+
     try {
       await deletePlanFromCloud(planId);
     } catch (error) {
-      console.error('[PlanList] Failed to delete plan:', error);
-      alert('プランの削除に失敗しました');
+      console.error("[PlanList] Failed to delete plan:", error);
+      alert("プランの削除に失敗しました");
     }
   };
 
   const handleEditName = async (planId: string, newName: string) => {
     if (!newName.trim()) return;
-    
+
     try {
       await updatePlanName(planId, newName);
       setEditingId(null);
     } catch (error) {
-      console.error('[PlanList] Failed to update plan name:', error);
-      alert('プラン名の更新に失敗しました');
+      console.error("[PlanList] Failed to update plan name:", error);
+      alert("プラン名の更新に失敗しました");
     }
   };
 
   const handleRetry = () => {
     if (user) {
-      console.log('[PlanList] Retrying to load plans');
+      console.log("[PlanList] Retrying to load plans");
       refreshPlans();
     }
   };
@@ -91,7 +101,7 @@ const PlanList: React.FC<PlanListProps> = ({ onSelect }) => {
           <div className="font-medium mb-1">プラン一覧の取得に失敗しました</div>
           <div className="text-xs text-red-600">{error}</div>
         </div>
-        <button 
+        <button
           onClick={handleRetry}
           className="px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
@@ -105,7 +115,9 @@ const PlanList: React.FC<PlanListProps> = ({ onSelect }) => {
     return (
       <div className="text-center py-8 space-y-2">
         <p className="text-gray-500 text-sm">保存されたプランはありません。</p>
-        <p className="text-gray-400 text-xs">新しいプランを作成してください。</p>
+        <p className="text-gray-400 text-xs">
+          新しいプランを作成してください。
+        </p>
       </div>
     );
   }
@@ -113,7 +125,11 @@ const PlanList: React.FC<PlanListProps> = ({ onSelect }) => {
   return (
     <ul className="space-y-2">
       {plans.map((plan) => (
-        <li key={plan.id} className="border rounded p-2 hover:bg-gray-50 cursor-pointer group" onClick={() => handleSelect(plan.id)}>
+        <li
+          key={plan.id}
+          className="border rounded p-2 hover:bg-gray-50 cursor-pointer group"
+          onClick={() => handleSelect(plan.id)}
+        >
           <div className="flex items-center justify-between">
             {editingId === plan.id ? (
               <input
@@ -122,9 +138,9 @@ const PlanList: React.FC<PlanListProps> = ({ onSelect }) => {
                 onChange={(e) => setEditingName(e.target.value)}
                 onBlur={() => handleEditName(plan.id, editingName)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     handleEditName(plan.id, editingName);
-                  } else if (e.key === 'Escape') {
+                  } else if (e.key === "Escape") {
                     setEditingId(null);
                   }
                 }}
@@ -155,7 +171,7 @@ const PlanList: React.FC<PlanListProps> = ({ onSelect }) => {
             </div>
           </div>
           <div className="text-xs text-gray-500">
-            {plan.placeCount} 地点 • {plan.totalCost.toLocaleString()} 円 • 
+            {plan.placeCount} 地点 • {plan.totalCost.toLocaleString()} 円 •
             {plan.memberCount} 人
           </div>
         </li>
@@ -164,4 +180,4 @@ const PlanList: React.FC<PlanListProps> = ({ onSelect }) => {
   );
 };
 
-export default PlanList; 
+export default PlanList;

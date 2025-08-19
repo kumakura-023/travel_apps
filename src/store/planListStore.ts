@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { PlanListItem, listenUserPlans } from '../services/planListService';
-import { User } from 'firebase/auth';
-import { Unsubscribe } from 'firebase/firestore';
+import { create } from "zustand";
+import { PlanListItem, listenUserPlans } from "../services/planListService";
+import { User } from "firebase/auth";
+import { Unsubscribe } from "firebase/firestore";
 
 interface PlanListState {
   plans: PlanListItem[];
@@ -22,8 +22,8 @@ export const usePlanListStore = create<PlanListState>((set, get) => ({
   unsubscribe: null,
 
   startListening: (user: User) => {
-    console.log('[planListStore] Starting to listen for plans');
-    
+    console.log("[planListStore] Starting to listen for plans");
+
     // 既存のリスナーがあれば停止
     const { unsubscribe } = get();
     if (unsubscribe) {
@@ -40,13 +40,16 @@ export const usePlanListStore = create<PlanListState>((set, get) => ({
         set({ plans, isLoading: false, error: null });
       },
       (error) => {
-        console.error('[planListStore] Error with sorted query:', error);
-        
+        console.error("[planListStore] Error with sorted query:", error);
+
         // インデックスエラーの場合は、ソートなし版を試す
-        if (!unsubscribeAttempted && (error as any).code === 'failed-precondition') {
-          console.log('[planListStore] Falling back to no-sort query');
+        if (
+          !unsubscribeAttempted &&
+          (error as any).code === "failed-precondition"
+        ) {
+          console.log("[planListStore] Falling back to no-sort query");
           unsubscribeAttempted = true;
-          
+
           const fallbackUnsubscribe = listenUserPlans(
             user,
             (plans) => {
@@ -55,28 +58,28 @@ export const usePlanListStore = create<PlanListState>((set, get) => ({
             (fallbackError) => {
               set({ error: fallbackError.message, isLoading: false });
             },
-            false // ソートなし
+            false, // ソートなし
           );
-          
+
           set({ unsubscribe: fallbackUnsubscribe });
           return;
         }
-        
+
         set({ error: error.message, isLoading: false });
-      }
+      },
     );
 
     set({ unsubscribe: newUnsubscribe });
   },
 
   stopListening: () => {
-    console.log('[planListStore] Stopping plan list listener');
-    
+    console.log("[planListStore] Stopping plan list listener");
+
     const { unsubscribe } = get();
     if (unsubscribe) {
       unsubscribe();
     }
-    
+
     set({ unsubscribe: null, plans: [], isLoading: false });
   },
 
@@ -87,20 +90,20 @@ export const usePlanListStore = create<PlanListState>((set, get) => ({
   setError: (error: string | null) => {
     set({ error });
   },
-  
+
   // 手動でリフレッシュする機能（デバッグ用）
   refreshPlans: async () => {
     const { startListening } = get();
-    
+
     // authから現在のユーザーを取得
-    const { auth } = await import('../firebase');
+    const { auth } = await import("../firebase");
     const user = auth.currentUser;
-    
+
     if (user) {
-      console.log('[planListStore] Manually refreshing plans');
+      console.log("[planListStore] Manually refreshing plans");
       startListening(user);
     } else {
-      console.error('[planListStore] No user found for refreshPlans');
+      console.error("[planListStore] No user found for refreshPlans");
     }
   },
 }));

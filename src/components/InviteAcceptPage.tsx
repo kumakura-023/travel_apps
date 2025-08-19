@@ -1,88 +1,108 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebase';
-import { useAuth, isInAppBrowser } from '../hooks/useAuth';
-import { useBrowserPromptStore } from '../store/browserPromptStore';
-import { setActivePlan } from '../services/storageService';
-import { getPlanCoordinator } from '../services/ServiceContainer';
-import ExternalBrowserPrompt from './ExternalBrowserPrompt';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../firebase";
+import { useAuth, isInAppBrowser } from "../hooks/useAuth";
+import { useBrowserPromptStore } from "../store/browserPromptStore";
+import { setActivePlan } from "../services/storageService";
+import { getPlanCoordinator } from "../services/ServiceContainer";
+import ExternalBrowserPrompt from "./ExternalBrowserPrompt";
 
-const INVITE_TOKEN_KEY = 'pending_invite_token';
+const INVITE_TOKEN_KEY = "pending_invite_token";
 
 const InviteAcceptPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
-  const storedToken = token || localStorage.getItem(INVITE_TOKEN_KEY) || undefined;
+  const storedToken =
+    token || localStorage.getItem(INVITE_TOKEN_KEY) || undefined;
   const navigate = useNavigate();
   const { user, isInitializing, signIn } = useAuth();
-  const [status, setStatus] = useState<'pending' | 'success' | 'error' | 'already' | 'auth'>('pending');
-  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<
+    "pending" | "success" | "error" | "already" | "auth"
+  >("pending");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (isInitializing) return;
     if (!storedToken) {
-      setStatus('error');
-      setMessage('招待トークンが無効です');
+      setStatus("error");
+      setMessage("招待トークンが無効です");
       return;
     }
     if (!user) {
-      setStatus('auth');
+      setStatus("auth");
       return;
     }
     const accept = async () => {
-      setStatus('pending');
-      setMessage('プランに参加しています...');
+      setStatus("pending");
+      setMessage("プランに参加しています...");
       try {
-        const acceptInviteToken = httpsCallable(functions, 'acceptInviteToken');
+        const acceptInviteToken = httpsCallable(functions, "acceptInviteToken");
         const result = await acceptInviteToken({ token: storedToken });
-        const data = result.data as { success?: boolean; alreadyMember?: boolean; planId?: string };
-        
+        const data = result.data as {
+          success?: boolean;
+          alreadyMember?: boolean;
+          planId?: string;
+        };
+
         if (data.alreadyMember || data.success) {
-          setStatus(data.alreadyMember ? 'already' : 'success');
-          setMessage(data.alreadyMember ? 'すでにこのプランのメンバーです。' : 'プランに参加しました！');
-          
+          setStatus(data.alreadyMember ? "already" : "success");
+          setMessage(
+            data.alreadyMember
+              ? "すでにこのプランのメンバーです。"
+              : "プランに参加しました！",
+          );
+
           // アクティブプランを設定
           if (data.planId) {
             setActivePlan(data.planId);
-            
+
             // 新しいプランを読み込む - プランIDを直接指定して読み込み
             try {
-              console.log('[InviteAcceptPage] プラン参加後の初期化を開始:', data.planId);
-              
+              console.log(
+                "[InviteAcceptPage] プラン参加後の初期化を開始:",
+                data.planId,
+              );
+
               // PlanCoordinatorを取得
               const coordinator = getPlanCoordinator();
-              
+
               // クリーンアップしてから再初期化
               coordinator.cleanup();
-              
+
               // Firestoreの一貫性を考慮してより長く待機
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+
               // プランリストに依存せず、直接プランIDを使用して切り替え
-              console.log('[InviteAcceptPage] 直接プランを切り替え:', data.planId);
+              console.log(
+                "[InviteAcceptPage] 直接プランを切り替え:",
+                data.planId,
+              );
               await coordinator.switchPlan(user.uid, data.planId);
-              
-              console.log('[InviteAcceptPage] プラン切り替え完了');
-              
+
+              console.log("[InviteAcceptPage] プラン切り替え完了");
+
               // 成功メッセージの表示を延長
-              setMessage(data.alreadyMember ? 'プランに参加済みです。アプリに移動します...' : 'プランに参加しました！アプリに移動します...');
-              
+              setMessage(
+                data.alreadyMember
+                  ? "プランに参加済みです。アプリに移動します..."
+                  : "プランに参加しました！アプリに移動します...",
+              );
             } catch (error) {
-              console.error('プランの初期化に失敗しました:', error);
-              setMessage('プランの読み込みに失敗しました');
+              console.error("プランの初期化に失敗しました:", error);
+              setMessage("プランの読み込みに失敗しました");
             }
           }
-          
+
           localStorage.removeItem(INVITE_TOKEN_KEY);
-          setTimeout(() => navigate('/', { replace: true }), 2000);
+          setTimeout(() => navigate("/", { replace: true }), 2000);
         } else {
-          setStatus('error');
-          setMessage('参加処理に失敗しました');
+          setStatus("error");
+          setMessage("参加処理に失敗しました");
           localStorage.removeItem(INVITE_TOKEN_KEY);
         }
       } catch (e: any) {
-        setStatus('error');
-        setMessage(e.message || '参加処理に失敗しました');
+        setStatus("error");
+        setMessage(e.message || "参加処理に失敗しました");
         localStorage.removeItem(INVITE_TOKEN_KEY);
       }
     };
@@ -105,23 +125,33 @@ const InviteAcceptPage: React.FC = () => {
     <>
       <div className="fixed inset-0 flex items-center justify-center bg-white z-[2000]">
         <div className="glass-effect rounded-2xl max-w-md w-full p-8 shadow-lg text-center space-y-6">
-        <h2 className="headline text-system-label">プランに参加</h2>
-        {status === 'pending' && <div className="text-system-secondary-label">{message || '処理中...'}</div>}
-        {status === 'auth' && (
-          <>
-            <div className="text-system-secondary-label mb-4">プランに参加するにはログインが必要です。</div>
-            <button className="btn-primary w-full" onClick={handleLogin}>Googleでログイン</button>
-          </>
-        )}
-        {status === 'success' && (
-          <div className="text-system-secondary-label">{message}</div>
-        )}
-        {status === 'already' && (
-          <div className="text-system-secondary-label">{message}</div>
-        )}
-        {status === 'error' && (
-          <div className="text-system-secondary-label text-red-500">{message}</div>
-        )}
+          <h2 className="headline text-system-label">プランに参加</h2>
+          {status === "pending" && (
+            <div className="text-system-secondary-label">
+              {message || "処理中..."}
+            </div>
+          )}
+          {status === "auth" && (
+            <>
+              <div className="text-system-secondary-label mb-4">
+                プランに参加するにはログインが必要です。
+              </div>
+              <button className="btn-primary w-full" onClick={handleLogin}>
+                Googleでログイン
+              </button>
+            </>
+          )}
+          {status === "success" && (
+            <div className="text-system-secondary-label">{message}</div>
+          )}
+          {status === "already" && (
+            <div className="text-system-secondary-label">{message}</div>
+          )}
+          {status === "error" && (
+            <div className="text-system-secondary-label text-red-500">
+              {message}
+            </div>
+          )}
         </div>
       </div>
       <ExternalBrowserPrompt />
@@ -129,4 +159,4 @@ const InviteAcceptPage: React.FC = () => {
   );
 };
 
-export default InviteAcceptPage; 
+export default InviteAcceptPage;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -12,10 +12,10 @@ interface ConfirmDialogProps {
 
 export default function ConfirmDialog({
   open,
-  title = '確認',
+  title = "確認",
   message,
-  confirmLabel = 'OK',
-  cancelLabel = 'キャンセル',
+  confirmLabel = "OK",
+  cancelLabel = "キャンセル",
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -27,14 +27,20 @@ export default function ConfirmDialog({
         {title && <h3 className="alert-title">{title}</h3>}
         <p className="alert-message">{message}</p>
         <div className="flex gap-3 pt-2">
-          <button className="btn-secondary flex-1 ease-ios-default duration-ios-fast" onClick={onCancel}>
+          <button
+            className="btn-secondary flex-1 ease-ios-default duration-ios-fast"
+            onClick={onCancel}
+          >
             {cancelLabel}
           </button>
-          <button className="btn-primary flex-1 ease-ios-default duration-ios-fast" onClick={onConfirm}>
+          <button
+            className="btn-primary flex-1 ease-ios-default duration-ios-fast"
+            onClick={onConfirm}
+          >
             {confirmLabel}
           </button>
         </div>
       </div>
     </div>
   );
-} 
+}

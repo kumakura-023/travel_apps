@@ -1,5 +1,5 @@
-import { TravelPlan } from '../../types';
-import { savePlanHybrid } from '../storageService';
+import { TravelPlan } from "../../types";
+import { savePlanHybrid } from "../storageService";
 
 export interface SaveConfig {
   localOnly?: boolean;
@@ -8,11 +8,11 @@ export interface SaveConfig {
 
 export class SaveService {
   async saveLocal(plan: TravelPlan): Promise<void> {
-    await savePlanHybrid(plan, { mode: 'local' });
+    await savePlanHybrid(plan, { mode: "local" });
   }
 
   async saveCloud(plan: TravelPlan, userId: string): Promise<void> {
-    await savePlanHybrid(plan, { mode: 'cloud', uid: userId });
+    await savePlanHybrid(plan, { mode: "cloud", uid: userId });
   }
 
   async saveHybrid(plan: TravelPlan, config: SaveConfig): Promise<void> {
@@ -21,7 +21,7 @@ export class SaveService {
     } else if (config.userId) {
       await this.saveCloud(plan, config.userId);
     } else {
-      throw new Error('saveHybrid requires userId when not localOnly');
+      throw new Error("saveHybrid requires userId when not localOnly");
     }
   }
 }

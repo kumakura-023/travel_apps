@@ -1,10 +1,13 @@
 # タスク5: 候補地追加時の通知機能修正
 
 ## 問題の概要
+
 候補地を追加しても他のユーザーに通知が表示されない
 
 ## 問題の原因
+
 `savedPlacesStore.ts`の`addPlace`メソッドで通知を生成する条件（99-112行目）は以下の通り：
+
 - `newPlace.addedBy?.uid`が存在する
 - `newPlace.addedBy.uid !== user.uid`（自分が追加した場合は通知しない）
 
@@ -19,13 +22,14 @@
 **修正箇所：** 33-50行目付近
 
 **修正前：**
+
 ```typescript
 addPlace: (partial) =>
   set((state) => {
     if (!partial.coordinates) {
       throw new Error('Coordinates are required for adding a place');
     }
-    
+
     const newPlace = {
       ...partial,
       labelHidden: true,
@@ -40,16 +44,17 @@ addPlace: (partial) =>
 ```
 
 **修正後：**
+
 ```typescript
 addPlace: (partial) =>
   set((state) => {
     if (!partial.coordinates) {
       throw new Error('Coordinates are required for adding a place');
     }
-    
+
     // 現在のユーザー情報を取得
     const { user } = useAuthStore.getState();
-    
+
     const newPlace = {
       ...partial,
       labelHidden: true,
@@ -75,9 +80,15 @@ addPlace: (partial) =>
 **修正箇所：** 98-112行目付近
 
 **修正前：**
+
 ```typescript
 // 通知を生成（自分が追加した候補地は通知しない）
-if (plan && user && newPlace.addedBy?.uid && newPlace.addedBy.uid !== user.uid) {
+if (
+  plan &&
+  user &&
+  newPlace.addedBy?.uid &&
+  newPlace.addedBy.uid !== user.uid
+) {
   const notificationStore = useNotificationStore.getState();
   notificationStore.addNotification({
     placeId: newPlace.id,
@@ -85,24 +96,25 @@ if (plan && user && newPlace.addedBy?.uid && newPlace.addedBy.uid !== user.uid) 
     placeCategory: newPlace.category,
     addedBy: {
       uid: newPlace.addedBy.uid,
-      displayName: newPlace.addedBy.displayName || 'ユーザー'
+      displayName: newPlace.addedBy.displayName || "ユーザー",
     },
     planId: plan.id,
-    position: newPlace.coordinates
+    position: newPlace.coordinates,
   });
 }
 ```
 
 **修正後：**
+
 ```typescript
 // 通知を生成（プラン内のすべてのユーザーが確認できるように）
 if (plan && newPlace.addedBy?.uid) {
-  console.log('[placesStore] Creating notification for new place:', {
+  console.log("[placesStore] Creating notification for new place:", {
     placeId: newPlace.id,
     placeName: newPlace.name,
-    addedBy: newPlace.addedBy
+    addedBy: newPlace.addedBy,
   });
-  
+
   const notificationStore = useNotificationStore.getState();
   notificationStore.addNotification({
     placeId: newPlace.id,
@@ -110,10 +122,10 @@ if (plan && newPlace.addedBy?.uid) {
     placeCategory: newPlace.category,
     addedBy: {
       uid: newPlace.addedBy.uid,
-      displayName: newPlace.addedBy.displayName || 'ユーザー'
+      displayName: newPlace.addedBy.displayName || "ユーザー",
     },
     planId: plan.id,
-    position: newPlace.coordinates
+    position: newPlace.coordinates,
   });
 }
 ```
@@ -132,18 +144,15 @@ if (plan && newPlace.addedBy?.uid) {
    - 通知リストに新しい候補地の通知が表示されることを確認
 
 ## 影響範囲
+
 - `src/store/savedPlacesStore.ts`のみの修正
 - 他のコンポーネントへの影響なし
 - 既存の候補地追加処理はそのまま動作
 
 ## 実装後の動作
+
 1. ユーザーAが候補地を追加
 2. `addedBy`フィールドにユーザーAの情報が自動設定される
 3. 通知が生成され、notificationStoreに保存される
 4. ユーザーBがアプリを開いたときに通知バッジが表示される
 5. ユーザーBが通知リストを開くと、ユーザーAが追加した候補地の通知が表示される
-
-
-
-
-

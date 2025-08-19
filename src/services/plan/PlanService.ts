@@ -1,16 +1,20 @@
-import { IPlanRepository } from '../../repositories/interfaces/IPlanRepository';
-import { IUserRepository } from '../../repositories/interfaces/IUserRepository';
-import { TravelPlan } from '../../types';
-import { v4 as uuidv4 } from 'uuid';
+import { IPlanRepository } from "../../repositories/interfaces/IPlanRepository";
+import { IUserRepository } from "../../repositories/interfaces/IUserRepository";
+import { TravelPlan } from "../../types";
+import { v4 as uuidv4 } from "uuid";
 // import { serverTimestamp } from 'firebase/firestore';
-import { usePlanStore } from '../../store/planStore';
-import { IPlanService, PlanData, PlanUpdateData } from '../../interfaces/IPlanService';
+import { usePlanStore } from "../../store/planStore";
+import {
+  IPlanService,
+  PlanData,
+  PlanUpdateData,
+} from "../../interfaces/IPlanService";
 
 export class PlanService implements IPlanService {
   constructor(
     private readonly planRepository: IPlanRepository,
     private readonly userRepository: IUserRepository,
-    private readonly localCacheRepository: IPlanRepository
+    private readonly localCacheRepository: IPlanRepository,
   ) {}
 
   // IPlanService インターフェースの実装
@@ -20,7 +24,7 @@ export class PlanService implements IPlanService {
     const newPlan: TravelPlan = {
       id: uuidv4(),
       name: data.name,
-      description: data.description || '',
+      description: data.description || "",
       places: [],
       labels: [],
       startDate: data.startDate || now,
@@ -31,13 +35,13 @@ export class PlanService implements IPlanService {
       isActive: true,
       ownerId: userId,
       members: {
-        [userId]: { role: 'owner', joinedAt: now }
-      }
+        [userId]: { role: "owner", joinedAt: now },
+      },
     };
-    
+
     await this.planRepository.savePlan(newPlan);
     await this.localCacheRepository.savePlan(newPlan);
-    
+
     return newPlan;
   }
 
@@ -48,9 +52,9 @@ export class PlanService implements IPlanService {
 
   async savePlan(plan: TravelPlan): Promise<void> {
     plan.updatedAt = new Date();
-    
+
     await this.planRepository.savePlan(plan);
-    
+
     await this.localCacheRepository.savePlan(plan);
   }
 
@@ -59,18 +63,21 @@ export class PlanService implements IPlanService {
     await this.localCacheRepository.deletePlan(id);
   }
 
-  async deletePlanLegacy(userId: string, planId: string): Promise<string | null> {
+  async deletePlanLegacy(
+    userId: string,
+    planId: string,
+  ): Promise<string | null> {
     await this.planRepository.deletePlan(planId);
-    
+
     await this.localCacheRepository.deletePlan(planId);
-    
+
     const userPlans = await this.userRepository.getUserPlans(userId);
-    const remainingPlans = userPlans.filter(p => p.id !== planId);
-    
+    const remainingPlans = userPlans.filter((p) => p.id !== planId);
+
     if (remainingPlans.length > 0) {
       return remainingPlans[0].id;
     }
-    
+
     return null;
   }
 
@@ -79,24 +86,27 @@ export class PlanService implements IPlanService {
     if (cachedPlan) {
       return cachedPlan;
     }
-    
+
     const plan = await this.planRepository.loadPlan(planId);
-    
+
     if (plan) {
       await this.localCacheRepository.savePlan(plan);
     }
-    
+
     return plan;
   }
 
-  listenToPlan(planId: string, callback: (plan: TravelPlan | null) => void): () => void {
+  listenToPlan(
+    planId: string,
+    callback: (plan: TravelPlan | null) => void,
+  ): () => void {
     return this.planRepository.listenToPlan(planId, async (plan) => {
       if (plan) {
         await this.localCacheRepository.savePlan(plan);
       } else {
         await this.localCacheRepository.deletePlan(planId);
       }
-      
+
       callback(plan);
     });
   }
@@ -105,40 +115,40 @@ export class PlanService implements IPlanService {
     planId: string,
     position: google.maps.LatLngLiteral,
     userId: string,
-    actionType: 'place' | 'label'
+    actionType: "place" | "label",
   ): Promise<void> {
     const lastActionPosition = {
       position: {
         lat: position.lat,
-        lng: position.lng
+        lng: position.lng,
       },
       timestamp: new Date(),
       userId,
-      actionType
+      actionType,
     };
-    
-    console.log('[PlanService] Updating last action position:', {
+
+    console.log("[PlanService] Updating last action position:", {
       planId,
       position,
       userId,
-      actionType
+      actionType,
     });
-    
+
     try {
       await this.planRepository.updatePlan(planId, {
-        lastActionPosition
+        lastActionPosition,
       });
-      
+
       // ローカルキャッシュも更新
       const cachedPlan = await this.localCacheRepository.loadPlan(planId);
       if (cachedPlan) {
         cachedPlan.lastActionPosition = {
           ...lastActionPosition,
-          timestamp: new Date() // ローカルではDateオブジェクトを使用
+          timestamp: new Date(), // ローカルではDateオブジェクトを使用
         };
         await this.localCacheRepository.savePlan(cachedPlan);
       }
-      
+
       // planStoreの状態も更新（リアルタイム反映のため）
       const { setPlan, plan: currentPlan } = usePlanStore.getState();
       if (currentPlan && currentPlan.id === planId) {
@@ -147,18 +157,21 @@ export class PlanService implements IPlanService {
           lastActionPosition: {
             position: {
               lat: position.lat,
-              lng: position.lng
+              lng: position.lng,
             },
             timestamp: new Date(),
             userId,
-            actionType
-          }
+            actionType,
+          },
         });
       }
-      
-      console.log('[PlanService] Last action position updated successfully');
+
+      console.log("[PlanService] Last action position updated successfully");
     } catch (error) {
-      console.error('[PlanService] Failed to update last action position:', error);
+      console.error(
+        "[PlanService] Failed to update last action position:",
+        error,
+      );
       throw error;
     }
   }
@@ -173,7 +186,7 @@ export class PlanService implements IPlanService {
     const updatedPlan: TravelPlan = {
       ...plan,
       ...data,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     await this.savePlan(updatedPlan);
@@ -209,7 +222,7 @@ export class PlanService implements IPlanService {
     if (!plan) {
       throw new Error(`Plan not found: ${id}`);
     }
-    
+
     // 現在のアクティブプランを非アクティブに
     const userId = await this.getCurrentUserId();
     const userPlans = await this.getUserPlans(userId);
@@ -237,7 +250,7 @@ export class PlanService implements IPlanService {
       name: newName,
       createdAt: new Date(),
       updatedAt: new Date(),
-      isActive: false
+      isActive: false,
     };
 
     await this.planRepository.savePlan(duplicatedPlan);
@@ -261,7 +274,7 @@ export class PlanService implements IPlanService {
       id: uuidv4(),
       createdAt: new Date(),
       updatedAt: new Date(),
-      isActive: false
+      isActive: false,
     };
 
     await this.planRepository.savePlan(importedPlan);
@@ -271,13 +284,13 @@ export class PlanService implements IPlanService {
   }
 
   private async getCurrentUserId(): Promise<string> {
-    const { auth } = await import('../../firebase');
+    const { auth } = await import("../../firebase");
     const currentUser = auth.currentUser;
-    
+
     if (!currentUser) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
-    
+
     return currentUser.uid;
   }
 }

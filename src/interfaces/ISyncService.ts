@@ -1,5 +1,5 @@
-import { TravelPlan } from '../types';
-import { SyncOperation, SyncContext } from '../types/SyncTypes';
+import { TravelPlan } from "../types";
+import { SyncOperation, SyncContext } from "../types/SyncTypes";
 
 /**
  * 同期競合の情報を表すインターフェース
@@ -9,7 +9,7 @@ export interface SyncConflict {
   remotePlan: TravelPlan;
   localTimestamp: Date;
   remoteTimestamp: Date;
-  conflictType: 'update' | 'delete' | 'merge';
+  conflictType: "update" | "delete" | "merge";
 }
 
 /**
@@ -57,7 +57,11 @@ export interface ISyncService {
    * @param plan 対象プラン
    * @param context 同期コンテキスト
    */
-  queueOperation(operation: SyncOperation, plan: TravelPlan, context: SyncContext): void;
+  queueOperation(
+    operation: SyncOperation,
+    plan: TravelPlan,
+    context: SyncContext,
+  ): void;
 
   /**
    * 保留中の同期操作を実行

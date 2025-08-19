@@ -47,7 +47,5 @@
     "deny": [],
     "defaultMode": "acceptEdits"
   },
-  "enabledMcpjsonServers": [
-    "serena-local"
-  ]
+  "enabledMcpjsonServers": ["serena-local"]
 }

@@ -3,43 +3,44 @@
  * 疎結合な設計を実現し、テスタビリティとモジュール性を向上
  */
 
-import { MapService } from '../interfaces/MapService';
-import { PlaceService } from '../interfaces/PlaceService';
-import { PlaceRepository } from '../interfaces/PlaceRepository';
-import { ISyncService } from '../interfaces/ISyncService';
-import { IPlanService } from '../interfaces/IPlanService';
-import { IDirectionsService } from '../interfaces/IDirectionsService';
-import { GoogleMapsServiceAdapter } from '../adapters/GoogleMapsServiceAdapter';
-import { ZustandPlaceRepositoryAdapter } from '../adapters/ZustandPlaceRepositoryAdapter';
-import { FirestorePlanRepository } from '../repositories/FirestorePlanRepository';
-import { LocalStoragePlanRepository } from '../repositories/LocalStoragePlanRepository';
-import { FirestoreUserRepository } from '../repositories/FirestoreUserRepository';
-import { PlanService } from './plan/PlanService';
-import { ActivePlanService } from './plan/ActivePlanService';
-import { PlanCoordinator } from '../coordinators/PlanCoordinator';
-import { SyncManager } from './SyncManager';
-import { directionsService } from './directionsService';
-import { EventBus, eventBus } from '../events/EventBus';
-import { UnifiedPlanService } from './plan/UnifiedPlanService';
+import { MapService } from "../interfaces/MapService";
+import { PlaceService } from "../interfaces/PlaceService";
+import { PlaceRepository } from "../interfaces/PlaceRepository";
+import { ISyncService } from "../interfaces/ISyncService";
+import { IPlanService } from "../interfaces/IPlanService";
+import { IDirectionsService } from "../interfaces/IDirectionsService";
+import { GoogleMapsServiceAdapter } from "../adapters/GoogleMapsServiceAdapter";
+import { ZustandPlaceRepositoryAdapter } from "../adapters/ZustandPlaceRepositoryAdapter";
+import { FirestorePlanRepository } from "../repositories/FirestorePlanRepository";
+import { LocalStoragePlanRepository } from "../repositories/LocalStoragePlanRepository";
+import { FirestoreUserRepository } from "../repositories/FirestoreUserRepository";
+import { PlanService } from "./plan/PlanService";
+import { ActivePlanService } from "./plan/ActivePlanService";
+import { PlanCoordinator } from "../coordinators/PlanCoordinator";
+import { SyncManager } from "./SyncManager";
+import { directionsService } from "./directionsService";
+import { EventBus, eventBus } from "../events/EventBus";
+import { UnifiedPlanService } from "./plan/UnifiedPlanService";
 
 // サービスの識別子
 export const SERVICE_IDENTIFIERS = {
-  MAP_SERVICE: Symbol('MapService'),
-  PLACE_SERVICE: Symbol('PlaceService'),
-  PLACE_REPOSITORY: Symbol('PlaceRepository'),
-  PLAN_COORDINATOR: Symbol('PlanCoordinator'),
-  PLAN_SERVICE: Symbol('PlanService'),
-  ACTIVE_PLAN_SERVICE: Symbol('ActivePlanService'),
-  FIRESTORE_PLAN_REPOSITORY: Symbol('FirestorePlanRepository'),
-  LOCAL_STORAGE_PLAN_REPOSITORY: Symbol('LocalStoragePlanRepository'),
-  FIRESTORE_USER_REPOSITORY: Symbol('FirestoreUserRepository'),
-  SYNC_SERVICE: Symbol('ISyncService'),
-  DIRECTIONS_SERVICE: Symbol('IDirectionsService'),
-  EVENT_BUS: Symbol('EventBus'),
-  UNIFIED_PLAN_SERVICE: Symbol('UnifiedPlanService'),
+  MAP_SERVICE: Symbol("MapService"),
+  PLACE_SERVICE: Symbol("PlaceService"),
+  PLACE_REPOSITORY: Symbol("PlaceRepository"),
+  PLAN_COORDINATOR: Symbol("PlanCoordinator"),
+  PLAN_SERVICE: Symbol("PlanService"),
+  ACTIVE_PLAN_SERVICE: Symbol("ActivePlanService"),
+  FIRESTORE_PLAN_REPOSITORY: Symbol("FirestorePlanRepository"),
+  LOCAL_STORAGE_PLAN_REPOSITORY: Symbol("LocalStoragePlanRepository"),
+  FIRESTORE_USER_REPOSITORY: Symbol("FirestoreUserRepository"),
+  SYNC_SERVICE: Symbol("ISyncService"),
+  DIRECTIONS_SERVICE: Symbol("IDirectionsService"),
+  EVENT_BUS: Symbol("EventBus"),
+  UNIFIED_PLAN_SERVICE: Symbol("UnifiedPlanService"),
 } as const;
 
-type ServiceIdentifier = typeof SERVICE_IDENTIFIERS[keyof typeof SERVICE_IDENTIFIERS];
+type ServiceIdentifier =
+  (typeof SERVICE_IDENTIFIERS)[keyof typeof SERVICE_IDENTIFIERS];
 
 /**
  * サービスコンテナのインターフェース
@@ -114,74 +115,75 @@ export function registerDefaultServices(): void {
   // PlaceRepositoryをシングルトンとして登録
   container.registerSingleton(
     SERVICE_IDENTIFIERS.PLACE_REPOSITORY,
-    () => new ZustandPlaceRepositoryAdapter()
+    () => new ZustandPlaceRepositoryAdapter(),
   );
 
   // リポジトリをシングルトンとして登録
   container.registerSingleton(
     SERVICE_IDENTIFIERS.FIRESTORE_PLAN_REPOSITORY,
-    () => new FirestorePlanRepository()
+    () => new FirestorePlanRepository(),
   );
 
   container.registerSingleton(
     SERVICE_IDENTIFIERS.LOCAL_STORAGE_PLAN_REPOSITORY,
-    () => new LocalStoragePlanRepository()
+    () => new LocalStoragePlanRepository(),
   );
 
   container.registerSingleton(
     SERVICE_IDENTIFIERS.FIRESTORE_USER_REPOSITORY,
-    () => new FirestoreUserRepository()
+    () => new FirestoreUserRepository(),
   );
 
   // サービスをシングルトンとして登録
   container.registerSingleton(
     SERVICE_IDENTIFIERS.PLAN_SERVICE,
-    () => new PlanService(
-      container.get(SERVICE_IDENTIFIERS.FIRESTORE_PLAN_REPOSITORY),
-      container.get(SERVICE_IDENTIFIERS.FIRESTORE_USER_REPOSITORY),
-      container.get(SERVICE_IDENTIFIERS.LOCAL_STORAGE_PLAN_REPOSITORY)
-    )
+    () =>
+      new PlanService(
+        container.get(SERVICE_IDENTIFIERS.FIRESTORE_PLAN_REPOSITORY),
+        container.get(SERVICE_IDENTIFIERS.FIRESTORE_USER_REPOSITORY),
+        container.get(SERVICE_IDENTIFIERS.LOCAL_STORAGE_PLAN_REPOSITORY),
+      ),
   );
 
   container.registerSingleton(
     SERVICE_IDENTIFIERS.ACTIVE_PLAN_SERVICE,
-    () => new ActivePlanService(
-      container.get(SERVICE_IDENTIFIERS.FIRESTORE_USER_REPOSITORY)
-    )
+    () =>
+      new ActivePlanService(
+        container.get(SERVICE_IDENTIFIERS.FIRESTORE_USER_REPOSITORY),
+      ),
   );
 
   // コーディネーターをシングルトンとして登録
   container.registerSingleton(
     SERVICE_IDENTIFIERS.PLAN_COORDINATOR,
-    () => new PlanCoordinator(
-      container.get(SERVICE_IDENTIFIERS.PLAN_SERVICE),
-      container.get(SERVICE_IDENTIFIERS.ACTIVE_PLAN_SERVICE)
-    )
+    () =>
+      new PlanCoordinator(
+        container.get(SERVICE_IDENTIFIERS.PLAN_SERVICE),
+        container.get(SERVICE_IDENTIFIERS.ACTIVE_PLAN_SERVICE),
+      ),
   );
 
   // 新しいインターフェースベースのサービスを登録
   container.registerSingleton(
     SERVICE_IDENTIFIERS.SYNC_SERVICE,
-    () => new SyncManager()
+    () => new SyncManager(),
   );
 
   container.registerSingleton(
     SERVICE_IDENTIFIERS.DIRECTIONS_SERVICE,
-    () => directionsService
+    () => directionsService,
   );
 
   // EventBusをシングルトンとして登録
-  container.registerSingleton(
-    SERVICE_IDENTIFIERS.EVENT_BUS,
-    () => eventBus
-  );
+  container.registerSingleton(SERVICE_IDENTIFIERS.EVENT_BUS, () => eventBus);
 
   // UnifiedPlanServiceをシングルトンとして登録
   container.registerSingleton(
     SERVICE_IDENTIFIERS.UNIFIED_PLAN_SERVICE,
-    () => new UnifiedPlanService(
-      container.get(SERVICE_IDENTIFIERS.FIRESTORE_PLAN_REPOSITORY)
-    )
+    () =>
+      new UnifiedPlanService(
+        container.get(SERVICE_IDENTIFIERS.FIRESTORE_PLAN_REPOSITORY),
+      ),
   );
 
   // MapServiceは地図インスタンスが必要なため、
@@ -194,7 +196,7 @@ export function registerDefaultServices(): void {
 export function registerMapService(mapInstance: google.maps.Map): void {
   container.register(
     SERVICE_IDENTIFIERS.MAP_SERVICE,
-    () => new GoogleMapsServiceAdapter(mapInstance)
+    () => new GoogleMapsServiceAdapter(mapInstance),
   );
 }
 
@@ -226,7 +228,9 @@ export function getSyncService(): ISyncService {
 }
 
 export function getDirectionsService(): IDirectionsService {
-  return container.get<IDirectionsService>(SERVICE_IDENTIFIERS.DIRECTIONS_SERVICE);
+  return container.get<IDirectionsService>(
+    SERVICE_IDENTIFIERS.DIRECTIONS_SERVICE,
+  );
 }
 
 export function getEventBus(): EventBus {
@@ -234,7 +238,9 @@ export function getEventBus(): EventBus {
 }
 
 export function getUnifiedPlanService(): UnifiedPlanService {
-  return container.get<UnifiedPlanService>(SERVICE_IDENTIFIERS.UNIFIED_PLAN_SERVICE);
+  return container.get<UnifiedPlanService>(
+    SERVICE_IDENTIFIERS.UNIFIED_PLAN_SERVICE,
+  );
 }
 
 /**
@@ -244,28 +250,30 @@ export function registerMockServices(): void {
   // モック実装の例
   container.register(
     SERVICE_IDENTIFIERS.MAP_SERVICE,
-    () => ({
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      panTo: () => {},
-      getZoom: () => 14,
-      setZoom: () => {},
-      isLoaded: () => true,
-      getCenter: () => ({ lat: 35.681236, lng: 139.767125 }),
-      setCenter: () => {},
-    }) as MapService
+    () =>
+      ({
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        panTo: () => {},
+        getZoom: () => 14,
+        setZoom: () => {},
+        isLoaded: () => true,
+        getCenter: () => ({ lat: 35.681236, lng: 139.767125 }),
+        setCenter: () => {},
+      }) as MapService,
   );
 
   container.register(
     SERVICE_IDENTIFIERS.PLACE_SERVICE,
-    () => ({
-      searchPlaces: async () => [],
-      getPlaceDetails: async () => null,
-      getAutocompleteSuggestions: async () => [],
-      searchNearbyPlaces: async () => [],
-    }) as PlaceService
+    () =>
+      ({
+        searchPlaces: async () => [],
+        getPlaceDetails: async () => null,
+        getAutocompleteSuggestions: async () => [],
+        searchNearbyPlaces: async () => [],
+      }) as PlaceService,
   );
 }
 
 // アプリケーション起動時にデフォルトサービスを登録
-registerDefaultServices(); 
+registerDefaultServices();

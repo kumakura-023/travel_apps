@@ -1,10 +1,10 @@
 export type PlaceCategory =
-  | 'hotel'
-  | 'restaurant'
-  | 'sightseeing'
-  | 'shopping'
-  | 'transport'
-  | 'other';
+  | "hotel"
+  | "restaurant"
+  | "sightseeing"
+  | "shopping"
+  | "transport"
+  | "other";
 
 export interface Place {
   id: string; // UUID
@@ -62,7 +62,7 @@ export interface TravelPlan {
     };
     timestamp: Date;
     userId: string;
-    actionType: 'place' | 'label';
+    actionType: "place" | "label";
   };
 }
 
@@ -81,7 +81,7 @@ export interface MapLabel {
   linkedPlaceId?: string; // 候補地とのリンク
   createdAt: Date; // 作成時刻
   updatedAt: Date; // 更新時刻
-  status?: 'new' | 'synced'; // 同期状態
+  status?: "new" | "synced"; // 同期状態
   deleted?: boolean; // 削除フラグ
   planId?: string; // プランとの関連
 }
@@ -113,11 +113,11 @@ export interface PlaceSelectionState {
   isSelecting: boolean;
   selectedPlaceId: string | null;
   selectedPlaces: string[]; // 選択中の地点IDの配列
-  selectionMode: 'ctrl-click' | 'long-press' | null;
+  selectionMode: "ctrl-click" | "long-press" | null;
 }
 
 // モバイル/デスクトップでの操作方法
-export type SelectionMethod = 'ctrl-click' | 'long-press';
+export type SelectionMethod = "ctrl-click" | "long-press";
 
 export type { RouteConnection as Route };
-export type { MapLabel as Label }; 
+export type { MapLabel as Label };

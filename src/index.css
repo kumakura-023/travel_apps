@@ -17,37 +17,37 @@ body {
 
 @layer components {
   /* Apple風タイポグラフィシステム */
-  .title-large { 
+  .title-large {
     @apply text-[34px] leading-[41px] tracking-[0.374px] font-normal font-system;
   }
-  .title-1 { 
+  .title-1 {
     @apply text-[28px] leading-[34px] tracking-[0.364px] font-normal font-system;
   }
-  .title-2 { 
+  .title-2 {
     @apply text-[22px] leading-[28px] tracking-[0.352px] font-normal font-system;
   }
-  .title-3 { 
+  .title-3 {
     @apply text-[20px] leading-[25px] tracking-[0.38px] font-normal font-system;
   }
-  .headline { 
+  .headline {
     @apply text-[17px] leading-[22px] tracking-[-0.408px] font-semibold font-system;
   }
-  .body { 
+  .body {
     @apply text-[17px] leading-[22px] tracking-[-0.408px] font-normal font-system;
   }
-  .callout { 
+  .callout {
     @apply text-[16px] leading-[21px] tracking-[-0.32px] font-normal font-system;
   }
-  .subheadline { 
+  .subheadline {
     @apply text-[15px] leading-[20px] tracking-[-0.24px] font-normal font-system;
   }
-  .footnote { 
+  .footnote {
     @apply text-[13px] leading-[18px] tracking-[-0.078px] font-normal font-system;
   }
-  .caption-1 { 
+  .caption-1 {
     @apply text-[12px] leading-[16px] tracking-[0px] font-normal font-system;
   }
-  .caption-2 { 
+  .caption-2 {
     @apply text-[11px] leading-[13px] tracking-[0.066px] font-normal font-system;
   }
 
@@ -90,25 +90,39 @@ body {
   }
 
   /* Apple風アニメーション */
-  .ease-ios-default { 
+  .ease-ios-default {
     transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
-  .ease-ios-in-out { 
+  .ease-ios-in-out {
     transition-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
   }
-  .ease-ios-out { 
+  .ease-ios-out {
     transition-timing-function: cubic-bezier(0.19, 0.91, 0.38, 1);
   }
 
-  .duration-ios-fast { transition-duration: 150ms; }
-  .duration-ios-base { transition-duration: 250ms; }
-  .duration-ios-slow { transition-duration: 350ms; }
+  .duration-ios-fast {
+    transition-duration: 150ms;
+  }
+  .duration-ios-base {
+    transition-duration: 250ms;
+  }
+  .duration-ios-slow {
+    transition-duration: 350ms;
+  }
 
   @keyframes spring-scale {
-    0% { transform: scale(1); }
-    30% { transform: scale(1.05); }
-    60% { transform: scale(0.95); }
-    100% { transform: scale(1); }
+    0% {
+      transform: scale(1);
+    }
+    30% {
+      transform: scale(1.05);
+    }
+    60% {
+      transform: scale(0.95);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
 
   .animate-spring {
@@ -117,16 +131,20 @@ body {
 
   /* モーダル用アニメーション */
   @keyframes modal-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes modal-zoom-in {
-    from { 
+    from {
       opacity: 0;
       transform: scale(0.95) translateY(8px);
     }
-    to { 
+    to {
       opacity: 1;
       transform: scale(1) translateY(0);
     }
@@ -142,12 +160,12 @@ body {
 
   /* iOS風入力フィールド */
   .input {
-  @apply w-full p-3 bg-white/60 dark:bg-black/20 rounded-lg border border-system-separator/50 focus:ring-2 focus:ring-coral-500 focus:outline-none transition-all duration-150;
-}
+    @apply w-full p-3 bg-white/60 dark:bg-black/20 rounded-lg border border-system-separator/50 focus:ring-2 focus:ring-coral-500 focus:outline-none transition-all duration-150;
+  }
 
-.select-box {
-  @apply p-2 bg-white/60 dark:bg-black/20 rounded-lg border border-system-separator/50 focus:ring-2 focus:ring-coral-500 focus:outline-none transition-all duration-150;
-}
+  .select-box {
+    @apply p-2 bg-white/60 dark:bg-black/20 rounded-lg border border-system-separator/50 focus:ring-2 focus:ring-coral-500 focus:outline-none transition-all duration-150;
+  }
 
   /* iOS風リストアイテム */
   .list-item {
@@ -171,11 +189,11 @@ body {
 
   /* スクロールバーを隠すユーティリティ */
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
   .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari, Opera */
+    display: none; /* Chrome, Safari, Opera */
   }
 }
 
@@ -184,4 +202,4 @@ body {
   .overscroll-y-contain {
     overscroll-behavior-y: contain;
   }
-} 
+}

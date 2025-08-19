@@ -1,9 +1,9 @@
-import React, { useState, useRef } from 'react';
-import { useAuthStore } from '../hooks/useAuth';
-import { FaUserCircle } from 'react-icons/fa';
-import SharePlanModal from './SharePlanModal';
-import InviteUrlModal from './InviteUrlModal';
-import { usePlanStore } from '../store/planStore';
+import React, { useState, useRef } from "react";
+import { useAuthStore } from "../hooks/useAuth";
+import { FaUserCircle } from "react-icons/fa";
+import SharePlanModal from "./SharePlanModal";
+import InviteUrlModal from "./InviteUrlModal";
+import { usePlanStore } from "../store/planStore";
 
 const AuthButton: React.FC = () => {
   const user = useAuthStore((s) => s.user);
@@ -50,8 +50,8 @@ const AuthButton: React.FC = () => {
         setMenuOpen(false);
       }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [menuOpen]);
 
   return (
@@ -61,7 +61,9 @@ const AuthButton: React.FC = () => {
           ref={btnRef}
           onClick={handleMenuToggle}
           className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium text-system-label hover:text-coral-600 transition-all duration-200 ease-out hover:scale-105 active:scale-95"
-          aria-label={user ? `アカウント: ${user.displayName}` : 'Googleでログイン'}
+          aria-label={
+            user ? `アカウント: ${user.displayName}` : "Googleでログイン"
+          }
         >
           {user && user.photoURL ? (
             <img
@@ -77,13 +79,13 @@ const AuthButton: React.FC = () => {
           <div
             ref={menuRef}
             className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg z-[2000] py-2 border border-gray-200"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               className="w-full text-left px-4 py-3 hover:bg-gray-100 text-system-label"
               onClick={handleLoginLogout}
             >
-              {user ? 'ログアウト' : 'Googleでログイン'}
+              {user ? "ログアウト" : "Googleでログイン"}
             </button>
             <button
               className="w-full text-left px-4 py-3 hover:bg-gray-100 text-system-label"
@@ -120,4 +122,4 @@ const AuthButton: React.FC = () => {
   );
 };
 
-export default AuthButton; 
+export default AuthButton;

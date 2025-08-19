@@ -1,41 +1,44 @@
-import React from 'react';
-import { TravelPlan } from '../types';
-import { createEmptyPlan } from '../services/storageService';
-import { useSavedPlacesStore } from '../store/savedPlacesStore';
-import { useLabelsStore } from '../store/labelsStore';
-import { useAutoSave } from '../hooks/useAutoSave';
-import PlanList from './PlanList';
-import { usePlanStore } from '../store/planStore';
-import { createNewPlan, deletePlanFromCloud } from '../services/planListService';
-import { serializePlan } from '../utils/planSerializer';
-import { useAuth } from '../hooks/useAuth';
-import { usePlanListStore } from '../store/planListStore';
+import React from "react";
+import { TravelPlan } from "../types";
+import { createEmptyPlan } from "../services/storageService";
+import { useSavedPlacesStore } from "../store/savedPlacesStore";
+import { useLabelsStore } from "../store/labelsStore";
+import { useAutoSave } from "../hooks/useAutoSave";
+import PlanList from "./PlanList";
+import { usePlanStore } from "../store/planStore";
+import {
+  createNewPlan,
+  deletePlanFromCloud,
+} from "../services/planListService";
+import { serializePlan } from "../utils/planSerializer";
+import { useAuth } from "../hooks/useAuth";
+import { usePlanListStore } from "../store/planListStore";
 
 const PlanManager: React.FC = () => {
   const { plan, setPlan: setPlanStore, updatePlan } = usePlanStore();
 
   const { user } = useAuth();
-  
+
   // 新規プラン作成
   const handleCreateNewPlan = async () => {
     if (!user) return;
-    
-    const newPlan = createEmptyPlan('新しいプラン');
+
+    const newPlan = createEmptyPlan("新しいプラン");
     const payload = serializePlan(newPlan);
-    
+
     try {
       const planId = await createNewPlan(user, newPlan.name, payload);
       // 作成したプランをリッスンする
       usePlanStore.getState().listenToPlan(planId);
-      
+
       // プラン一覧を手動でリフレッシュ（念のため）
       setTimeout(() => {
-        console.log('[PlanManager] Refreshing plan list after creation');
+        console.log("[PlanManager] Refreshing plan list after creation");
         usePlanListStore.getState().refreshPlans();
       }, 500);
     } catch (error) {
-      console.error('[PlanManager] Failed to create new plan:', error);
-      alert('プランの作成に失敗しました');
+      console.error("[PlanManager] Failed to create new plan:", error);
+      alert("プランの作成に失敗しました");
     }
   };
 
@@ -50,51 +53,51 @@ const PlanManager: React.FC = () => {
   // 手動保存（自動保存があるので基本的に不要だが、UI上は残す）
   const handleSave = () => {
     // 自動保存されているのでメッセージのみ表示
-    console.log('[PlanManager] Manual save triggered (auto-save is active)');
+    console.log("[PlanManager] Manual save triggered (auto-save is active)");
   };
 
   // 複製
   const handleDuplicate = async () => {
     if (!plan || !user) return;
-    
+
     const duplicatedPlan = {
       ...plan,
-      id: '', // 新しいIDは作成時に割り当てられる
+      id: "", // 新しいIDは作成時に割り当てられる
       name: `${plan.name}_コピー`,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    
+
     const payload = serializePlan(duplicatedPlan);
-    
+
     try {
       const planId = await createNewPlan(user, duplicatedPlan.name, payload);
       // 複製したプランをリッスンする
       usePlanStore.getState().listenToPlan(planId);
-      
+
       // プラン一覧を手動でリフレッシュ（念のため）
       setTimeout(() => {
-        console.log('[PlanManager] Refreshing plan list after duplication');
+        console.log("[PlanManager] Refreshing plan list after duplication");
         usePlanListStore.getState().refreshPlans();
       }, 500);
     } catch (error) {
-      console.error('[PlanManager] Failed to duplicate plan:', error);
-      alert('プランの複製に失敗しました');
+      console.error("[PlanManager] Failed to duplicate plan:", error);
+      alert("プランの複製に失敗しました");
     }
   };
 
   // 削除
   const handleDelete = async () => {
-    if (!confirm('本当に削除しますか？')) return;
+    if (!confirm("本当に削除しますか？")) return;
     if (!plan) return;
-    
+
     try {
       await deletePlanFromCloud(plan.id);
       // 削除後は新規プランを作成
       handleCreateNewPlan();
     } catch (error) {
-      console.error('[PlanManager] Failed to delete plan:', error);
-      alert('プランの削除に失敗しました');
+      console.error("[PlanManager] Failed to delete plan:", error);
+      alert("プランの削除に失敗しました");
     }
   };
 
@@ -122,13 +125,13 @@ const PlanManager: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <button 
+      <button
         className="w-full bg-green-500 text-white px-3 py-2 rounded text-sm hover:bg-green-600"
         onClick={handleCreateNewPlan}
       >
         新規プランを作成
       </button>
-      
+
       {plan && (
         <>
           <div>
@@ -141,20 +144,39 @@ const PlanManager: React.FC = () => {
             />
           </div>
           <div className="flex space-x-2">
-            <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm" onClick={handleSave}>保存</button>
-            <button className="bg-gray-500 text-white px-3 py-1 rounded text-sm" onClick={handleDuplicate}>複製</button>
-            <button className="bg-red-500 text-white px-3 py-1 rounded text-sm" onClick={handleDelete}>削除</button>
+            <button
+              className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+              onClick={handleSave}
+            >
+              保存
+            </button>
+            <button
+              className="bg-gray-500 text-white px-3 py-1 rounded text-sm"
+              onClick={handleDuplicate}
+            >
+              複製
+            </button>
+            <button
+              className="bg-red-500 text-white px-3 py-1 rounded text-sm"
+              onClick={handleDelete}
+            >
+              削除
+            </button>
           </div>
         </>
       )}
-      
+
       <hr />
       <div>
         <h3 className="font-semibold text-sm mb-2">保存済みプラン</h3>
-        <PlanList onSelect={() => { /* 選択後にメニューを閉じる場合は親側で */ }} />
+        <PlanList
+          onSelect={() => {
+            /* 選択後にメニューを閉じる場合は親側で */
+          }}
+        />
       </div>
     </div>
   );
 };
 
-export default PlanManager; 
+export default PlanManager;

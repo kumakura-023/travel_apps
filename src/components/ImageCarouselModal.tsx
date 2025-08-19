@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import useMediaQuery from '../hooks/useMediaQuery';
+import React, { useState, useEffect, useRef } from "react";
+import { FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import useMediaQuery from "../hooks/useMediaQuery";
 
 interface ImageCarouselModalProps {
   images: string[];
@@ -15,26 +15,26 @@ export default function ImageCarouselModal({
   initialIndex,
   isOpen,
   onClose,
-  placeName
+  placeName,
 }: ImageCarouselModalProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isZoomed, setIsZoomed] = useState(false);
   const [dragStart, setDragStart] = useState<number | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   // モーダル開閉時の初期化
   useEffect(() => {
     if (isOpen) {
       setCurrentIndex(initialIndex);
       setIsZoomed(false);
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
-    
+
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [isOpen, initialIndex]);
 
@@ -43,17 +43,17 @@ export default function ImageCarouselModal({
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
-      } else if (e.key === 'ArrowLeft') {
+      } else if (e.key === "ArrowLeft") {
         handlePrevious();
-      } else if (e.key === 'ArrowRight') {
+      } else if (e.key === "ArrowRight") {
         handleNext();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
   const handlePrevious = () => {
@@ -100,7 +100,7 @@ export default function ImageCarouselModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       {/* 背景 */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/90 backdrop-blur-md animate-modal-fade-in"
         onClick={onClose}
       />
@@ -121,7 +121,7 @@ export default function ImageCarouselModal({
                   {currentIndex + 1} / {images.length}
                 </p>
               </div>
-              
+
               <button
                 onClick={onClose}
                 className="w-9 h-9 glass-effect border border-white/20 rounded-full 
@@ -155,7 +155,7 @@ export default function ImageCarouselModal({
           )}
 
           {/* 画像 */}
-          <div 
+          <div
             className="relative max-w-full max-h-full flex items-center justify-center p-5 pt-20 pb-20"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
@@ -163,10 +163,10 @@ export default function ImageCarouselModal({
             <img
               ref={imageRef}
               src={images[currentIndex]}
-              alt={`${placeName || ''} - 写真 ${currentIndex + 1}`}
+              alt={`${placeName || ""} - 写真 ${currentIndex + 1}`}
               className={`max-w-full max-h-full object-contain transition-transform duration-300 ease-ios-default
-                         ${isZoomed ? 'scale-150 cursor-zoom-out' : 'cursor-zoom-in'}
-                         ${isMobile ? 'cursor-default' : ''}`}
+                         ${isZoomed ? "scale-150 cursor-zoom-out" : "cursor-zoom-in"}
+                         ${isMobile ? "cursor-default" : ""}`}
               onClick={handleImageClick}
               onLoad={() => {
                 // 画像ロード完了時の処理
@@ -215,9 +215,11 @@ export default function ImageCarouselModal({
                       setIsZoomed(false);
                     }}
                     className={`w-2 h-2 rounded-full transition-all duration-200 ease-ios-default
-                               ${index === currentIndex 
-                                 ? 'bg-white shadow-elevation-2' 
-                                 : 'bg-white/40 hover:bg-white/60'}`}
+                               ${
+                                 index === currentIndex
+                                   ? "bg-white shadow-elevation-2"
+                                   : "bg-white/40 hover:bg-white/60"
+                               }`}
                     title={`画像 ${index + 1}`}
                   />
                 ))}
@@ -239,4 +241,4 @@ export default function ImageCarouselModal({
       </div>
     </div>
   );
-} 
+}
