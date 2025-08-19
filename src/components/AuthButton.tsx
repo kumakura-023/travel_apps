@@ -17,7 +17,6 @@ const AuthButton: React.FC = () => {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleMenuToggle = () => setMenuOpen((v) => !v);
-  const handleMenuClose = () => setMenuOpen(false);
 
   const handleLoginLogout = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -61,7 +60,7 @@ const AuthButton: React.FC = () => {
         <button
           ref={btnRef}
           onClick={handleMenuToggle}
-          className="glass-effect flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-system-label hover:bg-gray-100/50 transition-colors duration-150"
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium text-system-label hover:text-coral-600 transition-all duration-200 ease-out hover:scale-105 active:scale-95"
           aria-label={user ? `アカウント: ${user.displayName}` : 'Googleでログイン'}
         >
           {user && user.photoURL ? (
@@ -73,9 +72,6 @@ const AuthButton: React.FC = () => {
           ) : (
             <FaUserCircle className="w-6 h-6 text-gray-400" />
           )}
-          <span className="hidden md:inline">
-            {user ? user.displayName || 'アカウント' : 'ログイン'}
-          </span>
         </button>
         {menuOpen && (
           <div

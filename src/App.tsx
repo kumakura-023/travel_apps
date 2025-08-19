@@ -20,6 +20,7 @@ import { useTravelTimeStore } from './store/travelTimeStore';
 import PlaceList from './components/PlaceList';
 import { useLabelModeStore } from './store/labelModeStore';
 import PlanNameDisplay from './components/PlanNameDisplay';
+import MobileHeader from './components/MobileHeader';
 import { usePlanStore } from './store/planStore';
 import { useAuth } from './hooks/useAuth';
 import { useAutoSave } from './hooks/useAutoSave';
@@ -220,8 +221,11 @@ function App() {
 
       {activeTab === 'travelTime' && <TravelTimeControls />}
 
-      {/* プラン名表示 */}
-      <PlanNameDisplay activeTab={activeTab} />
+      {/* プラン名表示 - デスクトップ・タブレット版 */}
+      {isDesktop ? <PlanNameDisplay activeTab={activeTab} /> : null}
+      
+      {/* モバイルヘッダー - モバイル版のみ */}
+      {!isDesktop ? <MobileHeader activeTab={activeTab} /> : null}
 
       {/* チュートリアル */}
       <Tutorial 
@@ -236,7 +240,7 @@ function App() {
       />
 
       {/* クラウド同期インジケータ */}
-      <SyncStatusIndicator onSave={updateLastSavedTimestamp} />
+      {/* <SyncStatusIndicator onSave={updateLastSavedTimestamp} /> */}
 
       {/* アプリ内ブラウザでログインできない場合の案内 */}
       <ExternalBrowserPrompt />

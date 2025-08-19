@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ArrowToggleButton from './ArrowToggleButton';
 import TabNavigation, { TabKey } from './TabNavigation';
+import BottomNavigation from './BottomNavigation';
 import { useDeviceDetect } from '../hooks/useDeviceDetect';
 
 interface WrapperProps {
@@ -10,7 +11,17 @@ interface WrapperProps {
 
 const TabNavigationWrapper: React.FC<WrapperProps> = ({ activeTab, onTabChange }) => {
   const [isOpen, setIsOpen] = useState(true);
-  const { isDesktop } = useDeviceDetect();
+  const { isDesktop, isMobile } = useDeviceDetect();
+
+  if (isMobile) {
+    return (
+      <BottomNavigation
+        active={activeTab}
+        onChange={onTabChange}
+        isVisible={true}
+      />
+    );
+  }
 
   if (isDesktop) {
     return (
