@@ -411,8 +411,9 @@ export default function LabelOverlay({
             </svg>
           )}
           <span
-            className="footnote font-medium tracking-tight text-center leading-tight"
+            className="font-medium tracking-tight text-center leading-tight"
             style={{
+              fontSize: "inherit",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
