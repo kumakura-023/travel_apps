@@ -60,6 +60,7 @@
 #### 対策
 
 1. **適切なセキュリティルールの実装**
+
    ```javascript
    // firestore.rules
    rules_version = '2';

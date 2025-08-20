@@ -52,8 +52,8 @@ export default function LabelOverlay({
     label.position,
   );
   const currentSizeRef = useRef<{ width: number; height: number }>({
-    width: label.width,
-    height: label.height,
+    width: label.width || 120,
+    height: label.height || 40,
   });
 
   const deleteLabel = useLabelsStore((s) => s.deleteLabel);
@@ -72,7 +72,14 @@ export default function LabelOverlay({
   // Unified interaction management (map lock, scroll lock, event listeners)
   useEffect(() => {
     const isInteracting = mode !== "idle";
-    setMapInteraction(!isInteracting);
+    const shouldEnableMap = !isInteracting;
+
+    // 現在の状態と異なる場合のみ更新
+    const currentEnabled = useUIStore.getState().isMapInteractionEnabled;
+    if (currentEnabled !== shouldEnableMap) {
+      setMapInteraction(shouldEnableMap);
+    }
+
     setGlobalScrollLock(isInteracting);
 
     const handlePointerMove = (ev: PointerEvent) => {
@@ -80,8 +87,14 @@ export default function LabelOverlay({
         ev.stopPropagation();
         const dx = ev.clientX - interactionStartRef.current.clientX;
         const dy = ev.clientY - interactionStartRef.current.clientY;
-        const newWidth = Math.max(60, interactionStartRef.current.width + dx);
-        const newHeight = Math.max(28, interactionStartRef.current.height + dy);
+        const newWidth = Math.max(
+          60,
+          (interactionStartRef.current.width || 120) + dx,
+        );
+        const newHeight = Math.max(
+          28,
+          (interactionStartRef.current.height || 40) + dy,
+        );
 
         // 現在のサイズを保存
         currentSizeRef.current = { width: newWidth, height: newHeight };
@@ -159,7 +172,7 @@ export default function LabelOverlay({
       window.removeEventListener("pointercancel", handlePointerUp);
       mapClickListener?.remove();
     };
-  }, [mode, map, onMove, onResize]);
+  }, [mode, map, onMove, onResize, onMoveEnd, onResizeEnd, isMobile]);
 
   // Zoom listener
   useEffect(() => {
@@ -174,8 +187,11 @@ export default function LabelOverlay({
   // labelの位置・サイズが外部から変更された場合にrefを更新
   useEffect(() => {
     currentPositionRef.current = label.position;
-    currentSizeRef.current = { width: label.width, height: label.height };
-  }, [label.position.lat, label.position.lng, label.width, label.height]);
+    currentSizeRef.current = {
+      width: label.width || 120,
+      height: label.height || 40,
+    };
+  }, [label.position, label.width, label.height]);
 
   // --- Event Handlers ---
 
@@ -233,7 +249,7 @@ export default function LabelOverlay({
     }
   };
 
-  const handleContainerPointerUp = (e: React.PointerEvent) => {
+  const handleContainerPointerUp = (_e: React.PointerEvent) => {
     isPointerDownRef.current = false;
 
     if (longPressTimerRef.current) {
@@ -309,11 +325,11 @@ export default function LabelOverlay({
                    ${linkedPlace ? "bg-gradient-to-br from-coral-500/15 to-coral-500/8" : "bg-gradient-to-br from-teal-500/10 to-teal-500/5"}
                    ${mode === "dragging" || (isMobile && mode === "editing") ? "cursor-move" : ""}`}
         style={{
-          fontSize: label.fontSize * scale,
+          fontSize: (label.fontSize || 14) * scale,
           fontFamily: label.fontFamily,
           color: label.color,
-          width: label.width * scale,
-          height: label.height * scale,
+          width: (label.width || 120) * scale,
+          height: (label.height || 40) * scale,
           pointerEvents: "auto",
           transform: "translate(-50%, -50%)",
         }}

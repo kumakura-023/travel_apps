@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Marker } from "@react-google-maps/api";
 import { useSavedPlacesStore } from "../store/savedPlacesStore";
 import { useSelectedPlaceStore } from "../store/selectedPlaceStore";
@@ -108,31 +108,69 @@ export default function MapOverlayManager({
   }, [plan, user, getNotificationsByPlan, isReadByUser, notifications]);
 
   // 通知の確認ハンドラー
-  const handleNotificationConfirm = (
-    notificationId: string,
-    placeId: string,
-  ) => {
-    if (!user) return;
+  const handleNotificationConfirm = useCallback(
+    (notificationId: string, placeId: string) => {
+      if (!user) return;
 
-    // 既読にする
-    markAsRead(notificationId, user.uid);
+      // 既読にする
+      markAsRead(notificationId, user.uid);
 
-    // 該当する場所を選択
-    const notificationPlace = savedPlaces.find((p) => p.id === placeId);
-    if (notificationPlace && map) {
-      setPlace({
-        place_id: notificationPlace.id,
-        name: notificationPlace.name,
-        geometry: {
-          location: {
-            lat: () => notificationPlace.coordinates.lat,
-            lng: () => notificationPlace.coordinates.lng,
-          } as google.maps.LatLng,
-        },
-        types: [notificationPlace.category],
-      } as google.maps.places.PlaceResult);
-    }
-  };
+      // 該当する場所を選択
+      const notificationPlace = savedPlaces.find((p) => p.id === placeId);
+      if (notificationPlace && map) {
+        setPlace({
+          place_id: notificationPlace.id,
+          name: notificationPlace.name,
+          geometry: {
+            location: {
+              lat: () => notificationPlace.coordinates.lat,
+              lng: () => notificationPlace.coordinates.lng,
+            } as google.maps.LatLng,
+          },
+          types: [notificationPlace.category],
+        } as google.maps.places.PlaceResult);
+      }
+    },
+    [user, markAsRead, savedPlaces, map, setPlace],
+  );
+
+  // ラベルコールバック関数をメモ化
+  const handleLabelEdit = useCallback(
+    (label: MapLabel) => setEditing(label),
+    [],
+  );
+
+  const handleLabelMove = useCallback(
+    (id: string, pos: { lat: number; lng: number }) => {
+      // ローカルの状態のみ更新（同期はしない）
+      updateLabel(id, { position: pos }, true);
+    },
+    [updateLabel],
+  );
+
+  const handleLabelResize = useCallback(
+    (id: string, size: { width: number; height: number }) => {
+      // ローカルの状態のみ更新（同期はしない）
+      updateLabel(id, size, true);
+    },
+    [updateLabel],
+  );
+
+  const handleLabelMoveEnd = useCallback(
+    (id: string, pos: { lat: number; lng: number }) => {
+      // 操作終了時もローカルのみ更新（プラン同期を避ける）
+      updateLabel(id, { position: pos }, true);
+    },
+    [updateLabel],
+  );
+
+  const handleLabelResizeEnd = useCallback(
+    (id: string, size: { width: number; height: number }) => {
+      // 操作終了時もローカルのみ更新（プラン同期を避ける）
+      updateLabel(id, size, true);
+    },
+    [updateLabel],
+  );
 
   return (
     <>
@@ -191,23 +229,11 @@ export default function MapOverlayManager({
           key={`label-${l.id}`}
           label={l}
           map={map}
-          onEdit={() => setEditing(l)}
-          onMove={(pos) => {
-            // ローカルの状態のみ更新（同期はしない）
-            updateLabel(l.id, { position: pos }, true);
-          }}
-          onResize={(size) => {
-            // ローカルの状態のみ更新（同期はしない）
-            updateLabel(l.id, size, true);
-          }}
-          onMoveEnd={(pos) => {
-            // 操作終了時に同期
-            updateLabel(l.id, { position: pos });
-          }}
-          onResizeEnd={(size) => {
-            // 操作終了時に同期
-            updateLabel(l.id, size);
-          }}
+          onEdit={() => handleLabelEdit(l)}
+          onMove={(pos) => handleLabelMove(l.id, pos)}
+          onResize={(size) => handleLabelResize(l.id, size)}
+          onMoveEnd={(pos) => handleLabelMoveEnd(l.id, pos)}
+          onResizeEnd={(size) => handleLabelResizeEnd(l.id, size)}
         />
       ))}
 
@@ -251,7 +277,7 @@ export default function MapOverlayManager({
       {editing && (
         <LabelEditDialog
           label={editing}
-          onSave={(u) => updateLabel(editing.id, u)}
+          onSave={(u) => updateLabel(editing.id, u, true)}
           onClose={() => setEditing(null)}
         />
       )}

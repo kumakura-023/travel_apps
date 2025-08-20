@@ -477,6 +477,7 @@ operationDebounceDelays: {
    - 結果：操作開始時の位置に戻ってしまう
 
 2. **リサイズ終了時（93-94行目）**：
+
    ```typescript
    onResizeEnd({
      width: label.width,
