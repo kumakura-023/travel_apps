@@ -17,6 +17,10 @@ import {
 import { AppError, toAppError } from "../errors/AppError";
 import { SyncErrorCode, NetworkErrorCode } from "../errors/ErrorCode";
 import { getRetryPolicy, withRetry } from "../errors/RetryPolicy";
+import { getEventBus } from "./ServiceContainer";
+import { SyncEventBus } from "../events/SyncEvents";
+import { v4 as uuidv4 } from "uuid";
+import { measured } from "../telemetry/decorators/measured";
 
 /**
  * 同期システム全体を管理するクラス
@@ -140,6 +144,7 @@ export class SyncManager implements ISyncService {
   /**
    * 操作を処理
    */
+  @measured({ operation: "sync.processOperation", threshold: 3000 })
   private async processOperation(
     operation: SyncOperation,
     plan: TravelPlan,
@@ -288,15 +293,26 @@ export class SyncManager implements ISyncService {
   /**
    * クラウド同期実行
    */
+  @measured({ operation: "sync.push", threshold: 2000 })
   private async syncToCloud(
     operation: SyncOperation,
     plan: TravelPlan,
     context: SyncContext,
   ): Promise<void> {
     const saveStartTimestamp = Date.now();
+    const syncId = uuidv4();
 
     // 書き込み履歴に追加
     this.recordWrite(saveStartTimestamp);
+
+    // 同期開始イベントを発火
+    this.emitSyncEvent("started", {
+      syncId,
+      entityType: "plan",
+      entityId: plan.id,
+      operation: this.mapOperationType(operation.type),
+      initiatedBy: context.uid || "unknown",
+    });
 
     try {
       // contextからuidを取得してクラウド保存
@@ -319,9 +335,101 @@ export class SyncManager implements ISyncService {
       this.consecutiveErrorCount = 0;
 
       const saveEndTimestamp = Date.now();
+      const durationMs = saveEndTimestamp - saveStartTimestamp;
+
+      // 同期完了イベントを発火
+      this.emitSyncEvent("completed", {
+        syncId,
+        entityType: "plan",
+        entityId: plan.id,
+        operation: this.mapOperationType(operation.type),
+        durationMs,
+      });
     } catch (error: unknown) {
       const appError = this.handleFirebaseError(error);
+
+      // 同期失敗イベントを発火
+      this.emitSyncEvent("failed", {
+        syncId,
+        entityType: "plan",
+        entityId: plan.id,
+        operation: this.mapOperationType(operation.type),
+        reason: appError.message,
+        errorCode: appError.code,
+        retryable: appError.isRecoverable,
+        retryCount: operation.retryCount,
+      });
+
       throw appError; // AppErrorを再スローして上位のエラーハンドリングに任せる
+    }
+  }
+
+  /**
+   * SyncOperationType を SyncEvents の operation に変換
+   */
+  private mapOperationType(
+    type: SyncOperationType,
+  ): "create" | "update" | "delete" {
+    switch (type) {
+      case "place_added":
+      case "label_added":
+        return "create";
+      case "place_deleted":
+      case "label_deleted":
+        return "delete";
+      default:
+        return "update";
+    }
+  }
+
+  /**
+   * 同期イベントを発火（EventBus が利用可能な場合のみ）
+   */
+  private emitSyncEvent(
+    eventType: "started" | "completed" | "failed",
+    payload: Record<string, unknown>,
+  ): void {
+    try {
+      const eventBus = getEventBus();
+      const syncEventBus = new SyncEventBus(eventBus);
+
+      switch (eventType) {
+        case "started":
+          syncEventBus.emitSyncStarted(
+            payload.syncId as string,
+            payload.entityType as "plan",
+            payload.entityId as string,
+            payload.operation as "create" | "update" | "delete",
+            payload.initiatedBy as string,
+          );
+          break;
+        case "completed":
+          syncEventBus.emitSyncCompleted(
+            payload.syncId as string,
+            payload.entityType as "plan",
+            payload.entityId as string,
+            payload.operation as "create" | "update" | "delete",
+            payload.durationMs as number,
+          );
+          break;
+        case "failed":
+          syncEventBus.emitSyncFailed(
+            payload.syncId as string,
+            payload.entityType as "plan",
+            payload.entityId as string,
+            payload.operation as "create" | "update" | "delete",
+            payload.reason as string,
+            {
+              errorCode: payload.errorCode as string | undefined,
+              retryable: payload.retryable as boolean | undefined,
+              retryCount: payload.retryCount as number | undefined,
+            },
+          );
+          break;
+      }
+    } catch (error) {
+      // EventBus が利用できない場合は警告のみ
+      console.warn("[SyncManager] Failed to emit sync event:", error);
     }
   }
 

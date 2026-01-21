@@ -12,6 +12,7 @@ import { storeEventBus } from "../../events/StoreEvents";
 import { AppError, toAppError } from "../../errors/AppError";
 import { PlanErrorCode, PlaceErrorCode } from "../../errors/ErrorCode";
 import { ERROR_MESSAGES } from "../../errors/ErrorMessages";
+import { measured } from "../../telemetry/decorators/measured";
 
 export class UnifiedPlanService {
   private eventService: PlanEventService;
@@ -20,6 +21,7 @@ export class UnifiedPlanService {
     this.eventService = new PlanEventService(storeEventBus);
   }
 
+  @measured({ operation: "plan.create", threshold: 1000 })
   async createPlan(userId: string, name: string): Promise<PlanOperationResult> {
     try {
       const newPlan = createEmptyPlan(name);
@@ -64,6 +66,7 @@ export class UnifiedPlanService {
     }
   }
 
+  @measured({ operation: "plan.switch", threshold: 2000 })
   async switchPlan(
     planId: string,
     userId: string,
@@ -123,6 +126,7 @@ export class UnifiedPlanService {
     }
   }
 
+  @measured({ operation: "plan.delete", threshold: 1000 })
   async deletePlan(
     userId: string,
     planId: string,
@@ -166,6 +170,7 @@ export class UnifiedPlanService {
     }
   }
 
+  @measured({ operation: "plan.duplicate", threshold: 1500 })
   async duplicatePlan(
     userId: string,
     planId: string,
