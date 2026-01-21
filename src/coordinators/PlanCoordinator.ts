@@ -17,6 +17,8 @@ import {
   PlanCoordinatorBridge,
   PlanCoordinatorBridgeDeps,
 } from "./PlanCoordinatorBridge";
+import { isAppError, AppError } from "../errors/AppError";
+import { PlanErrorCode } from "../errors/ErrorCode";
 
 export class PlanCoordinator implements IPlanCoordinator {
   private currentPlanUnsubscribe?: () => void;
@@ -386,11 +388,29 @@ export class PlanCoordinator implements IPlanCoordinator {
     useLabelsStore.setState({ labels: [] });
   }
 
-  private setErrorState(error: any): void {
+  private setErrorState(error: unknown): void {
+    let errorMessage: string;
+    let errorCode: string | undefined;
+
+    if (isAppError(error)) {
+      errorMessage = error.message;
+      errorCode = error.code;
+      console.error("[PlanCoordinator] AppError occurred:", {
+        code: error.code,
+        message: error.message,
+        severity: error.severity,
+        context: error.context,
+      });
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    } else {
+      errorMessage = String(error) || "Unknown error";
+    }
+
     usePlanStore.setState({
       plan: null,
       isLoading: false,
-      error: error.message || "Unknown error",
+      error: errorCode ? `[${errorCode}] ${errorMessage}` : errorMessage,
     });
   }
 

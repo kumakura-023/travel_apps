@@ -1,7 +1,36 @@
 /**
- * エラー関連のエクスポート
+ * Phase 3 & Legacy: エラー関連エクスポート
+ * 新規Phase3エラー基盤と既存コードの後方互換性を両立
  */
-export { AppError } from "./AppError";
+
+// Phase 3 新規エラー基盤
+export { AppError, isAppError, toAppError } from "./AppError";
+export type { ErrorContext, ErrorDTO } from "./AppError";
+// ErrorSeverityは型のみエクスポート（ErrorCodes.tsのenumと競合回避）
+export type { ErrorSeverity } from "./AppError";
+export {
+  PlanErrorCode,
+  PlaceErrorCode,
+  RouteErrorCode,
+  SyncErrorCode,
+  MapErrorCode,
+  AuthErrorCode,
+  NetworkErrorCode,
+  isErrorCode,
+} from "./ErrorCode";
+// ErrorCodeは型のみエクスポート（ErrorCodes.tsのenumと競合回避）
+export type { ErrorCode } from "./ErrorCode";
+export { ERROR_MESSAGES } from "./ErrorMessages";
+export {
+  RETRY_POLICIES,
+  DEFAULT_RETRY_POLICY,
+  getRetryPolicy,
+  calculateBackoff,
+  withRetry,
+} from "./RetryPolicy";
+export type { RetryPolicy } from "./RetryPolicy";
+
+// 後方互換性のため既存のエクスポート（enum）
 export { ErrorHandler } from "./ErrorHandler";
 export {
   ErrorCode,
@@ -9,33 +38,3 @@ export {
   getErrorMessage,
   getErrorSeverity,
 } from "./ErrorCodes";
-
-import { AppError } from "./AppError";
-import { ErrorCode } from "./ErrorCodes";
-
-// 便利なエラー作成関数のエクスポート
-export const createNetworkError = (
-  message?: string,
-  retry?: () => Promise<void>,
-) => {
-  return new AppError(ErrorCode.NETWORK_ERROR, message, { retry });
-};
-
-export const createValidationError = (message: string, details?: any) => {
-  return new AppError(ErrorCode.VALIDATION_ERROR, message, { details });
-};
-
-export const createNotFoundError = (resource: string, id?: string) => {
-  const msg = id
-    ? `${resource}が見つかりません (ID: ${id})`
-    : `${resource}が見つかりません`;
-  return new AppError(ErrorCode.NOT_FOUND, msg, { context: { resource, id } });
-};
-
-export const createSyncError = (message?: string, details?: any) => {
-  return new AppError(ErrorCode.SYNC_FAILED, message, { details });
-};
-
-export const createMapsApiError = (message?: string, details?: any) => {
-  return new AppError(ErrorCode.MAPS_API_ERROR, message, { details });
-};

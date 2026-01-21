@@ -14,6 +14,9 @@ import {
   SyncResult,
   SyncConflict,
 } from "../interfaces/ISyncService";
+import { AppError, toAppError } from "../errors/AppError";
+import { SyncErrorCode, NetworkErrorCode } from "../errors/ErrorCode";
+import { getRetryPolicy, withRetry } from "../errors/RetryPolicy";
 
 /**
  * 同期システム全体を管理するクラス
@@ -298,7 +301,16 @@ export class SyncManager implements ISyncService {
     try {
       // contextからuidを取得してクラウド保存
       if (!context.uid) {
-        throw new Error("uid is required for cloud save");
+        throw new AppError(
+          SyncErrorCode.SYNC_PERMISSION_DENIED,
+          "uid is required for cloud save",
+          "error",
+          {
+            service: "SyncManager",
+            operation: "syncToCloud",
+            entityType: "plan",
+          },
+        );
       }
 
       await savePlanHybrid(plan, { mode: "cloud", uid: context.uid });
@@ -307,9 +319,9 @@ export class SyncManager implements ISyncService {
       this.consecutiveErrorCount = 0;
 
       const saveEndTimestamp = Date.now();
-    } catch (error: any) {
-      this.handleFirebaseError(error);
-      throw error; // エラーを再スローして上位のエラーハンドリングに任せる
+    } catch (error: unknown) {
+      const appError = this.handleFirebaseError(error);
+      throw appError; // AppErrorを再スローして上位のエラーハンドリングに任せる
     }
   }
 
@@ -320,30 +332,52 @@ export class SyncManager implements ISyncService {
     operation: SyncOperation,
     plan: TravelPlan,
     context: SyncContext,
-    error: any,
+    error: unknown,
   ): Promise<void> {
     operation.retryCount = (operation.retryCount || 0) + 1;
 
+    const appError = toAppError(
+      error,
+      SyncErrorCode.SYNC_CONNECTION_LOST,
+      "error",
+      {
+        service: "SyncManager",
+        operation: operation.type,
+        retryCount: operation.retryCount,
+        maxRetries: this.config.retryLimit,
+      },
+    );
+
     if (operation.retryCount < this.config.retryLimit) {
-      // リトライ
-      setTimeout(() => {
-        this.processOperation(operation, plan, context);
-      }, 1000 * operation.retryCount);
+      // リトライポリシーに基づいたバックオフ
+      const policy = getRetryPolicy(SyncErrorCode.SYNC_CONNECTION_LOST);
+      const delay =
+        policy.backoffMs?.[operation.retryCount - 1] ||
+        1000 * operation.retryCount;
 
       console.warn(
-        `同期リトライ ${operation.retryCount}/${this.config.retryLimit}:`,
-        error,
+        `[SyncManager] Retry ${operation.retryCount}/${this.config.retryLimit}:`,
+        appError.message,
+        `waiting ${delay}ms`,
       );
+
+      setTimeout(() => {
+        this.processOperation(operation, plan, context);
+      }, delay);
     } else {
       // 最大リトライ回数に達した場合は操作を削除
       this.operationQueue.delete(operation.id);
-      console.error("同期失敗（最大リトライ回数到達）:", error);
+      console.error(
+        "[SyncManager] Sync failed (max retries reached):",
+        appError.toJSON(),
+      );
     }
 
     syncDebugUtils.log("save", {
       type: "sync_error",
       operation: operation.type,
-      error: error.message,
+      error: appError.message,
+      code: appError.code,
       retryCount: operation.retryCount,
       timestamp: Date.now(),
     });
@@ -539,16 +573,42 @@ export class SyncManager implements ISyncService {
   /**
    * Firebaseエラーのハンドリング
    */
-  private handleFirebaseError(error: any): void {
+  private handleFirebaseError(error: unknown): AppError {
     this.consecutiveErrorCount++;
 
-    const errorMessage = error?.message || error?.toString() || "";
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : typeof error === "object" && error !== null && "message" in error
+          ? String((error as { message: unknown }).message)
+          : String(error);
+
     const isQuotaError =
       errorMessage.includes("quota") ||
       errorMessage.includes("limit") ||
       errorMessage.includes("too many requests") ||
       errorMessage.includes("resource-exhausted") ||
       errorMessage.includes("Write stream exhausted");
+
+    const isNetworkError =
+      errorMessage.includes("network") ||
+      errorMessage.includes("offline") ||
+      errorMessage.includes("timeout");
+
+    // エラーコードを判定
+    let errorCode: SyncErrorCode | NetworkErrorCode;
+    if (isQuotaError) {
+      errorCode = SyncErrorCode.SYNC_QUOTA_EXCEEDED;
+    } else if (isNetworkError) {
+      errorCode = NetworkErrorCode.NETWORK_OFFLINE;
+    } else {
+      errorCode = SyncErrorCode.SYNC_CONNECTION_LOST;
+    }
+
+    const appError = toAppError(error, errorCode, "error", {
+      service: "SyncManager",
+      operation: "syncToCloud",
+    });
 
     // クォータエラーまたは連続エラーが多い場合は緊急停止
     if (
@@ -557,6 +617,8 @@ export class SyncManager implements ISyncService {
     ) {
       this.activateEmergencyStop();
     }
+
+    return appError;
   }
 
   /**
