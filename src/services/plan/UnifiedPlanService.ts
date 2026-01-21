@@ -9,6 +9,10 @@ import { createEmptyPlan } from "../storageService";
 import { IPlanRepository } from "../../repositories/interfaces/IPlanRepository";
 import { PlanEventService } from "./PlanEventService";
 import { storeEventBus } from "../../events/StoreEvents";
+import { AppError, toAppError } from "../../errors/AppError";
+import { PlanErrorCode, PlaceErrorCode } from "../../errors/ErrorCode";
+import { ERROR_MESSAGES } from "../../errors/ErrorMessages";
+import { measured } from "../../telemetry/decorators/measured";
 
 export class UnifiedPlanService {
   private eventService: PlanEventService;
@@ -17,6 +21,7 @@ export class UnifiedPlanService {
     this.eventService = new PlanEventService(storeEventBus);
   }
 
+  @measured({ operation: "plan.create", threshold: 1000 })
   async createPlan(userId: string, name: string): Promise<PlanOperationResult> {
     try {
       const newPlan = createEmptyPlan(name);
@@ -36,14 +41,32 @@ export class UnifiedPlanService {
         message: "プランが作成されました",
       };
     } catch (error) {
+      const appError = toAppError(
+        error,
+        PlanErrorCode.PLAN_SAVE_FAILED,
+        "error",
+        {
+          service: "UnifiedPlanService",
+          operation: "createPlan",
+          entityType: "plan",
+          userId,
+        },
+      );
+      console.error(
+        "[UnifiedPlanService] createPlan failed:",
+        appError.toJSON(),
+      );
       return {
         success: false,
-        error: error as Error,
-        message: "プランの作成に失敗しました",
+        error: appError,
+        message:
+          ERROR_MESSAGES[PlanErrorCode.PLAN_SAVE_FAILED] ||
+          "プランの作成に失敗しました",
       };
     }
   }
 
+  @measured({ operation: "plan.switch", threshold: 2000 })
   async switchPlan(
     planId: string,
     userId: string,
@@ -52,7 +75,18 @@ export class UnifiedPlanService {
       const plan = await this.planRepository.loadPlan(planId);
 
       if (!plan) {
-        throw new Error("プランが見つかりません");
+        throw new AppError(
+          PlanErrorCode.PLAN_NOT_FOUND,
+          ERROR_MESSAGES[PlanErrorCode.PLAN_NOT_FOUND] ||
+            "プランが見つかりません",
+          "warning",
+          {
+            service: "UnifiedPlanService",
+            operation: "switchPlan",
+            entityId: planId,
+            entityType: "plan",
+          },
+        );
       }
 
       // 新しいイベント駆動型の更新
@@ -67,14 +101,32 @@ export class UnifiedPlanService {
         message: "プランを切り替えました",
       };
     } catch (error) {
+      const appError = toAppError(
+        error,
+        PlanErrorCode.PLAN_SWITCH_FAILED,
+        "error",
+        {
+          service: "UnifiedPlanService",
+          operation: "switchPlan",
+          entityId: planId,
+          entityType: "plan",
+        },
+      );
+      console.error(
+        "[UnifiedPlanService] switchPlan failed:",
+        appError.toJSON(),
+      );
       return {
         success: false,
-        error: error as Error,
-        message: "プランの切り替えに失敗しました",
+        error: appError,
+        message:
+          ERROR_MESSAGES[PlanErrorCode.PLAN_SWITCH_FAILED] ||
+          "プランの切り替えに失敗しました",
       };
     }
   }
 
+  @measured({ operation: "plan.delete", threshold: 1000 })
   async deletePlan(
     userId: string,
     planId: string,
@@ -93,14 +145,32 @@ export class UnifiedPlanService {
         message: "プランが削除されました",
       };
     } catch (error) {
+      const appError = toAppError(
+        error,
+        PlanErrorCode.PLAN_DELETE_FAILED,
+        "error",
+        {
+          service: "UnifiedPlanService",
+          operation: "deletePlan",
+          entityId: planId,
+          entityType: "plan",
+        },
+      );
+      console.error(
+        "[UnifiedPlanService] deletePlan failed:",
+        appError.toJSON(),
+      );
       return {
         success: false,
-        error: error as Error,
-        message: "プランの削除に失敗しました",
+        error: appError,
+        message:
+          ERROR_MESSAGES[PlanErrorCode.PLAN_DELETE_FAILED] ||
+          "プランの削除に失敗しました",
       };
     }
   }
 
+  @measured({ operation: "plan.duplicate", threshold: 1500 })
   async duplicatePlan(
     userId: string,
     planId: string,
@@ -109,7 +179,17 @@ export class UnifiedPlanService {
       const originalPlan = await this.planRepository.loadPlan(planId);
 
       if (!originalPlan) {
-        throw new Error("複製元のプランが見つかりません");
+        throw new AppError(
+          PlanErrorCode.PLAN_NOT_FOUND,
+          "複製元のプランが見つかりません",
+          "warning",
+          {
+            service: "UnifiedPlanService",
+            operation: "duplicatePlan",
+            entityId: planId,
+            entityType: "plan",
+          },
+        );
       }
 
       const duplicatedPlan: TravelPlan = {
@@ -135,9 +215,24 @@ export class UnifiedPlanService {
         message: "プランが複製されました",
       };
     } catch (error) {
+      const appError = toAppError(
+        error,
+        PlanErrorCode.PLAN_SAVE_FAILED,
+        "error",
+        {
+          service: "UnifiedPlanService",
+          operation: "duplicatePlan",
+          entityId: planId,
+          entityType: "plan",
+        },
+      );
+      console.error(
+        "[UnifiedPlanService] duplicatePlan failed:",
+        appError.toJSON(),
+      );
       return {
         success: false,
-        error: error as Error,
+        error: appError,
         message: "プランの複製に失敗しました",
       };
     }
@@ -151,7 +246,17 @@ export class UnifiedPlanService {
     try {
       const currentPlan = usePlanStore.getState().plan;
       if (!currentPlan || currentPlan.id !== planId) {
-        throw new Error("プランが見つかりません");
+        throw new AppError(
+          PlanErrorCode.PLAN_NOT_FOUND,
+          "プランが見つかりません",
+          "warning",
+          {
+            service: "UnifiedPlanService",
+            operation: "updatePlanName",
+            entityId: planId,
+            entityType: "plan",
+          },
+        );
       }
 
       const updatedPlan = {
@@ -177,9 +282,24 @@ export class UnifiedPlanService {
         message: "プラン名が更新されました",
       };
     } catch (error) {
+      const appError = toAppError(
+        error,
+        PlanErrorCode.PLAN_SAVE_FAILED,
+        "error",
+        {
+          service: "UnifiedPlanService",
+          operation: "updatePlanName",
+          entityId: planId,
+          entityType: "plan",
+        },
+      );
+      console.error(
+        "[UnifiedPlanService] updatePlanName failed:",
+        appError.toJSON(),
+      );
       return {
         success: false,
-        error: error as Error,
+        error: appError,
         message: "プラン名の更新に失敗しました",
       };
     }

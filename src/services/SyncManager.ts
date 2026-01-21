@@ -14,6 +14,13 @@ import {
   SyncResult,
   SyncConflict,
 } from "../interfaces/ISyncService";
+import { AppError, toAppError } from "../errors/AppError";
+import { SyncErrorCode, NetworkErrorCode } from "../errors/ErrorCode";
+import { getRetryPolicy, withRetry } from "../errors/RetryPolicy";
+import { getEventBus } from "./ServiceContainer";
+import { SyncEventBus } from "../events/SyncEvents";
+import { v4 as uuidv4 } from "uuid";
+import { measured } from "../telemetry/decorators/measured";
 
 /**
  * 同期システム全体を管理するクラス
@@ -137,6 +144,7 @@ export class SyncManager implements ISyncService {
   /**
    * 操作を処理
    */
+  @measured({ operation: "sync.processOperation", threshold: 3000 })
   private async processOperation(
     operation: SyncOperation,
     plan: TravelPlan,
@@ -285,20 +293,40 @@ export class SyncManager implements ISyncService {
   /**
    * クラウド同期実行
    */
+  @measured({ operation: "sync.push", threshold: 2000 })
   private async syncToCloud(
     operation: SyncOperation,
     plan: TravelPlan,
     context: SyncContext,
   ): Promise<void> {
     const saveStartTimestamp = Date.now();
+    const syncId = uuidv4();
 
     // 書き込み履歴に追加
     this.recordWrite(saveStartTimestamp);
 
+    // 同期開始イベントを発火
+    this.emitSyncEvent("started", {
+      syncId,
+      entityType: "plan",
+      entityId: plan.id,
+      operation: this.mapOperationType(operation.type),
+      initiatedBy: context.uid || "unknown",
+    });
+
     try {
       // contextからuidを取得してクラウド保存
       if (!context.uid) {
-        throw new Error("uid is required for cloud save");
+        throw new AppError(
+          SyncErrorCode.SYNC_PERMISSION_DENIED,
+          "uid is required for cloud save",
+          "error",
+          {
+            service: "SyncManager",
+            operation: "syncToCloud",
+            entityType: "plan",
+          },
+        );
       }
 
       await savePlanHybrid(plan, { mode: "cloud", uid: context.uid });
@@ -307,9 +335,101 @@ export class SyncManager implements ISyncService {
       this.consecutiveErrorCount = 0;
 
       const saveEndTimestamp = Date.now();
-    } catch (error: any) {
-      this.handleFirebaseError(error);
-      throw error; // エラーを再スローして上位のエラーハンドリングに任せる
+      const durationMs = saveEndTimestamp - saveStartTimestamp;
+
+      // 同期完了イベントを発火
+      this.emitSyncEvent("completed", {
+        syncId,
+        entityType: "plan",
+        entityId: plan.id,
+        operation: this.mapOperationType(operation.type),
+        durationMs,
+      });
+    } catch (error: unknown) {
+      const appError = this.handleFirebaseError(error);
+
+      // 同期失敗イベントを発火
+      this.emitSyncEvent("failed", {
+        syncId,
+        entityType: "plan",
+        entityId: plan.id,
+        operation: this.mapOperationType(operation.type),
+        reason: appError.message,
+        errorCode: appError.code,
+        retryable: appError.isRecoverable,
+        retryCount: operation.retryCount,
+      });
+
+      throw appError; // AppErrorを再スローして上位のエラーハンドリングに任せる
+    }
+  }
+
+  /**
+   * SyncOperationType を SyncEvents の operation に変換
+   */
+  private mapOperationType(
+    type: SyncOperationType,
+  ): "create" | "update" | "delete" {
+    switch (type) {
+      case "place_added":
+      case "label_added":
+        return "create";
+      case "place_deleted":
+      case "label_deleted":
+        return "delete";
+      default:
+        return "update";
+    }
+  }
+
+  /**
+   * 同期イベントを発火（EventBus が利用可能な場合のみ）
+   */
+  private emitSyncEvent(
+    eventType: "started" | "completed" | "failed",
+    payload: Record<string, unknown>,
+  ): void {
+    try {
+      const eventBus = getEventBus();
+      const syncEventBus = new SyncEventBus(eventBus);
+
+      switch (eventType) {
+        case "started":
+          syncEventBus.emitSyncStarted(
+            payload.syncId as string,
+            payload.entityType as "plan",
+            payload.entityId as string,
+            payload.operation as "create" | "update" | "delete",
+            payload.initiatedBy as string,
+          );
+          break;
+        case "completed":
+          syncEventBus.emitSyncCompleted(
+            payload.syncId as string,
+            payload.entityType as "plan",
+            payload.entityId as string,
+            payload.operation as "create" | "update" | "delete",
+            payload.durationMs as number,
+          );
+          break;
+        case "failed":
+          syncEventBus.emitSyncFailed(
+            payload.syncId as string,
+            payload.entityType as "plan",
+            payload.entityId as string,
+            payload.operation as "create" | "update" | "delete",
+            payload.reason as string,
+            {
+              errorCode: payload.errorCode as string | undefined,
+              retryable: payload.retryable as boolean | undefined,
+              retryCount: payload.retryCount as number | undefined,
+            },
+          );
+          break;
+      }
+    } catch (error) {
+      // EventBus が利用できない場合は警告のみ
+      console.warn("[SyncManager] Failed to emit sync event:", error);
     }
   }
 
@@ -320,30 +440,52 @@ export class SyncManager implements ISyncService {
     operation: SyncOperation,
     plan: TravelPlan,
     context: SyncContext,
-    error: any,
+    error: unknown,
   ): Promise<void> {
     operation.retryCount = (operation.retryCount || 0) + 1;
 
+    const appError = toAppError(
+      error,
+      SyncErrorCode.SYNC_CONNECTION_LOST,
+      "error",
+      {
+        service: "SyncManager",
+        operation: operation.type,
+        retryCount: operation.retryCount,
+        maxRetries: this.config.retryLimit,
+      },
+    );
+
     if (operation.retryCount < this.config.retryLimit) {
-      // リトライ
-      setTimeout(() => {
-        this.processOperation(operation, plan, context);
-      }, 1000 * operation.retryCount);
+      // リトライポリシーに基づいたバックオフ
+      const policy = getRetryPolicy(SyncErrorCode.SYNC_CONNECTION_LOST);
+      const delay =
+        policy.backoffMs?.[operation.retryCount - 1] ||
+        1000 * operation.retryCount;
 
       console.warn(
-        `同期リトライ ${operation.retryCount}/${this.config.retryLimit}:`,
-        error,
+        `[SyncManager] Retry ${operation.retryCount}/${this.config.retryLimit}:`,
+        appError.message,
+        `waiting ${delay}ms`,
       );
+
+      setTimeout(() => {
+        this.processOperation(operation, plan, context);
+      }, delay);
     } else {
       // 最大リトライ回数に達した場合は操作を削除
       this.operationQueue.delete(operation.id);
-      console.error("同期失敗（最大リトライ回数到達）:", error);
+      console.error(
+        "[SyncManager] Sync failed (max retries reached):",
+        appError.toJSON(),
+      );
     }
 
     syncDebugUtils.log("save", {
       type: "sync_error",
       operation: operation.type,
-      error: error.message,
+      error: appError.message,
+      code: appError.code,
       retryCount: operation.retryCount,
       timestamp: Date.now(),
     });
@@ -539,16 +681,42 @@ export class SyncManager implements ISyncService {
   /**
    * Firebaseエラーのハンドリング
    */
-  private handleFirebaseError(error: any): void {
+  private handleFirebaseError(error: unknown): AppError {
     this.consecutiveErrorCount++;
 
-    const errorMessage = error?.message || error?.toString() || "";
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : typeof error === "object" && error !== null && "message" in error
+          ? String((error as { message: unknown }).message)
+          : String(error);
+
     const isQuotaError =
       errorMessage.includes("quota") ||
       errorMessage.includes("limit") ||
       errorMessage.includes("too many requests") ||
       errorMessage.includes("resource-exhausted") ||
       errorMessage.includes("Write stream exhausted");
+
+    const isNetworkError =
+      errorMessage.includes("network") ||
+      errorMessage.includes("offline") ||
+      errorMessage.includes("timeout");
+
+    // エラーコードを判定
+    let errorCode: SyncErrorCode | NetworkErrorCode;
+    if (isQuotaError) {
+      errorCode = SyncErrorCode.SYNC_QUOTA_EXCEEDED;
+    } else if (isNetworkError) {
+      errorCode = NetworkErrorCode.NETWORK_OFFLINE;
+    } else {
+      errorCode = SyncErrorCode.SYNC_CONNECTION_LOST;
+    }
+
+    const appError = toAppError(error, errorCode, "error", {
+      service: "SyncManager",
+      operation: "syncToCloud",
+    });
 
     // クォータエラーまたは連続エラーが多い場合は緊急停止
     if (
@@ -557,6 +725,8 @@ export class SyncManager implements ISyncService {
     ) {
       this.activateEmergencyStop();
     }
+
+    return appError;
   }
 
   /**

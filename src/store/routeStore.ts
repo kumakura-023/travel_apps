@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { RouteConnection, Place } from "../types";
 import { v4 as uuidv4 } from "uuid";
+import { getEventBus } from "../services/ServiceContainer";
+import { RouteEventBus } from "../events/RouteEvents";
 
 /**
  * ルート検索の選択地点
@@ -183,6 +185,25 @@ export const useRouteStore = create<RouteState>((set, get) => ({
       return { routes: newRoutes };
     });
 
+    // イベントを発火
+    try {
+      const eventBus = getEventBus();
+      const routeEventBus = new RouteEventBus(eventBus);
+      routeEventBus.emitRouteAdded(
+        {
+          id: newRoute.id,
+          origin: newRoute.origin,
+          destination: newRoute.destination,
+          duration: newRoute.duration,
+          distance: newRoute.distance,
+          travelMode: String(newRoute.travelMode),
+        },
+        "user",
+      );
+    } catch (error) {
+      console.warn("[routeStore] Failed to emit route added event:", error);
+    }
+
     return id;
   },
 
@@ -192,10 +213,31 @@ export const useRouteStore = create<RouteState>((set, get) => ({
       newRoutes.delete(id);
       return { routes: newRoutes };
     });
+
+    // イベントを発火
+    try {
+      const eventBus = getEventBus();
+      const routeEventBus = new RouteEventBus(eventBus);
+      routeEventBus.emitRouteRemoved(id, "user");
+    } catch (error) {
+      console.warn("[routeStore] Failed to emit route removed event:", error);
+    }
   },
 
   clearAllRoutes: () => {
+    const currentCount = get().routes.size;
     set({ routes: new Map() });
+
+    // イベントを発火
+    if (currentCount > 0) {
+      try {
+        const eventBus = getEventBus();
+        const routeEventBus = new RouteEventBus(eventBus);
+        routeEventBus.emitRouteCleared(currentCount, "user");
+      } catch (error) {
+        console.warn("[routeStore] Failed to emit route cleared event:", error);
+      }
+    }
   },
 
   getRoute: (id) => {
@@ -213,16 +255,55 @@ export const useRouteStore = create<RouteState>((set, get) => ({
     set((state) => ({
       connections: [...state.connections, newConnection],
     }));
+
+    // イベントを発火
+    try {
+      const eventBus = getEventBus();
+      const routeEventBus = new RouteEventBus(eventBus);
+      routeEventBus.emitConnectionAdded(newConnection, "user");
+    } catch (error) {
+      console.warn(
+        "[routeStore] Failed to emit connection added event:",
+        error,
+      );
+    }
   },
 
   removeConnection: (connectionId) => {
     set((state) => ({
       connections: state.connections.filter((c) => c.id !== connectionId),
     }));
+
+    // イベントを発火
+    try {
+      const eventBus = getEventBus();
+      const routeEventBus = new RouteEventBus(eventBus);
+      routeEventBus.emitConnectionRemoved(connectionId, "user");
+    } catch (error) {
+      console.warn(
+        "[routeStore] Failed to emit connection removed event:",
+        error,
+      );
+    }
   },
 
   clearAllConnections: () => {
+    const currentCount = get().connections.length;
     set({ connections: [] });
+
+    // イベントを発火
+    if (currentCount > 0) {
+      try {
+        const eventBus = getEventBus();
+        const routeEventBus = new RouteEventBus(eventBus);
+        routeEventBus.emitConnectionsCleared(currentCount, "user");
+      } catch (error) {
+        console.warn(
+          "[routeStore] Failed to emit connections cleared event:",
+          error,
+        );
+      }
+    }
   },
 
   // 地点選択アクション

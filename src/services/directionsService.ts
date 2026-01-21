@@ -5,6 +5,7 @@ import {
   RouteResult,
 } from "../interfaces/IDirectionsService";
 import { AppError, ErrorCode } from "../errors";
+import { measured } from "../telemetry/decorators/measured";
 
 interface LatLngLiteral {
   lat: number;
@@ -72,6 +73,7 @@ class DirectionsService implements IDirectionsService {
   /**
    * 2地点間のルートを取得
    */
+  @measured({ operation: "route.calculate", threshold: 2000 })
   async getRoute(
     origin: google.maps.LatLngLiteral,
     destination: google.maps.LatLngLiteral,
@@ -96,6 +98,7 @@ class DirectionsService implements IDirectionsService {
   /**
    * 複数地点のバッチ処理
    */
+  @measured({ operation: "route.calculate.batch", threshold: 5000 })
   async getBatchRoutes(
     requests: DirectionsRequest[],
   ): Promise<(DirectionsResult | Error)[]> {
@@ -455,6 +458,7 @@ class DirectionsService implements IDirectionsService {
   }
 
   // IDirectionsService インターフェースの実装
+  @measured({ operation: "route.calculate", threshold: 2000 })
   async calculateRoute(request: RouteRequest): Promise<RouteResult> {
     const directionsResult = await this.getRoute(
       request.origin,

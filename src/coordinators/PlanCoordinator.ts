@@ -7,19 +7,77 @@ import { usePlanListStore } from "../store/planListStore";
 import { TravelPlan } from "../types";
 import { useNotificationStore } from "../store/notificationStore";
 import { useAuthStore } from "../hooks/useAuth";
+import { IPlanCoordinator } from "../interfaces/IPlanCoordinator";
+import { PlanUiActionMapper } from "../application/actions/PlanUiActionMapper";
+import { PlanCommandBus } from "../application/commands/PlanCommandBus";
+import { planCommandHandlers } from "../application/commands/handlers";
+import { PlanEventPublisherAdapter } from "../application/events/PlanEventPublisher";
+import { getEventBus } from "../services/ServiceContainer";
+import {
+  PlanCoordinatorBridge,
+  PlanCoordinatorBridgeDeps,
+} from "./PlanCoordinatorBridge";
+import { isAppError, AppError } from "../errors/AppError";
+import { PlanErrorCode } from "../errors/ErrorCode";
 
-export class PlanCoordinator {
+export class PlanCoordinator implements IPlanCoordinator {
   private currentPlanUnsubscribe?: () => void;
   private isInitialized: boolean = false;
   private currentUserId?: string;
+  private readonly bridge: PlanCoordinatorBridge;
 
   constructor(
     private readonly planService: PlanService,
     private readonly activePlanService: ActivePlanService,
-  ) {}
+  ) {
+    const eventBus = getEventBus();
+    const eventPublisher = new PlanEventPublisherAdapter(eventBus);
+    const bridgeDeps: PlanCoordinatorBridgeDeps = {
+      services: {
+        planService: this.planService,
+        activePlanService: this.activePlanService,
+        eventPublisher,
+      },
+      stores: {
+        planStore: usePlanStore,
+        savedPlacesStore: useSavedPlacesStore,
+        labelsStore: useLabelsStore,
+      },
+      utilities: {},
+    };
+
+    const mapper = new PlanUiActionMapper();
+    const commandBus = new PlanCommandBus(bridgeDeps);
+
+    // Register all plan command handlers
+    commandBus.registerHandlers(planCommandHandlers);
+
+    this.bridge = new PlanCoordinatorBridge(mapper, commandBus, bridgeDeps);
+  }
 
   async initialize(userId: string): Promise<void> {
-    console.log("[PlanCoordinator] Starting initialization for user:", userId);
+    const result = await this.bridge.dispatch({
+      type: "plan/initialize",
+      payload: { userId },
+      metadata: { source: "PlanCoordinator.initialize" },
+    });
+
+    // Command handled successfully - skip legacy flow
+    if (result.status === "accepted" && result.nextState?.plan) {
+      console.log("[PlanCoordinator] Initialization handled by command bus");
+      this.isInitialized = true;
+      this.currentUserId = userId;
+
+      // Still need to set up listener for real-time updates (not yet in command handler)
+      await this.setupPlanListener(result.nextState.plan.id);
+      return;
+    }
+
+    // [LEGACY] Fallback initialization flow - to be removed after full migration
+    console.log(
+      "[PlanCoordinator] [LEGACY] Starting initialization for user:",
+      userId,
+    );
 
     // 既に同じユーザーで初期化済みで、現在のプランが存在する場合はスキップ
     if (
@@ -78,9 +136,29 @@ export class PlanCoordinator {
   }
 
   async switchPlan(userId: string, planId: string): Promise<void> {
-    try {
-      this.stopListening();
+    // Stop current listener before switching
+    this.stopListening();
 
+    const result = await this.bridge.dispatch({
+      type: "plan/switch",
+      payload: { userId, planId },
+      metadata: { source: "PlanCoordinator.switchPlan" },
+    });
+
+    // Command handled successfully - skip legacy flow
+    if (result.status === "accepted" && result.nextState?.plan) {
+      console.log("[PlanCoordinator] Switch handled by command bus");
+      this.isInitialized = true;
+      this.currentUserId = userId;
+
+      // Set up listener for real-time updates
+      await this.setupPlanListener(planId);
+      return;
+    }
+
+    // [LEGACY] Fallback switch flow - to be removed after full migration
+    console.log("[PlanCoordinator] [LEGACY] Switching plan:", planId);
+    try {
       await this.activePlanService.setActivePlanId(userId, planId);
 
       // プラン切り替え時にオーバーレイを一時的にクリア
@@ -99,6 +177,25 @@ export class PlanCoordinator {
   }
 
   async deletePlan(userId: string, planId: string): Promise<void> {
+    const result = await this.bridge.dispatch({
+      type: "plan/delete",
+      payload: { userId, planId },
+      metadata: { source: "PlanCoordinator.deletePlan" },
+    });
+
+    // Command handled successfully - skip legacy flow
+    if (result.status === "accepted") {
+      console.log("[PlanCoordinator] Delete handled by command bus");
+
+      // Set up listener for next plan if exists
+      if (result.nextState?.plan) {
+        await this.setupPlanListener(result.nextState.plan.id);
+      }
+      return;
+    }
+
+    // [LEGACY] Fallback delete flow - to be removed after full migration
+    console.log("[PlanCoordinator] [LEGACY] Deleting plan:", planId);
     try {
       await this.planService.deletePlanLegacy(userId, planId);
 
@@ -118,9 +215,27 @@ export class PlanCoordinator {
   }
 
   async createNewPlan(userId: string, name: string): Promise<void> {
-    try {
-      console.log("[PlanCoordinator] Creating new plan:", name);
+    const result = await this.bridge.dispatch({
+      type: "plan/create",
+      payload: { userId, name },
+      metadata: { source: "PlanCoordinator.createNewPlan" },
+    });
 
+    // Command handled successfully - skip legacy flow
+    if (result.status === "accepted" && result.nextState?.plan) {
+      console.log("[PlanCoordinator] Create handled by command bus");
+
+      // Refresh plan list to include the new plan
+      await usePlanListStore.getState().refreshPlans();
+
+      // Set up listener for new plan
+      await this.setupPlanListener(result.nextState.plan.id);
+      return;
+    }
+
+    // [LEGACY] Fallback create flow - to be removed after full migration
+    console.log("[PlanCoordinator] [LEGACY] Creating new plan:", name);
+    try {
       // 新しいプランを作成
       const newPlan = await this.planService.createPlanLegacy(userId, name);
       console.log("[PlanCoordinator] New plan created:", newPlan.id);
@@ -140,7 +255,14 @@ export class PlanCoordinator {
   }
 
   cleanup(): void {
+    // Stop listener first
     this.stopListening();
+
+    void this.bridge.dispatch({
+      type: "plan/cleanup",
+      metadata: { source: "PlanCoordinator.cleanup" },
+    });
+
     this.isInitialized = false;
     this.currentUserId = undefined;
   }
@@ -266,11 +388,29 @@ export class PlanCoordinator {
     useLabelsStore.setState({ labels: [] });
   }
 
-  private setErrorState(error: any): void {
+  private setErrorState(error: unknown): void {
+    let errorMessage: string;
+    let errorCode: string | undefined;
+
+    if (isAppError(error)) {
+      errorMessage = error.message;
+      errorCode = error.code;
+      console.error("[PlanCoordinator] AppError occurred:", {
+        code: error.code,
+        message: error.message,
+        severity: error.severity,
+        context: error.context,
+      });
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    } else {
+      errorMessage = String(error) || "Unknown error";
+    }
+
     usePlanStore.setState({
       plan: null,
       isLoading: false,
-      error: error.message || "Unknown error",
+      error: errorCode ? `[${errorCode}] ${errorMessage}` : errorMessage,
     });
   }
 
@@ -279,6 +419,30 @@ export class PlanCoordinator {
       this.currentPlanUnsubscribe();
       this.currentPlanUnsubscribe = undefined;
     }
+  }
+
+  /**
+   * Sets up a real-time listener for plan updates.
+   * Used after command handlers have already loaded and applied the plan to stores.
+   */
+  private async setupPlanListener(planId: string): Promise<void> {
+    console.log("[PlanCoordinator] Setting up listener for plan:", planId);
+
+    this.currentPlanUnsubscribe = this.planService.listenToPlan(
+      planId,
+      (updatedPlan) => {
+        console.log(
+          "[PlanCoordinator] Plan updated via listener:",
+          updatedPlan?.id,
+        );
+        if (updatedPlan) {
+          this.updateStores(updatedPlan);
+        } else {
+          console.log("[PlanCoordinator] Plan deleted, setting empty state");
+          this.setEmptyState();
+        }
+      },
+    );
   }
 
   // ServiceContainerから移行した機能のためのアクセサ
