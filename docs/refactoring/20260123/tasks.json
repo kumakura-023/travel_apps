@@ -1,0 +1,5610 @@
+{
+  "projectName": "検索機能強化",
+  "createdAt": "2026-01-23",
+  "totalEstimatedMinutes": 3660,
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Phase 1: リッチサジェスト基盤",
+      "estimatedMinutes": 1080,
+      "tasks": [
+        {
+          "id": "1.1.1",
+          "title": "PlacesApiService - ファイル作成・シングルトン基盤",
+          "description": "src/services/placesApiService.ts を新規作成し、シングルトンパターンの基盤とgetPlacesApiService関数を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": ["src/services/placesApiService.ts"],
+            "modify": [],
+            "reference": ["src/hooks/useGoogleMaps.ts"]
+          },
+          "acceptanceCriteria": [
+            "ファイルが正しいパスに作成されている",
+            "getPlacesApiService関数がエクスポートされている",
+            "シングルトンインスタンスが正しく管理される"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.2",
+          "title": "PlacesApiService - 型定義・インターフェース",
+          "description": "PlacesApiServiceクラスのインターフェースと必要な型定義を追加する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "PlacesApiServiceクラスの骨格が定義されている",
+            "TypeScriptの型エラーがない"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.3",
+          "title": "PlacesApiService - AutocompleteService初期化",
+          "description": "google.maps.places.AutocompleteServiceのインスタンス化と初期化処理を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "AutocompleteServiceが正しく初期化される",
+            "constructorでのエラーハンドリングが実装されている"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.4",
+          "title": "PlacesApiService - セッション管理",
+          "description": "startNewSession、endSessionメソッドを実装し、AutocompleteSessionTokenを管理する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "startNewSessionでトークンが生成される",
+            "endSessionでトークンがクリアされる",
+            "sessionTokenプロパティが適切に管理される"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.5",
+          "title": "PlacesApiService - getPredictions基本実装",
+          "description": "getPlacePredictionsを呼び出すgetPredictionsメソッドを実装する（基本フロー）",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "inputを受け取り予測結果を返す",
+            "sessionTokenが正しく渡される",
+            "空文字の場合は空配列を返す"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.6",
+          "title": "PlacesApiService - getPredictionsエラーハンドリング",
+          "description": "getPredictionsのステータスコード別エラーハンドリングを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "ZERO_RESULTSで空配列を返す",
+            "OVER_QUERY_LIMITでエラーをthrow",
+            "REQUEST_DENIEDでエラーをthrow"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.7",
+          "title": "PlacesApiService - PlacesService初期化",
+          "description": "google.maps.places.PlacesServiceのインスタンス化（mapインスタンス必要）を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "mapインスタンスを受け取りPlacesServiceを初期化",
+            "mapなしの場合のエラーハンドリング"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.8",
+          "title": "PlacesApiService - キャッシュ機構実装",
+          "description": "detailsCacheをMap<string, {data, timestamp}>で実装し、キャッシュ操作メソッドを追加する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "detailsCacheが初期化されている",
+            "キャッシュの取得・設定・削除が可能",
+            "タイムスタンプが記録される"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.9",
+          "title": "PlacesApiService - フィールド定数定義",
+          "description": "SUGGESTION_DETAIL_FIELDS、FULL_DETAIL_FIELDS、SPOT_DETAIL_FIELDSの定数を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.8"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "3つのフィールド定数が定義されている",
+            "api-design.mdの仕様に準拠している"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.10",
+          "title": "PlacesApiService - getDetailsForSuggestion実装",
+          "description": "サジェスト上位3件向けの簡易詳細取得メソッドを実装する（キャッシュ活用）",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.9"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "placeIdから詳細を取得できる",
+            "キャッシュがあればAPIを呼ばない",
+            "SUGGESTION_DETAIL_FIELDSのみ取得"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.11",
+          "title": "PlacesApiService - getFullDetails実装",
+          "description": "候補選択時の完全詳細取得メソッドを実装する（セッション消費）",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.10"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "FULL_DETAIL_FIELDSで詳細を取得",
+            "取得後にendSessionが呼ばれる",
+            "結果をキャッシュに保存"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.12",
+          "title": "PlacesApiService - searchNearbySpots基本実装",
+          "description": "nearbySearchを呼び出すsearchNearbySpotsメソッドを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.11"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "location、radius、typeを受け取り検索実行",
+            "結果をPlaceResult[]で返す",
+            "paginationを保持"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.13",
+          "title": "PlacesApiService - searchNearbySpotsエラーハンドリング",
+          "description": "nearbySearchのエラーケース（ZERO_RESULTS等）のハンドリングを追加する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.12"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "ZERO_RESULTSで空配列を返す",
+            "エラー時は適切なメッセージでthrow"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.14",
+          "title": "PlacesApiService - loadMoreSpots実装",
+          "description": "pagination.nextPage()を使用した追加結果取得メソッドを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.13"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "hasNextPageを確認して追加取得",
+            "追加結果をPromiseで返す",
+            "ページがない場合は空配列"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.15",
+          "title": "PlacesApiService - キャッシュTTL管理",
+          "description": "キャッシュの有効期限（5分）チェックと期限切れ削除機能を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.14"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "CACHE_TTL定数が定義されている",
+            "isExpiredメソッドが実装されている",
+            "期限切れキャッシュは再取得される"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.16",
+          "title": "PlacesApiService - 写真URL取得ユーティリティ",
+          "description": "PlacePhotoからURLを取得するgetPhotoUrl関数を実装する（maxWidth指定対応）",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.15"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "photo.getUrl()でURLを取得",
+            "maxWidthパラメータをサポート",
+            "デフォルト100pxで取得"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.17",
+          "title": "PlacesApiService - エクスポート整理",
+          "description": "外部からアクセス可能な関数・クラス・定数のエクスポートを整理する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.16"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "getPlacesApiServiceがexport",
+            "必要な型定義がexport",
+            "内部実装は隠蔽されている"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.18",
+          "title": "PlacesApiService - Unit Test モック準備",
+          "description": "Google Maps APIのモック準備とテストファイルを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.17"],
+          "files": {
+            "create": ["src/services/__tests__/placesApiService.test.ts"],
+            "modify": [],
+            "reference": ["src/services/placesApiService.ts"]
+          },
+          "acceptanceCriteria": [
+            "テストファイルが作成されている",
+            "Google Maps APIのモックが準備されている"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.19",
+          "title": "PlacesApiService - Unit Test getPredictions",
+          "description": "getPredictionsメソッドのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.18"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/__tests__/placesApiService.test.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "正常系のテストがある",
+            "空入力のテストがある",
+            "エラーケースのテストがある"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.20",
+          "title": "PlacesApiService - Unit Test getDetails",
+          "description": "getDetailsForSuggestion/getFullDetailsのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.19"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/__tests__/placesApiService.test.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "両メソッドのテストがある",
+            "フィールド指定が正しいことを確認"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.21",
+          "title": "PlacesApiService - Unit Test キャッシュ",
+          "description": "キャッシュ機能のユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.20"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/__tests__/placesApiService.test.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "キャッシュヒット時のテスト",
+            "キャッシュ期限切れのテスト"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.22",
+          "title": "PlacesApiService - Unit Test セッション管理",
+          "description": "セッション管理のユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.21"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/__tests__/placesApiService.test.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "startNewSessionのテスト",
+            "endSessionのテスト",
+            "Details取得後のセッション終了テスト"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.23",
+          "title": "PlacesApiService - 動作確認・統合テスト",
+          "description": "実際のGoogle Maps APIを使用した動作確認を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.22"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["src/services/placesApiService.ts"]
+          },
+          "acceptanceCriteria": [
+            "開発環境で予測取得が動作する",
+            "詳細取得が動作する",
+            "コンソールエラーがない"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.1.24",
+          "title": "PlacesApiService - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.23"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "レビュー指摘事項が解消されている",
+            "コード品質が基準を満たす"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.2.1",
+          "title": "suggestionStore - ファイル作成・基本構造",
+          "description": "src/store/suggestionStore.ts を新規作成し、Zustand storeの基本構造を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": ["src/store/suggestionStore.ts"],
+            "modify": [],
+            "reference": ["src/store/selectedPlaceStore.ts"]
+          },
+          "acceptanceCriteria": [
+            "ファイルが正しいパスに作成されている",
+            "create()でstoreが生成される"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.2.2",
+          "title": "suggestionStore - 状態インターフェース定義",
+          "description": "SuggestionState インターフェースを定義する（query, predictions, richDetails, isLoading, error）",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.2.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/suggestionStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "全プロパティの型が定義されている",
+            "TypeScriptエラーがない"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.2.3",
+          "title": "suggestionStore - 基本Actions実装",
+          "description": "setQuery, setPredictions, setLoading, setError アクションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.2.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/suggestionStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["各アクションが状態を正しく更新する"],
+          "status": "pending"
+        },
+        {
+          "id": "1.2.4",
+          "title": "suggestionStore - setRichDetail実装",
+          "description": "Mapを使用したrichDetails更新アクションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.2.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/suggestionStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "placeIdをキーに詳細を保存",
+            "既存Mapを不変更新で更新"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.2.5",
+          "title": "suggestionStore - clear実装",
+          "description": "全状態を初期値にリセットするclearアクションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.2.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/suggestionStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "全プロパティが初期値に戻る",
+            "richDetailsが空Mapになる"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.2.6",
+          "title": "suggestionStore - Unit Test",
+          "description": "suggestionStoreのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.2.5"],
+          "files": {
+            "create": ["src/store/__tests__/suggestionStore.test.ts"],
+            "modify": [],
+            "reference": ["src/store/suggestionStore.ts"]
+          },
+          "acceptanceCriteria": [
+            "各アクションのテストがある",
+            "clearのテストがある"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.1",
+          "title": "useAutocomplete - ファイル作成・基本構造",
+          "description": "src/hooks/useAutocomplete.ts を新規作成し、カスタムフックの基本構造を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.17", "1.2.5"],
+          "files": {
+            "create": ["src/hooks/useAutocomplete.ts"],
+            "modify": [],
+            "reference": [
+              "src/store/suggestionStore.ts",
+              "src/services/placesApiService.ts"
+            ]
+          },
+          "acceptanceCriteria": [
+            "ファイルが正しいパスに作成されている",
+            "useAutocomplete関数がexportされている"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.2",
+          "title": "useAutocomplete - 依存関係インポート",
+          "description": "必要な依存関係（store, service, hooks）をインポートする",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useAutocomplete.ts"],
+            "reference": [
+              "src/store/selectedPlaceStore.ts",
+              "src/hooks/useGoogleMaps.ts"
+            ]
+          },
+          "acceptanceCriteria": [
+            "suggestionStore, selectedPlaceStore, useGoogleMapsが正しくインポート",
+            "PlacesApiServiceが正しくインポート"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.3",
+          "title": "useAutocomplete - debounce機構実装",
+          "description": "300msのdebounce処理を実装する（useRef + setTimeout）",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useAutocomplete.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "debounceRef.currentで管理",
+            "DEBOUNCE_MS定数が定義"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.4",
+          "title": "useAutocomplete - handleQueryChange基本実装",
+          "description": "handleQueryChange関数の基本フロー（setQuery, debounce開始）を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useAutocomplete.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "newQueryをstoreに設定",
+            "空文字の場合は即座にpredictionsをクリア"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.5",
+          "title": "useAutocomplete - handleQueryChange API呼び出し",
+          "description": "debounce後のgetPredictions呼び出しとpredictions設定を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useAutocomplete.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "PlacesApiServiceのgetPredictionsを呼び出し",
+            "結果をsetPredictionsで設定"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.6",
+          "title": "useAutocomplete - リッチ詳細取得（上位3件）",
+          "description": "予測結果取得後、上位3件のDetailsを並列取得する処理を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useAutocomplete.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "上位3件をsliceで抽出",
+            "Promise.allで並列取得",
+            "setRichDetailで各結果を保存"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.7",
+          "title": "useAutocomplete - handleSelect基本実装",
+          "description": "handleSelect関数の基本フロー（getFullDetails呼び出し）を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useAutocomplete.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "placeIdからgetFullDetailsを呼び出し",
+            "結果がnullの場合のハンドリング"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.8",
+          "title": "useAutocomplete - selectedPlaceStore連携",
+          "description": "詳細取得後のselectedPlaceStore.setPlace呼び出しを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useAutocomplete.ts"],
+            "reference": ["src/store/selectedPlaceStore.ts"]
+          },
+          "acceptanceCriteria": [
+            "取得した詳細をsetPlaceに渡す",
+            "selectedPlaceStoreが更新される"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.9",
+          "title": "useAutocomplete - panTo連携",
+          "description": "選択後の地図移動（panTo）呼び出しを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.8"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useAutocomplete.ts"],
+            "reference": ["src/hooks/useGoogleMaps.ts"]
+          },
+          "acceptanceCriteria": [
+            "geometry.locationから座標を取得",
+            "panToを適切なズームレベルで呼び出し"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.10",
+          "title": "useAutocomplete - クリーンアップ処理",
+          "description": "useEffectのreturnでdebounceタイマーをクリアする処理を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.9"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useAutocomplete.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "アンマウント時にclearTimeoutが呼ばれる",
+            "メモリリークがない"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.11",
+          "title": "usePlaceDetails - フック作成",
+          "description": "src/hooks/usePlaceDetails.ts を新規作成し、placeId指定で詳細を取得するフックを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.10"],
+          "files": {
+            "create": ["src/hooks/usePlaceDetails.ts"],
+            "modify": [],
+            "reference": ["src/services/placesApiService.ts"]
+          },
+          "acceptanceCriteria": [
+            "placeIdを受け取り詳細を返す",
+            "ローディング状態を管理"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.12",
+          "title": "usePlaceDetails - キャッシュ活用実装",
+          "description": "PlacesApiServiceのキャッシュを活用した効率的な詳細取得を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.11"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/usePlaceDetails.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "キャッシュがあればAPIを呼ばない",
+            "エラー時のフォールバック"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.13",
+          "title": "useAutocomplete - Unit Test debounce",
+          "description": "debounce動作のユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.12"],
+          "files": {
+            "create": ["src/hooks/__tests__/useAutocomplete.test.ts"],
+            "modify": [],
+            "reference": ["src/hooks/useAutocomplete.ts"]
+          },
+          "acceptanceCriteria": [
+            "300ms内の連続入力で1回のみAPI呼び出し",
+            "jest.useFakeTimersを使用"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.14",
+          "title": "useAutocomplete - Unit Test handleQueryChange",
+          "description": "handleQueryChange関数のユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.13"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/__tests__/useAutocomplete.test.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "queryがstoreに設定されるテスト",
+            "predictionsが取得されるテスト"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.15",
+          "title": "useAutocomplete - Unit Test handleSelect",
+          "description": "handleSelect関数のユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.14"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/__tests__/useAutocomplete.test.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "selectedPlaceStoreが更新されるテスト",
+            "panToが呼ばれるテスト"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.16",
+          "title": "useAutocomplete - 統合テスト",
+          "description": "フック全体の統合テストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.15"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/__tests__/useAutocomplete.test.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["入力→予測取得→選択→詳細表示の一連フロー"],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.17",
+          "title": "useAutocomplete - 動作確認",
+          "description": "開発環境での動作確認を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.16"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["src/hooks/useAutocomplete.ts"]
+          },
+          "acceptanceCriteria": [
+            "検索入力で予測が表示される",
+            "選択で詳細が取得される"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.3.18",
+          "title": "useAutocomplete - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.3.17"],
+          "files": {
+            "create": [],
+            "modify": [
+              "src/hooks/useAutocomplete.ts",
+              "src/hooks/usePlaceDetails.ts"
+            ],
+            "reference": []
+          },
+          "acceptanceCriteria": ["レビュー指摘事項が解消されている"],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.1",
+          "title": "CustomSuggestionList - ファイル作成・基本構造",
+          "description": "src/components/search/CustomSuggestionList.tsx を新規作成し、コンポーネントの基本構造を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.2.5"],
+          "files": {
+            "create": ["src/components/search/CustomSuggestionList.tsx"],
+            "modify": [],
+            "reference": ["src/store/suggestionStore.ts"]
+          },
+          "acceptanceCriteria": [
+            "ファイルが正しいパスに作成されている",
+            "Reactコンポーネントとしてexportされている"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.2",
+          "title": "CustomSuggestionList - Props/インターフェース定義",
+          "description": "Propsインターフェース（onSelect, onClose）を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/CustomSuggestionList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "Propsの型定義が完了",
+            "必須/任意プロパティが明確"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.3",
+          "title": "CustomSuggestionList - リスト表示基本実装",
+          "description": "predictionsをmap()で表示する基本的なリスト表示を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/CustomSuggestionList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "predictionsがリスト表示される",
+            "keyにplace_idを使用"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.4",
+          "title": "CustomSuggestionList - Rich/Simple条件分岐",
+          "description": "上位3件はRichSuggestionItem、4件目以降はSimpleSuggestionItemで表示する分岐を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/CustomSuggestionList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "index < 3でRichSuggestionItem",
+            "index >= 3でSimpleSuggestionItem"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.5",
+          "title": "CustomSuggestionList - ローディング状態表示",
+          "description": "isLoading時のスピナー/メッセージ表示を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/CustomSuggestionList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "ローディング中は「検索中...」を表示",
+            "predictionsが空でローディング中の場合のみ表示"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.6",
+          "title": "CustomSuggestionList - キーボードナビ ArrowDown/Up",
+          "description": "上下矢印キーでのフォーカス移動を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/CustomSuggestionList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "focusedIndex状態を管理",
+            "ArrowDownでインデックス+1",
+            "ArrowUpでインデックス-1"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.7",
+          "title": "CustomSuggestionList - キーボードナビ Enter/Escape",
+          "description": "Enterキーで選択、Escapeキーで閉じる処理を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/CustomSuggestionList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "EnterでfocusedIndexの候補を選択",
+            "EscapeでonClose呼び出し"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.8",
+          "title": "CustomSuggestionList - 外側クリックで閉じる",
+          "description": "リスト外クリック時にonCloseを呼び出す処理を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/CustomSuggestionList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "useRefでリスト要素を参照",
+            "mousedownイベントで外側クリック検知",
+            "クリーンアップでイベントリスナー解除"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.9",
+          "title": "CustomSuggestionList - スタイリング",
+          "description": "Tailwind CSSでリストのスタイリングを行う（glass-effect, shadow, rounded等）",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.8"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/CustomSuggestionList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "glass-effect-borderクラスを適用",
+            "shadow-elevation-3を適用",
+            "max-heightとoverflow-y-autoを設定"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.10",
+          "title": "CustomSuggestionList - アクセシビリティ",
+          "description": "aria-*, role属性を追加してアクセシビリティを向上する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.9"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/CustomSuggestionList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "role=\"listbox\"を設定",
+            "各項目にaria-selectedを設定",
+            "フォーカス時のaria-activedescendant"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.11",
+          "title": "RichSuggestionItem - ファイル作成・基本構造",
+          "description": "src/components/search/RichSuggestionItem.tsx を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.10"],
+          "files": {
+            "create": ["src/components/search/RichSuggestionItem.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "ファイルが正しいパスに作成されている",
+            "export defaultでコンポーネントをexport"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.12",
+          "title": "RichSuggestionItem - Props定義",
+          "description": "Propsインターフェース（prediction, detail, isLoading, isFocused, onClick）を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.11"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RichSuggestionItem.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "全Propsの型定義が完了",
+            "detailはundefined許容"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.13",
+          "title": "RichSuggestionItem - 写真サムネイル表示",
+          "description": "48x48pxの写真サムネイルを表示する（photos[0]を使用）",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.12"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RichSuggestionItem.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "photo.getUrl({maxWidth: 48})で取得",
+            "object-fit: coverで表示",
+            "border-radius: 8pxを適用"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.14",
+          "title": "RichSuggestionItem - 場所名・住所表示",
+          "description": "prediction.structured_formattingから名前・住所を表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.13"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RichSuggestionItem.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "main_textで場所名を表示",
+            "secondary_textで住所を表示",
+            "適切な文字サイズ・色を設定"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.15",
+          "title": "RichSuggestionItem - 評価・レビュー件数表示",
+          "description": "detail.rating、detail.user_ratings_totalを表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.14"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RichSuggestionItem.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "★と数値で評価を表示",
+            "レビュー件数を(123件)形式で表示",
+            "detailがない場合は非表示"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.16",
+          "title": "RichSuggestionItem - スケルトンUI",
+          "description": "詳細読み込み中のスケルトン（プレースホルダー）表示を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.15"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RichSuggestionItem.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "isLoading && !detailの場合にスケルトン表示",
+            "写真・評価部分がアニメーションでパルス"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.17",
+          "title": "RichSuggestionItem - ホバー/フォーカススタイル",
+          "description": "ホバー時・フォーカス時のスタイルを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.16"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RichSuggestionItem.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "ホバー時に背景色変更",
+            "isFocused時にborder-leftハイライト"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.18",
+          "title": "RichSuggestionItem - プレースホルダー画像対応",
+          "description": "写真がない場合のプレースホルダー画像表示を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.17"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RichSuggestionItem.tsx"],
+            "reference": ["public/placeholders/place.svg"]
+          },
+          "acceptanceCriteria": [
+            "photos配列が空の場合はプレースホルダー表示",
+            "プレースホルダー画像パスの設定"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.19",
+          "title": "SimpleSuggestionItem - ファイル作成・基本構造",
+          "description": "src/components/search/SimpleSuggestionItem.tsx を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.18"],
+          "files": {
+            "create": ["src/components/search/SimpleSuggestionItem.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成されている"],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.20",
+          "title": "SimpleSuggestionItem - Props定義",
+          "description": "Propsインターフェース（prediction, isFocused, onClick）を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.19"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/SimpleSuggestionItem.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全Propsの型定義が完了"],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.21",
+          "title": "SimpleSuggestionItem - 場所名・住所表示",
+          "description": "コンパクトなレイアウトで名前・住所を表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.20"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/SimpleSuggestionItem.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "main_textで場所名を表示",
+            "secondary_textで住所を表示",
+            "RichSuggestionItemよりコンパクト"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.22",
+          "title": "SimpleSuggestionItem - ホバー/フォーカススタイル",
+          "description": "ホバー時・フォーカス時のスタイルを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.21"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/SimpleSuggestionItem.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["RichSuggestionItemと統一感のあるスタイル"],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.23",
+          "title": "searchコンポーネント - index.ts作成",
+          "description": "src/components/search/index.ts を作成してエクスポートを集約する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.22"],
+          "files": {
+            "create": ["src/components/search/index.ts"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全コンポーネントがexportされている"],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.24",
+          "title": "プレースホルダー画像 - place.svg作成",
+          "description": "public/placeholders/place.svg を作成する（シンプルな場所アイコン）",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": ["public/placeholders/place.svg"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "SVGファイルが作成されている",
+            "場所を表すシンプルなアイコン"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.25",
+          "title": "CustomSuggestionList - Unit Test",
+          "description": "CustomSuggestionListのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.23"],
+          "files": {
+            "create": [
+              "src/components/search/__tests__/CustomSuggestionList.test.tsx"
+            ],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "リスト表示のテスト",
+            "Rich/Simple分岐のテスト"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.26",
+          "title": "RichSuggestionItem - Unit Test",
+          "description": "RichSuggestionItemのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.25"],
+          "files": {
+            "create": [
+              "src/components/search/__tests__/RichSuggestionItem.test.tsx"
+            ],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["写真表示のテスト", "スケルトン表示のテスト"],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.27",
+          "title": "SimpleSuggestionItem - Unit Test",
+          "description": "SimpleSuggestionItemのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.26"],
+          "files": {
+            "create": [
+              "src/components/search/__tests__/SimpleSuggestionItem.test.tsx"
+            ],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "表示内容のテスト",
+            "クリックイベントのテスト"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.28",
+          "title": "キーボードナビゲーション - テスト",
+          "description": "キーボードナビゲーションの統合テストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.27"],
+          "files": {
+            "create": [],
+            "modify": [
+              "src/components/search/__tests__/CustomSuggestionList.test.tsx"
+            ],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "Arrow Up/Downのテスト",
+            "Enter/Escapeのテスト"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.29",
+          "title": "コンポーネント群 - 統合確認",
+          "description": "CustomSuggestionList, Rich/SimpleSuggestionItemの統合動作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.28"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["src/components/search/"]
+          },
+          "acceptanceCriteria": [
+            "全コンポーネントが連携動作する",
+            "TypeScriptエラーがない"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.30",
+          "title": "コンポーネント群 - スタイル微調整",
+          "description": "デザインレビュー後のスタイル微調整を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.29"],
+          "files": {
+            "create": [],
+            "modify": [
+              "src/components/search/CustomSuggestionList.tsx",
+              "src/components/search/RichSuggestionItem.tsx"
+            ],
+            "reference": []
+          },
+          "acceptanceCriteria": ["デザイン仕様に準拠", "一貫性のあるスタイル"],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.31",
+          "title": "コンポーネント群 - レスポンシブ対応確認",
+          "description": "デスクトップ・モバイルでの表示確認を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.30"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "デスクトップで正しく表示",
+            "モバイルで正しく表示"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.32",
+          "title": "コンポーネント群 - アクセシビリティ確認",
+          "description": "スクリーンリーダー、キーボード操作のアクセシビリティ確認を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.31"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["キーボードのみで操作可能", "aria属性が適切"],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.33",
+          "title": "コンポーネント群 - ブラウザ互換性確認",
+          "description": "主要ブラウザでの動作確認を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.32"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "Chrome, Firefox, Safariで動作確認",
+            "Edge, モバイルブラウザで動作確認"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.34",
+          "title": "コンポーネント群 - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.33"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["レビュー指摘事項が解消されている"],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.35",
+          "title": "コンポーネント群 - 最終調整",
+          "description": "Phase 1.4完了に向けた最終調整を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.34"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全コンポーネントが仕様通り動作"],
+          "status": "pending"
+        },
+        {
+          "id": "1.4.36",
+          "title": "コンポーネント群 - ドキュメント更新",
+          "description": "コンポーネントの使用方法をドキュメント化する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.4.35"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["使用方法が文書化されている"],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.1",
+          "title": "SearchBar改修 - 現行コード分析",
+          "description": "現在のSearchBar.tsxの実装を分析し、変更箇所を特定する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["src/components/SearchBar.tsx"]
+          },
+          "acceptanceCriteria": [
+            "現行のAutocomplete使用箇所を特定",
+            "維持すべき機能を明確化"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.2",
+          "title": "SearchBar改修 - バックアップ・安全策",
+          "description": "変更前のコードをバックアップし、ロールバック手順を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.1"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "git commitでバックアップ",
+            "ロールバック手順を確認"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.3",
+          "title": "SearchBar改修 - Autocomplete削除準備",
+          "description": "@react-google-maps/api の Autocomplete コンポーネント使用箇所を確認し削除準備する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.2", "1.3.18", "1.4.35"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["src/components/SearchBar.tsx"]
+          },
+          "acceptanceCriteria": [
+            "削除対象のimport文を特定",
+            "削除対象のJSXを特定"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.4",
+          "title": "SearchBar改修 - useAutocomplete導入",
+          "description": "useAutocompleteフックをインポートし、基本的な状態を取得する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": ["src/hooks/useAutocomplete.ts"]
+          },
+          "acceptanceCriteria": [
+            "useAutocompleteのインポート追加",
+            "query, handleQueryChange, handleSelect, clearを取得"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.5",
+          "title": "SearchBar改修 - useSuggestionStore導入",
+          "description": "useSuggestionStoreからpredictionsを取得する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": ["src/store/suggestionStore.ts"]
+          },
+          "acceptanceCriteria": ["predictionsを取得", "TypeScriptエラーがない"],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.6",
+          "title": "SearchBar改修 - input要素改修",
+          "description": "input要素のvalue/onChangeをuseAutocompleteに接続する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "value={query}に変更",
+            "onChangeでhandleQueryChangeを呼び出し"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.7",
+          "title": "SearchBar改修 - onFocusハンドラー",
+          "description": "onFocusでサジェスト表示を開始する処理を追加する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "onFocusでsetShowSuggestions(true)",
+            "フォーカス時にサジェストが表示される"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.8",
+          "title": "SearchBar改修 - showSuggestions状態管理",
+          "description": "showSuggestions状態を追加し、サジェスト表示/非表示を管理する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "useState(false)で初期化",
+            "表示条件が正しく動作"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.9",
+          "title": "SearchBar改修 - CustomSuggestionList統合",
+          "description": "CustomSuggestionListコンポーネントを配置し接続する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.8"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": ["src/components/search/CustomSuggestionList.tsx"]
+          },
+          "acceptanceCriteria": [
+            "条件付きレンダリングで配置",
+            "onSelect, onCloseを接続"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.10",
+          "title": "SearchBar改修 - handleSuggestionSelect実装",
+          "description": "サジェスト選択時のハンドラーを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.9"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "handleSelectを呼び出し",
+            "setShowSuggestions(false)で閉じる"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.11",
+          "title": "SearchBar改修 - RegionSearchButton導入準備",
+          "description": "RegionSearchButtonの配置位置を確認し、インポートを追加する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.10"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "インポート追加（Phase 2で実装予定のため仮）",
+            "配置位置を確定"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.12",
+          "title": "SearchBar改修 - RegionSearchButton配置",
+          "description": "RegionSearchButtonをSearchBar内に配置する（Phase 2.4で実装後に接続）",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.11"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "ボタンの配置スペースを確保",
+            "コメントで後続対応を明記"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.13",
+          "title": "SearchBar改修 - Enterキー検索維持",
+          "description": "既存のEnterキーでの検索確定機能を維持する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.12"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "Enterキーで選択中の候補を確定",
+            "候補未選択時の動作確認"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.14",
+          "title": "SearchBar改修 - 入力クリア維持",
+          "description": "既存の入力クリア機能を維持する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.13"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "クリアボタンでqueryをクリア",
+            "suggestionStore.clearも呼び出し"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.15",
+          "title": "SearchBar改修 - ルート検索ボタン維持",
+          "description": "既存のルート検索ボタン機能を維持する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.14"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "ルート検索ボタンが正常動作",
+            "既存機能への影響なし"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.16",
+          "title": "SearchBar改修 - inputRef維持",
+          "description": "外部から渡されるinputRefを維持する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.15"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "propsのinputRefを正しく設定",
+            "外部からのフォーカス制御が可能"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.17",
+          "title": "SearchBar改修 - selectedPlaceStore連携確認",
+          "description": "候補選択後のselectedPlaceStore更新を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.16"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["src/store/selectedPlaceStore.ts"]
+          },
+          "acceptanceCriteria": [
+            "選択後にselectedPlaceStoreが更新される",
+            "PlaceDetailsPanelに詳細が表示される"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.18",
+          "title": "SearchBar改修 - panTo地図移動確認",
+          "description": "候補選択後の地図移動を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.17"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["src/hooks/useGoogleMaps.ts"]
+          },
+          "acceptanceCriteria": [
+            "選択した場所に地図がパンする",
+            "適切なズームレベルで表示"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.19",
+          "title": "SearchBar改修 - スタイル調整",
+          "description": "カスタムUIの追加に伴うスタイル調整を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.18"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "既存デザインとの整合性",
+            "サジェストリストの配置が適切"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.20",
+          "title": "SearchBar改修 - レスポンシブ対応",
+          "description": "モバイル・デスクトップでのレスポンシブ対応を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.19"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "デスクトップで正しく表示",
+            "モバイルで正しく表示"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.21",
+          "title": "SearchBar改修 - Unit Test更新",
+          "description": "SearchBarの既存テストを更新し、新機能のテストを追加する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.20"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/__tests__/SearchBar.test.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "既存テストが通過",
+            "カスタムUI関連のテスト追加"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.22",
+          "title": "SearchBar改修 - 回帰テスト",
+          "description": "既存機能の回帰テストを実施する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.21"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["既存の検索機能が動作", "既存のUI/UXが維持"],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.23",
+          "title": "SearchBar改修 - 動作確認",
+          "description": "開発環境での総合動作確認を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.22"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "検索→サジェスト表示→選択→詳細表示の一連フロー",
+            "コンソールエラーがない"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "1.5.24",
+          "title": "SearchBar改修 - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.5.23"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "レビュー指摘事項が解消されている",
+            "Phase 1完了の基準を満たす"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Phase 2: 地域マスタ・選択UI",
+      "estimatedMinutes": 840,
+      "tasks": [
+        {
+          "id": "2.1.1",
+          "title": "region型定義 - Prefecture型",
+          "description": "src/types/region.ts を新規作成し、Prefecture インターフェースを定義する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": ["src/types/region.ts"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "code, name, nameEn, centerプロパティが定義",
+            "TypeScriptの型として使用可能"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.2",
+          "title": "region型定義 - City型",
+          "description": "City インターフェースを定義する（code, name, nameEn, center, searchRadius）",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/types/region.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "searchRadiusプロパティが含まれる",
+            "Prefectureと関連付けられる構造"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.3",
+          "title": "region型定義 - LatLng型・エクスポート",
+          "description": "LatLng型を定義し、全型をエクスポートする",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/types/region.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "lat, lngプロパティを持つ型",
+            "全型がexportされている"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.4",
+          "title": "地域マスタ - ディレクトリ構造作成",
+          "description": "src/data/regions/ および src/data/regions/cities/ ディレクトリを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.3"],
+          "files": {
+            "create": [
+              "src/data/regions/.gitkeep",
+              "src/data/regions/cities/.gitkeep"
+            ],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ディレクトリ構造が作成されている"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.5",
+          "title": "prefectures.json - 北海道〜東北",
+          "description": "北海道、青森、岩手、宮城、秋田、山形、福島の都道府県データを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.4"],
+          "files": {
+            "create": ["src/data/regions/prefectures.json"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "7都道府県のデータが含まれる",
+            "各県にcode, name, nameEn, centerがある"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.6",
+          "title": "prefectures.json - 関東",
+          "description": "茨城、栃木、群馬、埼玉、千葉、東京、神奈川の都道府県データを追加する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/data/regions/prefectures.json"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["7都道府県のデータが追加されている"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.7",
+          "title": "prefectures.json - 中部",
+          "description": "新潟〜静岡の9県の都道府県データを追加する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/data/regions/prefectures.json"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["9県のデータが追加されている"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.8",
+          "title": "prefectures.json - 近畿",
+          "description": "三重、滋賀、京都、大阪、兵庫、奈良、和歌山の都道府県データを追加する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/data/regions/prefectures.json"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["7府県のデータが追加されている"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.9",
+          "title": "prefectures.json - 中国・四国",
+          "description": "鳥取〜高知の9県の都道府県データを追加する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.8"],
+          "files": {
+            "create": [],
+            "modify": ["src/data/regions/prefectures.json"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["9県のデータが追加されている"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.10",
+          "title": "prefectures.json - 九州・沖縄",
+          "description": "福岡〜沖縄の8県の都道府県データを追加する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.9"],
+          "files": {
+            "create": [],
+            "modify": ["src/data/regions/prefectures.json"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "8県のデータが追加されている",
+            "47都道府県が揃っている"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.11",
+          "title": "cities/hokkaido.json作成",
+          "description": "北海道の主要市区町村データ（札幌、函館、小樽等）を作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.10"],
+          "files": {
+            "create": ["src/data/regions/cities/hokkaido.json"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "主要観光地を含む",
+            "各市にcenter, searchRadiusがある"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.12",
+          "title": "cities/tokyo.json作成",
+          "description": "東京都の主要市区町村データ（23区、八王子、町田等）を作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.11"],
+          "files": {
+            "create": ["src/data/regions/cities/tokyo.json"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["23区と主要市が含まれる"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.13",
+          "title": "cities/kanagawa.json作成",
+          "description": "神奈川県の主要市区町村データ（横浜、鎌倉、箱根等）を作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.12"],
+          "files": {
+            "create": ["src/data/regions/cities/kanagawa.json"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["主要観光地が含まれる"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.14",
+          "title": "cities/kyoto.json作成",
+          "description": "京都府の主要市区町村データ（京都市、宇治市等）を作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.13"],
+          "files": {
+            "create": ["src/data/regions/cities/kyoto.json"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["主要観光地が含まれる"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.15",
+          "title": "cities/osaka.json作成",
+          "description": "大阪府の主要市区町村データを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.14"],
+          "files": {
+            "create": ["src/data/regions/cities/osaka.json"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["主要観光地が含まれる"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.16",
+          "title": "cities/okinawa.json作成",
+          "description": "沖縄県の主要市区町村データを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.15"],
+          "files": {
+            "create": ["src/data/regions/cities/okinawa.json"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["主要観光地が含まれる"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.17",
+          "title": "地域マスタ - 座標・半径設定確認",
+          "description": "主要観光地の座標と検索半径が適切か確認・調整する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.16"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["src/data/regions/cities/"]
+          },
+          "acceptanceCriteria": [
+            "座標がGoogle Mapsで正確",
+            "検索半径が観光地をカバー"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.18",
+          "title": "地域マスタ - データ検証",
+          "description": "JSONデータの構文・型の検証を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.17"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["JSONが有効な構文", "TypeScript型と整合"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.19",
+          "title": "地域マスタ - TypeScript型チェック",
+          "description": "JSONデータがTypeScript型定義と一致するか確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.18"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "型エラーがない",
+            "インポート時に型推論が効く"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.20",
+          "title": "地域マスタ - インポートテスト",
+          "description": "実際にJSONをインポートして動作確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.19"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "import文でJSONを読み込める",
+            "データが正しくアクセス可能"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.21",
+          "title": "地域マスタ - 追加都道府県データ",
+          "description": "残りの主要観光都道府県のcitiesデータを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.20"],
+          "files": {
+            "create": [
+              "src/data/regions/cities/nara.json",
+              "src/data/regions/cities/hiroshima.json"
+            ],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["追加都道府県のデータが作成されている"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.22",
+          "title": "地域マスタ - データ完成度確認",
+          "description": "全データの完成度と品質を最終確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.21"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "主要50都市以上のデータ",
+            "観光地として適切なデータ"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.23",
+          "title": "地域マスタ - コードレビュー対応",
+          "description": "コードレビューで指摘されたデータの問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.22"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["レビュー指摘が解消"],
+          "status": "pending"
+        },
+        {
+          "id": "2.1.24",
+          "title": "地域マスタ - ドキュメント更新",
+          "description": "地域マスタの構造とメンテナンス方法をドキュメント化する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.23"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["追加方法が文書化"],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.1",
+          "title": "regionSearchStore - ファイル作成・基本構造",
+          "description": "src/store/regionSearchStore.ts を新規作成し、Zustand storeの基本構造を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.3"],
+          "files": {
+            "create": ["src/store/regionSearchStore.ts"],
+            "modify": [],
+            "reference": ["src/store/selectedPlaceStore.ts"]
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成されている"],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.2",
+          "title": "regionSearchStore - 状態インターフェース定義",
+          "description": "RegionSearchState インターフェースを定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/regionSearchStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全プロパティの型が定義"],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.3",
+          "title": "regionSearchStore - モーダル状態実装",
+          "description": "isModalOpen状態とopen/closeModalアクションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/regionSearchStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["openModal/closeModalが動作"],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.4",
+          "title": "regionSearchStore - スポットリスト状態実装",
+          "description": "isSpotListOpen状態とopen/closeSpotListアクションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/regionSearchStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["openSpotList/closeSpotListが動作"],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.5",
+          "title": "regionSearchStore - 選択状態実装",
+          "description": "selectedPrefecture, selectedCity状態とselectionアクションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/regionSearchStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "selectPrefecture/selectCityが動作",
+            "clearSelectionが動作"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.6",
+          "title": "regionSearchStore - spots状態実装",
+          "description": "spots配列状態とsetSpotsアクションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/regionSearchStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["setSpotsでスポット配列を設定可能"],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.7",
+          "title": "regionSearchStore - カテゴリ状態実装",
+          "description": "selectedCategory状態とsetCategoryアクションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/regionSearchStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["setCategoryでカテゴリを設定可能"],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.8",
+          "title": "regionSearchStore - ローディング状態実装",
+          "description": "isLoading状態とsetLoadingアクションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/regionSearchStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["setLoadingでローディング状態を設定可能"],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.9",
+          "title": "regionSearchStore - Modalアクション統合",
+          "description": "モーダル関連アクションの最終調整（closeModal時のselection reset等）",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.8"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/regionSearchStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["closeModal時にselectedPrefectureをクリア"],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.10",
+          "title": "regionSearchStore - Selectionアクション統合",
+          "description": "選択関連アクションの最終調整（selectCity時のモーダル閉じ等）",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.9"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/regionSearchStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "selectCity時にisModalOpen=false, isSpotListOpen=true"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.11",
+          "title": "regionSearchStore - SpotListアクション統合",
+          "description": "スポットリスト関連アクションの最終調整（closeSpotList時のクリーンアップ等）",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.10"],
+          "files": {
+            "create": [],
+            "modify": ["src/store/regionSearchStore.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["closeSpotList時にspots/categoryをクリア"],
+          "status": "pending"
+        },
+        {
+          "id": "2.2.12",
+          "title": "regionSearchStore - Unit Test",
+          "description": "regionSearchStoreのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.11"],
+          "files": {
+            "create": ["src/store/__tests__/regionSearchStore.test.ts"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全アクションのテストがある"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.1",
+          "title": "RegionSelectorModal - ファイル作成・基本構造",
+          "description": "src/components/region/RegionSelectorModal.tsx を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.2.12"],
+          "files": {
+            "create": ["src/components/region/RegionSelectorModal.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.2",
+          "title": "RegionSelectorModal - Props定義",
+          "description": "Propsインターフェース（isOpen, onClose, onCitySelect）を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全Propsの型定義が完了"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.3",
+          "title": "RegionSelectorModal - モーダルオーバーレイ",
+          "description": "モーダルの背景オーバーレイを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "オーバーレイクリックでonClose",
+            "z-indexが適切"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.4",
+          "title": "RegionSelectorModal - モーダルコンテナ",
+          "description": "モーダルのメインコンテナを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["中央配置", "最大幅/高さが設定"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.5",
+          "title": "RegionSelectorModal - ヘッダー実装",
+          "description": "タイトルと閉じるボタンを持つヘッダーを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "タイトルが表示される",
+            "閉じるボタンでonClose"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.6",
+          "title": "RegionSelectorModal - step状態管理",
+          "description": "step状態（'prefecture' | 'city'）を管理する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["stepに応じて表示を切り替え"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.7",
+          "title": "RegionSelectorModal - 戻るボタン",
+          "description": "city選択時に表示される戻るボタンを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "step='city'時に表示",
+            "クリックでstep='prefecture'に戻る"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.8",
+          "title": "RegionSelectorModal - 検索/絞り込み入力",
+          "description": "リスト絞り込み用の検索入力を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["入力でリストをフィルタリング"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.9",
+          "title": "RegionSelectorModal - PrefectureList統合",
+          "description": "PrefectureListコンポーネントを統合する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.8"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "step='prefecture'時に表示",
+            "選択でstep='city'に遷移"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.10",
+          "title": "RegionSelectorModal - CityList統合",
+          "description": "CityListコンポーネントを統合する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.9"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["step='city'時に表示", "選択でSpotList遷移"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.11",
+          "title": "RegionSelectorModal - SpotList遷移",
+          "description": "市区町村選択後のSpotList画面への遷移処理を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.10"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["onCitySelectを呼び出し", "モーダルを閉じる"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.12",
+          "title": "RegionSelectorModal - スタイリング",
+          "description": "モーダル全体のTailwind CSSスタイリングを行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.11"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["デザイン仕様に準拠"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.13",
+          "title": "RegionSelectorModal - アニメーション",
+          "description": "モーダルの開閉アニメーションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.12"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSelectorModal.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "フェードイン/アウト",
+            "スムーズなトランジション"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.14",
+          "title": "PrefectureList - ファイル作成・基本構造",
+          "description": "src/components/region/PrefectureList.tsx を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.24"],
+          "files": {
+            "create": ["src/components/region/PrefectureList.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.15",
+          "title": "PrefectureList - Props定義",
+          "description": "Propsインターフェースを定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.14"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/PrefectureList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["onSelect, filterTextなどのProps"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.16",
+          "title": "PrefectureList - データインポート",
+          "description": "prefectures.jsonをインポートして使用する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.15"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/PrefectureList.tsx"],
+            "reference": ["src/data/regions/prefectures.json"]
+          },
+          "acceptanceCriteria": ["JSONデータが正しくインポート"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.17",
+          "title": "PrefectureList - リスト表示",
+          "description": "都道府県一覧をリスト表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.16"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/PrefectureList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["47都道府県が表示される"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.18",
+          "title": "PrefectureList - 絞り込みロジック",
+          "description": "filterTextに基づくリスト絞り込みを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.17"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/PrefectureList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["名前でフィルタリング可能"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.19",
+          "title": "PrefectureList - 選択ハンドラー",
+          "description": "都道府県選択時のハンドラーを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.18"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/PrefectureList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["クリックでonSelect呼び出し"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.20",
+          "title": "PrefectureList - スタイリング",
+          "description": "リストのTailwind CSSスタイリングを行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.19"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/PrefectureList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["タッチフレンドリーな行高"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.21",
+          "title": "CityList - ファイル作成・基本構造",
+          "description": "src/components/region/CityList.tsx を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.1.24"],
+          "files": {
+            "create": ["src/components/region/CityList.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.22",
+          "title": "CityList - Props定義",
+          "description": "Propsインターフェース（prefectureCode, onSelect等）を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.21"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CityList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全Propsの型定義が完了"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.23",
+          "title": "CityList - 動的インポート",
+          "description": "prefectureCodeに基づく市区町村JSONの動的インポートを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.22"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CityList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "動的import()でJSONを読み込み",
+            "コード分割が機能"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.24",
+          "title": "CityList - リスト表示",
+          "description": "市区町村一覧をリスト表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.23"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CityList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["市区町村が表示される"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.25",
+          "title": "CityList - 選択ハンドラー",
+          "description": "市区町村選択時のハンドラーを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.24"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CityList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["クリックでonSelect呼び出し"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.26",
+          "title": "CityList - スタイリング",
+          "description": "リストのTailwind CSSスタイリングを行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.25"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CityList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["PrefectureListと統一感"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.27",
+          "title": "RegionSelectorModal - Unit Test",
+          "description": "RegionSelectorModalのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.13"],
+          "files": {
+            "create": [
+              "src/components/region/__tests__/RegionSelectorModal.test.tsx"
+            ],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["モーダル開閉のテスト", "step遷移のテスト"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.28",
+          "title": "PrefectureList - Unit Test",
+          "description": "PrefectureListのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.20"],
+          "files": {
+            "create": [
+              "src/components/region/__tests__/PrefectureList.test.tsx"
+            ],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "リスト表示のテスト",
+            "フィルタリングのテスト"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.29",
+          "title": "CityList - Unit Test",
+          "description": "CityListのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.26"],
+          "files": {
+            "create": ["src/components/region/__tests__/CityList.test.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["動的インポートのテスト", "選択のテスト"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.30",
+          "title": "Region コンポーネント - 統合確認",
+          "description": "全Regionコンポーネントの統合動作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.27", "2.3.28", "2.3.29"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["モーダル→都道府県→市区町村の一連フロー"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.31",
+          "title": "Region コンポーネント - モバイル対応",
+          "description": "モバイルでの表示・操作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.30"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["モバイルで正しく表示"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.32",
+          "title": "Region コンポーネント - デスクトップ対応",
+          "description": "デスクトップでの表示・操作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.31"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["デスクトップで正しく表示"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.33",
+          "title": "Region コンポーネント - キーボードナビ",
+          "description": "キーボードナビゲーションを実装・確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.32"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["キーボードのみで操作可能"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.34",
+          "title": "Region コンポーネント - アクセシビリティ",
+          "description": "アクセシビリティ対応を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.33"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["aria属性が適切"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.35",
+          "title": "Region コンポーネント - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.34"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["レビュー指摘が解消"],
+          "status": "pending"
+        },
+        {
+          "id": "2.3.36",
+          "title": "Region コンポーネント - 最終調整",
+          "description": "Phase 2.3完了に向けた最終調整を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.35"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全コンポーネントが仕様通り"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.1",
+          "title": "RegionSearchButton - ファイル作成・基本構造",
+          "description": "src/components/search/RegionSearchButton.tsx を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.3.36"],
+          "files": {
+            "create": ["src/components/search/RegionSearchButton.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.2",
+          "title": "RegionSearchButton - Props定義",
+          "description": "Propsインターフェース（onClick）を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.4.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RegionSearchButton.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["onClickプロパティが定義"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.3",
+          "title": "RegionSearchButton - アイコン選定・表示",
+          "description": "適切なアイコン（explore等）を選定し表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.4.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RegionSearchButton.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["アイコンが表示される"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.4",
+          "title": "RegionSearchButton - テキスト表示（デスクトップ）",
+          "description": "デスクトップでは「地域から探す」テキストを表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.4.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RegionSearchButton.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["hidden md:inline でテキスト表示"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.5",
+          "title": "RegionSearchButton - レスポンシブ対応",
+          "description": "モバイルではアイコンのみ表示にする",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.4.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RegionSearchButton.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["モバイルはアイコンのみ"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.6",
+          "title": "RegionSearchButton - スタイリング",
+          "description": "ボタンのTailwind CSSスタイリングを行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.4.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RegionSearchButton.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["既存ボタンと統一感"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.7",
+          "title": "RegionSearchButton - SearchBar統合",
+          "description": "SearchBarにRegionSearchButtonを配置する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.4.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ボタンがSearchBar内に表示"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.8",
+          "title": "RegionSearchButton - モーダル連携確認",
+          "description": "クリックでRegionSelectorModalが開くことを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.4.7"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ボタンクリックでモーダル表示"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.9",
+          "title": "RegionSearchButton - Unit Test",
+          "description": "RegionSearchButtonのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.4.8"],
+          "files": {
+            "create": [
+              "src/components/search/__tests__/RegionSearchButton.test.tsx"
+            ],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["クリックイベントのテスト"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.10",
+          "title": "RegionSearchButton - 動作確認",
+          "description": "開発環境での動作確認を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.4.9"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ボタン→モーダル→選択の一連フロー"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.11",
+          "title": "RegionSearchButton - スタイル微調整",
+          "description": "デザインレビュー後のスタイル微調整を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.4.10"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RegionSearchButton.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["デザイン仕様に準拠"],
+          "status": "pending"
+        },
+        {
+          "id": "2.4.12",
+          "title": "RegionSearchButton - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["2.4.11"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["Phase 2完了の基準を満たす"],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Phase 3: スポット一覧",
+      "estimatedMinutes": 840,
+      "tasks": [
+        {
+          "id": "3.1.1",
+          "title": "useNearbySearch - ファイル作成・基本構造",
+          "description": "src/hooks/useNearbySearch.ts を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["1.1.24"],
+          "files": {
+            "create": ["src/hooks/useNearbySearch.ts"],
+            "modify": [],
+            "reference": ["src/services/placesApiService.ts"]
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成"],
+          "status": "pending"
+        },
+        {
+          "id": "3.1.2",
+          "title": "useNearbySearch - 依存関係インポート",
+          "description": "必要な依存関係をインポートする",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useNearbySearch.ts"],
+            "reference": ["src/store/regionSearchStore.ts"]
+          },
+          "acceptanceCriteria": [
+            "PlacesApiService, regionSearchStoreをインポート"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "3.1.3",
+          "title": "useNearbySearch - searchSpots基本実装",
+          "description": "searchSpots関数の基本フローを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useNearbySearch.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["selectedCityがない場合は早期return"],
+          "status": "pending"
+        },
+        {
+          "id": "3.1.4",
+          "title": "useNearbySearch - PlacesApiService連携",
+          "description": "searchNearbySpotsを呼び出し結果をstoreに設定する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useNearbySearch.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "searchNearbySpotsを呼び出し",
+            "setSpotsで結果を設定"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "3.1.5",
+          "title": "useNearbySearch - カテゴリフィルター対応",
+          "description": "selectedCategoryに基づくtype指定を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useNearbySearch.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["カテゴリに応じたtypeを渡す"],
+          "status": "pending"
+        },
+        {
+          "id": "3.1.6",
+          "title": "useNearbySearch - loadMore実装",
+          "description": "追加結果取得のloadMore関数を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useNearbySearch.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["loadMoreSpotsを呼び出し", "既存spotsに追加"],
+          "status": "pending"
+        },
+        {
+          "id": "3.1.7",
+          "title": "useNearbySearch - エラーハンドリング",
+          "description": "検索エラー時のハンドリングを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useNearbySearch.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "エラー時のconsole.error",
+            "ユーザー通知（任意）"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "3.1.8",
+          "title": "useNearbySearch - ローディング状態管理",
+          "description": "setLoadingによるローディング状態管理を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useNearbySearch.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["検索開始時にtrue、完了時にfalse"],
+          "status": "pending"
+        },
+        {
+          "id": "3.1.9",
+          "title": "useNearbySearch - Unit Test 基本機能",
+          "description": "基本機能のユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.8"],
+          "files": {
+            "create": ["src/hooks/__tests__/useNearbySearch.test.ts"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["searchSpotsのテスト"],
+          "status": "pending"
+        },
+        {
+          "id": "3.1.10",
+          "title": "useNearbySearch - Unit Test フィルター",
+          "description": "カテゴリフィルターのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.9"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/__tests__/useNearbySearch.test.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["カテゴリ変更時のテスト"],
+          "status": "pending"
+        },
+        {
+          "id": "3.1.11",
+          "title": "useNearbySearch - 動作確認",
+          "description": "開発環境での動作確認を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.10"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["スポット検索が動作する"],
+          "status": "pending"
+        },
+        {
+          "id": "3.1.12",
+          "title": "useNearbySearch - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.11"],
+          "files": {
+            "create": [],
+            "modify": ["src/hooks/useNearbySearch.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["レビュー指摘が解消"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.1",
+          "title": "RegionSpotList - ファイル作成・基本構造",
+          "description": "src/components/region/RegionSpotList.tsx を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.1.12"],
+          "files": {
+            "create": ["src/components/region/RegionSpotList.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.2",
+          "title": "RegionSpotList - Props定義",
+          "description": "Propsインターフェースを定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["prefecture, city, onClose, onSpotSelect"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.3",
+          "title": "RegionSpotList - フルスクリーンモーダル",
+          "description": "フルスクリーンモーダルとしての基本実装を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["フルスクリーンで表示", "z-indexが適切"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.4",
+          "title": "RegionSpotList - Stickyヘッダー",
+          "description": "固定ヘッダーを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["スクロール時もヘッダー固定"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.5",
+          "title": "RegionSpotList - 戻るボタン",
+          "description": "ヘッダーの戻るボタンを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["クリックでonClose呼び出し"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.6",
+          "title": "RegionSpotList - 地域名表示",
+          "description": "ヘッダーに地域名を表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["city.nameが表示される"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.7",
+          "title": "RegionSpotList - お気に入りボタン準備",
+          "description": "ヘッダーのお気に入りボタンスペースを確保する（将来機能）",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ボタンスペースが確保"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.8",
+          "title": "RegionSpotList - RegionSummaryCard統合",
+          "description": "RegionSummaryCardコンポーネントを配置する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["サマリーカードが表示される"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.9",
+          "title": "RegionSpotList - CategoryFilterChips統合",
+          "description": "CategoryFilterChipsコンポーネントを配置する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.8"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["フィルターチップが表示される"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.10",
+          "title": "RegionSpotList - SpotGrid統合",
+          "description": "SpotGridコンポーネントを配置する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.9"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["スポットグリッドが表示される"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.11",
+          "title": "RegionSpotList - 地図で見るFAB",
+          "description": "地図表示に切り替えるFABを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.10"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["FABが画面下部に固定", "クリックで地図表示"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.12",
+          "title": "RegionSpotList - スクロール管理",
+          "description": "コンテンツのスクロール管理を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.11"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": [
+            "ヘッダー/フィルターはsticky",
+            "コンテンツ部分がスクロール"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.13",
+          "title": "RegionSpotList - useNearbySearch連携",
+          "description": "useNearbySearchフックと連携する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.12"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["searchSpotsを呼び出し"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.14",
+          "title": "RegionSpotList - 初期データ取得",
+          "description": "useEffectで初期データ取得を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.13"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["マウント時にsearchSpots呼び出し"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.15",
+          "title": "RegionSummaryCard - ファイル作成・基本構造",
+          "description": "src/components/region/RegionSummaryCard.tsx を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": ["src/components/region/RegionSummaryCard.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.16",
+          "title": "RegionSummaryCard - Props定義",
+          "description": "Propsインターフェースを定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.15"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSummaryCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["prefecture, city, onMapClick"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.17",
+          "title": "RegionSummaryCard - 地域画像表示",
+          "description": "地域の代表画像を表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.16"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSummaryCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["画像またはプレースホルダー表示"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.18",
+          "title": "RegionSummaryCard - 地域名表示",
+          "description": "地域名を表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.17"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSummaryCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["city.name, city.nameEnが表示"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.19",
+          "title": "RegionSummaryCard - 説明文表示",
+          "description": "地域の簡易説明を表示する（将来的にはデータから取得）",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.18"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSummaryCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["説明文が表示される"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.20",
+          "title": "RegionSummaryCard - 地図アイコンボタン",
+          "description": "地図を開くアイコンボタンを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.19"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSummaryCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["クリックでonMapClick呼び出し"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.21",
+          "title": "RegionSummaryCard - スタイリング",
+          "description": "カードのTailwind CSSスタイリングを行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.20"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSummaryCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["UIモックに準拠"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.22",
+          "title": "RegionSpotList - スタイリング",
+          "description": "RegionSpotList全体のスタイリングを行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.14", "3.2.21"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["UIモックに準拠"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.23",
+          "title": "RegionSpotList - レスポンシブ対応",
+          "description": "モバイル・デスクトップでのレスポンシブ対応を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.22"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["各デバイスで正しく表示"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.24",
+          "title": "RegionSpotList - アニメーション",
+          "description": "開閉アニメーションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.23"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["スムーズなトランジション"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.25",
+          "title": "RegionSpotList - Unit Test",
+          "description": "RegionSpotListのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.24"],
+          "files": {
+            "create": [
+              "src/components/region/__tests__/RegionSpotList.test.tsx"
+            ],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["表示・操作のテスト"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.26",
+          "title": "RegionSummaryCard - Unit Test",
+          "description": "RegionSummaryCardのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.21"],
+          "files": {
+            "create": [
+              "src/components/region/__tests__/RegionSummaryCard.test.tsx"
+            ],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["表示のテスト"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.27",
+          "title": "RegionSpotList - 統合テスト",
+          "description": "全コンポーネントの統合テストを行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.25", "3.2.26"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["一連のフローが動作"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.28",
+          "title": "RegionSpotList - PlaceDetailsPanel連携",
+          "description": "スポット選択時のPlaceDetailsPanel表示を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.27"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": ["src/store/selectedPlaceStore.ts"]
+          },
+          "acceptanceCriteria": ["選択でselectedPlaceStore更新"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.29",
+          "title": "RegionSpotList - selectedPlaceStore連携",
+          "description": "selectedPlaceStoreとの連携を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.28"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["PlaceDetailsPanelが表示される"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.30",
+          "title": "RegionSpotList - panTo連携",
+          "description": "スポット選択時の地図移動を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.29"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["src/hooks/useGoogleMaps.ts"]
+          },
+          "acceptanceCriteria": ["選択で地図がパン"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.31",
+          "title": "RegionSpotList - モバイル動作確認",
+          "description": "モバイルでの動作確認を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.30"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["モバイルで正しく動作"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.32",
+          "title": "RegionSpotList - デスクトップ動作確認",
+          "description": "デスクトップでの動作確認を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.31"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["デスクトップで正しく動作"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.33",
+          "title": "RegionSpotList - アクセシビリティ確認",
+          "description": "アクセシビリティ対応を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.32"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["aria属性が適切"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.34",
+          "title": "RegionSpotList - パフォーマンス確認",
+          "description": "大量スポット表示時のパフォーマンスを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.33"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["20件以上でも快適に動作"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.35",
+          "title": "RegionSpotList - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.34"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["レビュー指摘が解消"],
+          "status": "pending"
+        },
+        {
+          "id": "3.2.36",
+          "title": "RegionSpotList - 最終調整",
+          "description": "Phase 3.2完了に向けた最終調整を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.2.35"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全機能が仕様通り"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.1",
+          "title": "SpotCard - ファイル作成・基本構造",
+          "description": "src/components/region/SpotCard.tsx を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": ["src/components/region/SpotCard.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.2",
+          "title": "SpotCard - Props定義",
+          "description": "Propsインターフェース（place, onClick）を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全Propsの型定義が完了"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.3",
+          "title": "SpotCard - 画像コンテナ",
+          "description": "4:3アスペクト比の画像コンテナを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["aspect-ratio: 4/3", "overflow: hidden"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.4",
+          "title": "SpotCard - 写真表示",
+          "description": "place.photosから写真を表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["photo.getUrl()で取得", "object-fit: cover"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.5",
+          "title": "SpotCard - 評価バッジ",
+          "description": "右上に評価バッジを表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["position: absolute", "★と数値を表示"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.6",
+          "title": "SpotCard - 名前表示",
+          "description": "スポット名を表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["place.nameを表示", "1行で切り捨て"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.7",
+          "title": "SpotCard - サブタイトル表示",
+          "description": "住所またはカテゴリをサブタイトルとして表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["vicinityまたはtypesを表示", "1行で切り捨て"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.8",
+          "title": "SpotCard - ホバーアニメーション",
+          "description": "ホバー時の画像スケールアニメーションを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ホバーでscale: 1.1", "transition: 500ms"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.9",
+          "title": "SpotCard - クリックハンドラー",
+          "description": "カードクリック時のハンドラーを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.8"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["クリックでonClick呼び出し"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.10",
+          "title": "SpotCard - プレースホルダー画像",
+          "description": "写真がない場合のプレースホルダー表示を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.9"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotCard.tsx"],
+            "reference": ["public/placeholders/place.svg"]
+          },
+          "acceptanceCriteria": ["photosがない場合はプレースホルダー"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.11",
+          "title": "SpotCard - スタイリング",
+          "description": "カードのTailwind CSSスタイリングを行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.10"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotCard.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["UIモックに準拠"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.12",
+          "title": "SpotGrid - ファイル作成・基本構造",
+          "description": "src/components/region/SpotGrid.tsx を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": ["src/components/region/SpotGrid.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.13",
+          "title": "SpotGrid - Props定義",
+          "description": "Propsインターフェース（spots, onSpotClick）を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.12"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotGrid.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全Propsの型定義が完了"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.14",
+          "title": "SpotGrid - 2カラムグリッド",
+          "description": "2カラムのグリッドレイアウトを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.13"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotGrid.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["grid-cols-2", "適切なgap"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.15",
+          "title": "SpotGrid - SpotCard配置",
+          "description": "SpotCardコンポーネントを配置する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.11", "3.3.14"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotGrid.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["spotsをmap()で表示"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.16",
+          "title": "SpotGrid - レスポンシブ対応",
+          "description": "レスポンシブ対応を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.15"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotGrid.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["モバイル/デスクトップで適切なカラム数"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.17",
+          "title": "SpotGrid - 遅延読み込み対応",
+          "description": "画像の遅延読み込みを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.16"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotGrid.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["loading=\"lazy\"を設定"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.18",
+          "title": "SpotGrid - スクロール最適化",
+          "description": "スクロールパフォーマンスの最適化を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.17"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/SpotGrid.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["スムーズなスクロール"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.19",
+          "title": "SpotCard - Unit Test",
+          "description": "SpotCardのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.11"],
+          "files": {
+            "create": ["src/components/region/__tests__/SpotCard.test.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["表示・クリックのテスト"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.20",
+          "title": "SpotGrid - Unit Test",
+          "description": "SpotGridのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.18"],
+          "files": {
+            "create": ["src/components/region/__tests__/SpotGrid.test.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["グリッド表示のテスト"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.21",
+          "title": "SpotCard/Grid - PlaceDetailsPanel連携",
+          "description": "クリック時のPlaceDetailsPanel表示を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.19", "3.3.20"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["クリックで詳細パネル表示"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.22",
+          "title": "SpotCard/Grid - selectedPlaceStore連携",
+          "description": "selectedPlaceStoreとの連携を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.21"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["storeが更新される"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.23",
+          "title": "SpotCard/Grid - panTo連携",
+          "description": "クリック時の地図移動を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.22"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["地図がパンする"],
+          "status": "pending"
+        },
+        {
+          "id": "3.3.24",
+          "title": "SpotCard/Grid - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.3.23"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["レビュー指摘が解消"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.1",
+          "title": "CategoryFilterChips - ファイル作成・基本構造",
+          "description": "src/components/region/CategoryFilterChips.tsx を新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": ["src/components/region/CategoryFilterChips.tsx"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ファイルが正しいパスに作成"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.2",
+          "title": "CategoryFilterChips - Props定義",
+          "description": "Propsインターフェース（selectedCategory, onSelect）を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.4.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CategoryFilterChips.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全Propsの型定義が完了"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.3",
+          "title": "CategoryFilterChips - CATEGORIES定数",
+          "description": "カテゴリ定数配列を定義する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.4.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CategoryFilterChips.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["All, 観光, 飲食, 買物, 宿泊が定義"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.4",
+          "title": "CategoryFilterChips - チップ一覧表示",
+          "description": "カテゴリチップを横並びで表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.4.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CategoryFilterChips.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全カテゴリがチップで表示"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.5",
+          "title": "CategoryFilterChips - 選択状態スタイル",
+          "description": "選択中のチップのスタイルを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.4.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CategoryFilterChips.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["bg-primary text-white"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.6",
+          "title": "CategoryFilterChips - 未選択状態スタイル",
+          "description": "未選択のチップのスタイルを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.4.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CategoryFilterChips.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["bg-white border"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.7",
+          "title": "CategoryFilterChips - 横スクロール",
+          "description": "横スクロール可能なコンテナを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.4.6"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CategoryFilterChips.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["overflow-x-auto", "flex nowrap"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.8",
+          "title": "CategoryFilterChips - スクロールバー非表示",
+          "description": "スクロールバーを非表示にする",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.4.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CategoryFilterChips.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["scrollbar-hide"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.9",
+          "title": "CategoryFilterChips - 選択ハンドラー",
+          "description": "チップクリック時のハンドラーを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.4.8"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/CategoryFilterChips.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["クリックでonSelect呼び出し"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.10",
+          "title": "regionコンポーネント - index.ts作成",
+          "description": "src/components/region/index.ts を作成してエクスポートを集約する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.4.9", "3.3.24", "3.2.36"],
+          "files": {
+            "create": ["src/components/region/index.ts"],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全コンポーネントがexport"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.11",
+          "title": "CategoryFilterChips - Unit Test",
+          "description": "CategoryFilterChipsのユニットテストを作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.4.10"],
+          "files": {
+            "create": [
+              "src/components/region/__tests__/CategoryFilterChips.test.tsx"
+            ],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["選択変更のテスト"],
+          "status": "pending"
+        },
+        {
+          "id": "3.4.12",
+          "title": "CategoryFilterChips - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正し、Phase 3を完了する",
+          "estimatedMinutes": 10,
+          "dependencies": ["3.4.11"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["Phase 3完了の基準を満たす"],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Phase 4: 統合・調整",
+      "estimatedMinutes": 900,
+      "tasks": [
+        {
+          "id": "4.1.1",
+          "title": "モバイル対応 - useDeviceDetect確認",
+          "description": "既存のuseDeviceDetectフックの使用方法を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["src/hooks/useDeviceDetect.ts"]
+          },
+          "acceptanceCriteria": ["isMobile判定方法を確認"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.2",
+          "title": "モバイル対応 - BottomSheet確認/作成",
+          "description": "既存のBottomSheetコンポーネントを確認または新規作成する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.1"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["src/store/bottomSheetStore.ts"]
+          },
+          "acceptanceCriteria": ["BottomSheetが利用可能"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.3",
+          "title": "モバイル対応 - サジェストBottomSheet",
+          "description": "モバイルでサジェストをBottomSheet形式で表示する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["isMobile時はBottomSheetで表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.4",
+          "title": "モバイル対応 - SearchBar条件分岐",
+          "description": "SearchBarでデバイスに応じたサジェスト表示を切り替える",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/SearchBar.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["デスクトップとモバイルで異なる表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.5",
+          "title": "モバイル対応 - フルスクリーン確認",
+          "description": "地域スポット一覧のフルスクリーン表示を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.4"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["モバイルでフルスクリーン表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.6",
+          "title": "モバイル対応 - タップ領域最適化",
+          "description": "全タップ可能要素が44px以上であることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.5"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["最小タップ領域44px"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.7",
+          "title": "モバイル対応 - FAB位置調整",
+          "description": "FABが適切な位置に固定されることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.6"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["SafeAreaを考慮した位置"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.8",
+          "title": "モバイル対応 - スクロール動作確認",
+          "description": "モバイルでのスクロール動作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.7"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["スムーズなスクロール"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.9",
+          "title": "モバイル対応 - ジェスチャー対応",
+          "description": "スワイプ等のジェスチャー対応を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.8"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["BottomSheetのスワイプ閉じ"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.10",
+          "title": "モバイル対応 - SafeArea対応",
+          "description": "ノッチ/ホームバーのSafeArea対応を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.9"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["SafeAreaで要素が隠れない"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.11",
+          "title": "モバイル対応 - 横向き確認",
+          "description": "横向き表示での動作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.10"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["横向きでもレイアウト崩れなし"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.12",
+          "title": "モバイル対応 - iPhone SE テスト",
+          "description": "iPhone SE（小画面）での動作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.11"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["小画面でも使用可能"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.13",
+          "title": "モバイル対応 - iPhone 14 テスト",
+          "description": "iPhone 14（標準画面）での動作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.12"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["標準画面で正しく表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.14",
+          "title": "モバイル対応 - iPad テスト",
+          "description": "iPadでの動作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.13"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["タブレットで正しく表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.15",
+          "title": "モバイル対応 - Android テスト",
+          "description": "Android端末での動作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.14"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["Androidで正しく動作"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.16",
+          "title": "モバイル対応 - タッチスクロール最適化",
+          "description": "タッチスクロールの最適化を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.15"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["-webkit-overflow-scrolling: touch"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.17",
+          "title": "モバイル対応 - キーボード表示対応",
+          "description": "キーボード表示時のレイアウト対応を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.16"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["キーボードで入力欄が隠れない"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.18",
+          "title": "モバイル対応 - アニメーション調整",
+          "description": "モバイルでのアニメーションを調整する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.17"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["60fps維持"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.19",
+          "title": "モバイル対応 - パフォーマンス確認",
+          "description": "モバイルでのパフォーマンスを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.18"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["遅延なく動作"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.20",
+          "title": "モバイル対応 - バグ修正",
+          "description": "発見されたモバイル固有のバグを修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.19"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["既知のバグが解消"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.21",
+          "title": "モバイル対応 - 統合テスト",
+          "description": "モバイル環境での統合テストを実施する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.20"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全フローが動作"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.22",
+          "title": "モバイル対応 - ユーザビリティ確認",
+          "description": "実際のモバイル操作でのユーザビリティを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.21"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["直感的に操作可能"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.23",
+          "title": "モバイル対応 - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.22"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["レビュー指摘が解消"],
+          "status": "pending"
+        },
+        {
+          "id": "4.1.24",
+          "title": "モバイル対応 - 最終調整",
+          "description": "Phase 4.1完了に向けた最終調整を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.1.23"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["モバイル対応完了"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.1",
+          "title": "エラーハンドリング - 戦略確認",
+          "description": "全体のエラーハンドリング戦略を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": ["docs/refactoring/20260123/api-design.md"]
+          },
+          "acceptanceCriteria": ["エラーケースが明確"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.2",
+          "title": "エラーハンドリング - Autocomplete対応",
+          "description": "AutocompleteServiceのエラー対応を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.1"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["コンソールログ出力", "ユーザーには非表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.3",
+          "title": "エラーハンドリング - Details取得失敗対応",
+          "description": "Place Details取得失敗時のフォールバックを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.2"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/RichSuggestionItem.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["SimpleSuggestionItemにフォールバック"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.4",
+          "title": "エラーハンドリング - フォールバック実装",
+          "description": "RichからSimpleへのフォールバックロジックを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.3"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/search/CustomSuggestionList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["詳細取得失敗時はテキストのみ表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.5",
+          "title": "エラーハンドリング - nearbySearch 0件対応",
+          "description": "検索結果0件時のメッセージ表示を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.4"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["「スポットが見つかりませんでした」表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.6",
+          "title": "エラーハンドリング - 0件メッセージUI",
+          "description": "0件時のUIを実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.5"],
+          "files": {
+            "create": [],
+            "modify": ["src/components/region/RegionSpotList.tsx"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["適切なUIで表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.7",
+          "title": "エラーハンドリング - 写真なし対応",
+          "description": "写真がない場合のプレースホルダー表示を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.6"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["プレースホルダーが表示される"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.8",
+          "title": "エラーハンドリング - ネットワークエラー通知",
+          "description": "ネットワークエラー時のトースト通知を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.7"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": ["src/store/notificationStore.ts"]
+          },
+          "acceptanceCriteria": ["エラー時にトースト表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.9",
+          "title": "エラーハンドリング - OVER_QUERY_LIMIT対応",
+          "description": "API制限超過時の対応を実装する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.8"],
+          "files": {
+            "create": [],
+            "modify": ["src/services/placesApiService.ts"],
+            "reference": []
+          },
+          "acceptanceCriteria": ["リトライ + ユーザー通知"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.10",
+          "title": "エラーハンドリング - リトライ機構",
+          "description": "リトライ機構の動作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.9"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["指数バックオフでリトライ"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.11",
+          "title": "エラーハンドリング - Error Boundary確認",
+          "description": "React Error Boundaryの適用を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.10"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["致命的エラーでもクラッシュしない"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.12",
+          "title": "エラーハンドリング - メッセージ統一",
+          "description": "ユーザー向けエラーメッセージを統一する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.11"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["分かりやすいメッセージ"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.13",
+          "title": "エラーハンドリング - コンソールログ整理",
+          "description": "開発者向けコンソールログを整理する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.12"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["デバッグに有用な情報"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.14",
+          "title": "エラーハンドリング - ログ収集準備",
+          "description": "エラーログ収集の準備を行う（将来的な分析用）",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.13"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ログ収集ポイントを特定"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.15",
+          "title": "エラーハンドリング - シナリオテスト",
+          "description": "各エラーシナリオのテストを実施する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.14"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全シナリオで適切に対応"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.16",
+          "title": "エラーハンドリング - 回復テスト",
+          "description": "エラーからの回復動作をテストする",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.15"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["エラー後に正常動作に戻る"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.17",
+          "title": "エラーハンドリング - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.16"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["レビュー指摘が解消"],
+          "status": "pending"
+        },
+        {
+          "id": "4.2.18",
+          "title": "エラーハンドリング - ドキュメント更新",
+          "description": "エラーハンドリングの仕様をドキュメント化する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.2.17"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["対応方針が文書化"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.1",
+          "title": "パフォーマンス - debounce確認",
+          "description": "debounce動作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["300msのdebounceが機能"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.2",
+          "title": "パフォーマンス - キャッシュ確認",
+          "description": "キャッシュ動作を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.1"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["同一place_idで再取得なし"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.3",
+          "title": "パフォーマンス - 再レンダリング確認",
+          "description": "React DevToolsで不要な再レンダリングを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.2"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["Highlighterで過剰な再レンダリングなし"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.4",
+          "title": "パフォーマンス - 再レンダリング修正",
+          "description": "不要な再レンダリングを修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.3"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["必要なレンダリングのみ"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.5",
+          "title": "パフォーマンス - memo最適化",
+          "description": "memo/useMemo/useCallbackで最適化を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.4"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["適切な箇所でメモ化"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.6",
+          "title": "パフォーマンス - 画像サイズ最適化",
+          "description": "サムネイル画像サイズを最適化する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.5"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["サムネイルは100px以下"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.7",
+          "title": "パフォーマンス - 画像遅延読み込み",
+          "description": "画像の遅延読み込みを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.6"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["loading=\"lazy\"が機能"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.8",
+          "title": "パフォーマンス - メモリリーク確認",
+          "description": "メモリリークがないことを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.7"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["DevToolsでメモリ増加なし"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.9",
+          "title": "パフォーマンス - useEffectクリーンアップ",
+          "description": "useEffectのクリーンアップ処理を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.8"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["適切にクリーンアップ"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.10",
+          "title": "パフォーマンス - 動的インポート確認",
+          "description": "地域マスタの動的インポートを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.9"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["必要時のみデータ読み込み"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.11",
+          "title": "パフォーマンス - コード分割確認",
+          "description": "コード分割が機能していることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.10"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["チャンクが分割されている"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.12",
+          "title": "パフォーマンス - Bundleサイズ分析",
+          "description": "Bundleサイズを分析する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.11"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["サイズ増加量を把握"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.13",
+          "title": "パフォーマンス - Bundleサイズ削減",
+          "description": "不要な依存関係を削除しBundleサイズを削減する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.12"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["許容範囲内のサイズ増加"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.14",
+          "title": "パフォーマンス - Lighthouse パフォーマンス",
+          "description": "Lighthouseパフォーマンススコアを測定する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.13"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["スコアが著しく低下していない"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.15",
+          "title": "パフォーマンス - Lighthouse アクセシビリティ",
+          "description": "Lighthouseアクセシビリティスコアを測定する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.14"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["スコアが許容範囲"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.16",
+          "title": "パフォーマンス - 初回レンダリング時間",
+          "description": "初回レンダリング時間を測定する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.15"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["許容範囲内"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.17",
+          "title": "パフォーマンス - API応答時間",
+          "description": "API応答時間を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.16"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["体感的に遅延なし"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.18",
+          "title": "パフォーマンス - メモリ使用量",
+          "description": "メモリ使用量を測定する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.17"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["安定したメモリ使用量"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.19",
+          "title": "パフォーマンス - 改善対応",
+          "description": "測定結果に基づく改善を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.18"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["問題箇所を改善"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.20",
+          "title": "パフォーマンス - 再測定",
+          "description": "改善後のパフォーマンスを再測定する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.19"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["改善が確認できる"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.21",
+          "title": "パフォーマンス - ドキュメント",
+          "description": "パフォーマンス最適化の内容をドキュメント化する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.20"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["最適化内容が文書化"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.22",
+          "title": "パフォーマンス - コードレビュー対応",
+          "description": "コードレビューで指摘された問題を修正する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.21"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["レビュー指摘が解消"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.23",
+          "title": "パフォーマンス - 最終確認",
+          "description": "パフォーマンス最適化の最終確認を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.22"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全指標が許容範囲"],
+          "status": "pending"
+        },
+        {
+          "id": "4.3.24",
+          "title": "パフォーマンス - 本番環境想定テスト",
+          "description": "本番環境を想定したテストを行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.3.23"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["本番相当で問題なし"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.1",
+          "title": "テスト - サジェスト表示確認",
+          "description": "検索入力時にサジェスト候補が表示されることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": [],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["カスタムUIでサジェスト表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.2",
+          "title": "テスト - リッチ情報確認",
+          "description": "上位3件にリッチ情報（写真・評価）が表示されることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.1"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["写真サムネイル・★評価表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.3",
+          "title": "テスト - 候補選択→地図移動",
+          "description": "候補選択時に地図が移動することを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.2"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["選択で地図がパン"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.4",
+          "title": "テスト - PlaceDetailsPanel表示",
+          "description": "候補選択時にPlaceDetailsPanelが表示されることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.3"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["詳細パネルが表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.5",
+          "title": "テスト - Enterキー確定",
+          "description": "Enterキーで選択が確定することを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.4"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["Enterで選択確定"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.6",
+          "title": "テスト - debounce動作",
+          "description": "入力がdebounceされていることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.5"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["連続入力で過剰なAPI呼び出しなし"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.7",
+          "title": "テスト - モバイルBottomSheet",
+          "description": "モバイルでBottomSheet形式で表示されることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.6"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["モバイルはBottomSheet"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.8",
+          "title": "テスト - 地域から探すボタン",
+          "description": "「地域から探す」ボタンが表示されることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.7"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["ボタンが表示される"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.9",
+          "title": "テスト - 都道府県一覧表示",
+          "description": "都道府県一覧が表示されることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.8"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["47都道府県が表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.10",
+          "title": "テスト - 市区町村選択",
+          "description": "市区町村選択が機能することを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.9"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["市区町村が選択できる"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.11",
+          "title": "テスト - 観光地グリッド表示",
+          "description": "観光地一覧がグリッド表示されることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.10"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["2カラムグリッドで表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.12",
+          "title": "テスト - カード写真・評価",
+          "description": "各カードに写真・評価が表示されることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.11"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["写真と★評価が表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.13",
+          "title": "テスト - スポット→地図フォーカス",
+          "description": "スポットタップで地図フォーカスすることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.12"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["タップで地図がパン"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.14",
+          "title": "テスト - AddPlaceButton連携",
+          "description": "AddPlaceButtonで旅行計画に追加できることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.13"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["旅行計画への追加が可能"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.15",
+          "title": "テスト - カテゴリフィルター",
+          "description": "カテゴリフィルターが機能することを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.14"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["カテゴリで絞り込み可能"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.16",
+          "title": "テスト - APIコール数確認",
+          "description": "APIコール数が適切に制限されていることを確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.15"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["Details取得は上位3件のみ"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.17",
+          "title": "テスト - デスクトップ表示確認",
+          "description": "デスクトップでの表示を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.16"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["デスクトップで正しく表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.18",
+          "title": "テスト - タブレット表示確認",
+          "description": "タブレットでの表示を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.17"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["タブレットで正しく表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.19",
+          "title": "テスト - モバイル表示確認",
+          "description": "モバイルでの表示を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.18"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["モバイルで正しく表示"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.20",
+          "title": "テスト - 既存機能回帰テスト",
+          "description": "既存機能の回帰テストを実施する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.19"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["既存機能が壊れていない"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.21",
+          "title": "テスト - PlaceDetailsPanel回帰テスト",
+          "description": "PlaceDetailsPanelの既存機能を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.20"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["既存機能が動作"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.22",
+          "title": "テスト - AddPlaceButton回帰テスト",
+          "description": "AddPlaceButtonの既存機能を確認する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.21"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["既存機能が動作"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.23",
+          "title": "テスト - 全フロー通しテスト",
+          "description": "全機能の通しテストを実施する",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.22"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["全フローが正常動作"],
+          "status": "pending"
+        },
+        {
+          "id": "4.4.24",
+          "title": "テスト - バグ修正・最終調整",
+          "description": "発見されたバグを修正し、最終調整を行う",
+          "estimatedMinutes": 10,
+          "dependencies": ["4.4.23"],
+          "files": {
+            "create": [],
+            "modify": [],
+            "reference": []
+          },
+          "acceptanceCriteria": ["リリース準備完了"],
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalTasks": 366,
+    "phaseBreakdown": {
+      "phase1": {
+        "name": "リッチサジェスト基盤",
+        "tasks": 108,
+        "estimatedMinutes": 1080
+      },
+      "phase2": {
+        "name": "地域マスタ・選択UI",
+        "tasks": 84,
+        "estimatedMinutes": 840
+      },
+      "phase3": {
+        "name": "スポット一覧",
+        "tasks": 84,
+        "estimatedMinutes": 840
+      },
+      "phase4": {
+        "name": "統合・調整",
+        "tasks": 90,
+        "estimatedMinutes": 900
+      }
+    },
+    "parallelizableGroups": [
+      {
+        "description": "Phase 1.1と1.2は並列実行可能",
+        "taskIds": ["1.1.*", "1.2.*"]
+      },
+      {
+        "description": "Phase 2.1と2.2は並列実行可能",
+        "taskIds": ["2.1.*", "2.2.*"]
+      },
+      {
+        "description": "Phase 3.3と3.4は並列実行可能",
+        "taskIds": ["3.3.*", "3.4.*"]
+      },
+      {
+        "description": "Phase 4.1〜4.4は一部並列実行可能",
+        "taskIds": ["4.1.*", "4.2.*", "4.3.*", "4.4.*"]
+      }
+    ]
+  }
+}

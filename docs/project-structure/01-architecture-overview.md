@@ -6,14 +6,22 @@
 
 **場所**: `src/services/ServiceContainer.ts`
 
-VoyageSketchの中核となる依存性注入システム。アプリケーション全体でサービスの管理と提供を行う。
+VoyageSketchでは`ServiceContainer`が唯一のDI実装であり、`registerDefaultServices()`を通じて各種リポジトリ・サービス・イベントバスをまとめて配線します。地図関連だけはGoogle Maps読み込み後に`registerMapService()`から動的に登録され、必要に応じて差し替え可能です。
 
 ```typescript
 // サービス識別子
 export const SERVICE_IDENTIFIERS = {
   MAP_SERVICE: Symbol("MapService"),
-  PLACE_SERVICE: Symbol("PlaceService"),
-  PLACE_REPOSITORY: Symbol("PlaceRepository"),
+  PLAN_COORDINATOR: Symbol("PlanCoordinator"),
+  PLAN_SERVICE: Symbol("PlanService"),
+  ACTIVE_PLAN_SERVICE: Symbol("ActivePlanService"),
+  UNIFIED_PLAN_SERVICE: Symbol("UnifiedPlanService"),
+  FIRESTORE_PLAN_REPOSITORY: Symbol("FirestorePlanRepository"),
+  LOCAL_STORAGE_PLAN_REPOSITORY: Symbol("LocalStoragePlanRepository"),
+  FIRESTORE_USER_REPOSITORY: Symbol("FirestoreUserRepository"),
+  SYNC_SERVICE: Symbol("SyncService"),
+  DIRECTIONS_SERVICE: Symbol("DirectionsService"),
+  EVENT_BUS: Symbol("EventBus"),
 } as const;
 ```
 
@@ -27,11 +35,13 @@ export const SERVICE_IDENTIFIERS = {
   - シングルトンサービスの管理
   - ファクトリー関数によるサービス生成
   - 動的なサービス登録（Google Maps読み込み後など）
+  - ヘルパー関数: `register` / `registerSingleton` / `registerMockServices`
 
-#### 2. DIContainer（新しいDIシステム）
+#### 2. EventBus（イベント駆動）
 
-- **場所**: `src/di/DIContainer.ts`
-- **注意**: 現在2つのDIシステムが混在している（要統合）
+- **場所**: `src/events/EventBus.ts`
+- **責任**: イベント駆動でサービスやストア間の疎結合通信を提供
+- **解決方法**: `ServiceContainer.resolve(SERVICE_IDENTIFIERS.EVENT_BUS)`で取得し、各サービスが購読/発行を行う
 
 ### アダプター層
 
@@ -106,19 +116,18 @@ export const SERVICE_IDENTIFIERS = {
 
 ### アーキテクチャの問題点
 
-1. **DIシステムの重複**
-   - `ServiceContainer`と`DIContainer`が並存
-   - 統一が必要
+1. **インターフェースを経由しないサービス**
+   - 一部のサービス/リポジトリは依然として具象実装を直接参照しており、置き換えやテストが困難
 
-2. **インターフェースの不完全な実装**
-   - 一部のサービスがインターフェースを通さず直接使用されている
+2. **循環依存の潜在リスク**
+   - ストア → サービス → ストアのような再帰的参照があり、設計次第で循環が発生しやすい
 
-3. **循環依存の可能性**
-   - ストアとサービス間の依存関係が明確でない
+3. **イベント駆動の徹底不足**
+   - EventBus経由で通知すべき箇所が直接的な関数呼び出しになっており、疎結合性を阻害
 
 ### 推奨される改善
 
-1. DIシステムの統一
-2. すべてのサービスのインターフェース化
-3. 明確な層の分離（UI → Hook → Service → Repository）
-4. イベント駆動アーキテクチャの導入
+1. ServiceContainer配下で未DI化のサービスを整理し、インターフェース越しに解決できるようにする
+2. ストア/サービス間の循環依存を監視し、EventBusを介した非同期通知へ移行
+3. Zustandストアへ直接アクセスするサービスを減らし、Hook→Service→Repositoryの層分離を徹底
+4. EventBusの利用指針を策定し、状態変更通知を統一

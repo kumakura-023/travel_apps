@@ -6,42 +6,41 @@
 
 ## 主要コンポーネント
 
-### 1. PlaceDetailsPanel（メイン詳細パネル）
+### 1. PlaceDetailsPanel（検索結果ビュー）
 
 **場所**: `src/components/PlaceDetailsPanel.tsx`
 
 **責任**:
 
-- Google Places APIから取得した場所の詳細表示
-- 場所の候補地追加機能
+- Google Places APIから取得した候補の詳細表示
+- 検索結果からの場所追加、一時保存
 
 **特徴**:
 
-- 固定幅540pxのサイドパネル
-- 写真、評価、住所、ウェブサイトを表示
+- 固定幅サイドパネルで検索結果を表示
+- 写真、評価、住所、ウェブサイトなどGoogleデータ中心
 
-**問題点**: PlaceDetailPanelと名前が似ている
+**課題**: PlaceDetailPanelとの命名が似ており役割が伝わりづらい
 
-### 2. PlaceDetailPanel（保存済み場所の詳細）
+### 2. PlaceDetailPanel（保存済み場所エディタ）
 
 **場所**: `src/components/PlaceDetailPanel.tsx`
 
 **責任**:
 
 - 保存済み場所の詳細表示と編集
-- メモ機能
-- コスト管理
-- 画像管理
+- メモ・コスト・画像などローカルデータの管理
+- PlanCoordinator/UnifiedPlanServiceを通じたプラン更新
 
 **特徴**:
 
-- レスポンシブデザイン（デスクトップ/モバイル）
-- BottomSheet対応（モバイル）
+- レスポンシブデザイン（デスクトップ/BottomSheet）
+- コメント、コスト、属性パネルなど多機能
 
 **問題点**:
 
-- 1000行を超える巨大なコンポーネント
-- 複数の責任を持っている
+- 1000行近い巨大なコンポーネントで責務過多
+- HookやZustandストアへの直接アクセスが多い
 
 ### 3. PlaceList（場所リスト）
 
@@ -75,23 +74,16 @@
 
 ## サブコンポーネント（placeDetailフォルダ）
 
-### ImageGallery
+### ImageGallery / MemoEditor / PlaceActions など
 
-**場所**: `src/components/placeDetail/ImageGallery.tsx`
+**場所**: `src/components/placeDetail/` 配下
 
-**責任**: 場所の画像ギャラリー表示
+**責任**:
 
-### MemoEditor
-
-**場所**: `src/components/placeDetail/MemoEditor.tsx`
-
-**責任**: メモの編集機能
-
-### PlaceActions
-
-**場所**: `src/components/placeDetail/PlaceActions.tsx`
-
-**責任**: 場所に対するアクション（削除、ルート検索など）
+- ImageGallery: 画像ギャラリー表示
+- MemoEditor: メモやコメント編集
+- PlaceActions: 削除、ルート検索、共有などの操作
+- CostBreakdown, AttributesPanel など補助コンポーネント群がPlaceDetailPanelをサポート
 
 ## 検索機能
 
@@ -109,22 +101,32 @@
 
 ### ストア
 
-#### placesStore
+#### savedPlacesStore
+
+**場所**: `src/store/savedPlacesStore.ts`
+
+**管理するデータ**:
+
+- 保存済み場所のリストと詳細フィールド（メモ、コスト、ラベル）
+- 削除フラグ、復元情報
+
+#### selectedPlaceStore
+
+**場所**: `src/store/selectedPlaceStore.ts`
+
+**管理するデータ**:
+
+- Google Places検索結果のうち現在選択中の場所
+- PlaceDetailsPanelの開閉/ステップ状態
+
+#### placesStore（レガシー）
 
 **場所**: `src/store/placesStore.ts`
 
-**管理するデータ**:
+**備考**:
 
-- 保存済み場所のリスト
-- 論理削除フラグ
-
-#### placeStore
-
-**場所**: `src/store/placeStore.ts`
-
-**管理するデータ**:
-
-- 現在選択中の場所（Google Places結果）
+- savedPlacesStoreとほぼ同じ責務を持つ旧ストア
+- 論理削除フラグや並び順の処理が二重に存在
 
 ### インターフェース
 
@@ -143,20 +145,19 @@
 
 **場所**: `src/interfaces/PlaceService.ts`
 
-**メソッド**:
+**現状**:
 
-- `searchPlaces()` - 場所検索
-- `getPlaceDetails()` - 詳細情報取得
-- `getAutocompleteSuggestions()` - オートコンプリート
+- インターフェースのみで実装クラスは登録されていない
+- 実際の検索・保存ロジックはPlanCoordinator/UnifiedPlanService/PlaceManagementServiceが担い、ServiceContainerにPlaceServiceは存在しない
 
 ## 問題点
 
-### 1. 名前の混乱
+### 1. 名前/責務の混乱
 
-- `PlaceDetailsPanel` vs `PlaceDetailPanel`
-- 単数形と複数形の不統一
+- `PlaceDetailsPanel`（検索）と`PlaceDetailPanel`（保存済み）が名前以外で区別されない
+- `savedPlacesStore` / `placesStore` / `selectedPlaceStore` の命名が似通い用途が曖昧
 
-### 2. 責任の過剰
+### 2. コンポーネントの肥大化
 
 ```typescript
 // PlaceDetailPanelが持つ責任（多すぎる）
@@ -182,64 +183,31 @@ const estimatedCost = useMemo(() => {
 
 ### 4. 状態管理の分散
 
-- 場所データが複数のストアで管理されている
-- 選択状態の管理が不明確
+- savedPlacesStore / placesStore / selectedPlaceStore に重複があり、削除フラグやコスト情報の真実が不明瞭
 
 ## 推奨される改善
 
-### 1. コンポーネントの分割
+### 1. コンポーネント責務の再分割
 
-```typescript
-// PlaceDetailPanelを責任ごとに分割
--PlaceDetailViewer - // 表示のみ
-  PlaceDetailEditor - // 編集機能
-  PlaceImageManager - // 画像管理
-  PlaceMemoManager - // メモ管理
-  PlaceCostCalculator; // コスト計算
-```
+- PlaceDetailPanelを「表示」「編集」「メモ」「コスト」「アクション」などカテゴリごとに分割
 
-### 2. 名前の統一
+### 2. 命名とストア整理
 
-```typescript
-// 明確な命名規則
--PlaceSearchPanel - // Google Places検索用
-  PlaceDetailPanel - // 保存済み場所の詳細
-  PlaceListPanel; // 場所リスト
-```
+- PlaceDetailsPanel（検索）とPlaceDetailPanel（保存済み）の命名差別化
+- savedPlacesStore / placesStore / selectedPlaceStore の役割分担を明文化
 
-### 3. カスタムフックの活用
+### 3. ビジネスロジックのサービス層移動
 
-```typescript
-// ビジネスロジックをフックに分離
-const usePlaceManagement = () => {
-  const addPlace = (data: PlaceData) => {
-    // バリデーション
-    // 重複チェック
-    // 追加処理
-  };
+- コスト計算、メモバリデーション、削除フラグ処理をPlanCoordinator / UnifiedPlanService / PlaceManagementServiceへ移す
 
-  return { addPlace, updatePlace, deletePlace };
-};
-```
+### 4. 状態統合と削除フロー整理
 
-### 4. PlaceServiceの完全実装
-
-```typescript
-class PlaceServiceImpl implements PlaceService {
-  constructor(
-    private googleMapsAdapter: GoogleMapsAdapter,
-    private placeRepository: PlaceRepository,
-  ) {}
-
-  async searchPlaces(query: string): Promise<Place[]> {
-    // Google Places APIとローカルデータの統合検索
-  }
-}
-```
+- savedPlacesStoreを単一ソースとし、placesStoreは移行または廃止
+- 削除フラグや復元処理を共通ユーティリティへ
 
 ## リファクタリング優先順位
 
-1. **高**: PlaceDetailPanelの分割（1000行以上）
-2. **高**: 名前の統一（PlaceDetailsPanel → PlaceSearchPanel）
-3. **中**: ビジネスロジックのサービス層への移動
-4. **低**: カスタムフックによるロジック共有
+1. **高**: PlaceDetailPanelの分割とPlaceDetailsPanelとの責務整理
+2. **高**: savedPlacesStore / placesStore / selectedPlaceStore の統合戦略と命名整理
+3. **中**: PlanCoordinatorやUnifiedPlanServiceへのロジック移動、PlaceService実装方針の再検討
+4. **低**: placeDetail配下コンポーネントの整理とファイル構造再編
