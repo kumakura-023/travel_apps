@@ -1,0 +1,26 @@
+{
+  "prefectureCode": "28",
+  "cities": [
+    {
+      "code": "28100",
+      "name": "神戸市",
+      "nameEn": "Kobe",
+      "center": { "lat": 34.6901, "lng": 135.1956 },
+      "searchRadius": 8000
+    },
+    {
+      "code": "28201",
+      "name": "姫路市",
+      "nameEn": "Himeji",
+      "center": { "lat": 34.8153, "lng": 134.6855 },
+      "searchRadius": 6000
+    },
+    {
+      "code": "28209",
+      "name": "豊岡市",
+      "nameEn": "Toyooka",
+      "center": { "lat": 35.544, "lng": 134.82 },
+      "searchRadius": 5000
+    }
+  ]
+}

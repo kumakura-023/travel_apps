@@ -17,17 +17,22 @@ import { FirestoreUserRepository } from "../repositories/FirestoreUserRepository
 import { PlanService } from "./plan/PlanService";
 import { ActivePlanService } from "./plan/ActivePlanService";
 import { PlanCoordinator } from "../coordinators/PlanCoordinator";
+import { IPlanCoordinator } from "../interfaces/IPlanCoordinator";
 import { SyncManager } from "./SyncManager";
 import { directionsService } from "./directionsService";
 import { EventBus, eventBus } from "../events/EventBus";
 import { UnifiedPlanService } from "./plan/UnifiedPlanService";
+import {
+  PerformanceMonitor,
+  getPerformanceMonitor,
+} from "../telemetry/PerformanceMonitor";
 
 // サービスの識別子
 export const SERVICE_IDENTIFIERS = {
   MAP_SERVICE: Symbol("MapService"),
   PLACE_SERVICE: Symbol("PlaceService"),
   PLACE_REPOSITORY: Symbol("PlaceRepository"),
-  PLAN_COORDINATOR: Symbol("PlanCoordinator"),
+  PLAN_COORDINATOR: Symbol("IPlanCoordinator"),
   PLAN_SERVICE: Symbol("PlanService"),
   ACTIVE_PLAN_SERVICE: Symbol("ActivePlanService"),
   FIRESTORE_PLAN_REPOSITORY: Symbol("FirestorePlanRepository"),
@@ -37,6 +42,7 @@ export const SERVICE_IDENTIFIERS = {
   DIRECTIONS_SERVICE: Symbol("IDirectionsService"),
   EVENT_BUS: Symbol("EventBus"),
   UNIFIED_PLAN_SERVICE: Symbol("UnifiedPlanService"),
+  PERFORMANCE_MONITOR: Symbol("PerformanceMonitor"),
 } as const;
 
 type ServiceIdentifier =
@@ -177,6 +183,11 @@ export function registerDefaultServices(): void {
   // EventBusをシングルトンとして登録
   container.registerSingleton(SERVICE_IDENTIFIERS.EVENT_BUS, () => eventBus);
 
+  // PerformanceMonitorをシングルトンとして登録
+  container.registerSingleton(SERVICE_IDENTIFIERS.PERFORMANCE_MONITOR, () =>
+    getPerformanceMonitor(),
+  );
+
   // UnifiedPlanServiceをシングルトンとして登録
   container.registerSingleton(
     SERVICE_IDENTIFIERS.UNIFIED_PLAN_SERVICE,
@@ -240,6 +251,12 @@ export function getEventBus(): EventBus {
 export function getUnifiedPlanService(): UnifiedPlanService {
   return container.get<UnifiedPlanService>(
     SERVICE_IDENTIFIERS.UNIFIED_PLAN_SERVICE,
+  );
+}
+
+export function getPerformanceMonitorService(): PerformanceMonitor {
+  return container.get<PerformanceMonitor>(
+    SERVICE_IDENTIFIERS.PERFORMANCE_MONITOR,
   );
 }
 

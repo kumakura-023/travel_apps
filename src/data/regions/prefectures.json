@@ -1,0 +1,286 @@
+{
+  "prefectures": [
+    {
+      "code": "01",
+      "name": "北海道",
+      "nameEn": "Hokkaido",
+      "center": { "lat": 43.0646, "lng": 141.3468 }
+    },
+    {
+      "code": "02",
+      "name": "青森県",
+      "nameEn": "Aomori",
+      "center": { "lat": 40.8246, "lng": 140.74 }
+    },
+    {
+      "code": "03",
+      "name": "岩手県",
+      "nameEn": "Iwate",
+      "center": { "lat": 39.7036, "lng": 141.1527 }
+    },
+    {
+      "code": "04",
+      "name": "宮城県",
+      "nameEn": "Miyagi",
+      "center": { "lat": 38.2688, "lng": 140.8721 }
+    },
+    {
+      "code": "05",
+      "name": "秋田県",
+      "nameEn": "Akita",
+      "center": { "lat": 39.7186, "lng": 140.1024 }
+    },
+    {
+      "code": "06",
+      "name": "山形県",
+      "nameEn": "Yamagata",
+      "center": { "lat": 38.2405, "lng": 140.3634 }
+    },
+    {
+      "code": "07",
+      "name": "福島県",
+      "nameEn": "Fukushima",
+      "center": { "lat": 37.75, "lng": 140.4678 }
+    },
+    {
+      "code": "08",
+      "name": "茨城県",
+      "nameEn": "Ibaraki",
+      "center": { "lat": 36.3414, "lng": 140.4467 }
+    },
+    {
+      "code": "09",
+      "name": "栃木県",
+      "nameEn": "Tochigi",
+      "center": { "lat": 36.5658, "lng": 139.8836 }
+    },
+    {
+      "code": "10",
+      "name": "群馬県",
+      "nameEn": "Gunma",
+      "center": { "lat": 36.3906, "lng": 139.0604 }
+    },
+    {
+      "code": "11",
+      "name": "埼玉県",
+      "nameEn": "Saitama",
+      "center": { "lat": 35.8569, "lng": 139.6489 }
+    },
+    {
+      "code": "12",
+      "name": "千葉県",
+      "nameEn": "Chiba",
+      "center": { "lat": 35.605, "lng": 140.1233 }
+    },
+    {
+      "code": "13",
+      "name": "東京都",
+      "nameEn": "Tokyo",
+      "center": { "lat": 35.6895, "lng": 139.6917 }
+    },
+    {
+      "code": "14",
+      "name": "神奈川県",
+      "nameEn": "Kanagawa",
+      "center": { "lat": 35.4478, "lng": 139.6425 }
+    },
+    {
+      "code": "15",
+      "name": "新潟県",
+      "nameEn": "Niigata",
+      "center": { "lat": 37.9024, "lng": 139.0232 }
+    },
+    {
+      "code": "16",
+      "name": "富山県",
+      "nameEn": "Toyama",
+      "center": { "lat": 36.6953, "lng": 137.2113 }
+    },
+    {
+      "code": "17",
+      "name": "石川県",
+      "nameEn": "Ishikawa",
+      "center": { "lat": 36.5947, "lng": 136.6256 }
+    },
+    {
+      "code": "18",
+      "name": "福井県",
+      "nameEn": "Fukui",
+      "center": { "lat": 36.0652, "lng": 136.2216 }
+    },
+    {
+      "code": "19",
+      "name": "山梨県",
+      "nameEn": "Yamanashi",
+      "center": { "lat": 35.6642, "lng": 138.5684 }
+    },
+    {
+      "code": "20",
+      "name": "長野県",
+      "nameEn": "Nagano",
+      "center": { "lat": 36.6513, "lng": 138.181 }
+    },
+    {
+      "code": "21",
+      "name": "岐阜県",
+      "nameEn": "Gifu",
+      "center": { "lat": 35.3912, "lng": 136.7223 }
+    },
+    {
+      "code": "22",
+      "name": "静岡県",
+      "nameEn": "Shizuoka",
+      "center": { "lat": 34.9769, "lng": 138.3831 }
+    },
+    {
+      "code": "23",
+      "name": "愛知県",
+      "nameEn": "Aichi",
+      "center": { "lat": 35.1802, "lng": 136.9066 }
+    },
+    {
+      "code": "24",
+      "name": "三重県",
+      "nameEn": "Mie",
+      "center": { "lat": 34.7303, "lng": 136.5086 }
+    },
+    {
+      "code": "25",
+      "name": "滋賀県",
+      "nameEn": "Shiga",
+      "center": { "lat": 35.0045, "lng": 135.8686 }
+    },
+    {
+      "code": "26",
+      "name": "京都府",
+      "nameEn": "Kyoto",
+      "center": { "lat": 35.0214, "lng": 135.7556 }
+    },
+    {
+      "code": "27",
+      "name": "大阪府",
+      "nameEn": "Osaka",
+      "center": { "lat": 34.6863, "lng": 135.52 }
+    },
+    {
+      "code": "28",
+      "name": "兵庫県",
+      "nameEn": "Hyogo",
+      "center": { "lat": 34.6913, "lng": 135.183 }
+    },
+    {
+      "code": "29",
+      "name": "奈良県",
+      "nameEn": "Nara",
+      "center": { "lat": 34.6851, "lng": 135.8329 }
+    },
+    {
+      "code": "30",
+      "name": "和歌山県",
+      "nameEn": "Wakayama",
+      "center": { "lat": 34.226, "lng": 135.1675 }
+    },
+    {
+      "code": "31",
+      "name": "鳥取県",
+      "nameEn": "Tottori",
+      "center": { "lat": 35.5039, "lng": 134.2377 }
+    },
+    {
+      "code": "32",
+      "name": "島根県",
+      "nameEn": "Shimane",
+      "center": { "lat": 35.4723, "lng": 133.0505 }
+    },
+    {
+      "code": "33",
+      "name": "岡山県",
+      "nameEn": "Okayama",
+      "center": { "lat": 34.6618, "lng": 133.9344 }
+    },
+    {
+      "code": "34",
+      "name": "広島県",
+      "nameEn": "Hiroshima",
+      "center": { "lat": 34.3966, "lng": 132.4596 }
+    },
+    {
+      "code": "35",
+      "name": "山口県",
+      "nameEn": "Yamaguchi",
+      "center": { "lat": 34.1861, "lng": 131.4705 }
+    },
+    {
+      "code": "36",
+      "name": "徳島県",
+      "nameEn": "Tokushima",
+      "center": { "lat": 34.0658, "lng": 134.5593 }
+    },
+    {
+      "code": "37",
+      "name": "香川県",
+      "nameEn": "Kagawa",
+      "center": { "lat": 34.3401, "lng": 134.0434 }
+    },
+    {
+      "code": "38",
+      "name": "愛媛県",
+      "nameEn": "Ehime",
+      "center": { "lat": 33.8416, "lng": 132.7657 }
+    },
+    {
+      "code": "39",
+      "name": "高知県",
+      "nameEn": "Kochi",
+      "center": { "lat": 33.5597, "lng": 133.5311 }
+    },
+    {
+      "code": "40",
+      "name": "福岡県",
+      "nameEn": "Fukuoka",
+      "center": { "lat": 33.6064, "lng": 130.4183 }
+    },
+    {
+      "code": "41",
+      "name": "佐賀県",
+      "nameEn": "Saga",
+      "center": { "lat": 33.2494, "lng": 130.2988 }
+    },
+    {
+      "code": "42",
+      "name": "長崎県",
+      "nameEn": "Nagasaki",
+      "center": { "lat": 32.7448, "lng": 129.8737 }
+    },
+    {
+      "code": "43",
+      "name": "熊本県",
+      "nameEn": "Kumamoto",
+      "center": { "lat": 32.7898, "lng": 130.7417 }
+    },
+    {
+      "code": "44",
+      "name": "大分県",
+      "nameEn": "Oita",
+      "center": { "lat": 33.2382, "lng": 131.6126 }
+    },
+    {
+      "code": "45",
+      "name": "宮崎県",
+      "nameEn": "Miyazaki",
+      "center": { "lat": 31.9111, "lng": 131.4239 }
+    },
+    {
+      "code": "46",
+      "name": "鹿児島県",
+      "nameEn": "Kagoshima",
+      "center": { "lat": 31.5602, "lng": 130.5581 }
+    },
+    {
+      "code": "47",
+      "name": "沖縄県",
+      "nameEn": "Okinawa",
+      "center": { "lat": 26.2124, "lng": 127.6809 }
+    }
+  ]
+}

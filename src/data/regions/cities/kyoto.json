@@ -1,0 +1,82 @@
+{
+  "prefectureCode": "26",
+  "cities": [
+    {
+      "code": "26101",
+      "name": "京都市北区",
+      "nameEn": "Kyoto Kita",
+      "center": { "lat": 35.0428, "lng": 135.7531 },
+      "searchRadius": 4000
+    },
+    {
+      "code": "26102",
+      "name": "京都市上京区",
+      "nameEn": "Kyoto Kamigyo",
+      "center": { "lat": 35.0302, "lng": 135.7555 },
+      "searchRadius": 3000
+    },
+    {
+      "code": "26103",
+      "name": "京都市左京区",
+      "nameEn": "Kyoto Sakyo",
+      "center": { "lat": 35.0441, "lng": 135.7929 },
+      "searchRadius": 5000
+    },
+    {
+      "code": "26104",
+      "name": "京都市中京区",
+      "nameEn": "Kyoto Nakagyo",
+      "center": { "lat": 35.0116, "lng": 135.7581 },
+      "searchRadius": 3000
+    },
+    {
+      "code": "26105",
+      "name": "京都市東山区",
+      "nameEn": "Kyoto Higashiyama",
+      "center": { "lat": 34.9997, "lng": 135.7785 },
+      "searchRadius": 3000
+    },
+    {
+      "code": "26106",
+      "name": "京都市下京区",
+      "nameEn": "Kyoto Shimogyo",
+      "center": { "lat": 34.9914, "lng": 135.7588 },
+      "searchRadius": 3000
+    },
+    {
+      "code": "26107",
+      "name": "京都市南区",
+      "nameEn": "Kyoto Minami",
+      "center": { "lat": 34.97, "lng": 135.75 },
+      "searchRadius": 4000
+    },
+    {
+      "code": "26108",
+      "name": "京都市右京区",
+      "nameEn": "Kyoto Ukyo",
+      "center": { "lat": 35.0172, "lng": 135.7125 },
+      "searchRadius": 5000
+    },
+    {
+      "code": "26109",
+      "name": "京都市伏見区",
+      "nameEn": "Kyoto Fushimi",
+      "center": { "lat": 34.9362, "lng": 135.7589 },
+      "searchRadius": 5000
+    },
+    {
+      "code": "26204",
+      "name": "宇治市",
+      "nameEn": "Uji",
+      "center": { "lat": 34.8842, "lng": 135.8 },
+      "searchRadius": 5000
+    },
+    {
+      "code": "26205",
+      "name": "宮津市",
+      "nameEn": "Miyazu",
+      "center": { "lat": 35.536, "lng": 135.195 },
+      "searchRadius": 5000
+    }
+  ]
+}

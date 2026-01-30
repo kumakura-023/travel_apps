@@ -1,0 +1,40 @@
+{
+  "prefectureCode": "14",
+  "cities": [
+    {
+      "code": "14100",
+      "name": "横浜市",
+      "nameEn": "Yokohama",
+      "center": { "lat": 35.4437, "lng": 139.638 },
+      "searchRadius": 10000
+    },
+    {
+      "code": "14204",
+      "name": "鎌倉市",
+      "nameEn": "Kamakura",
+      "center": { "lat": 35.319, "lng": 139.5467 },
+      "searchRadius": 5000
+    },
+    {
+      "code": "14382",
+      "name": "箱根町",
+      "nameEn": "Hakone",
+      "center": { "lat": 35.2326, "lng": 139.1069 },
+      "searchRadius": 8000
+    },
+    {
+      "code": "14205",
+      "name": "藤沢市",
+      "nameEn": "Fujisawa",
+      "center": { "lat": 35.3389, "lng": 139.4905 },
+      "searchRadius": 6000
+    },
+    {
+      "code": "14130",
+      "name": "川崎市",
+      "nameEn": "Kawasaki",
+      "center": { "lat": 35.5308, "lng": 139.703 },
+      "searchRadius": 8000
+    }
+  ]
+}

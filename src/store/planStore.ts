@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { TravelPlan } from "../types";
+import type { TravelPlan } from "../types";
 import { storeEventBus } from "../events/StoreEvents";
 
 interface PlanMetadata {

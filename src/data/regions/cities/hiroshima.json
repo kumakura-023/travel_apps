@@ -1,0 +1,26 @@
+{
+  "prefectureCode": "34",
+  "cities": [
+    {
+      "code": "34100",
+      "name": "広島市",
+      "nameEn": "Hiroshima",
+      "center": { "lat": 34.3853, "lng": 132.4553 },
+      "searchRadius": 8000
+    },
+    {
+      "code": "34205",
+      "name": "尾道市",
+      "nameEn": "Onomichi",
+      "center": { "lat": 34.4088, "lng": 133.205 },
+      "searchRadius": 5000
+    },
+    {
+      "code": "34207",
+      "name": "廿日市市",
+      "nameEn": "Hatsukaichi",
+      "center": { "lat": 34.2961, "lng": 132.3316 },
+      "searchRadius": 6000
+    }
+  ]
+}
