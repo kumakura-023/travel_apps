@@ -49,7 +49,7 @@ src/
 ├── di/              # 依存性注入コンテナ
 ├── hooks/           # カスタムReactフック
 ├── interfaces/      # TypeScriptインターフェース定義
-├── repositories/    # データ永続化層one
+├── repositories/    # データ永続化層
 │   └── interfaces/  # リポジトリインターフェース
 ├── services/        # ビジネスロジックサービス
 │   └── plan/        # プラン関連サービス
