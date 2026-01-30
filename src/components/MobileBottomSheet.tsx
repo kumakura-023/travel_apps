@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useBottomSheet } from "../hooks/useBottomSheet";
 
 interface Props {
@@ -19,20 +19,32 @@ export default function MobileBottomSheet({
   // 100% (closed) -> 10% (expanded/nearly full screen)
   // Default snap points in hook are [10, 55, 80] for standalone, [20, 55] for browser
   const { state, style, bindHandleRef, setPercent } = useBottomSheet(100);
+  const openedRef = useRef(false);
 
   // Handle open/close synchronization
   useEffect(() => {
     if (isOpen) {
       // Open to "half" state (55%) by default when opened
       setPercent(55);
+      openedRef.current = true;
     } else {
       setPercent(100);
+      openedRef.current = false;
     }
   }, [isOpen, setPercent]);
 
   // Handle close when dragged to bottom (100%)
   useEffect(() => {
-    if (state.percent >= 95 && !state.isDragging && isOpen) {
+    if (!isOpen) return;
+
+    if (openedRef.current) {
+      if (state.percent < 95) {
+        openedRef.current = false;
+      }
+      return;
+    }
+
+    if (state.percent >= 95 && !state.isDragging) {
       onClose();
     }
   }, [state.percent, state.isDragging, isOpen, onClose]);
