@@ -2,11 +2,11 @@
 
 ## 概要
 
-VoyageSketchはZustandを使用してアプリケーションの状態を管理しています。現在12個のストアが存在し、それぞれが特定のドメインを管理しています。
+VoyageSketchはZustandを使用してアプリケーションの状態を管理しています。現在はプラン関連・場所関連・UI関連を中心に複数のストアが存在し、一部には移行中のバックアップファイルも併存します。
 
 ## ストア一覧
 
-### 1. planStore
+### 1. planStore / planStore.backup
 
 **場所**: `src/store/planStore.ts`
 
@@ -22,7 +22,7 @@ VoyageSketchはZustandを使用してアプリケーションの状態を管理�
 - `updatePlan()` - プラン更新
 - `updateLastActionPosition()` - 最後の操作位置更新
 
-**問題点**: 非推奨メソッドが残存（`listenToPlan`, `unsubscribeFromPlan`）
+**問題点**: 非推奨API（`listenToPlan`, `unsubscribeFromPlan`）が残っており、`planStore.backup.ts`の旧実装が依然として手放せていない
 
 ### 2. placesStore
 
@@ -40,13 +40,26 @@ VoyageSketchはZustandを使用してアプリケーションの状態を管理�
 - `deletePlace()` - 場所削除（論理削除）
 - `getFilteredPlaces()` - 削除済みを除く場所取得
 
-### 3. placeStore（選択された場所）
+### 3. savedPlacesStore
 
-**場所**: `src/store/placeStore.ts`
+**場所**: `src/store/savedPlacesStore.ts`
+
+**管理する状態**:
+
+- 保存済み場所の詳細（メモ/コスト/タグなど拡張フィールド）
+- 削除フラグと復元情報
+
+**問題点**: `placesStore`との責務が重複し、どちらがソースオブトゥルースか曖昧
+
+### 4. selectedPlaceStore
+
+**場所**: `src/store/selectedPlaceStore.ts`
 
 **管理する状態**:
 
 - 選択中の場所（`place: google.maps.places.PlaceResult | null`）
+
+**問題点**: 名前が`savedPlacesStore`と紛らわしく、UI用途のみの一時状態であることが分かりづらい
 
 **主要メソッド**:
 
@@ -54,89 +67,39 @@ VoyageSketchはZustandを使用してアプリケーションの状態を管理�
 
 **問題点**: 名前が紛らわしい（placesStoreと混同しやすい）
 
-### 4. routeSearchStore
+### 5. savedPlacesStore（重複ドメイン）
 
-**場所**: `src/store/routeSearchStore.ts`
-
-**管理する状態**:
-
-- ルート検索パネルの開閉状態
-- 出発地と目的地
-- 検索結果
-
-**主要メソッド**:
-
-- `openRouteSearch()` - 検索パネルを開く
-- `setSelectedOrigin()` - 出発地設定
-- `setSelectedDestination()` - 目的地設定
-
-### 5. routeConnectionsStore
-
-**場所**: `src/store/routeConnectionsStore.ts`
+**場所**: `src/store/savedPlacesStore.ts`
 
 **管理する状態**:
 
-- 場所間の接続情報
-- ルート表示の管理
+- 保存済み場所の詳細（メモ/コスト/タグなど拡張フィールド）
+- 削除フラグと復元情報
 
-### 6. travelTimeStore
+**問題点**: `placesStore`との責務が重複し、どちらがソースオブトゥルースか曖昧
 
-**場所**: `src/store/travelTimeStore.ts`
+### 6. selectedPlaceStore
 
-**管理する状態**:
-
-- 移動時間モードのON/OFF
-- 基準となる場所
-- 移動手段
-
-### 7. uiStore
-
-**場所**: `src/store/uiStore.ts`
+**場所**: `src/store/selectedPlaceStore.ts`
 
 **管理する状態**:
 
-- 各種UIパネルの開閉状態
-- 地図操作の有効/無効
-- 表示モード
+- 現在選択中のGoogle Places結果を保持し、PlaceDetailsPanelで利用
 
-**問題点**: 責任範囲が広すぎる
+**問題点**: 名前が`savedPlacesStore`と紛らわしく、UI用途のみの一時状態であることが伝わりにくい
 
-### 8. labelModeStore
+### 7. labelsStore / labelModeStore
 
-**場所**: `src/store/labelModeStore.ts`
+**場所**: `src/store/labelsStore.ts`, `src/store/labelModeStore.ts`
 
 **管理する状態**:
 
+- カスタムラベルと位置情報
 - ラベル編集モードのON/OFF
-- ラベル表示設定
 
-### 9. labelsStore
+**問題点**: ラベル編集のアクションがstore内に散らばり、UIと密結合
 
-**場所**: `src/store/labelsStore.ts`
-
-**管理する状態**:
-
-- カスタムラベルのリスト
-- ラベルの位置情報
-
-### 10. bottomSheetStore
-
-**場所**: `src/store/bottomSheetStore.ts`
-
-**管理する状態**:
-
-- モバイル版ボトムシートの状態
-- シートの高さ
-
-### 11. browserPromptStore
-
-**場所**: `src/store/browserPromptStore.ts`
-
-**管理する状態**:
-
-- 外部ブラウザー誘導プロンプトの表示状態
-
-### 12. planListStore
+### 8. planListStore
 
 **場所**: `src/store/planListStore.ts`
 
@@ -144,18 +107,67 @@ VoyageSketchはZustandを使用してアプリケーションの状態を管理�
 
 - プランのリスト
 - 選択中のプランID
+- フィルター状態
+
+### 9. routeStore / routeStoreMigration
+
+**場所**: `src/store/routeStore.ts`, `src/store/routeStoreMigration.ts`
+
+**管理する状態**:
+
+- ルート検索結果（polylines, markers）
+- 選択した経路モード
+- 移行用バックアップロジック（routeStoreMigration）
+
+**問題点**: migrationファイルが残り続けており、どちらを参照すべきか不明な箇所がある
+
+### 10. travelTimeStore
+
+**場所**: `src/store/travelTimeStore.ts`
+
+**管理する状態**:
+
+- 移動時間モードON/OFF
+- 基準地点
+- 移動手段設定
+
+### 11. uiStore / bottomSheetStore
+
+**場所**: `src/store/uiStore.ts`, `src/store/bottomSheetStore.ts`
+
+**管理する状態**:
+
+- UIパネル開閉、テーマ、ロードインジケータ
+- モバイルボトムシートの高さ・モード
+
+**問題点**: uiStoreの責務が広範で、Map/Place/Plan関連のフラグが混在
+
+### 12. browserPromptStore / notificationStore
+
+**場所**: `src/store/browserPromptStore.ts`, `src/store/notificationStore.ts`
+
+**管理する状態**:
+
+- 外部ブラウザ誘導モーダル表示
+- アプリ内通知キュー
+
+### 13. savedPlacesStoreバックアップ系
+
+**場所**: `src/store/savedPlacesStore.backup.ts`（存在する場合）
+
+**注意**: 古いMigration用ファイルが残存している可能性があり、メンテ対象から外れている
 
 ## 状態管理の問題点
 
-### 1. ストアの過剰な分割
+### 1. 状態の重複
 
-- 12個のストアは多すぎる可能性
-- 関連する状態が複数のストアに分散
+- `placesStore`と`savedPlacesStore`がほぼ同じ情報を持ち、どちらが真実か不明
+- `routeStore`と`routeStoreMigration`が並存しメンテが煩雑
 
-### 2. 名前の一貫性の欠如
+### 2. レガシーAPIの残存
 
-- `placeStore` vs `placesStore` - 紛らわしい
-- 単数形と複数形の使い分けが不明確
+- `planStore.listenToPlan`など非推奨APIが削除されず、新旧実装が混在
+- `planStore.backup.ts`や`savedPlacesStore.backup.ts`が参照されるケースが残っている
 
 ### 3. ビジネスロジックの混在
 
@@ -172,75 +184,34 @@ addPlace: (partial) => {
 };
 ```
 
-### 4. 状態の重複
+### 4. 命名・境界の不一致
 
-- 同じ情報が複数のストアで管理されている可能性
-
-### 5. コールバックの管理
-
-- `onPlaceAdded`, `onPlaceDeleted`などのコールバックがストアに含まれている
-- イベントシステムとして独立させるべき
+- `selectedPlaceStore`は一時選択に留まるのに`savedPlacesStore`と似た名前
+- route系ストアのMigration命名が残り続けている
 
 ## 推奨される改善
 
-### 1. ストアの統合
+### 1. ストア統合/整理
 
-```typescript
-// Before: 分散したストア
--placeStore.ts -
-  placesStore.ts -
-  labelsStore.ts -
-  labelModeStore.ts -
-  // After: 統合されたストア
-  placeManagementStore.ts(場所関連すべて) -
-  uiStateStore.ts(UI状態すべて);
-```
+- `placesStore`と`savedPlacesStore`を単一のplaceStateモジュールへ統合
+- `routeStoreMigration`などの移行ファイルを削除または自動テスト化
 
-### 2. ビジネスロジックの分離
+### 2. ビジネスロジックのサービス層移動
 
-```typescript
-// Service層でビジネスロジックを処理
-class PlaceService {
-  validatePlace(data: Partial<Place>): void {
-    if (!data.coordinates) {
-      throw new Error("Coordinates are required");
-    }
-  }
-}
+- コスト計算やバリデーションをPlaceManagementServiceへ寄せ、ストアを純粋に保つ
 
-// ストアは純粋な状態管理のみ
-const usePlacesStore = create((set) => ({
-  places: [],
-  setPlaces: (places) => set({ places }),
-}));
-```
+### 3. レガシーAPIの段階的削除
 
-### 3. セレクターパターンの導入
+- `planStore.listenToPlan`やbackupファイル依存を洗い出し、EventBusやサービス層へ置き換え
 
-```typescript
-// 計算済みの値を取得するセレクター
-const useFilteredPlaces = () => {
-  const places = usePlacesStore((state) => state.places);
-  return useMemo(() => places.filter((p) => !p.deleted), [places]);
-};
-```
+### 4. 命名/責務の明確化
 
-### 4. アクションの分離
-
-```typescript
-// アクションを別ファイルに分離
-export const placeActions = {
-  addPlace: async (data: PlaceData) => {
-    const validated = await placeService.validate(data);
-    const place = await placeService.create(validated);
-    usePlacesStore.getState().addPlace(place);
-  },
-};
-```
+- 一時的な選択状態には`selectedPlaceState`のような命名を採用し、保存済みとは区別
+- route系ストアの命名を現行仕様（`routeStore`）に揃える
 
 ## リファクタリング優先順位
 
-1. **高**: placeStore と placesStore の統合
-2. **高**: ビジネスロジックのサービス層への移動
-3. **中**: UIストアの責任分離
-4. **低**: セレクターパターンの導入
+1. **高**: place関連ストアの統合と命名整理（savedPlaces vs places vs selectedPlace）
+2. **高**: 旧API（planStore.listenToPlan等）の排除とサービス層経由のアクセス統一
+3. **中**: routeStoreMigrationの削除と状態定義の一本化
+4. **低**: uiStoreの責務分割と通知/プロンプト系ストアの整理

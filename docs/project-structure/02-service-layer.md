@@ -10,183 +10,147 @@
 
 **場所**: `src/services/plan/PlanService.ts`
 
-**責任**:
+**責任**: プラン作成/更新/削除、共有設定、Firestore・LocalStorage両リポジトリへの書き込み調整。
 
-- プランの作成、更新、削除
-- プランのメタデータ管理
-- プラン共有機能
-
-**依存関係**:
-
-- `FirestorePlanRepository`
-- `LocalStoragePlanRepository`
+**主要依存**: `FirestorePlanRepository`, `LocalStoragePlanRepository`, `EventBus`
 
 ### 2. ActivePlanService
 
 **場所**: `src/services/plan/ActivePlanService.ts`
 
-**責任**:
+**責任**: アクティブプランIDの管理、planStoreとの同期、画面遷移時のフェッチ制御。
 
-- 現在アクティブなプランの管理
-- プラン切り替え機能
-- アクティブプランの状態同期
+**主要依存**: `planStore`, `PlanService`, `EventBus`
 
-### 3. SyncManager
+### 3. UnifiedPlanService
 
-**場所**: `src/services/SyncManager.ts`
+**場所**: `src/services/plan/UnifiedPlanService.ts`
 
-**責任**:
+**責任**: ローカル/クラウド差分を吸収して単一Plan APIを提供し、オフライン差分をPlanCoordinatorへ伝搬。
 
-- オンライン/オフライン同期
-- 競合解決
-- 同期状態の管理
+**主要依存**: `PlanService`, `PlanCoordinator`, `SyncManager`, `EventBus`
 
-**主要メソッド**:
+### 4. PlanEventService
 
-- `sync()` - 手動同期
-- `enableAutoSync()` - 自動同期の有効化
-- `resolveConflicts()` - 競合解決
+**場所**: `src/services/plan/PlanEventService.ts`
 
-### 4. DirectionsService
+**責任**: EventBus経由でPlan更新/削除イベントを発行し、planStoreやUIフックが購読できるよう調整。
 
-**場所**: `src/services/directionsService.ts`
+**主要依存**: `EventBus`, `planStore`
 
-**責任**:
+### 5. PlanCoordinator
 
-- Google Directions APIとの通信
-- ルート計算
-- 移動時間の見積もり
+**場所**: `src/coordinators/PlanCoordinator.ts`
 
-### 5. BookingService
+**責任**: PlanService・UnifiedPlanService・ストア・hooksの間で指示を仲介するユースケース調整役。
 
-**場所**: `src/services/bookingService.ts`
+**主要依存**: `PlanService`, `UnifiedPlanService`, `ServiceContainer`, 各種 stores
 
-**責任**:
+### 6. PlanService 補助（PlanListService/PlanCloudService）
 
-- 宿泊施設の予約リンク生成
-- 外部予約サービスとの連携
+- **PlanListService** (`src/services/planListService.ts`)
+  - プラン一覧の取得/キャッシュ、ソート・フィルタリング、planListStoreへの反映。
+  - 依存: `planStore`, `UnifiedPlanService`, `FirestorePlanRepository`
+- **PlanCloudService** (`src/services/planCloudService.ts`)
+  - クラウドバックアップ、共有リンク生成、Firebase連携。
+  - 依存: `PlanService`, `storageService`, Firebase APIs
 
-### 6. PlanCloudService
+### 7. SyncManager & SyncCoordinator
 
-**場所**: `src/services/planCloudService.ts`
+- **SyncManager** (`src/services/SyncManager.ts`)
+  - 同期のオーケストレーション、競合検出、バックグラウンド同期トリガー。
+  - 依存: `FirestorePlanRepository`, `LocalStoragePlanRepository`, `SyncCoordinator`, `EventBus`
+- **SyncCoordinator** (`src/services/sync/SyncCoordinator.ts`)
+  - SyncManagerと各リポジトリ/サービスの橋渡し、スケジュール/リトライ制御。
+  - 依存: `SyncManager`, `storageService`, `EventBus`
 
-**責任**:
+### 8. Sync & Save 系ユーティリティ
 
-- クラウドストレージとの同期
-- プランのバックアップ
-- 共有機能の実装
+- **SaveService / AutoSaveService** (`src/services/save/`)
+  - 手動保存とplanStore監視による自動保存、storageServiceとの連携。
+  - 依存: `PlanService`, `storageService`, `planStore`, `EventBus`
+- **SyncConflictResolver** (`src/services/syncConflictResolver.ts`)
+  - Firestore/LocalStorage間の差分マージと勝者決定、EventBus通知。
+  - 依存: `FirestorePlanRepository`, `LocalStoragePlanRepository`, `EventBus`
+- **ConflictResolver** (`src/services/conflict/ConflictResolver.ts`)
+  - SyncManagerから委譲された競合をドメインルールで解決しUnifiedPlanServiceへ返却。
+  - 依存: `SyncManager`, `planStore`, `EventBus`
 
-### 7. PlanListService
+### 9. PlanLifecycleManager
 
-**場所**: `src/services/planListService.ts`
+**場所**: `src/services/lifecycle/PlanLifecycleManager.ts`
 
-**責任**:
+**責任**: プランの状態遷移（作成→編集中→共有）やAutoSave/Syncトリガーを管理。
 
-- プランリストの管理
-- プランのソートとフィルタリング
-- プランの検索機能
+**主要依存**: `ActivePlanService`, `SaveService`, `AutoSaveService`, `EventBus`
 
-**問題点**: `planListServiceNoSort.ts`という重複ファイルが存在
+### 10. Directions/Directions Adjacent
 
-### 8. StorageService
+- **directionsService** (`src/services/directionsService.ts`)
+  - Google Directions/TravelTime API呼び出し、ルート・移動時間のキャッシュ。
+  - 依存: Google Maps JS API, `routeStore`, `travelTimeStore`
+- **planListServiceNoSort**: 削除済みで、現行は`planListService.ts`のみが使用される
 
-**場所**: `src/services/storageService.ts`
+### 11. ユーティリティサービス
 
-**責任**:
+- **storageService** (`src/services/storageService.ts`)
+  - LocalStorage/IndexedDBアクセス、マイグレーション、暗号化。
+  - 依存: ブラウザStorage APIs, 暗号化ユーティリティ
+- **bookingService** (`src/services/bookingService.ts`)
+  - 宿泊/交通予約リンクや外部アフィリエイト生成。
+  - 依存: 外部連携設定, Google Travel APIs, `planStore`
 
-- ローカルストレージの管理
-- データの永続化
-- キャッシュ管理
+### 12. PlaceManagementService
 
-### 9. SyncConflictResolver
+**場所**: `src/services/place/PlaceManagementService.ts`
 
-**場所**: `src/services/syncConflictResolver.ts`
+**責任**: 保存済み場所のCRUD、メモ/コスト/削除フラグ更新、savedPlacesStoreとplacesStoreの同期。
 
-**責任**:
+**主要依存**: `savedPlacesStore`, `planStore`, `PlaceRepository`, `EventBus`
 
-- 同期競合の検出
-- 競合解決戦略の実装
-- マージロジック
+### 13. PlanLifecycle周辺（PlanEventServiceと連携）
+
+**責任**: PlanEventService / PlanLifecycleManager / UnifiedPlanServiceが連動して状態変化をUIへ伝える構造。ServiceContainerから`PLAN_COORDINATOR`, `PLAN_SERVICE`, `ACTIVE_PLAN_SERVICE`, `UNIFIED_PLAN_SERVICE`として解決される。
 
 ## サービス層の問題点
 
-### 1. 責任の不明確さ
+### 1. 責任の重複
 
-- 一部のサービスが複数の責任を持っている
-- サービス間の境界が曖昧
+- 保存済み場所関連サービス（PlaceManagementService／planListService内ロジックなど）が同じドメインを扱い境界が曖昧
 
-### 2. 直接的な依存関係
+### 2. ストアへ直接アクセス
 
-- サービスがストアに直接依存している箇所がある
-- インターフェースを介さない通信
+- PlanService以外でもZustandストアに直接触れる箇所が残り、テストが難しい
 
-### 3. 重複コード
+### 3. 永続化ロジックの重複
 
-- `planListService.ts`と`planListServiceNoSort.ts`の重複
-- 同様の機能が複数のサービスに散在
+- PlanService／SaveService／AutoSaveServiceで同様の永続化コードが散在
 
 ### 4. エラーハンドリングの不統一
 
-- 各サービスで異なるエラーハンドリング方法
-- 統一されたエラー処理戦略の欠如
+- DirectionsServiceやSync系でエラー表現がバラバラ
 
 ## 推奨される改善
 
-### 1. サービスの責任分離
+### 1. サービス境界の整理
 
-```typescript
-// Before: 複数の責任を持つサービス
-class PlanService {
-  createPlan() {}
-  syncPlan() {}
-  sharePlan() {}
-  validatePlan() {}
-}
+- PlaceManagementService / PlanListService / UnifiedPlanServiceなど、重複する責務を洗い出し統合
 
-// After: 単一責任に分離
-class PlanCreationService {}
-class PlanSyncService {}
-class PlanSharingService {}
-class PlanValidationService {}
-```
+### 2. インターフェースとDIの徹底
 
-### 2. インターフェースの導入
+- ServiceContainer経由で解決されないサービスにも契約を定義し、テストや差し替えを容易にする
 
-```typescript
-interface IPlanService {
-  createPlan(data: PlanData): Promise<Plan>;
-  updatePlan(id: string, data: Partial<PlanData>): Promise<Plan>;
-  deletePlan(id: string): Promise<void>;
-}
-```
+### 3. 永続化・エラーハンドリングの共通化
 
-### 3. イベント駆動アーキテクチャ
+- SaveService／AutoSaveService／PlanServiceで共通の保存ユーティリティとServiceError規約を共有
 
-```typescript
-// サービス間の疎結合な通信
-class EventBus {
-  emit(event: string, data: any): void;
-  on(event: string, handler: Function): void;
-}
-```
+### 4. ストアアクセスの抽象化
 
-### 4. 統一されたエラーハンドリング
-
-```typescript
-class ServiceError extends Error {
-  constructor(
-    public code: string,
-    public message: string,
-    public details?: any,
-  ) {
-    super(message);
-  }
-}
-```
+- 直接Zustandを呼び出しているサービスはアクション層を挟み、EventBus／サービス経由のアクセスへ置き換える
 
 ## 実装優先順位
 
-1. **高**: 重複サービスの統合（planListService）
-2. **高**: サービスインターフェースの定義
-3. **中**: エラーハンドリングの統一
-4. **低**: イベント駆動アーキテクチャの導入
+1. **高**: ドメインごとのサービス統合（Place系/Save系の整理）
+2. **高**: インターフェース未定義サービス（PlanList/PlanLifecycle等）への契約導入
+3. **中**: 永続化・エラーハンドリングの共通ユーティリティ整備
+4. **低**: EventBusを介した通知の標準化とサンプル実装の整備

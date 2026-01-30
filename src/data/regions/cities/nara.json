@@ -1,0 +1,19 @@
+{
+  "prefectureCode": "29",
+  "cities": [
+    {
+      "code": "29201",
+      "name": "奈良市",
+      "nameEn": "Nara",
+      "center": { "lat": 34.6851, "lng": 135.8048 },
+      "searchRadius": 6000
+    },
+    {
+      "code": "29441",
+      "name": "吉野町",
+      "nameEn": "Yoshino",
+      "center": { "lat": 34.3962, "lng": 135.8563 },
+      "searchRadius": 5000
+    }
+  ]
+}

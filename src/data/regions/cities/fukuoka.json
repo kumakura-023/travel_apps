@@ -1,0 +1,26 @@
+{
+  "prefectureCode": "40",
+  "cities": [
+    {
+      "code": "40130",
+      "name": "福岡市",
+      "nameEn": "Fukuoka",
+      "center": { "lat": 33.5902, "lng": 130.4017 },
+      "searchRadius": 8000
+    },
+    {
+      "code": "40100",
+      "name": "北九州市",
+      "nameEn": "Kitakyushu",
+      "center": { "lat": 33.8834, "lng": 130.8752 },
+      "searchRadius": 10000
+    },
+    {
+      "code": "40221",
+      "name": "太宰府市",
+      "nameEn": "Dazaifu",
+      "center": { "lat": 33.5122, "lng": 130.5236 },
+      "searchRadius": 4000
+    }
+  ]
+}

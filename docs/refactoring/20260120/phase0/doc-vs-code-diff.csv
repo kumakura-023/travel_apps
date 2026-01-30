@@ -1,0 +1,6 @@
+file,item,description,status,recommended_action
+"docs/project-structure/01-architecture-overview.md","ServiceContainer登録一覧","ドキュメントではPlaceServiceがServiceContainerに登録済みと記載されているが、実装では識別子のみで登録・利用箇所が存在しない","未対応","PLACE_SERVICEを正式に登録し、利用箇所をServiceContainer経由に統一する"
+"docs/project-structure/02-service-layer.md","PlaceManagementServiceのDI","PlaceManagementServiceがServiceContainer経由で解決される前提で記述されているが、実装ではnewによる直接生成すら行われずストア内ロジックに置き換わっている","未対応","PlaceManagementServiceを具象実装+登録パス込みで整備し、ストアからビジネスロジックを移管する"
+"docs/project-structure/03-state-management.md","placesStore統合状況","Phase1でplacesStoreがsavedPlacesStoreへ統合済みと説明されているが、両ストアが実装上共存しイベント経由で同期する状態のまま","未対応","savedPlacesStoreを唯一のソースに定義し、placesStore利用箇所を削除・移行する"
+"docs/project-structure/03-state-management.md","selectedPlaceStore命名","selectedPlaceStoreがUI一時状態のみと記載されているが、PlaceDetailsPanelなどで永続化前処理を多数担っており責務が拡張している","要再整理","UI専用ステートへ責務を戻すか、別名称/モジュールへ切り出して実装とドキュメントの齟齬を解消する"
+"docs/project-structure/05-place-management.md","PlaceDetailPanel分割","ドキュメントはPlaceDetailPanelを100行以下のメインコンテナ+複数サブコンポーネント構成と説明しているが、実コードは依然として単一巨大コンポーネントのまま","未対応","placeDetail配下フォルダへ段階的に機能を抽出し、ドキュメント記載の構造へ合わせる"

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Region Spot List Variant 2</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d93f2",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101b22",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for clean UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased selection:bg-primary/30">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden pb-24">
+<!-- Sticky Header -->
+<header class="sticky top-0 z-50 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4 shadow-sm transition-colors">
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-900 dark:text-white">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-center flex-1 truncate px-2 text-slate-900 dark:text-white">Kyoto, Japan</h2>
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-900 dark:text-white">
+<span class="material-symbols-outlined text-[24px]">bookmark_border</span>
+</button>
+</header>
+<!-- Region Summary Card -->
+<div class="px-4 pt-2 pb-4">
+<div class="relative w-full overflow-hidden rounded-xl shadow-sm h-[240px] group">
+<!-- Main Background Image -->
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Scenic view of traditional Kyoto streets at sunset" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCjEnogf40QIxO7islX4Z14NwH8hy56MFlk4Vhe7gm_AuQBa2tHdBaBspo-bwVjLS2J4PwtFPTZZwyrfOLM0m4kmMftoJLIsLuUN53l4dh5KBKoI9Uk0WCShdq9XCENbhxfxWwN4Gq2Uk9Si621PN0eqrjCAl0Lre63o0bIi6hYQHSoDW0-5r70BJFMEzs9yt0VBSIjBRuVqWKuaWhKHZKtAAKU85U31HMkkQHUvM7OtZ5gZr-X-Dkvso8_5OqdJzQoRjHNsAzmOcA");'>
+</div>
+<!-- Gradient Overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<!-- Content -->
+<div class="absolute inset-0 flex flex-col justify-end p-5">
+<div class="flex items-end justify-between gap-4">
+<div class="flex-1">
+<h1 class="text-3xl font-bold text-white mb-2">Kyoto</h1>
+<p class="text-white/90 text-sm font-medium leading-relaxed max-w-[280px]">
+                                Ancient temples and traditional tea houses. Best time to visit: Spring &amp; Autumn.
+                            </p>
+</div>
+<!-- Map Thumbnail -->
+<div class="shrink-0 w-16 h-16 rounded-lg border-2 border-white/30 shadow-lg overflow-hidden relative bg-slate-100">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="Small map thumbnail showing Kyoto location" data-location="Kyoto" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCKiKL8yAu-X5DImHEpAzlpncQIK3uHbs5Q1gLCYdm4MqDZWvYgwRtXJJ498qeeqAWQoa7Hv2BsFxwmqhozWLN57vJAPuikfDF4CqFoXuzdKsns-FlgkKP65CrwhQ1rA-x-aUn8BUZezExvn61_DFBbO4pHbYfDi9HQKJz9PHedeRqPYzzA-XLWCrwoZlWGTjwzM3NJ9YMQmVQEGyP7FibEcF0ysnxMhoUdlGuajGcCc5OTcz1D9TQrQqaj1YWvMSoGh9g4UdRByv0");'>
+</div>
+<div class="absolute inset-0 flex items-center justify-center bg-primary/10">
+<span class="material-symbols-outlined text-primary drop-shadow-md text-[20px] font-bold">location_on</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="sticky top-[72px] z-40 bg-background-light dark:bg-background-dark pt-0 pb-4">
+<div class="flex gap-3 overflow-x-auto px-4 no-scrollbar">
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-primary px-5 transition-transform active:scale-95 shadow-sm shadow-primary/20">
+<p class="text-white text-sm font-bold leading-normal">All</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-5 transition-transform active:scale-95">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal">Sightseeing</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-5 transition-transform active:scale-95">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal">Dining</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-5 transition-transform active:scale-95">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal">Shopping</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-5 transition-transform active:scale-95">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal">Hotels</p>
+</button>
+</div>
+</div>
+<!-- Spot Grid -->
+<div class="grid grid-cols-2 gap-4 px-4 pb-4">
+<!-- Item 1 -->
+<div class="flex flex-col gap-3 group cursor-pointer">
+<div class="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-800 shadow-sm">
+<div class="absolute top-2 right-2 z-10">
+<div class="flex items-center gap-1 rounded-full bg-white/90 dark:bg-black/60 px-2 py-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-yellow-500 text-[14px] leading-none fill-1">star</span>
+<span class="text-xs font-bold text-slate-900 dark:text-white leading-none pt-0.5">4.9</span>
+</div>
+</div>
+<div class="w-full h-full bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Golden Pavilion Kinkaku-ji reflecting in the pond" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCsqqY9vZcMFAgOMyFcSieuVq69Pz9dgDFNUw_Kt5udjT5BfJniiGflwbrgRf8bwY58ZFOH4f2LG7Ey3QANQt5Ip3udvhfHWRO97OMKpvdWBDaaeof_tY3iRbH8j_72Q3mtasCT2FDTVCTrzjX6LEfv-IhTvOZYtZMDTF9SuMDwvh0pthZZcBpqmMIdJM3UBKrSKzJDMTxFPCnuvQZuSH5JdiG_COQ9rObPkeRp_wxPhZ-MDjyHceGB1oQOOeyj0f0AWvF73jQfWl4");'>
+</div>
+</div>
+<div class="px-1">
+<h3 class="text-base font-bold leading-tight text-slate-900 dark:text-white line-clamp-1">Kinkaku-ji Temple</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal mt-0.5 line-clamp-1">Historic Zen temple</p>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex flex-col gap-3 group cursor-pointer">
+<div class="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-800 shadow-sm">
+<div class="absolute top-2 right-2 z-10">
+<div class="flex items-center gap-1 rounded-full bg-white/90 dark:bg-black/60 px-2 py-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-yellow-500 text-[14px] leading-none fill-1">star</span>
+<span class="text-xs font-bold text-slate-900 dark:text-white leading-none pt-0.5">4.8</span>
+</div>
+</div>
+<div class="w-full h-full bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Red Torii gates path at Fushimi Inari Shrine" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA9dz_WKpHevsw9JfTTNnqRhXdSV51tkA_fRM7RIP2f1YfLRRt1Vwg7im_8eRztiW2GS8w623ukYfcM4ZFmaIFL9i_5z-QN2bYTMByuItV_9mUfIFR8DzQ90sEorzKhmrKTq3FeX2o2S2DzQrHMvR0Qm_UpX_17a5RR7NxKci28sW6irduVwAgEvY4SzHEVOLC1s43Aos8maqClnkRFnItMLbNU6ubn437TuXiVX-iIrURNsFJa21yeJNJ8XV0i0EvZQaIgc7Y2QvE");'>
+</div>
+</div>
+<div class="px-1">
+<h3 class="text-base font-bold leading-tight text-slate-900 dark:text-white line-clamp-1">Fushimi Inari Shrine</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal mt-0.5 line-clamp-1">Iconic red gates</p>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex flex-col gap-3 group cursor-pointer">
+<div class="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-800 shadow-sm">
+<div class="absolute top-2 right-2 z-10">
+<div class="flex items-center gap-1 rounded-full bg-white/90 dark:bg-black/60 px-2 py-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-yellow-500 text-[14px] leading-none fill-1">star</span>
+<span class="text-xs font-bold text-slate-900 dark:text-white leading-none pt-0.5">4.7</span>
+</div>
+</div>
+<div class="w-full h-full bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Looking up at tall green bamboo stalks in Arashiyama" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCrNxPMRnk1Bgrre0-c5hPTKabsfReoV03NsHQ0O1Pi7s6vLUErRbmOn6IJh4bVzoXVEpNyGX27RMKMlivV0wrz-EsOVzeFBODqN5kQhsEuad4SbJp3x8VpNDHf2nADZkcWE0EqvsYHBM0a-x0q5QLmbHjJ1wFxlBjm5v4s9pprrdkeONMijUTZP52KQQjh0JfqDeCv7aq6nh9FCsQfBWcti3eqYJFJSGNc93VQNvevVPfEOSn5Dtfnqsj5fBjox7ct7s63k7etcPM");'>
+</div>
+</div>
+<div class="px-1">
+<h3 class="text-base font-bold leading-tight text-slate-900 dark:text-white line-clamp-1">Arashiyama Bamboo Grove</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal mt-0.5 line-clamp-1">Scenic nature walk</p>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="flex flex-col gap-3 group cursor-pointer">
+<div class="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-800 shadow-sm">
+<div class="absolute top-2 right-2 z-10">
+<div class="flex items-center gap-1 rounded-full bg-white/90 dark:bg-black/60 px-2 py-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-yellow-500 text-[14px] leading-none fill-1">star</span>
+<span class="text-xs font-bold text-slate-900 dark:text-white leading-none pt-0.5">4.5</span>
+</div>
+</div>
+<div class="w-full h-full bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Bustling indoor market with food stalls" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCHAdehLRYGrKxz_x4eMR8AhIyXBnklcJX90-tiAVILHOWABpfftGC2SlTtne7g7CCQz37dhmpej17JyNhDUHNwDjATdhIW2rxFUknDHTUjVUlp9E7NgTmEg0SgRJY55Bl0bSYIF2xhhvQIPMELJaAax5zrX59NDflJlevObiqHbgtAG2Xm5tdnx8yUGOdMdQUq1_k96941pl7_QiOV6v9yFVeWyl-BYadxpwBC7gDiiqqIVoYKngd1UUfnNvVRepJrJgjqTea6w5Q");'>
+</div>
+</div>
+<div class="px-1">
+<h3 class="text-base font-bold leading-tight text-slate-900 dark:text-white line-clamp-1">Nishiki Market</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal mt-0.5 line-clamp-1">Kyoto's Kitchen</p>
+</div>
+</div>
+<!-- Item 5 -->
+<div class="flex flex-col gap-3 group cursor-pointer">
+<div class="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-800 shadow-sm">
+<div class="absolute top-2 right-2 z-10">
+<div class="flex items-center gap-1 rounded-full bg-white/90 dark:bg-black/60 px-2 py-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-yellow-500 text-[14px] leading-none fill-1">star</span>
+<span class="text-xs font-bold text-slate-900 dark:text-white leading-none pt-0.5">4.8</span>
+</div>
+</div>
+<div class="w-full h-full bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Wooden terrace of Kiyomizu-dera temple" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCVKzITg6Vd4PuJVnGPkiyzYmDMYF-WnKfremI6bWlfiqz_hfwP4rYdJZPTqBspeeXbTBMb6a4BRdSsDwFXWOBKxF0QHhVz6mUr0LPDlbyeMlc2-i7TuMeKEKzUwqkcMc0O5Lr2FJOqqeT_ASaz1z-RK6m3vB52MBc_Ws5EHzMCwkwxHBZtyiMN8Uug84-wXXQoka0ykTXgARtr8pYnYYKe3YP8zuSwtTav24d1TiZaNz4s5OkCsfJ4p1pTekd2DVu72LlMMLcm76I");'>
+</div>
+</div>
+<div class="px-1">
+<h3 class="text-base font-bold leading-tight text-slate-900 dark:text-white line-clamp-1">Kiyomizu-dera</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal mt-0.5 line-clamp-1">Pure Water Temple</p>
+</div>
+</div>
+<!-- Item 6 -->
+<div class="flex flex-col gap-3 group cursor-pointer">
+<div class="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-800 shadow-sm">
+<div class="absolute top-2 right-2 z-10">
+<div class="flex items-center gap-1 rounded-full bg-white/90 dark:bg-black/60 px-2 py-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-yellow-500 text-[14px] leading-none fill-1">star</span>
+<span class="text-xs font-bold text-slate-900 dark:text-white leading-none pt-0.5">4.6</span>
+</div>
+</div>
+<div class="w-full h-full bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Traditional street in Gion district" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD7frKUABYkjvqlPL1xO32zx9Sp66Z3C-lffzxJXYtomrIpdn8YnFFpfSFeqljlZApOnq6VzycT_MXXpxoxZuyqc2uKx1nF2NtvG1x2ahvAMJyVSEjw03GWRvvLnb300znw_-3uUGIkooQdTAWoscHYjhQaJ-Yhw4y-7Bkcj0Acejql2WpcVV5r9PcDMVah_-eVQjzA56p7Oi0e-59hMDAq9p0NkQyPudzvad9d2XwDhliFW_PxqU5YlhvtwVXcYZLcjdFKGQAHOL4");'>
+</div>
+</div>
+<div class="px-1">
+<h3 class="text-base font-bold leading-tight text-slate-900 dark:text-white line-clamp-1">Gion District</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal mt-0.5 line-clamp-1">Geisha district</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Action Button -->
+<div class="fixed bottom-[96px] right-4 z-50">
+<button class="flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-xl shadow-primary/40 hover:bg-blue-600 hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[28px]">map</span>
+</button>
+</div>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-40 bg-white dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 pb-safe">
+<div class="flex justify-around items-center h-16 sm:h-20 pb-2 sm:pb-4">
+<button class="flex flex-col items-center justify-center w-full gap-1 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[24px]">home</span>
+<span class="text-[10px] font-medium text-slate-400 group-hover:text-primary transition-colors">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full gap-1 group">
+<span class="material-symbols-outlined text-primary text-[24px] fill-1">search</span>
+<span class="text-[10px] font-medium text-primary">Explore</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full gap-1 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[24px]">flight</span>
+<span class="text-[10px] font-medium text-slate-400 group-hover:text-primary transition-colors">Trips</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full gap-1 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[24px]">person</span>
+<span class="text-[10px] font-medium text-slate-400 group-hover:text-primary transition-colors">Profile</span>
+</button>
+</div>
+</nav>
+<!-- Safe Area Padding for iPhone Home Indicator -->
+<div class="h-4 w-full bg-transparent"></div>
+</body></html>

@@ -1,0 +1,33 @@
+{
+  "prefectureCode": "47",
+  "cities": [
+    {
+      "code": "47201",
+      "name": "那覇市",
+      "nameEn": "Naha",
+      "center": { "lat": 26.2124, "lng": 127.6809 },
+      "searchRadius": 6000
+    },
+    {
+      "code": "47209",
+      "name": "名護市",
+      "nameEn": "Nago",
+      "center": { "lat": 26.5917, "lng": 127.9778 },
+      "searchRadius": 5000
+    },
+    {
+      "code": "47207",
+      "name": "石垣市",
+      "nameEn": "Ishigaki",
+      "center": { "lat": 24.3448, "lng": 124.1572 },
+      "searchRadius": 5000
+    },
+    {
+      "code": "47214",
+      "name": "宮古島市",
+      "nameEn": "Miyakojima",
+      "center": { "lat": 24.8055, "lng": 125.2811 },
+      "searchRadius": 5000
+    }
+  ]
+}

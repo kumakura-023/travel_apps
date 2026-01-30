@@ -1,0 +1,40 @@
+{
+  "prefectureCode": "01",
+  "cities": [
+    {
+      "code": "01100",
+      "name": "札幌市",
+      "nameEn": "Sapporo",
+      "center": { "lat": 43.0621, "lng": 141.3544 },
+      "searchRadius": 10000
+    },
+    {
+      "code": "01202",
+      "name": "函館市",
+      "nameEn": "Hakodate",
+      "center": { "lat": 41.7687, "lng": 140.7288 },
+      "searchRadius": 8000
+    },
+    {
+      "code": "01203",
+      "name": "小樽市",
+      "nameEn": "Otaru",
+      "center": { "lat": 43.1907, "lng": 140.9947 },
+      "searchRadius": 5000
+    },
+    {
+      "code": "01204",
+      "name": "旭川市",
+      "nameEn": "Asahikawa",
+      "center": { "lat": 43.7707, "lng": 142.365 },
+      "searchRadius": 8000
+    },
+    {
+      "code": "01460",
+      "name": "富良野市",
+      "nameEn": "Furano",
+      "center": { "lat": 43.3418, "lng": 142.3833 },
+      "searchRadius": 5000
+    }
+  ]
+}

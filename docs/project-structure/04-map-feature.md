@@ -6,23 +6,15 @@
 
 ## 主要コンポーネント
 
-### 1. Map（エントリーポイント）
-
-**場所**: `src/components/Map.tsx`
-
-**責任**: MapContainerへの後方互換性エイリアス
-
-**問題点**: 実質的に不要なラッパー
-
-### 2. MapContainer（メインコンテナ）
+### 1. MapContainer（エントリーポイント）
 
 **場所**: `src/components/MapContainer.tsx`
 
 **責任**:
 
 - Google Mapsインスタンスの初期化
-- 子コンポーネントの統合
-- 地図の基本設定
+- MapStateManager / MapEventHandler / MapOverlayManager など管理コンポーネントの統合
+- TravelTimeControls や RouteDisplay など地図周辺UIのラップ
 
 **依存関係**:
 
@@ -30,16 +22,17 @@
 - `MapStateManager`
 - `MapEventHandler`
 - `MapOverlayManager`
+- `TravelTimeControls`
 
-### 3. MapStateManager（状態管理）
+### 2. MapStateManager（状態管理）
 
 **場所**: `src/components/MapStateManager.tsx`
 
-**責任**:
+- **責任**:
 
-- 地図の表示状態管理
-- センター位置の管理
-- マップオプションの提供
+  - 地図コンテナのレイアウト制御
+  - 中心位置/ズームなど基本オプション管理
+  - routeStore / travelTimeStore からの情報を集約しMapContainerへ渡す
 
 **管理する状態**:
 
@@ -47,27 +40,26 @@
 - 地図オプション
 - 中心位置
 
-### 4. MapEventHandler（イベント処理）
+### 3. MapEventHandler（イベント処理）
 
 **場所**: `src/components/MapEventHandler.tsx`
 
-**責任**:
+- **責任**:
 
-- 地図上のクリックイベント処理
-- ダブルクリックでの場所追加
-- イベントの伝播制御
+  - クリック/ダブルクリックでの場所追加やルート選択
+  - ストアやサービスを呼び出して状態を更新
+  - ビジネスロジックが内包されており肥大化
 
 **問題点**: UIを持たないコンポーネントとして設計されているが、ビジネスロジックを含む
 
-### 5. MapOverlayManager（オーバーレイ管理）
+### 4. MapOverlayManager（オーバーレイ管理）
 
 **場所**: `src/components/MapOverlayManager.tsx`
 
-**責任**:
+- **責任**:
 
-- 地図上のオーバーレイ要素の管理
-- ラベル、マーカー、ルートの表示制御
-- ズームレベルに応じた表示切り替え
+  - SavedPlace/Label/Notification/TravelTime/Routeなど多数のオーバーレイをまとめて描画
+  - ズームレベルやフィルタに応じた表示切り替え
 
 ## 関連コンポーネント
 
@@ -79,23 +71,17 @@
 
 **責任**: マーカーのクラスタリング表示
 
-#### PlaceCircle
-
-**場所**: `src/components/PlaceCircle.tsx`
-
-**責任**: 場所を示す円形マーカー
-
-#### PlaceLabel
-
-**場所**: `src/components/PlaceLabel.tsx`
-
-**責任**: 場所のラベル表示
-
 #### PlaceSimpleOverlay
 
 **場所**: `src/components/PlaceSimpleOverlay.tsx`
 
 **責任**: シンプルなオーバーレイ表示
+
+#### PlaceNotificationOverlay
+
+**場所**: `src/components/PlaceNotificationOverlay.tsx`
+
+**責任**: 通知や警告を地図上にピン留め
 
 ### ルート表示
 
@@ -111,11 +97,17 @@
 
 **責任**: ルート上のマーカー管理
 
-#### SafeRouteOverlay
+#### RouteDisplay
 
-**場所**: `src/components/SafeRouteOverlay.tsx`
+**場所**: `src/components/RouteDisplay.tsx`
 
-**責任**: 安全なルート表示（エラーハンドリング付き）
+**責任**: ルートのポリライン表示とズーム調整
+
+#### RouteMarkers
+
+**場所**: `src/components/RouteMarkers.tsx`
+
+**責任**: ルート上のマーカー管理
 
 ### 移動時間表示
 
@@ -131,11 +123,11 @@
 
 **責任**: 移動時間範囲の円表示
 
-#### SafeTravelTimeOverlay
+#### TravelTimeControls
 
-**場所**: `src/components/SafeTravelTimeOverlay.tsx`
+**場所**: `src/components/TravelTimeControls.tsx`
 
-**責任**: 安全な移動時間表示（エラーハンドリング付き）
+**責任**: TravelTimeモードの切り替えと中心地点管理（エラーハンドリングもここで実施）
 
 ### その他の地図機能
 
@@ -173,18 +165,7 @@
 
 ## 問題点と改善案
 
-### 1. コンポーネントの過剰な分割
-
-- `Map.tsx`は単なるエイリアスで不要
-- 一部のコンポーネントが小さすぎる
-
-### 2. 重複する安全性ラッパー
-
-- `SafeRouteOverlay`と`RouteDisplay`
-- `SafeTravelTimeOverlay`と`TravelTimeOverlay`
-- エラーハンドリングを統一すべき
-
-### 3. ビジネスロジックの混在
+### 1. MapEventHandlerへのロジック集中
 
 ```typescript
 // MapEventHandlerにビジネスロジックが含まれている
@@ -197,21 +178,17 @@ const handleMapDblClick = (e: google.maps.MapMouseEvent) => {
 };
 ```
 
-### 4. 状態管理の分散
+### 2. オーバーレイ描画の分散
 
-- 地図の状態が複数の場所で管理されている
-- 統一された地図状態ストアが必要
+- MapOverlayManager配下でさらに細分化したコンポーネントへ責務が拡散
+
+### 3. 状態管理の分散
+
+- MapStateManagerと複数のZustandストアが重複した状態を持ち、中心やズームのソースが不明確
 
 ## 推奨される改善
 
-### 1. コンポーネントの統合
-
-```typescript
-// Map.tsxを削除し、MapContainerを直接使用
-// Safe*Overlayを統合してエラーハンドリングを共通化
-```
-
-### 2. 地図状態の一元管理
+### 1. 地図状態の一元管理
 
 ```typescript
 // 専用の地図ストアを作成
@@ -224,7 +201,7 @@ const useMapStore = create((set) => ({
 }));
 ```
 
-### 3. イベントハンドリングの分離
+### 2. イベントハンドリングの分離
 
 ```typescript
 // MapEventHandlerからビジネスロジックを分離
@@ -235,7 +212,7 @@ class MapInteractionService {
 }
 ```
 
-### 4. オーバーレイの抽象化
+### 3. オーバーレイの抽象化
 
 ```typescript
 // 共通のオーバーレイインターフェース
@@ -248,7 +225,7 @@ interface MapOverlay {
 
 ## リファクタリング優先順位
 
-1. **高**: Map.tsxの削除とMapContainerへの統一
-2. **高**: Safe\*Overlayの統合
-3. **中**: 地図状態の一元管理
-4. **低**: オーバーレイシステムの抽象化
+1. **高**: MapEventHandlerの責務分離（サービス層へ移動）
+2. **高**: MapStateManagerとZustandストアの役割整理（中心/ズーム/フィルタの統一）
+3. **中**: MapOverlayManagerの描画パイプラインを抽象化し、Route/TravelTime/Notificationをプラグイン化
+4. **低**: Overlayコンポーネントの命名/構成整理

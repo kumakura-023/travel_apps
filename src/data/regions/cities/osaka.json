@@ -1,0 +1,54 @@
+{
+  "prefectureCode": "27",
+  "cities": [
+    {
+      "code": "27102",
+      "name": "大阪市北区",
+      "nameEn": "Osaka Kita",
+      "center": { "lat": 34.7055, "lng": 135.5014 },
+      "searchRadius": 3000
+    },
+    {
+      "code": "27127",
+      "name": "大阪市中央区",
+      "nameEn": "Osaka Chuo",
+      "center": { "lat": 34.6783, "lng": 135.5133 },
+      "searchRadius": 3000
+    },
+    {
+      "code": "27103",
+      "name": "大阪市都島区",
+      "nameEn": "Osaka Miyakojima",
+      "center": { "lat": 34.7061, "lng": 135.5299 },
+      "searchRadius": 3000
+    },
+    {
+      "code": "27109",
+      "name": "大阪市天王寺区",
+      "nameEn": "Osaka Tennoji",
+      "center": { "lat": 34.6533, "lng": 135.5175 },
+      "searchRadius": 3000
+    },
+    {
+      "code": "27113",
+      "name": "大阪市浪速区",
+      "nameEn": "Osaka Naniwa",
+      "center": { "lat": 34.6589, "lng": 135.5008 },
+      "searchRadius": 3000
+    },
+    {
+      "code": "27140",
+      "name": "堺市",
+      "nameEn": "Sakai",
+      "center": { "lat": 34.5733, "lng": 135.483 },
+      "searchRadius": 8000
+    },
+    {
+      "code": "27207",
+      "name": "高槻市",
+      "nameEn": "Takatsuki",
+      "center": { "lat": 34.8468, "lng": 135.6173 },
+      "searchRadius": 6000
+    }
+  ]
+}
