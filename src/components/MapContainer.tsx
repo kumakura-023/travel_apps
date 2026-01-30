@@ -1,6 +1,7 @@
 import { GoogleMap } from "@react-google-maps/api";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useGoogleMaps } from "../hooks/useGoogleMaps";
+import { initializePlacesApiService } from "../services/placesApiService";
 import MapStateManager from "./MapStateManager";
 import MapEventHandler from "./MapEventHandler";
 import MapOverlayManager from "./MapOverlayManager";
@@ -83,6 +84,7 @@ export default function MapContainer({
   // 地図の読み込み完了時のハンドラー
   const handleMapLoad = (map: google.maps.Map) => {
     setMap(map);
+    initializePlacesApiService(map);
 
     // プランの初期表示時は、全体を見渡せるように最適な位置を設定
     setTimeout(() => {
