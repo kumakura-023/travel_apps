@@ -123,12 +123,12 @@ const RegionSelectorModal: React.FC = () => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* ヘッダー */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0 bg-white/40 backdrop-blur">
             {/* 戻るボタン */}
             <button
               type="button"
               onClick={handleBack}
-              className="p-2 -ml-2 rounded-lg hover:bg-white/10 transition-colors text-system-secondary-label"
+              className="p-2 -ml-2 rounded-lg hover:bg-white/20 transition-colors text-system-secondary-label"
               aria-label={step === "city" ? "都道府県選択に戻る" : "閉じる"}
             >
               <svg
@@ -158,7 +158,7 @@ const RegionSelectorModal: React.FC = () => {
             <button
               type="button"
               onClick={handleClose}
-              className="p-2 -mr-2 rounded-lg hover:bg-white/10 transition-colors text-system-secondary-label"
+              className="p-2 -mr-2 rounded-lg hover:bg-white/20 transition-colors text-system-secondary-label"
               aria-label="閉じる"
             >
               <svg
@@ -178,15 +178,26 @@ const RegionSelectorModal: React.FC = () => {
           </div>
 
           {/* コンテンツエリア */}
-          <div className="flex-1 overflow-hidden">
-            {step === "prefecture" ? (
+          <div className="flex-1 overflow-hidden relative">
+            <div
+              className={`absolute inset-0 transition-transform duration-300 ease-ios-out ${
+                step === "prefecture" ? "translate-x-0" : "-translate-x-6"
+              }`}
+            >
               <PrefectureList onSelect={handlePrefectureSelect} />
-            ) : selectedPrefecture ? (
-              <CityList
-                prefectureCode={selectedPrefecture.code}
-                onSelect={handleCitySelect}
-              />
-            ) : null}
+            </div>
+            <div
+              className={`absolute inset-0 transition-transform duration-300 ease-ios-out ${
+                step === "city" ? "translate-x-0" : "translate-x-full"
+              }`}
+            >
+              {selectedPrefecture ? (
+                <CityList
+                  prefectureCode={selectedPrefecture.code}
+                  onSelect={handleCitySelect}
+                />
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

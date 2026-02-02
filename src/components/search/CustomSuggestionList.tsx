@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { useSuggestionStore } from "../../store/suggestionStore";
 import RichSuggestionItem from "./RichSuggestionItem";
 import SimpleSuggestionItem from "./SimpleSuggestionItem";
@@ -76,11 +77,10 @@ export default function CustomSuggestionList({
     <div
       ref={listRef}
       className={`${containerClassName}
-                 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md
-                 border border-slate-200 dark:border-slate-700
-                 rounded-xl shadow-lg
+                 glass-effect-border
+                 rounded-2xl shadow-2xl
                  ${variant === "panel" ? "max-h-[50vh]" : "max-h-[400px]"}
-                 overflow-y-auto ${className}`}
+                 overflow-y-auto scrollbar-hide ${className}`}
       role="listbox"
     >
       {isLoading && predictions.length === 0 ? (
@@ -95,6 +95,9 @@ export default function CustomSuggestionList({
         predictions.map((prediction, index) => {
           const isRich = index < 3;
           const detail = richDetails.get(prediction.place_id);
+          const animationStyle: CSSProperties = {
+            animationDelay: `${index * 45}ms`,
+          };
 
           return isRich ? (
             <RichSuggestionItem
@@ -104,6 +107,8 @@ export default function CustomSuggestionList({
               isLoading={isLoading && !detail}
               isFocused={focusedIndex === index}
               onClick={() => onSelect(prediction.place_id)}
+              className="animate-slide-up-fade"
+              style={animationStyle}
             />
           ) : (
             <SimpleSuggestionItem
@@ -111,6 +116,8 @@ export default function CustomSuggestionList({
               prediction={prediction}
               isFocused={focusedIndex === index}
               onClick={() => onSelect(prediction.place_id)}
+              className="animate-slide-up-fade"
+              style={animationStyle}
             />
           );
         })

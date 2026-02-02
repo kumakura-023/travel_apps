@@ -185,12 +185,10 @@ export default function SearchBar({
           header={
             <div className="px-4 pb-2">
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-semibold text-system-label">
-                  検索候補
-                </h2>
+                <h2 className="headline text-system-label">検索候補</h2>
                 <button
                   onClick={() => setShowSuggestions(false)}
-                  className="text-sm text-system-tertiary-label hover:text-system-label"
+                  className="text-sm text-system-tertiary-label hover:text-system-label transition-colors"
                 >
                   閉じる
                 </button>

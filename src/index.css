@@ -158,6 +158,22 @@ body {
     animation: modal-zoom-in 0.3s cubic-bezier(0.19, 0.91, 0.38, 1);
   }
 
+  @keyframes slide-up-fade {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up-fade {
+    animation: slide-up-fade 0.35s cubic-bezier(0.19, 0.91, 0.38, 1) forwards;
+    opacity: 0;
+  }
+
   /* iOS風入力フィールド */
   .input {
     @apply w-full p-3 bg-white/60 dark:bg-black/20 rounded-lg border border-system-separator/50 focus:ring-2 focus:ring-coral-500 focus:outline-none transition-all duration-150;
