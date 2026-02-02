@@ -119,7 +119,7 @@ const RegionSelectorModal: React.FC = () => {
       >
         {/* モーダルコンテナ */}
         <div
-          className="w-full max-w-lg max-h-[80vh] overflow-hidden rounded-2xl glass-effect-border shadow-elevation-3 mx-4 flex flex-col animate-modal-zoom-in"
+          className="w-full max-w-lg h-[80vh] max-h-[80vh] overflow-hidden rounded-2xl glass-effect-border shadow-elevation-3 mx-4 flex flex-col animate-modal-zoom-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ヘッダー */}
