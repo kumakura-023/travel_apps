@@ -1,9 +1,13 @@
+import type { CSSProperties } from "react";
+
 interface Props {
   prediction: google.maps.places.AutocompletePrediction;
   detail: google.maps.places.PlaceResult | undefined;
   isLoading: boolean;
   isFocused: boolean;
   onClick: () => void;
+  className?: string;
+  style?: CSSProperties;
 }
 
 export default function RichSuggestionItem({
@@ -12,6 +16,8 @@ export default function RichSuggestionItem({
   isLoading,
   isFocused,
   onClick,
+  className = "",
+  style,
 }: Props) {
   // 写真URL取得
   const photoUrl = detail?.photos?.[0]?.getUrl({ maxWidth: 96 });
@@ -19,19 +25,20 @@ export default function RichSuggestionItem({
   return (
     <div
       onClick={onClick}
+      style={style}
       className={`flex items-center gap-3 p-3 cursor-pointer
                   transition-colors duration-150
                   ${
                     isFocused
-                      ? "bg-blue-50 dark:bg-blue-900/30 border-l-3 border-l-blue-500"
-                      : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                      ? "bg-coral-50/70 dark:bg-coral-500/15 border-l-3 border-l-coral-500"
+                      : "hover:bg-white/70 dark:hover:bg-slate-800/70"
                   }
-                  border-b border-slate-100 dark:border-slate-800 last:border-b-0`}
+                  border-b border-white/40 dark:border-slate-800 last:border-b-0 ${className}`}
       role="option"
       aria-selected={isFocused}
     >
       {/* 写真サムネイル */}
-      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200 dark:bg-slate-700">
+      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-slate-200/80 dark:bg-slate-700/80 shadow-sm">
         {isLoading && !detail ? (
           <div className="w-full h-full animate-pulse bg-slate-300 dark:bg-slate-600" />
         ) : photoUrl ? (
@@ -68,14 +75,14 @@ export default function RichSuggestionItem({
       {/* テキスト情報 */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-slate-900 dark:text-white truncate">
+          <span className="text-[17px] font-semibold text-slate-900 dark:text-white truncate">
             {prediction.structured_formatting.main_text}
           </span>
 
           {/* 評価バッジ */}
           {detail?.rating && (
-            <span className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300 flex-shrink-0">
-              <span className="text-yellow-500">★</span>
+            <span className="flex items-center gap-1 text-[13px] text-slate-600 dark:text-slate-300 flex-shrink-0">
+              <span className="text-amber-500">★</span>
               <span>{detail.rating.toFixed(1)}</span>
               {detail.user_ratings_total && (
                 <span className="text-slate-400">
@@ -91,7 +98,7 @@ export default function RichSuggestionItem({
           )}
         </div>
 
-        <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
+        <p className="text-[13px] text-slate-500 dark:text-slate-400 truncate">
           {prediction.structured_formatting.secondary_text}
         </p>
       </div>

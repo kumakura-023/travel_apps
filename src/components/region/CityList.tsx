@@ -137,13 +137,17 @@ const CityList: React.FC<CityListProps> = ({ prefectureCode, onSelect }) => {
             該当する市区町村がありません
           </div>
         ) : (
-          <ul role="listbox" aria-label="市区町村一覧">
+          <ul
+            role="listbox"
+            aria-label="市区町村一覧"
+            className="px-4 pb-4 space-y-2"
+          >
             {filteredCities.map((city) => (
               <li key={city.code}>
                 <button
                   type="button"
                   onClick={() => onSelect(city)}
-                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/10 cursor-pointer transition-colors border-b border-white/5 last:border-b-0 text-left"
+                  className="w-full px-4 py-3.5 flex items-center justify-between rounded-xl bg-white/40 hover:bg-white/60 dark:bg-slate-800/60 dark:hover:bg-slate-800/80 transition-colors border border-white/30 text-left shadow-sm active:scale-[0.99]"
                   role="option"
                   aria-selected={false}
                 >

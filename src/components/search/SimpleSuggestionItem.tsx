@@ -1,32 +1,39 @@
+import type { CSSProperties } from "react";
+
 interface Props {
   prediction: google.maps.places.AutocompletePrediction;
   isFocused: boolean;
   onClick: () => void;
+  className?: string;
+  style?: CSSProperties;
 }
 
 export default function SimpleSuggestionItem({
   prediction,
   isFocused,
   onClick,
+  className = "",
+  style,
 }: Props) {
   return (
     <div
       onClick={onClick}
+      style={style}
       className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer
                   transition-colors duration-150
                   ${
                     isFocused
-                      ? "bg-blue-50 dark:bg-blue-900/30 border-l-3 border-l-blue-500"
-                      : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                      ? "bg-coral-50/70 dark:bg-coral-500/15 border-l-3 border-l-coral-500"
+                      : "hover:bg-white/70 dark:hover:bg-slate-800/70"
                   }
-                  border-b border-slate-100 dark:border-slate-800 last:border-b-0`}
+                  border-b border-white/40 dark:border-slate-800 last:border-b-0 ${className}`}
       role="option"
       aria-selected={isFocused}
     >
       {/* アイコン */}
       <div
-        className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 
-                      flex items-center justify-center flex-shrink-0"
+        className="w-9 h-9 rounded-full bg-white/70 dark:bg-slate-700/80 
+                      flex items-center justify-center flex-shrink-0 shadow-sm"
       >
         <svg
           className="w-4 h-4 text-slate-400"
@@ -51,10 +58,10 @@ export default function SimpleSuggestionItem({
 
       {/* テキスト情報 */}
       <div className="flex-1 min-w-0">
-        <span className="font-medium text-slate-900 dark:text-white truncate block">
+        <span className="text-[15px] font-semibold text-slate-900 dark:text-white truncate block">
           {prediction.structured_formatting.main_text}
         </span>
-        <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
+        <p className="text-[13px] text-slate-500 dark:text-slate-400 truncate">
           {prediction.structured_formatting.secondary_text}
         </p>
       </div>

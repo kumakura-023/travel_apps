@@ -70,8 +70,9 @@ export default function MobileBottomSheet({
         {/* Handle Area - This is the drag target */}
         <div
           ref={bindHandleRef}
-          className="w-full flex-none pt-3 pb-1 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none bg-white/50 dark:bg-black/20 backdrop-blur-md z-20"
+          className="relative w-full flex-none pt-3 pb-1 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none bg-white/60 dark:bg-black/25 backdrop-blur-md z-20"
         >
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent dark:via-white/20" />
           {/* Handle Bar */}
           <div className="w-9 h-1 bg-system-separator/80 rounded-full mb-2" />
 
