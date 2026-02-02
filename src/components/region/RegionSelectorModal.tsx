@@ -182,14 +182,18 @@ const RegionSelectorModal: React.FC = () => {
             <div
               className={`absolute inset-0 transition-transform duration-300 ease-ios-out ${
                 step === "prefecture" ? "translate-x-0" : "-translate-x-6"
-              }`}
+              } ${step !== "prefecture" ? "pointer-events-none" : ""}`}
+              aria-hidden={step !== "prefecture"}
+              {...(step !== "prefecture" ? { inert: "" } : {})}
             >
               <PrefectureList onSelect={handlePrefectureSelect} />
             </div>
             <div
               className={`absolute inset-0 transition-transform duration-300 ease-ios-out ${
                 step === "city" ? "translate-x-0" : "translate-x-full"
-              }`}
+              } ${step !== "city" ? "pointer-events-none" : ""}`}
+              aria-hidden={step !== "city"}
+              {...(step !== "city" ? { inert: "" } : {})}
             >
               {selectedPrefecture ? (
                 <CityList
