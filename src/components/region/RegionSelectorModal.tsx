@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ModalPortal from "../ModalPortal";
 import PrefectureList from "./PrefectureList";
 import CityList from "./CityList";
@@ -28,17 +28,71 @@ const RegionSelectorModal: React.FC = () => {
   } = useRegionSearchStore();
 
   const [step, setStep] = useState<Step>("prefecture");
+  const [activeRegionId, setActiveRegionId] = useState("kanto");
+
+  const regions = useMemo(
+    () => [
+      {
+        id: "hokkaido",
+        label: "Hokkaido",
+        prefectureCodes: ["01"],
+      },
+      {
+        id: "tohoku",
+        label: "Tohoku",
+        prefectureCodes: ["02", "03", "04", "05", "06", "07"],
+      },
+      {
+        id: "kanto",
+        label: "Kanto",
+        prefectureCodes: ["08", "09", "10", "11", "12", "13", "14"],
+      },
+      {
+        id: "chubu",
+        label: "Chubu",
+        prefectureCodes: ["15", "16", "17", "18", "19", "20", "21", "22", "23"],
+      },
+      {
+        id: "kansai",
+        label: "Kansai",
+        prefectureCodes: ["24", "25", "26", "27", "28", "29", "30"],
+      },
+      {
+        id: "chugoku",
+        label: "Chugoku",
+        prefectureCodes: ["31", "32", "33", "34", "35"],
+      },
+      {
+        id: "shikoku",
+        label: "Shikoku",
+        prefectureCodes: ["36", "37", "38", "39"],
+      },
+      {
+        id: "kyushu",
+        label: "Kyushu",
+        prefectureCodes: ["40", "41", "42", "43", "44", "45", "46", "47"],
+      },
+    ],
+    [],
+  );
 
   // モーダルが開いたらprefectureステップから開始
   useEffect(() => {
     if (isModalOpen) {
       if (selectedPrefecture) {
         setStep("city");
+        const matchedRegion = regions.find((region) =>
+          region.prefectureCodes.includes(selectedPrefecture.code),
+        );
+        if (matchedRegion) {
+          setActiveRegionId(matchedRegion.id);
+        }
       } else {
         setStep("prefecture");
+        setActiveRegionId("kanto");
       }
     }
-  }, [isModalOpen, selectedPrefecture]);
+  }, [isModalOpen, selectedPrefecture, regions]);
 
   // 都道府県選択時
   const handlePrefectureSelect = useCallback(
@@ -99,19 +153,16 @@ const RegionSelectorModal: React.FC = () => {
     return null;
   }
 
-  // ヘッダータイトルを取得
-  const getTitle = () => {
-    if (step === "city" && selectedPrefecture) {
-      return `${selectedPrefecture.name} - 市区町村を選択`;
-    }
-    return "都道府県を選択";
-  };
+  const activeRegionLabel =
+    regions.find((region) => region.id === activeRegionId)?.label ?? "Kanto";
+  const title =
+    step === "city" && selectedPrefecture ? "Select City" : "Select Prefecture";
 
   return (
     <ModalPortal>
       {/* オーバーレイ */}
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-modal-fade-in"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm animate-modal-fade-in"
         onClick={handleClose}
         role="dialog"
         aria-modal="true"
@@ -119,62 +170,65 @@ const RegionSelectorModal: React.FC = () => {
       >
         {/* モーダルコンテナ */}
         <div
-          className="w-full max-w-lg h-[80vh] max-h-[80vh] overflow-hidden rounded-2xl glass-effect-border shadow-elevation-3 mx-4 flex flex-col animate-modal-zoom-in"
+          className="w-full max-w-lg h-[86vh] max-h-[86vh] overflow-hidden rounded-[28px] bg-[#F9F7F4] shadow-elevation-3 mx-4 flex flex-col animate-modal-zoom-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ヘッダー */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0 bg-white/40 backdrop-blur">
-            {/* 戻るボタン */}
-            <button
-              type="button"
-              onClick={handleBack}
-              className="p-2 -ml-2 rounded-lg hover:bg-white/20 transition-colors text-system-secondary-label"
-              aria-label={step === "city" ? "都道府県選択に戻る" : "閉じる"}
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          <div className="px-5 pt-5 pb-3 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="w-10 h-10 rounded-full bg-white/90 shadow-sm flex items-center justify-center text-system-label hover:shadow-md transition"
+                aria-label={step === "city" ? "都道府県選択に戻る" : "閉じる"}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-
-            {/* タイトル */}
-            <h2
-              id="region-selector-title"
-              className="flex-1 text-center font-semibold text-system-label"
-            >
-              {getTitle()}
-            </h2>
-
-            {/* 閉じるボタン */}
-            <button
-              type="button"
-              onClick={handleClose}
-              className="p-2 -mr-2 rounded-lg hover:bg-white/20 transition-colors text-system-secondary-label"
-              aria-label="閉じる"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="w-10 h-10 rounded-full bg-white/90 shadow-sm flex items-center justify-center text-system-label hover:shadow-md transition"
+                aria-label="閉じる"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <p className="text-[11px] tracking-[0.28em] text-coral-500 font-semibold">
+                {activeRegionLabel.toUpperCase()} REGION
+              </p>
+              <h2
+                id="region-selector-title"
+                className="text-[26px] leading-tight font-semibold text-system-label mt-1"
+              >
+                {title}
+              </h2>
+            </div>
           </div>
 
           {/* コンテンツエリア */}
@@ -186,7 +240,13 @@ const RegionSelectorModal: React.FC = () => {
               aria-hidden={step !== "prefecture"}
               {...(step !== "prefecture" ? { inert: "" } : {})}
             >
-              <PrefectureList onSelect={handlePrefectureSelect} />
+              <PrefectureList
+                onSelect={handlePrefectureSelect}
+                regions={regions}
+                activeRegionId={activeRegionId}
+                onRegionChange={setActiveRegionId}
+                selectedPrefectureCode={selectedPrefecture?.code}
+              />
             </div>
             <div
               className={`absolute inset-0 transition-transform duration-300 ease-ios-out ${
