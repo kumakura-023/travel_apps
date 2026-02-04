@@ -122,7 +122,7 @@ const CityList: React.FC<CityListProps> = ({ prefectureCode, onSelect }) => {
   }, [cities, searchQuery, activeType]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#F9F7F4]">
       <div className="px-5 pb-2">
         <div className="flex gap-3 overflow-x-auto scrollbar-hide">
           {availableTypes.map((type) => {
@@ -173,7 +173,7 @@ const CityList: React.FC<CityListProps> = ({ prefectureCode, onSelect }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-[#F9F7F4]">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-coral-500 border-t-transparent" />
