@@ -155,6 +155,10 @@ const RegionSelectorModal: React.FC = () => {
 
   const activeRegionLabel =
     regions.find((region) => region.id === activeRegionId)?.label ?? "Kanto";
+  const subTitle =
+    step === "city" && selectedPrefecture
+      ? `${selectedPrefecture.nameEn.toUpperCase()} PREFECTURE`
+      : `${activeRegionLabel.toUpperCase()} REGION`;
   const title =
     step === "city" && selectedPrefecture ? "Select City" : "Select Prefecture";
 
@@ -162,7 +166,7 @@ const RegionSelectorModal: React.FC = () => {
     <ModalPortal>
       {/* オーバーレイ */}
       <div
-        className="fixed inset-0 z-50 flex items-start justify-center pt-4 bg-black/45 backdrop-blur-sm animate-modal-fade-in"
+        className="fixed inset-0 z-50 flex items-center justify-center py-4 bg-black/45 backdrop-blur-sm animate-modal-fade-in"
         onClick={handleClose}
         role="dialog"
         aria-modal="true"
@@ -170,7 +174,7 @@ const RegionSelectorModal: React.FC = () => {
       >
         {/* モーダルコンテナ */}
         <div
-          className="w-full max-w-lg h-[86vh] max-h-[86vh] overflow-hidden rounded-[28px] bg-[#F9F7F4] shadow-elevation-3 mx-4 flex flex-col animate-modal-zoom-in"
+          className="w-full max-w-lg h-[calc(100vh-32px)] max-h-[calc(100vh-32px)] overflow-hidden rounded-[28px] bg-[#F9F7F4] shadow-elevation-3 mx-4 flex flex-col animate-modal-zoom-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ヘッダー */}
@@ -220,7 +224,7 @@ const RegionSelectorModal: React.FC = () => {
 
             <div className="mt-2">
               <p className="text-[11px] tracking-[0.28em] text-coral-500 font-semibold">
-                {activeRegionLabel.toUpperCase()} REGION
+                {subTitle}
               </p>
               <h2
                 id="region-selector-title"
