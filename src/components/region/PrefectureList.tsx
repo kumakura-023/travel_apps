@@ -42,7 +42,6 @@ const PrefectureList: React.FC<PrefectureListProps> = ({
   const prefectures: Prefecture[] = prefecturesData.prefectures;
   const activeRegion = regions.find((region) => region.id === activeRegionId);
   const regionPrefectureCodes = activeRegion?.prefectureCodes ?? [];
-  const regionPrefectureCount = regionPrefectureCodes.length;
 
   const filteredPrefectures = useMemo(() => {
     const regionScoped = prefectures.filter((p) =>
@@ -85,15 +84,6 @@ const PrefectureList: React.FC<PrefectureListProps> = ({
       </div>
 
       <div className="px-5 pb-4">
-        <h3 className="text-xl font-semibold text-system-label">
-          Destinations in {activeRegion?.label ?? "Japan"}
-        </h3>
-        <p className="text-sm text-system-secondary-label mt-1">
-          Explore {regionPrefectureCount} prefectures in this region
-        </p>
-      </div>
-
-      <div className="px-5 pb-4">
         <div className="relative">
           <input
             type="text"
@@ -127,7 +117,7 @@ const PrefectureList: React.FC<PrefectureListProps> = ({
           <div
             role="listbox"
             aria-label="都道府県一覧"
-            className="grid grid-cols-2 gap-4 px-5 pb-8"
+            className="grid grid-cols-2 gap-3 px-4 pb-8"
           >
             {filteredPrefectures.map((prefecture) => (
               <button
