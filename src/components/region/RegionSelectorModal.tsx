@@ -162,7 +162,7 @@ const RegionSelectorModal: React.FC = () => {
     <ModalPortal>
       {/* オーバーレイ */}
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm animate-modal-fade-in"
+        className="fixed inset-0 z-50 flex items-start justify-center pt-4 bg-black/45 backdrop-blur-sm animate-modal-fade-in"
         onClick={handleClose}
         role="dialog"
         aria-modal="true"
@@ -174,12 +174,12 @@ const RegionSelectorModal: React.FC = () => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* ヘッダー */}
-          <div className="px-5 pt-5 pb-3 flex-shrink-0">
+          <div className="px-5 pt-3 pb-2 flex-shrink-0">
             <div className="flex items-center justify-between">
               <button
                 type="button"
                 onClick={handleBack}
-                className="w-10 h-10 rounded-full bg-white/90 shadow-sm flex items-center justify-center text-system-label hover:shadow-md transition"
+                className="w-9 h-9 rounded-full bg-white/90 shadow-sm flex items-center justify-center text-system-label hover:shadow-md transition"
                 aria-label={step === "city" ? "都道府県選択に戻る" : "閉じる"}
               >
                 <svg
@@ -199,7 +199,7 @@ const RegionSelectorModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleClose}
-                className="w-10 h-10 rounded-full bg-white/90 shadow-sm flex items-center justify-center text-system-label hover:shadow-md transition"
+                className="w-9 h-9 rounded-full bg-white/90 shadow-sm flex items-center justify-center text-system-label hover:shadow-md transition"
                 aria-label="閉じる"
               >
                 <svg
@@ -218,7 +218,7 @@ const RegionSelectorModal: React.FC = () => {
               </button>
             </div>
 
-            <div className="mt-4">
+            <div className="mt-2">
               <p className="text-[11px] tracking-[0.28em] text-coral-500 font-semibold">
                 {activeRegionLabel.toUpperCase()} REGION
               </p>
