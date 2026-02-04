@@ -6,9 +6,6 @@ interface CityListProps {
   onSelect: (city: City) => void;
 }
 
-/**
- * 都道府県コードからファイル名へのマッピング
- */
 const prefectureFileMap: Record<string, string> = {
   "01": "hokkaido",
   "13": "tokyo",
@@ -22,9 +19,6 @@ const prefectureFileMap: Record<string, string> = {
   "47": "okinawa",
 };
 
-/**
- * 市区町村を動的に読み込む
- */
 const loadCities = async (prefectureCode: string): Promise<City[]> => {
   try {
     const fileName = prefectureFileMap[prefectureCode];
@@ -32,7 +26,6 @@ const loadCities = async (prefectureCode: string): Promise<City[]> => {
       return [];
     }
 
-    // 動的インポートで市区町村データを読み込み
     const module = await import(`../../data/regions/cities/${fileName}.json`);
     return module.default?.cities || module.cities || [];
   } catch (error) {
@@ -41,25 +34,38 @@ const loadCities = async (prefectureCode: string): Promise<City[]> => {
   }
 };
 
-/**
- * 市区町村一覧表示コンポーネント
- * - 選択された都道府県に基づいて市区町村を動的読み込み
- * - 絞り込み検索入力欄
- * - リスト表示で各市区町村をクリックで選択
- */
+type CityType = "all" | "ward" | "city" | "town" | "village";
+
+const getCityType = (name: string): CityType => {
+  if (name.endsWith("区")) return "ward";
+  if (name.endsWith("市")) return "city";
+  if (name.endsWith("町")) return "town";
+  if (name.endsWith("村")) return "village";
+  return "city";
+};
+
+const CITY_TYPE_LABELS: Record<CityType, string> = {
+  all: "All",
+  ward: "Wards",
+  city: "Cities",
+  town: "Towns",
+  village: "Villages",
+};
+
 const CityList: React.FC<CityListProps> = ({ prefectureCode, onSelect }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [cities, setCities] = useState<City[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeType, setActiveType] = useState<CityType>("all");
 
-  // 都道府県コードが変わったら市区町村を読み込む
   useEffect(() => {
     let mounted = true;
 
     const fetchCities = async () => {
       setIsLoading(true);
       setError(null);
+      setActiveType("all");
 
       const loadedCities = await loadCities(prefectureCode);
 
@@ -81,27 +87,72 @@ const CityList: React.FC<CityListProps> = ({ prefectureCode, onSelect }) => {
     };
   }, [prefectureCode]);
 
-  // 検索フィルタ
+  const availableTypes = useMemo(() => {
+    const counts: Record<CityType, number> = {
+      all: cities.length,
+      ward: 0,
+      city: 0,
+      town: 0,
+      village: 0,
+    };
+
+    cities.forEach((city) => {
+      const type = getCityType(city.name);
+      counts[type] += 1;
+    });
+
+    return (Object.keys(counts) as CityType[]).filter((type) =>
+      type === "all" ? true : counts[type] > 0,
+    );
+  }, [cities]);
+
   const filteredCities = useMemo(() => {
+    const scoped =
+      activeType === "all"
+        ? cities
+        : cities.filter((city) => getCityType(city.name) === activeType);
+
     if (!searchQuery.trim()) {
-      return cities;
+      return scoped;
     }
     const query = searchQuery.toLowerCase().trim();
-    return cities.filter(
+    return scoped.filter(
       (c) => c.name.includes(query) || c.nameEn.toLowerCase().includes(query),
     );
-  }, [cities, searchQuery]);
+  }, [cities, searchQuery, activeType]);
 
   return (
     <div className="flex flex-col h-full">
-      {/* 検索入力欄 */}
+      <div className="px-5 pb-2">
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+          {availableTypes.map((type) => {
+            const isActive = type === activeType;
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setActiveType(type)}
+                className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all shadow-sm border
+                  ${
+                    isActive
+                      ? "bg-coral-500 text-white border-transparent shadow-md"
+                      : "bg-white text-system-secondary-label border-white/80 hover:text-system-label"
+                  }`}
+              >
+                {CITY_TYPE_LABELS[type]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="px-5 pb-4">
         <div className="relative">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="市区町村を検索..."
+            placeholder="Search city"
             className="w-full px-4 py-3 pl-11 bg-white rounded-full text-system-label placeholder:text-system-tertiary-label focus:outline-none focus:ring-2 focus:ring-coral-500/40 shadow-sm"
             autoFocus
             disabled={isLoading}
@@ -122,7 +173,6 @@ const CityList: React.FC<CityListProps> = ({ prefectureCode, onSelect }) => {
         </div>
       </div>
 
-      {/* 市区町村一覧 */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -137,45 +187,29 @@ const CityList: React.FC<CityListProps> = ({ prefectureCode, onSelect }) => {
             該当する市区町村がありません
           </div>
         ) : (
-          <ul
+          <div
             role="listbox"
             aria-label="市区町村一覧"
-            className="px-5 pb-6 space-y-3"
+            className="grid grid-cols-2 gap-4 px-5 pb-8"
           >
             {filteredCities.map((city) => (
-              <li key={city.code}>
-                <button
-                  type="button"
-                  onClick={() => onSelect(city)}
-                  className="w-full px-4 py-4 flex items-center justify-between rounded-2xl bg-white hover:shadow-md transition-all border border-white/80 text-left shadow-sm active:scale-[0.99]"
-                  role="option"
-                  aria-selected={false}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-system-label font-semibold">
-                      {city.name}
-                    </span>
-                    <span className="text-system-tertiary-label text-sm">
-                      {city.nameEn}
-                    </span>
-                  </div>
-                  <svg
-                    className="w-4 h-4 text-system-tertiary-label"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </li>
+              <button
+                key={city.code}
+                type="button"
+                onClick={() => onSelect(city)}
+                className="group relative flex flex-col items-start justify-center p-4 bg-white rounded-2xl border-2 border-transparent shadow-sm hover:shadow-md hover:border-coral-200 text-left transition-all"
+                role="option"
+                aria-selected={false}
+              >
+                <span className="text-system-label text-lg font-semibold leading-tight mb-1">
+                  {city.name}
+                </span>
+                <span className="text-system-tertiary-label text-[11px] uppercase tracking-widest">
+                  {city.nameEn}
+                </span>
+              </button>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>
