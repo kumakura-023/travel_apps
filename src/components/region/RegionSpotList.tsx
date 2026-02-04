@@ -1,12 +1,9 @@
-import { useEffect } from "react";
-import { MdArrowBack, MdMap, MdClose } from "react-icons/md";
+import { useEffect, useMemo } from "react";
+import { MdArrowBack, MdShare, MdPlace } from "react-icons/md";
 import { useRegionSearchStore } from "../../store/regionSearchStore";
 import { useNearbySearch } from "../../hooks/useNearbySearch";
-import { useDeviceDetect } from "../../hooks/useDeviceDetect";
-import RegionSummaryCard from "./RegionSummaryCard";
 import SpotGrid from "./SpotGrid";
 import CategoryFilterChips from "./CategoryFilterChips";
-import MobileBottomSheet from "../MobileBottomSheet";
 
 export default function RegionSpotList() {
   const {
@@ -15,10 +12,10 @@ export default function RegionSpotList() {
     selectedCity,
     isLoading,
     closeSpotList,
+    spots,
   } = useRegionSearchStore();
 
   const { loadMore, hasMore } = useNearbySearch();
-  const { isMobile } = useDeviceDetect();
 
   // ESC key handler
   useEffect(() => {
@@ -47,134 +44,116 @@ export default function RegionSpotList() {
     }
   };
 
-  const title = selectedCity?.name || selectedPrefecture?.name || "";
+  const title =
+    selectedCity?.nameEn ||
+    selectedCity?.name ||
+    selectedPrefecture?.nameEn ||
+    selectedPrefecture?.name ||
+    "";
+  const subtitle = selectedCity
+    ? selectedPrefecture?.nameEn || selectedPrefecture?.name || ""
+    : "";
 
-  // Common content for both views
-  const Content = (
-    <>
-      {selectedCity && (
-        <RegionSummaryCard
-          city={selectedCity}
-          prefecture={selectedPrefecture}
-        />
-      )}
-      <SpotGrid />
-      {hasMore() && (
-        <div className="flex justify-center py-6 pb-24">
-          <button
-            onClick={handleLoadMore}
-            disabled={isLoading}
-            className="px-6 py-2 bg-coral-500 text-white rounded-full
-                       hover:bg-coral-600 disabled:opacity-50
-                       transition-colors font-medium text-sm
-                       shadow-elevation-1 hover:shadow-elevation-2"
-          >
-            {isLoading ? "読み込み中..." : "もっと見る"}
-          </button>
+  const heroImageUrl = useMemo(() => {
+    const heroSpot = spots[0];
+    if (heroSpot?.photos && heroSpot.photos.length > 0) {
+      return heroSpot.photos[0].getUrl({ maxWidth: 1200 });
+    }
+    return "";
+  }, [spots]);
+
+  const rating = spots[0]?.rating;
+  const reviews = spots[0]?.user_ratings_total;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-[#F9F7F4]">
+      <div className="h-full overflow-y-auto">
+        <div className="relative h-[38vh] min-h-[280px]">
+          {heroImageUrl ? (
+            <img
+              src={heroImageUrl}
+              alt={title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+          <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+            <button
+              onClick={closeSpotList}
+              className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center"
+              aria-label="戻る"
+            >
+              <MdArrowBack size={22} />
+            </button>
+            <button
+              className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center"
+              aria-label="共有"
+            >
+              <MdShare size={20} />
+            </button>
+          </div>
+
+          <div className="absolute bottom-6 left-5 right-5 text-white">
+            <div className="flex items-center gap-2 text-xs mb-3">
+              <span className="bg-coral-500 text-white px-2.5 py-1 rounded-full">
+                Japan
+              </span>
+              {rating && (
+                <span className="bg-white/20 px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <span className="text-yellow-300">★</span>
+                  <span className="font-semibold">{rating.toFixed(1)}</span>
+                  {reviews && (
+                    <span className="text-white/80">
+                      ({reviews.toLocaleString()} reviews)
+                    </span>
+                  )}
+                </span>
+              )}
+            </div>
+            <h1 className="text-3xl font-semibold leading-tight">{title}</h1>
+            {(subtitle || title) && (
+              <div className="flex items-center gap-2 text-sm text-white/80 mt-2">
+                <MdPlace size={16} />
+                <span>{subtitle || title}</span>
+              </div>
+            )}
+          </div>
         </div>
-      )}
-    </>
-  );
 
-  // Mobile Bottom Sheet View
-  if (isMobile) {
-    return (
-      <MobileBottomSheet
-        isOpen={isSpotListOpen}
-        onClose={closeSpotList}
-        header={
-          <div className="px-4 pb-2 w-full">
-            <div className="flex items-center justify-between mb-3">
-              <h1 className="text-xl font-semibold text-system-label truncate flex-1 tracking-tight">
-                {title}
-              </h1>
+        <div className="relative -mt-8 rounded-t-[28px] bg-[#F9F7F4] pt-6 pb-28">
+          <CategoryFilterChips className="px-5 pb-4" />
+          <SpotGrid />
+
+          {hasMore() && (
+            <div className="flex justify-center py-8">
               <button
-                onClick={closeSpotList}
-                className="p-2 -mr-2 text-system-tertiary-label hover:text-system-label 
-                           hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
-                title="閉じる"
+                onClick={handleLoadMore}
+                disabled={isLoading}
+                className="px-6 py-2.5 bg-coral-500 text-white rounded-full
+                           hover:bg-coral-600 disabled:opacity-50
+                           transition-colors font-medium text-sm shadow-md"
               >
-                <MdClose size={24} />
+                {isLoading ? "読み込み中..." : "もっと見る"}
               </button>
             </div>
-            <div className="-mx-4 px-4 overflow-x-auto scrollbar-hide">
-              <CategoryFilterChips />
-            </div>
-          </div>
-        }
-      >
-        <div className="p-4 pt-2 min-h-full bg-transparent">{Content}</div>
-
-        {/* FAB: Map View - Float above sheet content */}
-        <div className="fixed bottom-6 right-6 z-[110]">
-          <button
-            onClick={closeSpotList}
-            className="w-14 h-14 rounded-full bg-coral-500 text-white
-                       shadow-elevation-3 hover:bg-coral-600
-                       flex items-center justify-center
-                       transition-all hover:scale-105 active:scale-95"
-            title="地図で見る"
-          >
-            <MdMap size={24} />
-          </button>
+          )}
         </div>
-      </MobileBottomSheet>
-    );
-  }
+      </div>
 
-  // Desktop/Tablet View (Original)
-  return (
-    <div className="fixed inset-0 z-50 bg-system-grouped-background">
-      {/* Sticky Header */}
-      <header className="sticky top-0 z-10 glass-effect-border border-b border-white/10">
-        <div className="flex items-center justify-between px-4 py-3">
-          {/* Back Button */}
-          <button
-            onClick={closeSpotList}
-            className="flex items-center gap-2 text-coral-500 
-                       hover:text-coral-600 transition-colors"
-          >
-            <MdArrowBack size={24} />
-            <span className="text-sm font-medium">戻る</span>
-          </button>
-
-          {/* Title */}
-          <h1 className="text-lg font-semibold text-system-label">{title}</h1>
-
-          {/* Map Button */}
-          <button
-            onClick={closeSpotList}
-            className="flex items-center gap-1 text-coral-500 
-                       hover:text-coral-600 transition-colors"
-          >
-            <MdMap size={20} />
-            <span className="text-sm font-medium hidden sm:inline">地図</span>
-          </button>
-        </div>
-
-        {/* Filter Chips */}
-        <div className="border-t border-white/5">
-          <CategoryFilterChips />
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="h-[calc(100vh-120px)] overflow-y-auto">
-        <div className="p-4">{Content}</div>
-      </main>
-
-      {/* FAB: Map View */}
-      <button
-        onClick={closeSpotList}
-        className="fixed bottom-6 right-6 z-20
-                   w-14 h-14 rounded-full bg-coral-500 text-white
-                   shadow-elevation-3 hover:bg-coral-600
-                   flex items-center justify-center
-                   transition-all hover:scale-105 active:scale-95"
-        title="地図で見る"
-      >
-        <MdMap size={24} />
-      </button>
+      <div className="fixed bottom-6 right-6 z-20">
+        <button
+          onClick={closeSpotList}
+          className="px-6 py-3.5 rounded-full bg-coral-500 text-white
+                     shadow-lg shadow-coral-500/30 hover:bg-coral-600
+                     flex items-center gap-2 text-sm font-semibold
+                     transition-all active:scale-95"
+        >
+          Book Guide
+        </button>
+      </div>
     </div>
   );
 }

@@ -2,64 +2,108 @@ import React, { useState, useMemo } from "react";
 import type { Prefecture } from "../../types/region";
 import prefecturesData from "../../data/regions/prefectures.json";
 
-interface PrefectureListProps {
-  onSelect: (prefecture: Prefecture) => void;
+interface RegionGroup {
+  id: string;
+  label: string;
+  prefectureCodes: string[];
 }
 
-/**
- * 都道府県一覧表示コンポーネント
- * - prefectures.json から都道府県リストを読み込み
- * - 絞り込み検索入力欄
- * - リスト表示で各都道府県をクリックで選択
- */
-const PrefectureList: React.FC<PrefectureListProps> = ({ onSelect }) => {
+interface PrefectureListProps {
+  onSelect: (prefecture: Prefecture) => void;
+  regions: RegionGroup[];
+  activeRegionId: string;
+  onRegionChange: (regionId: string) => void;
+  selectedPrefectureCode?: string;
+}
+
+const PrefectureList: React.FC<PrefectureListProps> = ({
+  onSelect,
+  regions,
+  activeRegionId,
+  onRegionChange,
+  selectedPrefectureCode,
+}) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const prefectureGradientMap: Record<string, string> = {
-    "01": "from-sky-500 via-sky-600 to-slate-700",
-    "13": "from-rose-500 via-orange-500 to-amber-500",
-    "14": "from-blue-500 via-cyan-500 to-teal-500",
-    "26": "from-amber-600 via-orange-600 to-stone-700",
-    "27": "from-red-500 via-orange-500 to-amber-500",
-    "28": "from-emerald-500 via-teal-500 to-cyan-600",
-    "29": "from-amber-500 via-yellow-500 to-lime-500",
-    "34": "from-green-600 via-emerald-500 to-teal-600",
-    "40": "from-orange-500 via-red-500 to-rose-500",
-    "47": "from-teal-400 via-cyan-500 to-blue-500",
+  const imagePool = [
+    "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1505761671935-60b3a7427bad?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+  ];
+
+  const getImageForPrefecture = (code: string) => {
+    const index = Number.parseInt(code, 10) % imagePool.length;
+    return imagePool[index];
   };
 
-  const getGradient = (code: string) =>
-    prefectureGradientMap[code] ?? "from-slate-500 via-slate-600 to-slate-700";
-
-  // 都道府県データを取得
   const prefectures: Prefecture[] = prefecturesData.prefectures;
+  const activeRegion = regions.find((region) => region.id === activeRegionId);
+  const regionPrefectureCodes = activeRegion?.prefectureCodes ?? [];
+  const regionPrefectureCount = regionPrefectureCodes.length;
 
-  // 検索フィルタ
   const filteredPrefectures = useMemo(() => {
+    const regionScoped = prefectures.filter((p) =>
+      regionPrefectureCodes.length
+        ? regionPrefectureCodes.includes(p.code)
+        : true,
+    );
     if (!searchQuery.trim()) {
-      return prefectures;
+      return regionScoped;
     }
     const query = searchQuery.toLowerCase().trim();
-    return prefectures.filter(
+    return regionScoped.filter(
       (p) => p.name.includes(query) || p.nameEn.toLowerCase().includes(query),
     );
-  }, [prefectures, searchQuery]);
+  }, [prefectures, searchQuery, regionPrefectureCodes]);
 
   return (
     <div className="flex flex-col h-full">
-      {/* 検索入力欄 */}
-      <div className="px-4 py-3 border-b border-white/10">
+      <div className="px-5 pb-2">
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+          {regions.map((region) => {
+            const isActive = region.id === activeRegionId;
+            return (
+              <button
+                key={region.id}
+                type="button"
+                onClick={() => onRegionChange(region.id)}
+                className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all shadow-sm border
+                  ${
+                    isActive
+                      ? "bg-coral-500 text-white border-transparent shadow-md"
+                      : "bg-white text-system-secondary-label border-white/80 hover:text-system-label"
+                  }`}
+              >
+                {region.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="px-5 pb-4">
+        <h3 className="text-xl font-semibold text-system-label">
+          Destinations in {activeRegion?.label ?? "Japan"}
+        </h3>
+        <p className="text-sm text-system-secondary-label mt-1">
+          Explore {regionPrefectureCount} prefectures in this region
+        </p>
+      </div>
+
+      <div className="px-5 pb-4">
         <div className="relative">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="都道府県を検索..."
-            className="w-full px-4 py-2.5 pl-10 bg-white/10 border border-white/20 rounded-lg text-system-label placeholder:text-system-tertiary-label focus:outline-none focus:ring-2 focus:ring-coral-500/50 focus:border-coral-500 transition-colors"
-            autoFocus
+            placeholder="Search prefecture"
+            className="w-full px-4 py-3 pl-11 bg-white rounded-full text-system-label placeholder:text-system-tertiary-label focus:outline-none focus:ring-2 focus:ring-coral-500/40 shadow-sm"
           />
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-system-tertiary-label"
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-system-tertiary-label"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -74,52 +118,65 @@ const PrefectureList: React.FC<PrefectureListProps> = ({ onSelect }) => {
         </div>
       </div>
 
-      {/* 都道府県一覧 */}
       <div className="flex-1 overflow-y-auto">
         {filteredPrefectures.length === 0 ? (
           <div className="px-4 py-8 text-center text-system-secondary-label">
-            該当する都道府県がありません
+            No prefectures found
           </div>
         ) : (
           <div
             role="listbox"
             aria-label="都道府県一覧"
-            className="grid grid-cols-2 gap-3 px-4 pb-4 sm:grid-cols-3"
+            className="grid grid-cols-2 gap-4 px-5 pb-8"
           >
             {filteredPrefectures.map((prefecture) => (
               <button
                 key={prefecture.code}
                 type="button"
                 onClick={() => onSelect(prefecture)}
-                className={`group relative h-28 rounded-2xl overflow-hidden text-left shadow-sm transition-all duration-200 ease-ios-out active:scale-[0.98] hover:shadow-md border border-white/20 bg-gradient-to-br ${getGradient(
-                  prefecture.code,
-                )}`}
+                className={`group relative overflow-hidden text-left transition-all duration-200 ease-ios-out active:scale-[0.98] rounded-2xl border-2
+                  ${
+                    selectedPrefectureCode === prefecture.code
+                      ? "border-coral-500 shadow-lg"
+                      : "border-transparent shadow-sm hover:shadow-md"
+                  }`}
                 role="option"
-                aria-selected={false}
+                aria-selected={selectedPrefectureCode === prefecture.code}
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-                <div className="relative h-full flex flex-col justify-end p-3">
-                  <span className="text-white text-[16px] font-semibold drop-shadow-sm">
-                    {prefecture.name}
-                  </span>
-                  <span className="text-white/80 text-[12px] tracking-wide">
-                    {prefecture.nameEn}
-                  </span>
-                </div>
-                <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/25 backdrop-blur flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
+                <div className="relative aspect-[3/4]">
+                  <img
+                    src={getImageForPrefecture(prefecture.code)}
+                    alt={prefecture.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <span className="block text-white text-lg font-semibold drop-shadow-sm">
+                      {prefecture.name}
+                    </span>
+                    <span className="text-white/80 text-[10px] uppercase tracking-widest">
+                      {prefecture.nameEn}
+                    </span>
+                  </div>
+
+                  {selectedPrefectureCode === prefecture.code && (
+                    <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-coral-500 text-white flex items-center justify-center shadow-md">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                  )}
                 </div>
               </button>
             ))}

@@ -95,19 +95,19 @@ const CityList: React.FC<CityListProps> = ({ prefectureCode, onSelect }) => {
   return (
     <div className="flex flex-col h-full">
       {/* 検索入力欄 */}
-      <div className="px-4 py-3 border-b border-white/10">
+      <div className="px-5 pb-4">
         <div className="relative">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="市区町村を検索..."
-            className="w-full px-4 py-2.5 pl-10 bg-white/10 border border-white/20 rounded-lg text-system-label placeholder:text-system-tertiary-label focus:outline-none focus:ring-2 focus:ring-coral-500/50 focus:border-coral-500 transition-colors"
+            className="w-full px-4 py-3 pl-11 bg-white rounded-full text-system-label placeholder:text-system-tertiary-label focus:outline-none focus:ring-2 focus:ring-coral-500/40 shadow-sm"
             autoFocus
             disabled={isLoading}
           />
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-system-tertiary-label"
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-system-tertiary-label"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -140,19 +140,19 @@ const CityList: React.FC<CityListProps> = ({ prefectureCode, onSelect }) => {
           <ul
             role="listbox"
             aria-label="市区町村一覧"
-            className="px-4 pb-4 space-y-2"
+            className="px-5 pb-6 space-y-3"
           >
             {filteredCities.map((city) => (
               <li key={city.code}>
                 <button
                   type="button"
                   onClick={() => onSelect(city)}
-                  className="w-full px-4 py-3.5 flex items-center justify-between rounded-xl bg-white/40 hover:bg-white/60 dark:bg-slate-800/60 dark:hover:bg-slate-800/80 transition-colors border border-white/30 text-left shadow-sm active:scale-[0.99]"
+                  className="w-full px-4 py-4 flex items-center justify-between rounded-2xl bg-white hover:shadow-md transition-all border border-white/80 text-left shadow-sm active:scale-[0.99]"
                   role="option"
                   aria-selected={false}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-system-label font-medium">
+                    <span className="text-system-label font-semibold">
                       {city.name}
                     </span>
                     <span className="text-system-tertiary-label text-sm">

@@ -1,13 +1,15 @@
 import { memo, useMemo } from "react";
+import { MdBookmarkBorder } from "react-icons/md";
 import { useSelectedPlaceStore } from "../../store/selectedPlaceStore";
 import { useGoogleMaps } from "../../hooks/useGoogleMaps";
 
 interface SpotCardProps {
   spot: google.maps.places.PlaceResult;
   onClick?: () => void;
+  variant?: "feature" | "standard";
 }
 
-function SpotCard({ spot, onClick }: SpotCardProps) {
+function SpotCard({ spot, onClick, variant = "standard" }: SpotCardProps) {
   const { setPlace } = useSelectedPlaceStore();
   const { panTo } = useGoogleMaps();
 
@@ -32,59 +34,76 @@ function SpotCard({ spot, onClick }: SpotCardProps) {
     onClick?.();
   };
 
+  const vicinityLabel = useMemo(() => {
+    const raw = spot.vicinity || spot.formatted_address || "";
+    return raw.split(",")[0] || raw;
+  }, [spot.vicinity, spot.formatted_address]);
+
+  if (variant === "feature") {
+    return (
+      <div
+        onClick={handleClick}
+        className="group cursor-pointer rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-200"
+      >
+        <div className="relative aspect-[16/9]">
+          <img
+            src={photoUrl}
+            alt={spot.name || "スポット"}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+          <div className="absolute top-3 right-3">
+            <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white">
+              <MdBookmarkBorder size={18} />
+            </div>
+          </div>
+
+          {spot.rating && (
+            <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/20 text-white text-xs flex items-center gap-1">
+              <span className="text-yellow-300">★</span>
+              <span className="font-semibold">{spot.rating.toFixed(1)}</span>
+            </div>
+          )}
+
+          <div className="absolute bottom-3 left-4 right-4 text-white">
+            {vicinityLabel && (
+              <span className="inline-block px-2.5 py-1 text-[11px] rounded-full bg-white/20 mb-2">
+                {vicinityLabel}
+              </span>
+            )}
+            <h3 className="text-lg font-semibold leading-tight">{spot.name}</h3>
+            <p className="text-xs text-white/80 truncate">
+              {spot.vicinity || spot.formatted_address || ""}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       onClick={handleClick}
-      className="group cursor-pointer rounded-xl overflow-hidden 
-                 glass-effect-border shadow-elevation-1
-                 hover:shadow-elevation-2 transition-all duration-200"
+      className="group cursor-pointer rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-200"
     >
-      {/* 写真（アスペクト比 4:3） */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-square overflow-hidden">
         <img
           src={photoUrl}
           alt={spot.name || "スポット"}
-          className="w-full h-full object-cover 
-                     group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
         />
-
-        {/* 評価バッジ（右上） */}
-        {spot.rating && (
-          <div
-            className="absolute top-2 right-2 px-2 py-1 
-                          bg-black/60 backdrop-blur-sm rounded-full
-                          flex items-center gap-1"
-          >
-            <span className="text-yellow-400 text-xs">★</span>
-            <span className="text-white text-xs font-medium">
-              {spot.rating.toFixed(1)}
-            </span>
-          </div>
-        )}
       </div>
 
-      {/* 情報部分 */}
       <div className="p-3">
-        {/* スポット名 */}
-        <h3
-          className="text-system-label font-semibold text-sm 
-                       truncate mb-1"
-        >
+        <h3 className="text-system-label font-semibold text-sm truncate">
           {spot.name}
         </h3>
-
-        {/* サブタイトル（タイプ or 住所） */}
-        <p className="text-system-secondary-label text-xs truncate">
+        <p className="text-system-secondary-label text-xs truncate mt-1">
           {spot.vicinity || spot.formatted_address || ""}
         </p>
-
-        {/* レビュー件数 */}
-        {spot.user_ratings_total && (
-          <p className="text-system-tertiary-label text-xs mt-1">
-            ({spot.user_ratings_total.toLocaleString()}件のレビュー)
-          </p>
-        )}
       </div>
     </div>
   );
