@@ -63,6 +63,7 @@ export default function SpotGrid({ onSpotClick }: SpotGridProps) {
             key={spot.place_id}
             spot={spot}
             variant="feature"
+            hideAddress
             onClick={() => onSpotClick?.(spot)}
           />
         ))}
