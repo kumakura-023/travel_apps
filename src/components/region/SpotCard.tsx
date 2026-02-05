@@ -4,6 +4,7 @@ import { classifyCategory } from "../../utils/categoryClassifier";
 import { estimateCost } from "../../utils/estimateCost";
 import { useSelectedPlaceStore } from "../../store/selectedPlaceStore";
 import { useGoogleMaps } from "../../hooks/useGoogleMaps";
+import { getPlacesApiService } from "../../services/placesApiService";
 
 interface SpotCardProps {
   spot: google.maps.places.PlaceResult;
@@ -13,7 +14,7 @@ interface SpotCardProps {
 
 function SpotCard({ spot, onClick, variant = "standard" }: SpotCardProps) {
   const { setPlace } = useSelectedPlaceStore();
-  const { panTo } = useGoogleMaps();
+  const { panTo, map } = useGoogleMaps();
 
   // 写真URLを取得（なければプレースホルダー）
   const photoUrl = useMemo(() => {
@@ -23,38 +24,54 @@ function SpotCard({ spot, onClick, variant = "standard" }: SpotCardProps) {
     return "/placeholders/place.svg";
   }, [spot.photos]);
 
+  const fetchPlaceDetails = async (placeId: string) => {
+    if (!map) return null;
+    try {
+      const service = getPlacesApiService(map);
+      return await service.getFullDetails(placeId);
+    } catch (error) {
+      console.error("Failed to fetch place details:", error);
+      return null;
+    }
+  };
+
   // クリックハンドラ
-  const handleClick = () => {
-    const coords = spot.geometry?.location
+  const handleClick = async () => {
+    const detail = spot.place_id
+      ? await fetchPlaceDetails(spot.place_id)
+      : null;
+    const source = detail ?? spot;
+    const coords = source.geometry?.location
       ? {
-          lat: spot.geometry.location.lat(),
-          lng: spot.geometry.location.lng(),
+          lat: source.geometry.location.lat(),
+          lng: source.geometry.location.lng(),
         }
       : undefined;
 
-    const category = classifyCategory(spot.types || []);
+    const category = classifyCategory(source.types || []);
     const placeForPanel: any = {
       id: crypto.randomUUID(),
-      name: spot.name || "名称不明",
-      address: spot.vicinity || spot.formatted_address || "",
-      formatted_address: spot.formatted_address || spot.vicinity || "",
+      name: source.name || "名称不明",
+      address: source.vicinity || source.formatted_address || "",
+      formatted_address: source.formatted_address || source.vicinity || "",
       coordinates: coords,
       category,
       memo: "",
-      estimatedCost: estimateCost(spot.price_level, category),
-      photos: spot.photos || [],
+      estimatedCost: estimateCost(source.price_level, category),
+      photos: source.photos || [],
       createdAt: new Date(),
       updatedAt: new Date(),
-      rating: spot.rating,
-      website: spot.website,
-      types: spot.types,
-      opening_hours: spot.opening_hours,
-      place_id: spot.place_id,
+      rating: source.rating,
+      user_ratings_total: source.user_ratings_total,
+      website: source.website,
+      types: source.types,
+      opening_hours: source.opening_hours,
+      place_id: source.place_id,
+      price_level: source.price_level,
     };
 
     setPlace(placeForPanel);
 
-    // 地図を移動
     if (coords) {
       panTo(coords.lat, coords.lng, 15);
     }
