@@ -1,5 +1,7 @@
 import { memo, useMemo } from "react";
 import { MdBookmarkBorder } from "react-icons/md";
+import { classifyCategory } from "../../utils/categoryClassifier";
+import { estimateCost } from "../../utils/estimateCost";
 import { useSelectedPlaceStore } from "../../store/selectedPlaceStore";
 import { useGoogleMaps } from "../../hooks/useGoogleMaps";
 
@@ -23,12 +25,38 @@ function SpotCard({ spot, onClick, variant = "standard" }: SpotCardProps) {
 
   // クリックハンドラ
   const handleClick = () => {
-    // 選択状態を更新
-    setPlace(spot);
+    const coords = spot.geometry?.location
+      ? {
+          lat: spot.geometry.location.lat(),
+          lng: spot.geometry.location.lng(),
+        }
+      : undefined;
+
+    const category = classifyCategory(spot.types || []);
+    const placeForPanel: any = {
+      id: crypto.randomUUID(),
+      name: spot.name || "名称不明",
+      address: spot.vicinity || spot.formatted_address || "",
+      formatted_address: spot.formatted_address || spot.vicinity || "",
+      coordinates: coords,
+      category,
+      memo: "",
+      estimatedCost: estimateCost(spot.price_level, category),
+      photos: spot.photos || [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      rating: spot.rating,
+      website: spot.website,
+      types: spot.types,
+      opening_hours: spot.opening_hours,
+      place_id: spot.place_id,
+    };
+
+    setPlace(placeForPanel);
 
     // 地図を移動
-    if (spot.geometry?.location) {
-      panTo(spot.geometry.location.lat(), spot.geometry.location.lng(), 15);
+    if (coords) {
+      panTo(coords.lat, coords.lng, 15);
     }
 
     onClick?.();
