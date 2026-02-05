@@ -88,43 +88,52 @@ export default function RegionSpotList() {
   const rating = spots[0]?.rating;
   const reviews = spots[0]?.user_ratings_total;
 
-  // Parallax & Transition Values
-  const heroHeight = "44vh";
-  const minHeroHeight = "340px";
-  const parallaxTranslateY = scrollTop * 0.5;
-  const textOpacity = Math.max(0, 1 - scrollTop / 250);
-  const textTranslateY = scrollTop * 0.2;
-  const isScrolledPastHeader = scrollTop > 280;
+  // Collapsing Header Constants
+  const HERO_HEIGHT = 420; // px
+  const MIN_HEADER_HEIGHT = 80; // px
+  const TRANSITION_DISTANCE = HERO_HEIGHT - MIN_HEADER_HEIGHT;
+
+  // Dynamic Values
+  const currentHeaderHeight = Math.max(
+    MIN_HEADER_HEIGHT,
+    HERO_HEIGHT - scrollTop,
+  );
+  const headerProgress = Math.min(1, scrollTop / TRANSITION_DISTANCE);
+
+  // Fade out text faster (by 60% of scroll) to avoid overlap
+  const textOpacity = Math.max(0, 1 - headerProgress * 1.8);
+  const textTranslateY = scrollTop * 0.35;
+
+  const isScrolledPastHeader = scrollTop > TRANSITION_DISTANCE - 20;
 
   return (
     <div className="fixed inset-0 z-50 bg-[#F9F7F4] font-system">
-      {/* 1. BACKGROUND PARALLAX LAYER (Fixed) */}
+      {/* 1. COLLAPSING HEADER LAYER (Fixed Top) */}
       <div
-        className="absolute top-0 left-0 w-full overflow-hidden z-0 bg-slate-900"
-        style={{ height: heroHeight, minHeight: minHeroHeight }}
+        className="absolute top-0 left-0 w-full overflow-hidden z-0 bg-slate-900 shadow-xl"
+        style={{ height: currentHeaderHeight }}
       >
-        <div
-          className="w-full h-full relative will-change-transform"
-          style={{ transform: `translate3d(0, ${parallaxTranslateY}px, 0)` }}
-        >
+        <div className="w-full h-full relative">
           {heroImageUrl ? (
             <img
               src={heroImageUrl}
               alt={title}
-              className="absolute inset-0 w-full h-[110%] object-cover opacity-90 transition-opacity duration-700"
+              className="absolute inset-0 w-full h-[120%] object-cover opacity-90 transition-opacity duration-700"
+              style={{ transform: `translate3d(0, ${scrollTop * 0.3}px, 0)` }}
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         </div>
 
-        {/* Hero Text Content (Fades out on scroll) */}
+        {/* Hero Text Content */}
         <div
-          className="absolute bottom-0 left-0 w-full px-6 pb-20 z-10 text-white will-change-transform"
+          className="absolute bottom-0 left-0 w-full px-6 pb-16 z-10 text-white"
           style={{
             opacity: textOpacity,
             transform: `translate3d(0, ${textTranslateY}px, 0)`,
+            pointerEvents: textOpacity === 0 ? "none" : "auto",
           }}
         >
           <div className="flex items-center gap-2 text-xs mb-3 font-medium tracking-wide">
@@ -164,14 +173,14 @@ export default function RegionSpotList() {
         ref={scrollRef}
         className="absolute inset-0 z-10 overflow-y-auto overflow-x-hidden custom-scrollbar scroll-smooth"
       >
-        {/* Spacer for Parallax Header */}
+        {/* Spacer to push content below expanded header */}
         <div
           className="w-full pointer-events-none"
-          style={{ height: heroHeight, minHeight: minHeroHeight }}
+          style={{ height: HERO_HEIGHT }}
         />
 
         {/* Content Sheet */}
-        <div className="relative -mt-6 bg-[#F9F7F4] rounded-t-[32px] shadow-elevation-5 min-h-screen">
+        <div className="relative -mt-2 bg-[#F9F7F4] rounded-t-[32px] shadow-elevation-5 min-h-screen">
           {/* Handle bar for visual cue */}
           <div className="w-full flex justify-center pt-3 pb-1 opacity-50">
             <div className="w-12 h-1.5 rounded-full bg-slate-300/50" />

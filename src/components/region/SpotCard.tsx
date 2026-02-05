@@ -10,9 +10,15 @@ interface SpotCardProps {
   spot: google.maps.places.PlaceResult;
   onClick?: () => void;
   variant?: "feature" | "standard";
+  hideAddress?: boolean;
 }
 
-function SpotCard({ spot, onClick, variant = "standard" }: SpotCardProps) {
+function SpotCard({
+  spot,
+  onClick,
+  variant = "standard",
+  hideAddress = false,
+}: SpotCardProps) {
   const { setPlace } = useSelectedPlaceStore();
   const { panTo, map } = useGoogleMaps();
 
@@ -113,7 +119,7 @@ function SpotCard({ spot, onClick, variant = "standard" }: SpotCardProps) {
           )}
 
           <div className="absolute bottom-3 left-4 right-4 text-white">
-            {vicinityLabel && (
+            {!hideAddress && vicinityLabel && (
               <span className="inline-block px-2.5 py-1 text-[11px] rounded-full bg-black/20 backdrop-blur-md mb-2 border border-white/10">
                 {vicinityLabel}
               </span>
@@ -121,9 +127,11 @@ function SpotCard({ spot, onClick, variant = "standard" }: SpotCardProps) {
             <h3 className="text-xl font-display font-bold leading-tight drop-shadow-sm">
               {spot.name}
             </h3>
-            <p className="text-xs text-white/90 truncate mt-1 font-medium">
-              {spot.vicinity || spot.formatted_address || ""}
-            </p>
+            {!hideAddress && (
+              <p className="text-xs text-white/90 truncate mt-1 font-medium">
+                {spot.vicinity || spot.formatted_address || ""}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -148,9 +156,11 @@ function SpotCard({ spot, onClick, variant = "standard" }: SpotCardProps) {
         <h3 className="text-system-label font-display font-semibold text-sm truncate">
           {spot.name}
         </h3>
-        <p className="text-system-secondary-label text-xs truncate mt-1">
-          {spot.vicinity || spot.formatted_address || ""}
-        </p>
+        {!hideAddress && (
+          <p className="text-system-secondary-label text-xs truncate mt-1">
+            {spot.vicinity || spot.formatted_address || ""}
+          </p>
+        )}
       </div>
     </div>
   );
