@@ -94,19 +94,19 @@ function SpotCard({ spot, onClick, variant = "standard" }: SpotCardProps) {
           <img
             src={photoUrl}
             alt={spot.name || "スポット"}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 will-change-transform"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
           <div className="absolute top-3 right-3">
-            <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white">
+            <div className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white border border-white/10">
               <MdBookmarkBorder size={18} />
             </div>
           </div>
 
           {spot.rating && (
-            <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/20 text-white text-xs flex items-center gap-1">
+            <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/20 backdrop-blur-md text-white text-xs flex items-center gap-1 border border-white/10">
               <span className="text-yellow-300">★</span>
               <span className="font-semibold">{spot.rating.toFixed(1)}</span>
             </div>
@@ -114,12 +114,14 @@ function SpotCard({ spot, onClick, variant = "standard" }: SpotCardProps) {
 
           <div className="absolute bottom-3 left-4 right-4 text-white">
             {vicinityLabel && (
-              <span className="inline-block px-2.5 py-1 text-[11px] rounded-full bg-white/20 mb-2">
+              <span className="inline-block px-2.5 py-1 text-[11px] rounded-full bg-black/20 backdrop-blur-md mb-2 border border-white/10">
                 {vicinityLabel}
               </span>
             )}
-            <h3 className="text-lg font-semibold leading-tight">{spot.name}</h3>
-            <p className="text-xs text-white/80 truncate">
+            <h3 className="text-xl font-display font-bold leading-tight drop-shadow-sm">
+              {spot.name}
+            </h3>
+            <p className="text-xs text-white/90 truncate mt-1 font-medium">
               {spot.vicinity || spot.formatted_address || ""}
             </p>
           </div>
@@ -137,13 +139,13 @@ function SpotCard({ spot, onClick, variant = "standard" }: SpotCardProps) {
         <img
           src={photoUrl}
           alt={spot.name || "スポット"}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 will-change-transform"
           loading="lazy"
         />
       </div>
 
       <div className="p-3">
-        <h3 className="text-system-label font-semibold text-sm truncate">
+        <h3 className="text-system-label font-display font-semibold text-sm truncate">
           {spot.name}
         </h3>
         <p className="text-system-secondary-label text-xs truncate mt-1">
