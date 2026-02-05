@@ -12,6 +12,7 @@ export default function RegionSpotList() {
     selectedCity,
     isLoading,
     closeSpotList,
+    openModal,
     spots,
   } = useRegionSearchStore();
 
@@ -42,6 +43,11 @@ export default function RegionSpotList() {
     if (hasMore() && !isLoading) {
       loadMore();
     }
+  };
+
+  const handleBackToCitySelect = () => {
+    closeSpotList();
+    openModal();
   };
 
   const title =
@@ -82,7 +88,7 @@ export default function RegionSpotList() {
 
           <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
             <button
-              onClick={closeSpotList}
+              onClick={handleBackToCitySelect}
               className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center"
               aria-label="戻る"
             >
@@ -145,13 +151,13 @@ export default function RegionSpotList() {
 
       <div className="fixed bottom-6 right-6 z-20">
         <button
-          onClick={closeSpotList}
+          onClick={handleBackToCitySelect}
           className="px-6 py-3.5 rounded-full bg-coral-500 text-white
                      shadow-lg shadow-coral-500/30 hover:bg-coral-600
                      flex items-center gap-2 text-sm font-semibold
                      transition-all active:scale-95"
         >
-          Book Guide
+          市区町村へ戻る
         </button>
       </div>
     </div>
