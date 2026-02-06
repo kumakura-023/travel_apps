@@ -5,6 +5,7 @@ import {
   MdEditNote,
   MdFilterList,
 } from "react-icons/md";
+import type { IconType } from "react-icons";
 import { useLabelModeStore } from "../store/labelModeStore";
 import { useUIStore } from "../store/uiStore";
 
@@ -16,10 +17,10 @@ interface Props {
   isVisible: boolean;
 }
 
-const tabs: { key: TabKey; icon: React.ReactNode; label: string }[] = [
-  { key: "map", icon: <MdMap size={22} />, label: "地図" },
-  { key: "travelTime", icon: <MdAccessTime size={22} />, label: "移動時間" },
-  { key: "list", icon: <MdList size={22} />, label: "リスト" },
+const tabs: { key: TabKey; icon: IconType; label: string }[] = [
+  { key: "map", icon: MdMap, label: "地図" },
+  { key: "travelTime", icon: MdAccessTime, label: "移動時間" },
+  { key: "list", icon: MdList, label: "リスト" },
 ];
 
 const BottomNavigation: React.FC<Props> = ({ active, onChange, isVisible }) => {
@@ -31,110 +32,93 @@ const BottomNavigation: React.FC<Props> = ({ active, onChange, isVisible }) => {
   return (
     <nav
       className={`fixed bottom-0 left-0 right-0 z-50 
-                     bg-white/98 backdrop-blur-xl 
-                     border-t border-system-separator/20
-                     shadow-[0_-1px_8px_rgba(0,0,0,0.04),0_-4px_24px_rgba(0,0,0,0.12)] 
-                     px-2 py-1 
-                     transition-all duration-300 ease-ios-default 
+                     bg-white/82 backdrop-blur-xl backdrop-saturate-150
+                     border-t border-gray-200/40
+                     shadow-[0_-2px_14px_rgba(0,0,0,0.06)]
+                     pb-[max(env(safe-area-inset-bottom),2px)]
+                     transition-all duration-300 cubic-bezier(0.32, 0.72, 0, 1)
                      ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}
     >
-      <div className="flex items-center justify-around max-w-md mx-auto h-20">
+      <div className="flex items-center justify-between gap-1 px-1.5 h-[48px]">
         {/* Main navigation tabs */}
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            className={`relative flex flex-col items-center justify-center 
-                       min-w-[56px] h-16 px-3 rounded-2xl
-                       transition-all duration-250 ease-out
-                       hover:scale-[1.02] active:scale-[0.98]
-                       ${
-                         active === tab.key
-                           ? "text-coral-600 bg-coral-500/12"
-                           : "text-system-secondary-label hover:text-coral-600 hover:bg-coral-500/8"
-                       }`}
-            onClick={() => onChange(tab.key)}
-          >
-            {/* State layer for press effect */}
-            <div
-              className={`absolute inset-0 rounded-2xl 
-                            ${active === tab.key ? "bg-coral-500/8" : ""} 
-                            transition-all duration-150`}
-            />
-
-            <div className="relative mb-1 z-10">{tab.icon}</div>
-            <span className="relative text-xs font-medium leading-tight z-10">
-              {tab.label}
-            </span>
-          </button>
-        ))}
+        {tabs.map((tab) => {
+          const isActive = active === tab.key;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              className="group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 h-full rounded-xl outline-none touch-manipulation transition-colors"
+              onClick={() => onChange(tab.key)}
+            >
+              <div
+                className={`relative flex items-center justify-center w-9 h-6 rounded-full transition-all duration-200 ${
+                  isActive
+                    ? "bg-coral-500 text-white shadow-sm"
+                    : "bg-transparent text-gray-400 group-hover:bg-gray-50 group-active:scale-95"
+                }`}
+              >
+                <Icon size={18} />
+              </div>
+              <span
+                className={`text-[9px] leading-none font-medium tracking-wide transition-colors duration-200 ${
+                  isActive ? "text-coral-600" : "text-gray-400"
+                }`}
+              >
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
 
         {/* Label Mode Button */}
         <button
-          className={`relative flex flex-col items-center justify-center 
-                     min-w-[56px] h-16 px-3 rounded-2xl
-                     transition-all duration-250 ease-out
-                     hover:scale-[1.02] active:scale-[0.98]
-                     ${
-                       labelMode
-                         ? "text-white bg-teal-600 shadow-lg shadow-teal-500/20"
-                         : "text-system-secondary-label hover:text-teal-600 hover:bg-teal-500/8"
-                     }`}
+          className="group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 h-full rounded-xl outline-none touch-manipulation"
           onClick={toggleLabelMode}
           title={labelMode ? "メモ配置を終了" : "メモを追加"}
         >
-          {/* State layer for press effect */}
           <div
-            className={`absolute inset-0 rounded-2xl 
-                          ${labelMode ? "bg-white/12" : ""} 
-                          transition-all duration-150`}
-          />
-
-          <div className="relative mb-1 z-10">
-            <MdEditNote size={22} />
+            className={`relative flex items-center justify-center w-9 h-6 rounded-full transition-all duration-200 ${
+              labelMode
+                ? "bg-teal-500 text-white shadow-teal-500/25 shadow-sm"
+                : "bg-transparent text-gray-400 group-hover:text-teal-600 group-hover:bg-teal-50"
+            }`}
+          >
+            <MdEditNote size={18} />
           </div>
-          <span className="relative text-xs font-medium leading-tight z-10">
+          <span
+            className={`text-[9px] leading-none font-medium tracking-wide transition-colors duration-200 ${
+              labelMode ? "text-teal-600" : "text-gray-400"
+            }`}
+          >
             {labelMode ? "配置中" : "メモ"}
           </span>
         </button>
 
         {/* Filter Button */}
         <button
-          className={`relative flex flex-col items-center justify-center 
-                     min-w-[56px] h-16 px-3 rounded-2xl
-                     transition-all duration-250 ease-out
-                     hover:scale-[1.02] active:scale-[0.98]
-                     ${
-                       hasActiveFilters
-                         ? "text-white bg-coral-600 shadow-lg shadow-coral-500/20"
-                         : "text-system-secondary-label hover:text-coral-600 hover:bg-coral-500/8"
-                     }`}
+          className="group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 h-full rounded-xl outline-none touch-manipulation"
           onClick={openCategoryFilterModal}
           title="カテゴリフィルター"
         >
-          {/* State layer for press effect */}
           <div
-            className={`absolute inset-0 rounded-2xl 
-                          ${hasActiveFilters ? "bg-white/12" : ""} 
-                          transition-all duration-150`}
-          />
-
-          <div className="relative mb-1 z-10">
-            <MdFilterList size={22} />
+            className={`relative flex items-center justify-center w-9 h-6 rounded-full transition-all duration-200 ${
+              hasActiveFilters
+                ? "bg-coral-500 text-white shadow-coral-500/25 shadow-sm"
+                : "bg-transparent text-gray-400 group-hover:text-coral-600 group-hover:bg-coral-50"
+            }`}
+          >
+            <MdFilterList size={18} />
             {hasActiveFilters && (
-              <div
-                className="absolute -top-1 -right-1 
-                             min-w-[18px] h-[18px] bg-white rounded-full 
-                             flex items-center justify-center shadow-sm border-2 border-coral-600"
-              >
-                <span className="text-coral-600 text-xs font-bold leading-none">
-                  {selectedCategories.length > 9
-                    ? "9+"
-                    : selectedCategories.length}
-                </span>
-              </div>
+              <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-white ring-2 ring-white">
+                <span className="h-1.5 w-1.5 rounded-full bg-coral-500" />
+              </span>
             )}
           </div>
-          <span className="relative text-xs font-medium leading-tight z-10">
+          <span
+            className={`text-[9px] leading-none font-medium tracking-wide transition-colors duration-200 ${
+              hasActiveFilters ? "text-coral-600" : "text-gray-400"
+            }`}
+          >
             フィルター
           </span>
         </button>
