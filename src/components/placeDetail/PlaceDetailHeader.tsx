@@ -39,15 +39,15 @@ export default function PlaceDetailHeader({
           bottomSheet?.collapse();
         }
       }}
-      className="flex justify-between items-center pt-2 pb-1 px-4 flex-shrink-0 
-                 touch-none cursor-grab active:cursor-grabbing focus:outline-none"
+      className="flex justify-between items-center pt-3 pb-2 px-4 flex-shrink-0 
+                  touch-none cursor-grab active:cursor-grabbing focus:outline-none"
     >
       <div className="w-8"></div> {/* スペーサー */}
-      <div className="w-10 h-1 bg-system-secondary-label/40 rounded-full" />
+      <div className="w-12 h-1.5 bg-system-secondary-label/35 rounded-full" />
       <button
         onClick={handleClosePanel}
-        className="w-8 h-8 flex items-center justify-center 
-                   text-system-secondary-label hover:text-coral-500
+        className="w-8 h-8 flex items-center justify-center rounded-full
+                   text-system-secondary-label hover:text-coral-500 hover:bg-black/5
                    transition-colors duration-150"
         title="閉じる"
       >

@@ -260,7 +260,6 @@ export function useBottomSheet(
   const draggingRef = useRef<boolean>(false);
   const percentRef = useRef<number>(initialPercent);
   const viewportHeightRef = useRef<number>(0);
-  const tapTimeoutRef = useRef<number | NodeJS.Timeout | null>(null);
 
   // state.percent が変化したら percentRef を更新
   useEffect(() => {
@@ -341,17 +340,14 @@ export function useBottomSheet(
 
     let newPercent = initialPercentRef.current + deltaPercent;
 
-    // 55%より下への縮小を禁止（55%スナップ時に下方向へドラッグしても固定）
-    const MID_SNAP_PERCENT = 55;
-
-    // ・開始位置が55%以下の場合: ドラッグで55%を超えないよう制限
-    // ・開始位置がちょうど55%の場合: 下方向(正のdeltaPercent)は無視
-    if (
-      initialPercentRef.current <= MID_SNAP_PERCENT &&
-      newPercent > MID_SNAP_PERCENT
-    ) {
-      newPercent = MID_SNAP_PERCENT;
+    // Resistance when dragging beyond top (0%)
+    if (newPercent < 0) {
+      const overdrag = -newPercent;
+      newPercent = -5 * Math.log(1 + overdrag / 5);
     }
+
+    // Remove the artificial restriction that prevents closing from mid-point
+    // Previously blocked dragging down if starting from <= 55%
 
     percentRef.current = newPercent;
 
@@ -550,15 +546,9 @@ export function useBottomSheet(
     ],
   );
 
-  // タップで開閉トグル（300msデバウンス）
+  // タップで開閉トグル
   const handleToggle = useCallback(() => {
-    if (tapTimeoutRef.current) {
-      clearTimeout(tapTimeoutRef.current);
-    }
-
-    tapTimeoutRef.current = setTimeout(() => {
-      dispatch({ type: "TOGGLE", snapPoints });
-    }, 300);
+    dispatch({ type: "TOGGLE", snapPoints });
   }, [snapPoints]);
 
   // ハンドル要素にイベントリスナーをバインドする関数
@@ -618,7 +608,7 @@ export function useBottomSheet(
     const transform = `translateY(${state.percent}%)`;
     const transition = state.isDragging
       ? "none"
-      : "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+      : "transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)";
 
     return { transform, transition };
   }, [state.percent, state.isDragging]);
@@ -626,10 +616,6 @@ export function useBottomSheet(
   // クリーンアップ
   useEffect(() => {
     return () => {
-      if (tapTimeoutRef.current) {
-        clearTimeout(tapTimeoutRef.current);
-      }
-
       if (handleRef.current) {
         if (supportsPointer) {
           handleRef.current.removeEventListener(

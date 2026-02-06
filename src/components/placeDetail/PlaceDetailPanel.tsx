@@ -139,7 +139,7 @@ export default function PlaceDetailPanel() {
       <div
         ref={bottomSheetRootRef}
         className="fixed left-0 right-0 bottom-0 h-screen h-[100dvh] glass-effect shadow-elevation-5 
-                   border-t border-system-separator z-50 flex flex-col touch-pan-y overscroll-y-contain
+                   border-t border-system-separator rounded-t-[32px] z-50 flex flex-col touch-pan-y overscroll-y-contain overflow-hidden
                    transition-transform duration-300 ease-out"
         style={bottomSheet.style}
       >
@@ -153,7 +153,7 @@ export default function PlaceDetailPanel() {
 
         <div
           ref={contentRef}
-          className={`flex-1 ${bottomSheet.state.isExpanded ? "overflow-y-auto overscroll-y-contain touch-pan-y" : "overflow-hidden"} ${contentPaddingClass}`}
+          className={`flex-1 ${bottomSheet.state.isDragging ? "overflow-hidden" : "overflow-y-auto overscroll-y-contain touch-pan-y"} ${contentPaddingClass}`}
         >
           {children}
         </div>

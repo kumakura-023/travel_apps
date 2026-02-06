@@ -64,24 +64,24 @@ export default function MobileBottomSheet({
         style={style}
         className={`absolute bottom-0 left-0 right-0 h-[92vh] 
                    bg-system-grouped-background glass-effect-border 
-                   rounded-t-[20px] shadow-2xl overflow-hidden pointer-events-auto
+                   rounded-t-[32px] shadow-2xl overflow-hidden pointer-events-auto
                    flex flex-col ${className}`}
       >
         {/* Handle Area - This is the drag target */}
         <div
           ref={bindHandleRef}
-          className="relative w-full flex-none pt-3 pb-1 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none bg-white/60 dark:bg-black/25 backdrop-blur-md z-20"
+          className="relative w-full flex-none pt-4 pb-2 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none bg-white/60 dark:bg-black/25 backdrop-blur-md z-20"
         >
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent dark:via-white/20" />
           {/* Handle Bar */}
-          <div className="w-9 h-1 bg-system-separator/80 rounded-full mb-2" />
+          <div className="w-12 h-1.5 bg-system-secondary-label/30 rounded-full mb-2" />
 
           {/* Optional Header Content (embedded in drag area) */}
           {header && <div className="w-full">{header}</div>}
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain bg-transparent relative">
+        <div className="flex-1 overflow-y-auto overscroll-contain bg-transparent relative touch-pan-y">
           {children}
         </div>
       </div>
