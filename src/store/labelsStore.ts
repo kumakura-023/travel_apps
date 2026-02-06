@@ -226,17 +226,44 @@ export const useLabelsStore = create<LabelsState>((set, get) => {
         "[labelsStore] updateLabel is deprecated. Use events instead.",
       );
       set((s) => {
-        let updatedLabel: MapLabel | null = null;
         const updatedLabels = s.labels.map((l) => {
           if (l.id === id) {
-            updatedLabel = { ...l, ...update, updatedAt: new Date() };
-            return updatedLabel;
+            return { ...l, ...update, updatedAt: new Date() };
           }
           return l;
         });
+        const updatedLabel = updatedLabels.find((l) => l.id === id);
 
         if (!localOnly && s.onLabelUpdated && updatedLabel) {
           s.onLabelUpdated(updatedLabel, updatedLabels);
+        }
+
+        if (updatedLabel?.position) {
+          const { plan } = usePlanStore.getState();
+          const { user } = useAuthStore.getState();
+
+          if (plan && user) {
+            try {
+              const planCoordinator = getPlanCoordinator();
+              const planService = planCoordinator.getPlanService();
+
+              planService
+                .updateLastActionPosition(
+                  plan.id,
+                  updatedLabel.position,
+                  user.uid,
+                  "label",
+                )
+                .catch((error) => {
+                  console.error(
+                    "[labelsStore] Failed to update last action position on label edit:",
+                    error,
+                  );
+                });
+            } catch (error) {
+              console.error("[labelsStore] Failed to get PlanService:", error);
+            }
+          }
         }
 
         return { labels: updatedLabels };
