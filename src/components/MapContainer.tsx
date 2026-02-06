@@ -33,7 +33,23 @@ export default function MapContainer({
   const isMapInteractionEnabled = useUIStore((s) => s.isMapInteractionEnabled);
   const { plan } = usePlanStore();
   const lastPositionRef = useRef<{ lat: number; lng: number } | null>(null);
-  const planSwitchedTimeRef = useRef<number | null>(null);
+
+  const focusMapToLastAction = useCallback(
+    (map: google.maps.Map) => {
+      const lastActionPosition = plan?.lastActionPosition?.position;
+      if (!lastActionPosition) {
+        return false;
+      }
+
+      map.setCenter(lastActionPosition);
+      if ((map.getZoom() ?? 0) < 14) {
+        map.setZoom(15);
+      }
+
+      return true;
+    },
+    [plan?.lastActionPosition?.position],
+  );
 
   // プラン内の全ての場所を表示するように地図をフィット
   const fitMapToShowAllPlaces = useCallback(
@@ -86,9 +102,12 @@ export default function MapContainer({
     setMap(map);
     initializePlacesApiService(map);
 
-    // プランの初期表示時は、全体を見渡せるように最適な位置を設定
+    // プランの初期表示時は前回操作位置を優先し、なければ全体表示
     setTimeout(() => {
-      fitMapToShowAllPlaces(map);
+      const focused = focusMapToLastAction(map);
+      if (!focused) {
+        fitMapToShowAllPlaces(map);
+      }
     }, 100);
 
     setZoom(map.getZoom() ?? 14);
@@ -101,37 +120,37 @@ export default function MapContainer({
 
   // プランが変更された時の地図表示調整
   useEffect(() => {
-    if (map && plan) {
-      // プラン切り替え時はlastPositionRefをクリアして全体を表示
-      lastPositionRef.current = null;
-      planSwitchedTimeRef.current = Date.now();
-      console.log(
-        "[MapContainer] Plan changed, clearing lastPosition and fitting map",
-      );
-      fitMapToShowAllPlaces(map);
-    }
-  }, [map, plan?.id, fitMapToShowAllPlaces]); // plan.id が変更された時にトリガー
+    const planId = plan?.id;
+    const lastActionPosition = plan?.lastActionPosition?.position;
 
-  // lastActionPositionの変更は新しい場所やラベルが追加された時のみ反応
-  useEffect(() => {
-    if (map && plan?.lastActionPosition?.position) {
-      const newPosition = plan.lastActionPosition.position;
-      const lastPosition = lastPositionRef.current;
-      const timeSincePlanSwitch = planSwitchedTimeRef.current
-        ? Date.now() - planSwitchedTimeRef.current
-        : Infinity;
-
-      // プラン切り替え直後（3秒以内）はlastActionPositionを無視
-      if (timeSincePlanSwitch < 3000) {
-        console.log(
-          "[MapContainer] Ignoring lastActionPosition - plan recently switched",
-        );
-        lastPositionRef.current = { ...newPosition };
+    if (map && planId) {
+      const focused = focusMapToLastAction(map);
+      if (focused && lastActionPosition) {
+        lastPositionRef.current = { ...lastActionPosition };
         return;
       }
 
+      lastPositionRef.current = null;
+      fitMapToShowAllPlaces(map);
+    }
+  }, [
+    map,
+    plan?.id,
+    plan?.lastActionPosition?.position,
+    fitMapToShowAllPlaces,
+    focusMapToLastAction,
+  ]); // plan.id が変更された時にトリガー
+
+  // lastActionPositionの変更は新しい場所やラベルが追加された時のみ反応
+  useEffect(() => {
+    const lastLat = plan?.lastActionPosition?.position?.lat;
+    const lastLng = plan?.lastActionPosition?.position?.lng;
+
+    if (map && typeof lastLat === "number" && typeof lastLng === "number") {
+      const newPosition = { lat: lastLat, lng: lastLng };
+      const lastPosition = lastPositionRef.current;
+
       // 新しい操作があった場合のみ、その位置に移動
-      // ただし、プラン初期表示時は除く（fitMapToShowAllPlacesで対応済み）
       if (
         lastPosition &&
         (Math.abs(lastPosition.lat - newPosition.lat) > 0.000001 ||

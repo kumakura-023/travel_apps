@@ -154,6 +154,34 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
       const placeEventBus = new PlaceEventBus(eventBus);
       placeEventBus.emitPlaceUpdated(id, updatedPlace, update, previousPlace);
 
+      if (updatedPlace.coordinates) {
+        const { plan } = usePlanStore.getState();
+        const { user } = useAuthStore.getState();
+
+        if (plan && user) {
+          try {
+            const planCoordinator = getPlanCoordinator();
+            const planService = planCoordinator.getPlanService();
+
+            planService
+              .updateLastActionPosition(
+                plan.id,
+                updatedPlace.coordinates,
+                user.uid,
+                "place",
+              )
+              .catch((error) => {
+                console.error(
+                  "[placesStore] Failed to update last action position on place edit:",
+                  error,
+                );
+              });
+          } catch (error) {
+            console.error("[placesStore] Failed to get PlanService:", error);
+          }
+        }
+      }
+
       return { places: newPlaces };
     }),
   deletePlace: (id) => {
