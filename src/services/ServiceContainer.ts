@@ -218,7 +218,14 @@ export function getPlaceRepository(): PlaceRepository {
   return container.get<PlaceRepository>(SERVICE_IDENTIFIERS.PLACE_REPOSITORY);
 }
 
-export function getMapService(): MapService {
+export function getMapService(): MapService | null {
+  if (!container.has(SERVICE_IDENTIFIERS.MAP_SERVICE)) {
+    console.warn(
+      "MapService is not registered yet. Ensure registerMapService() is called after the map instance is created.",
+    );
+    return null;
+  }
+
   return container.get<MapService>(SERVICE_IDENTIFIERS.MAP_SERVICE);
 }
 
