@@ -21,8 +21,12 @@ export function usePlaceDetail() {
   }));
   const savedPlaces = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const { plan } = usePlanStore();
-  const { setSelectedOrigin, setSelectedDestination, openRouteSearch } =
-    useRouteSearchStore();
+  const {
+    setSelectedOrigin,
+    setSelectedDestination,
+    setSelectionMode,
+    openRouteSearch,
+  } = useRouteSearchStore();
   const { map } = useGoogleMaps();
   const { saveWithSyncManager } = useAutoSave(plan);
 
@@ -55,8 +59,9 @@ export function usePlaceDetail() {
       ...pos,
       name: place.name || "選択した地点",
     });
+    setSelectionMode("destination");
     openRouteSearch();
-  }, [getLatLng, place, setSelectedOrigin, openRouteSearch]);
+  }, [getLatLng, place, setSelectedOrigin, setSelectionMode, openRouteSearch]);
 
   const handleRouteToHere = useCallback(() => {
     const pos = getLatLng();
@@ -66,8 +71,15 @@ export function usePlaceDetail() {
       ...pos,
       name: place.name || "選択した地点",
     });
+    setSelectionMode("origin");
     openRouteSearch();
-  }, [getLatLng, place, setSelectedDestination, openRouteSearch]);
+  }, [
+    getLatLng,
+    place,
+    setSelectedDestination,
+    setSelectionMode,
+    openRouteSearch,
+  ]);
 
   const handleSavePlace = useCallback(() => {
     const pos = getLatLng();
