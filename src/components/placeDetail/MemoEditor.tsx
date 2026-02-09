@@ -27,20 +27,20 @@ export default function MemoEditor({
   const [isExpanded, setIsExpanded] = useState(false);
   const [memoValue, setMemoValue] = useState(savedPlace?.memo || "");
   const lastSavedValueRef = useRef<string>(savedPlace?.memo || "");
+  const isFocusedRef = useRef(false);
 
   // メモの値が変更された時の処理（同期なし、ローカル更新のみ）
-  const handleMemoChange = useCallback(
-    (id: string, memo: string) => {
-      // 即座にローカル状態を更新（UI応答性維持）
-      setMemoValue(memo);
-      updatePlace(id, { memo });
-    },
-    [updatePlace],
-  );
+  const handleMemoChange = useCallback((memo: string) => {
+    // 即座にローカル状態を更新（UI応答性維持）
+    setMemoValue(memo);
+  }, []);
 
   // メモ編集が完了した時の処理（フォーカスアウト時）
   const handleMemoBlur = useCallback(
     (id: string, memo: string) => {
+      // 編集完了時にストアへ反映
+      updatePlace(id, { memo });
+
       // 値が実際に変更された場合のみ同期を実行
       if (memo !== lastSavedValueRef.current && onMemoChange) {
         if (import.meta.env.DEV) {
@@ -57,11 +57,12 @@ export default function MemoEditor({
         onMemoChange(id, memo, "memo_updated", false);
       }
     },
-    [onMemoChange],
+    [onMemoChange, updatePlace],
   );
 
   // 編集開始時の処理
   const handleEditStart = useCallback(() => {
+    isFocusedRef.current = true;
     if (import.meta.env.DEV) {
       console.log(
         `📝 メモエディター: 編集開始`,
@@ -72,6 +73,7 @@ export default function MemoEditor({
 
   // savedPlaceが変更された時に最後の保存値を更新
   React.useEffect(() => {
+    if (isFocusedRef.current) return;
     const memo = savedPlace?.memo || "";
     lastSavedValueRef.current = memo;
     setMemoValue(memo);
@@ -120,12 +122,13 @@ export default function MemoEditor({
           value={memoValue}
           onChange={(e) => {
             if (savedPlace) {
-              handleMemoChange(savedPlace.id, e.target.value);
+              handleMemoChange(e.target.value);
             }
           }}
           onFocus={handleEditStart}
           onBlur={(e) => {
             if (savedPlace) {
+              isFocusedRef.current = false;
               handleMemoBlur(savedPlace.id, e.target.value);
             }
           }}
@@ -137,13 +140,14 @@ export default function MemoEditor({
           value={memoValue}
           onChange={(e) => {
             if (savedPlace) {
-              handleMemoChange(savedPlace.id, e.target.value);
+              handleMemoChange(e.target.value);
             }
           }}
           onFocus={handleEditStart}
           onBlur={(e) => {
             setEditing(false);
             if (savedPlace) {
+              isFocusedRef.current = false;
               handleMemoBlur(savedPlace.id, e.target.value);
             }
           }}
