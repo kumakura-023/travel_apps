@@ -24,14 +24,15 @@ export default function MemoEditor({
   onMemoChange,
 }: Props) {
   const [editing, setEditing] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [memoValue, setMemoValue] = useState(savedPlace?.memo || "");
   const lastSavedValueRef = useRef<string>(savedPlace?.memo || "");
 
   // メモの値が変更された時の処理（同期なし、ローカル更新のみ）
   const handleMemoChange = useCallback(
     (id: string, memo: string) => {
       // 即座にローカル状態を更新（UI応答性維持）
+      setMemoValue(memo);
       updatePlace(id, { memo });
     },
     [updatePlace],
@@ -40,8 +41,6 @@ export default function MemoEditor({
   // メモ編集が完了した時の処理（フォーカスアウト時）
   const handleMemoBlur = useCallback(
     (id: string, memo: string) => {
-      setIsEditing(false);
-
       // 値が実際に変更された場合のみ同期を実行
       if (memo !== lastSavedValueRef.current && onMemoChange) {
         if (import.meta.env.DEV) {
@@ -63,7 +62,6 @@ export default function MemoEditor({
 
   // 編集開始時の処理
   const handleEditStart = useCallback(() => {
-    setIsEditing(true);
     if (import.meta.env.DEV) {
       console.log(
         `📝 メモエディター: 編集開始`,
@@ -74,7 +72,9 @@ export default function MemoEditor({
 
   // savedPlaceが変更された時に最後の保存値を更新
   React.useEffect(() => {
-    lastSavedValueRef.current = savedPlace?.memo || "";
+    const memo = savedPlace?.memo || "";
+    lastSavedValueRef.current = memo;
+    setMemoValue(memo);
   }, [savedPlace?.memo]);
 
   if (!saved) return null;
@@ -99,6 +99,7 @@ export default function MemoEditor({
           <button
             onClick={() => {
               if (savedPlace) {
+                setMemoValue("");
                 updatePlace(savedPlace.id, { memo: "" });
                 if (onMemoChange) {
                   onMemoChange(savedPlace.id, "", "memo_updated", false);
@@ -116,7 +117,7 @@ export default function MemoEditor({
       {isMobile ? (
         <textarea
           className={`w-full ${isExpanded ? "h-48" : "h-24"} p-2 border rounded bg-white/50 dark:bg-black/20 border-system-separator/50 focus:ring-2 focus:ring-coral-500 transition-all duration-150`}
-          value={savedPlace?.memo || ""}
+          value={memoValue}
           onChange={(e) => {
             if (savedPlace) {
               handleMemoChange(savedPlace.id, e.target.value);
@@ -133,7 +134,7 @@ export default function MemoEditor({
       ) : editing ? (
         <textarea
           className={`w-full ${isExpanded ? "h-48" : "h-24"} p-2 border rounded bg-white/50 dark:bg-black/20 border-system-separator/50 focus:ring-2 focus:ring-coral-500 transition-all duration-150`}
-          value={savedPlace?.memo || ""}
+          value={memoValue}
           onChange={(e) => {
             if (savedPlace) {
               handleMemoChange(savedPlace.id, e.target.value);
@@ -160,8 +161,8 @@ export default function MemoEditor({
           title="ダブルクリックして編集"
         >
           <p className="body text-system-secondary-label leading-relaxed whitespace-pre-wrap group-hover:text-system-label transition-colors duration-150">
-            {savedPlace?.memo ? (
-              savedPlace.memo
+            {memoValue ? (
+              memoValue
             ) : (
               <span className="text-system-tertiary-label group-hover:text-system-secondary-label">
                 ダブルクリックしてメモを編集
