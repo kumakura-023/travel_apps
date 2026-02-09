@@ -112,6 +112,7 @@ export default function MapEventHandler({}: MapEventHandlerProps) {
             // 最新のルート検索ストアの状態を取得
             const routeState = useRouteSearchStore.getState();
             const currentSelectionMode = routeState.selectionMode;
+            const isSearchingRoute = routeState.isRouteSearchOpen;
 
             if (currentSelectionMode && detail.geometry?.location) {
               // ルート検索の選択モード中
@@ -121,6 +122,10 @@ export default function MapEventHandler({}: MapEventHandlerProps) {
                 name: detail.name || detail.formatted_address || "選択した地点",
               };
               selectPointFromMap(point);
+              return;
+            }
+
+            if (isSearchingRoute) {
               return;
             }
 

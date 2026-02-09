@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   MdAdd,
   MdArrowBack,
+  MdBookmark,
   MdChevronRight,
   MdDirectionsBus,
   MdDirectionsWalk,
@@ -22,6 +23,7 @@ import {
 } from "../store/routeStoreMigration";
 import { directionsService } from "../services/directionsService";
 import { useGoogleMaps } from "../hooks/useGoogleMaps";
+import { useSavedPlacesStore } from "../store/savedPlacesStore";
 
 interface Props {
   isOpen: boolean;
@@ -48,6 +50,9 @@ export default function RouteSearchPanel({
     fare?: string;
     mode: TravelMode;
   } | null>(null);
+  const [savedSelectorTarget, setSavedSelectorTarget] = useState<
+    "origin" | "destination" | null
+  >(null);
 
   const originInputRef = useRef<HTMLInputElement>(null);
   const destinationInputRef = useRef<HTMLInputElement>(null);
@@ -64,6 +69,7 @@ export default function RouteSearchPanel({
     setSelectedDestination: setStoreDestination,
     clearSelections,
   } = useRouteSearchStore();
+  const savedPlaces = useSavedPlacesStore((s) => s.getFilteredPlaces());
   const { map, panTo, zoomIn, zoomOut } = useGoogleMaps();
 
   const travelModes = useMemo(
@@ -134,6 +140,7 @@ export default function RouteSearchPanel({
 
   const handleClose = () => {
     setSelectionMode(null);
+    setSavedSelectorTarget(null);
     clearAllRoutes();
     clearSelections();
     setSearchResult(null);
@@ -156,6 +163,33 @@ export default function RouteSearchPanel({
 
     setStoreOrigin(storeDestination);
     setStoreDestination(storeOrigin);
+  };
+
+  const handleSelectSavedPlace = (
+    place: (typeof savedPlaces)[number],
+    target: "origin" | "destination",
+  ) => {
+    const point = {
+      lat: place.coordinates.lat,
+      lng: place.coordinates.lng,
+      name: place.name,
+    };
+
+    if (target === "origin") {
+      setStoreOrigin(point);
+      originValueRef.current = place.name;
+      if (originInputRef.current) {
+        originInputRef.current.value = place.name;
+      }
+    } else {
+      setStoreDestination(point);
+      destinationValueRef.current = place.name;
+      if (destinationInputRef.current) {
+        destinationInputRef.current.value = place.name;
+      }
+    }
+
+    setSavedSelectorTarget(null);
   };
 
   const setCurrentLocationAsOrigin = () => {
@@ -405,6 +439,66 @@ export default function RouteSearchPanel({
               <MdSwapVert size={14} />
             </button>
           </div>
+
+          <div className="mt-1.5 flex gap-1">
+            <button
+              onClick={() =>
+                setSavedSelectorTarget((prev) =>
+                  prev === "origin" ? null : "origin",
+                )
+              }
+              className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-slate-100 px-1.5 py-1 text-[10px] font-semibold text-slate-700"
+            >
+              <MdBookmark size={12} />
+              <span>出発地を保存済みから</span>
+            </button>
+            <button
+              onClick={() =>
+                setSavedSelectorTarget((prev) =>
+                  prev === "destination" ? null : "destination",
+                )
+              }
+              className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-slate-100 px-1.5 py-1 text-[10px] font-semibold text-slate-700"
+            >
+              <MdBookmark size={12} />
+              <span>目的地を保存済みから</span>
+            </button>
+          </div>
+
+          {savedSelectorTarget && (
+            <div className="mt-1.5 max-h-36 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1">
+              {savedPlaces.length === 0 ? (
+                <div className="px-2 py-2 text-[10px] text-slate-500">
+                  保存済み地点がありません
+                </div>
+              ) : (
+                savedPlaces.map((place) => (
+                  <button
+                    key={place.id}
+                    onClick={() =>
+                      handleSelectSavedPlace(place, savedSelectorTarget)
+                    }
+                    className="mb-1 flex w-full items-start gap-1 rounded-md px-2 py-1 text-left hover:bg-slate-100"
+                  >
+                    <MdLocationOn
+                      size={12}
+                      className="mt-[1px] flex-shrink-0 text-coral-500"
+                    />
+                    <span className="min-w-0 text-[10px] leading-tight text-slate-700">
+                      <span className="block truncate font-semibold">
+                        {place.name}
+                      </span>
+                      {place.address && (
+                        <span className="block truncate text-slate-500">
+                          {place.address}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         <div className="pointer-events-auto absolute right-2 top-1/2 flex -translate-y-1/2 flex-col gap-1.5">
