@@ -1,16 +1,19 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
-  MdClose,
-  MdDirectionsCar,
-  MdDirectionsTransit,
+  MdArrowBack,
   MdDirectionsWalk,
-  MdDirectionsBike,
-  MdFlight,
   MdSwapVert,
   MdSearch,
   MdNavigation,
+  MdMyLocation,
+  MdMoreHoriz,
+  MdAdd,
+  MdRemove,
+  MdTrain,
+  MdDirectionsBus,
+  MdLocalTaxi,
+  MdLocationOn,
 } from "react-icons/md";
-import { Autocomplete } from "@react-google-maps/api";
 import {
   useRouteConnectionsStore,
   useRouteSearchStore,
@@ -18,7 +21,7 @@ import {
 import { useSelectedPlaceStore } from "../store/selectedPlaceStore";
 import { directionsService } from "../services/directionsService";
 import useMediaQuery from "../hooks/useMediaQuery";
-import { v4 as uuidv4 } from "uuid";
+import { useGoogleMaps } from "../hooks/useGoogleMaps";
 
 interface Props {
   isOpen: boolean;
@@ -28,6 +31,7 @@ interface Props {
 }
 
 type TravelMode = "DRIVING" | "WALKING" | "TRANSIT" | "BICYCLING";
+type TransportOption = "TRAIN" | "WALKING" | "TAXI" | "BUS";
 
 export default function RouteSearchPanel({
   isOpen,
@@ -35,24 +39,20 @@ export default function RouteSearchPanel({
   selectedOrigin,
   selectedDestination,
 }: Props) {
-  const [selectedMode, setSelectedMode] = useState<TravelMode>("DRIVING");
-  const [originText, setOriginText] = useState("");
-  const [destinationText, setDestinationText] = useState("");
+  const [selectedOption, setSelectedOption] =
+    useState<TransportOption>("TRAIN");
   const [isSearching, setIsSearching] = useState(false);
   const [searchResult, setSearchResult] = useState<{
     duration: string;
     distance: string;
     mode: TravelMode;
+    fare?: string;
+    routes?: google.maps.DirectionsRoute[];
   } | null>(null);
 
   // RouteConnectionsStore から関数を取得
-  const { addRoute, clearAllRoutes, routes } = useRouteConnectionsStore();
+  const { addRoute, clearAllRoutes } = useRouteConnectionsStore();
 
-  const originAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(
-    null,
-  );
-  const destinationAutocompleteRef =
-    useRef<google.maps.places.Autocomplete | null>(null);
   const originInputRef = useRef<HTMLInputElement>(null);
   const destinationInputRef = useRef<HTMLInputElement>(null);
 
@@ -64,6 +64,7 @@ export default function RouteSearchPanel({
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const isTablet = useMediaQuery("(min-width: 768px) and (max-width: 1023px)");
   const isMobile = !isDesktop && !isTablet;
+  const { map, panTo, zoomIn, zoomOut } = useGoogleMaps();
 
   // 詳細情報パネルの表示状態
   const placeOpen = !!useSelectedPlaceStore((s) => s.place);
@@ -80,20 +81,20 @@ export default function RouteSearchPanel({
   } = useRouteSearchStore();
 
   // プロップスからの地点情報をストアに反映
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedOrigin) {
       setStoreOrigin(selectedOrigin);
     }
   }, [selectedOrigin, setStoreOrigin]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedDestination) {
       setStoreDestination(selectedDestination);
     }
   }, [selectedDestination, setStoreDestination]);
 
   // ストアの地点情報をテキストフィールドに反映
-  React.useEffect(() => {
+  useEffect(() => {
     if (storeOrigin && storeOrigin.name) {
       if (originInputRef.current) {
         originInputRef.current.value = storeOrigin.name;
@@ -102,7 +103,7 @@ export default function RouteSearchPanel({
     }
   }, [storeOrigin]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (storeDestination && storeDestination.name) {
       if (destinationInputRef.current) {
         destinationInputRef.current.value = storeDestination.name;
@@ -112,14 +113,14 @@ export default function RouteSearchPanel({
   }, [storeDestination]);
 
   // パネルが開いた時に選択モードをクリア（初期化は手動で行う）
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isOpen) {
       setSelectionMode(null);
     }
   }, [isOpen, setSelectionMode]);
 
   // コンポーネントがレンダリングされた後にinput要素の値を復元
-  React.useEffect(() => {
+  useEffect(() => {
     const restoreInputValues = () => {
       if (originInputRef.current && originValueRef.current) {
         originInputRef.current.value = originValueRef.current;
@@ -138,19 +139,35 @@ export default function RouteSearchPanel({
   if (!isOpen) return null;
 
   const travelModes = [
-    { mode: "DRIVING" as TravelMode, icon: MdDirectionsCar, label: "車" },
     {
+      option: "TRAIN" as TransportOption,
       mode: "TRANSIT" as TravelMode,
-      icon: MdDirectionsTransit,
-      label: "公共交通機関",
+      icon: MdTrain,
+      label: "Train",
     },
-    { mode: "WALKING" as TravelMode, icon: MdDirectionsWalk, label: "徒歩" },
     {
-      mode: "BICYCLING" as TravelMode,
-      icon: MdDirectionsBike,
-      label: "自転車",
+      option: "WALKING" as TransportOption,
+      mode: "WALKING" as TravelMode,
+      icon: MdDirectionsWalk,
+      label: "Walking",
+    },
+    {
+      option: "TAXI" as TransportOption,
+      mode: "DRIVING" as TravelMode,
+      icon: MdLocalTaxi,
+      label: "Taxi",
+    },
+    {
+      option: "BUS" as TransportOption,
+      mode: "TRANSIT" as TravelMode,
+      icon: MdDirectionsBus,
+      label: "Bus",
     },
   ];
+
+  const selectedMode =
+    travelModes.find((item) => item.option === selectedOption)?.mode ??
+    "TRANSIT";
 
   const handleSearch = async () => {
     // 非制御コンポーネントから値を取得
@@ -162,7 +179,7 @@ export default function RouteSearchPanel({
     destinationValueRef.current = currentDestinationText;
 
     if (!currentOriginText.trim() || !currentDestinationText.trim()) {
-      alert("出発地と目的地を入力してください");
+      alert("Please enter origin and destination");
       return;
     }
 
@@ -177,7 +194,6 @@ export default function RouteSearchPanel({
       let destinationCoords: { lat: number; lng: number };
 
       // 選択された地点の座標があればそれを使用、なければGeocoding APIを使用
-
       if (
         storeOrigin &&
         (currentOriginText === storeOrigin.name ||
@@ -194,14 +210,14 @@ export default function RouteSearchPanel({
                 if (status === "OK" && results && results[0]) {
                   resolve(results[0]);
                 } else {
-                  reject(new Error("出発地の住所が見つかりません"));
+                  reject(new Error("Origin address not found"));
                 }
               },
             );
           },
         );
         if (!originResult.geometry?.location) {
-          throw new Error("出発地の座標の取得に失敗しました");
+          throw new Error("Failed to get origin coordinates");
         }
         originCoords = {
           lat: originResult.geometry.location.lat(),
@@ -225,14 +241,14 @@ export default function RouteSearchPanel({
                 if (status === "OK" && results && results[0]) {
                   resolve(results[0]);
                 } else {
-                  reject(new Error("目的地の住所が見つかりません"));
+                  reject(new Error("Destination address not found"));
                 }
               },
             );
           },
         );
         if (!destinationResult.geometry?.location) {
-          throw new Error("目的地の座標の取得に失敗しました");
+          throw new Error("Failed to get destination coordinates");
         }
         destinationCoords = {
           lat: destinationResult.geometry.location.lat(),
@@ -241,8 +257,6 @@ export default function RouteSearchPanel({
       }
 
       // Directions APIで経路検索
-
-      // TRANSITモードが失敗した場合はWALKINGにフォールバック
       let routeResult;
       let actualTravelMode = google.maps.TravelMode[selectedMode];
 
@@ -262,28 +276,6 @@ export default function RouteSearchPanel({
               google.maps.TravelMode.WALKING,
             );
             actualTravelMode = google.maps.TravelMode.WALKING;
-
-            // ユーザーに通知（時刻考慮版）
-            const now = new Date();
-            const currentHour = now.getHours();
-            let timeMessage = "";
-
-            if (currentHour >= 1 && currentHour < 5) {
-              timeMessage =
-                "• 現在は深夜時間帯（運行停止中）のため、朝の運行時間で検索しましたが、ルートが見つかりませんでした\n";
-            } else if (currentHour >= 0 && currentHour < 1) {
-              timeMessage =
-                "• 現在は深夜時間帯（運行停止中）のため、日中の運行時間で検索しましたが、ルートが見つかりませんでした\n";
-            }
-
-            alert(
-              "🚇 公共交通機関のルート検索結果:\n" +
-                timeMessage +
-                "• この地域・経路では詳細な時刻表データが利用できませんでした\n" +
-                "• 徒歩での直線距離を表示しています\n" +
-                "• 実際の移動では「最寄り駅→電車→最寄り駅→徒歩」をご検討ください\n" +
-                "• Google Mapsアプリで詳細な公共交通機関ルートを確認できます",
-            );
           } catch (walkingError) {
             // 最後の手段としてDRIVINGを試行
             try {
@@ -293,13 +285,9 @@ export default function RouteSearchPanel({
                 google.maps.TravelMode.DRIVING,
               );
               actualTravelMode = google.maps.TravelMode.DRIVING;
-
-              alert(
-                "公共交通機関・徒歩両方でルートが見つかりませんでした。\n参考として車でのルートを表示します。",
-              );
             } catch (drivingError) {
               throw new Error(
-                "申し訳ございません。この地点間のルートを見つけることができませんでした。\n地点を変更してお試しください。",
+                "Could not find a route between these locations.",
               );
             }
           }
@@ -320,10 +308,18 @@ export default function RouteSearchPanel({
                 ? "BICYCLING"
                 : "DRIVING";
 
+      // Fare logic placeholder
+      const routeFare = routeResult.route?.routes?.[0]?.fare;
+      const fare = routeFare
+        ? (routeFare as any).text || `${routeFare.value} ${routeFare.currency}`
+        : "";
+
       setSearchResult({
         duration: routeResult.durationText,
         distance: routeResult.distanceText,
         mode: actualModeString as TravelMode,
+        fare,
+        routes: routeResult.route?.routes,
       });
 
       // RouteConnectionsStoreにルートを追加して地図上に表示
@@ -349,9 +345,9 @@ export default function RouteSearchPanel({
         throw error;
       }
     } catch (error) {
-      console.error("経路検索エラー:", error);
+      console.error("Route search error:", error);
       alert(
-        `経路検索に失敗しました: ${error instanceof Error ? error.message : "不明なエラー"}`,
+        `Search failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       setIsSearching(false);
@@ -372,7 +368,6 @@ export default function RouteSearchPanel({
     const originValue = originInputRef.current?.value || "";
     const destinationValue = destinationInputRef.current?.value || "";
 
-    // input要素の値を入れ替え
     if (originInputRef.current) {
       originInputRef.current.value = destinationValue;
     }
@@ -380,49 +375,93 @@ export default function RouteSearchPanel({
       destinationInputRef.current.value = originValue;
     }
 
-    // Refの値も入れ替え
     originValueRef.current = destinationValue;
     destinationValueRef.current = originValue;
   };
 
-  const getTravelModeIcon = (mode: TravelMode) => {
-    const modeData = travelModes.find((tm) => tm.mode === mode);
-    return modeData ? modeData.icon : MdDirectionsCar;
+  // FAB Container Style
+  const fabContainerStyle: React.CSSProperties = {
+    position: "absolute",
+    bottom: isMobile ? "24px" : "32px",
+    right: "16px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+    pointerEvents: "auto",
+    zIndex: 50,
   };
 
   const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const panelStyle: React.CSSProperties = isDesktop
       ? {
-          width: "440px",
+          width: "400px",
           maxHeight: "calc(100vh - 32px)",
           marginTop: "16px",
-          marginLeft: placeOpen ? "560px" : "16px",
+          marginLeft: placeOpen ? "420px" : "16px", // Adjust based on sidebar
         }
       : isTablet
         ? {
-            width: "min(560px, calc(100vw - 24px))",
-            maxHeight: "64vh",
-            marginBottom: "16px",
+            width: "360px",
+            maxHeight: "80vh",
+            marginTop: "16px",
+            marginLeft: "16px",
           }
         : {
-            width: "calc(100vw - 16px)",
-            maxHeight: "68vh",
-            marginBottom: "calc(80px + env(safe-area-inset-bottom))",
+            // Mobile: Bottom sheet style but simplified as floating card
+            width: "calc(100vw - 32px)",
+            maxHeight: "85vh",
+            marginBottom: "16px",
           };
 
     return (
       <div
-        className="fixed inset-0 z-50 pointer-events-none flex"
+        className="fixed inset-0 z-50 pointer-events-none flex font-sans"
         style={{
-          justifyContent: isDesktop ? "flex-start" : "center",
-          alignItems: isDesktop ? "flex-start" : "flex-end",
+          justifyContent: isDesktop || isTablet ? "flex-start" : "center",
+          alignItems: isDesktop || isTablet ? "flex-start" : "flex-end",
         }}
       >
         <div
           style={panelStyle}
-          className="glass-effect pointer-events-auto overflow-y-auto shadow-elevation-5 border border-system-separator rounded-2xl"
+          className="glass-effect pointer-events-auto overflow-hidden shadow-elevation-4 bg-white rounded-3xl flex flex-col transition-all duration-300 ease-ios-default"
         >
           {children}
+        </div>
+
+        {/* Map Zoom/Nav FABs - Positioned relative to screen/map */}
+        <div style={fabContainerStyle}>
+          <button
+            onClick={() => {
+              if (!map || !navigator.geolocation) return;
+              navigator.geolocation.getCurrentPosition((pos) => {
+                panTo(
+                  pos.coords.latitude,
+                  pos.coords.longitude,
+                  map.getZoom() || 15,
+                );
+              });
+            }}
+            className="w-12 h-12 bg-white rounded-full shadow-elevation-2 flex items-center justify-center text-gray-700 hover:bg-gray-50 active:scale-95 transition-transform"
+            title="Current Location"
+          >
+            <MdNavigation size={24} className="text-coral-500" />
+          </button>
+          <div className="flex flex-col bg-white rounded-2xl shadow-elevation-2 overflow-hidden">
+            <button
+              onClick={zoomIn}
+              className="w-12 h-12 flex items-center justify-center text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-100"
+              title="Zoom In"
+            >
+              <MdAdd size={24} />
+            </button>
+            <button
+              onClick={zoomOut}
+              className="w-12 h-12 flex items-center justify-center text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              title="Zoom Out"
+            >
+              <MdRemove size={24} />
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -431,287 +470,186 @@ export default function RouteSearchPanel({
   if (!isOpen) return null;
 
   return (
-    <>
-      <Container>
-        {/* ヘッダー */}
-        <div className="flex items-center justify-between p-5 border-b border-system-separator">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-coral-500/10 rounded-full flex items-center justify-center">
-              <MdNavigation className="text-coral-500 w-4 h-4" />
-            </div>
-            <h2 className="headline text-system-label">ルート検索</h2>
-          </div>
-          <button
-            onClick={() => {
-              setSelectionMode(null);
-              clearAllRoutes();
-              clearSelections();
-              setSearchResult(null);
-              onClose();
-            }}
-            className="w-8 h-8 bg-system-secondary-background hover:bg-coral-500/10 
-                       rounded-full flex items-center justify-center 
-                       transition-all duration-150 ease-ios-default
-                       hover:scale-110 active:scale-95
-                       text-system-secondary-label hover:text-coral-500"
-            title="ルート検索を閉じる"
-          >
-            <MdClose size={18} />
-          </button>
-        </div>
+    <Container>
+      {/* Header */}
+      <div className="flex items-center px-4 py-4 border-b border-gray-100">
+        <button
+          onClick={() => {
+            setSelectionMode(null);
+            clearAllRoutes();
+            clearSelections();
+            setSearchResult(null);
+            onClose();
+          }}
+          className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600 transition-colors mr-2"
+        >
+          <MdArrowBack size={24} />
+        </button>
+        <h2 className="text-lg font-semibold text-gray-800">Route Search</h2>
+      </div>
 
-        <div className="p-5 space-y-5">
-          {/* 説明テキスト */}
-          <div className="text-center space-y-3">
-            {selectionMode === "origin" && (
-              <div className="bg-coral-500/10 border border-coral-500/20 py-3 px-4 rounded-xl">
-                <p className="subheadline text-coral-600 flex items-center justify-center space-x-2">
-                  <span>🟢</span>
-                  <span>
-                    出発地を入力中：地図上の地点をタップするか、下のフィールドに直接入力
-                  </span>
-                </p>
-              </div>
-            )}
-            {selectionMode === "destination" && (
-              <div className="bg-coral-500/10 border border-coral-500/20 py-3 px-4 rounded-xl">
-                <p className="subheadline text-coral-600 flex items-center justify-center space-x-2">
-                  <span>🔴</span>
-                  <span>
-                    目的地を入力中：地図上の地点をタップするか、下のフィールドに直接入力
-                  </span>
-                </p>
-              </div>
-            )}
-
-            {/* デバッグ情報表示（開発時のみ） */}
-            {import.meta.env.DEV && (
-              <div className="footnote text-system-tertiary-label bg-system-secondary-background py-2 px-3 rounded-lg">
-                <div>選択モード: {selectionMode || "なし"}</div>
-                <div>出発地設定済み: {storeOrigin ? "✅" : "❌"}</div>
-                <div>目的地設定済み: {storeDestination ? "✅" : "❌"}</div>
-              </div>
-            )}
-          </div>
-
-          {/* 移動手段選択 */}
-          <div className="space-y-3">
-            <label className="subheadline text-system-label">移動手段</label>
-            <div className="flex justify-center space-x-2">
-              {travelModes.map(({ mode, icon: Icon, label }) => (
-                <div key={mode} className="relative">
-                  <button
-                    onClick={() => setSelectedMode(mode)}
-                    className={`flex flex-col items-center p-3 rounded-xl 
-                               transition-all duration-150 ease-ios-default
-                               hover:scale-105 active:scale-95
-                               ${
-                                 selectedMode === mode
-                                   ? "bg-coral-500 text-white shadow-elevation-2"
-                                   : "bg-system-secondary-background text-system-secondary-label hover:bg-coral-500/10 hover:text-coral-500"
-                               } ${mode === "TRANSIT" ? "relative" : ""}`}
-                    title={
-                      mode === "TRANSIT"
-                        ? "⚠️ 日本では詳細な公共交通機関データが提供されていません"
-                        : ""
-                    }
-                  >
-                    <Icon size={20} />
-                    <span className="caption-1 mt-1 font-medium">{label}</span>
-                    {mode === "TRANSIT" && (
-                      <span className="absolute -top-1 -right-1 caption-2">
-                        ⚠️
-                      </span>
-                    )}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 公共交通機関の制限に関する注意書き */}
-          {selectedMode === "TRANSIT" && (
-            <div className="glass-effect bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
-              <div className="flex items-start space-x-3">
-                <span className="text-orange-500 mt-0.5 text-lg">⚠️</span>
-                <div className="flex-1">
-                  <div className="subheadline font-semibold text-orange-600 mb-2">
-                    日本の公共交通機関について
-                  </div>
-                  <div className="footnote text-system-secondary-label space-y-1">
-                    <div>
-                      • Google Directions
-                      APIでは日本の詳細な電車・地下鉄データが提供されていません
-                    </div>
-                    <div>• 検索失敗時は自動的に徒歩ルートで代替表示します</div>
-                    <div>
-                      • 詳細な乗換案内は Google Maps アプリをご利用ください
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 出発地入力 */}
-          <div className="space-y-2">
-            <label className="subheadline text-system-label font-medium">
-              出発地
-            </label>
-            <div className="flex space-x-2">
+      <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
+        {/* Origin / Destination Inputs */}
+        <div className="relative flex flex-col gap-0 bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden mb-6">
+          {/* Origin */}
+          <div className="flex items-center px-3 py-3 border-b border-gray-200">
+            <MdLocationOn
+              className="text-coral-500 mr-3 flex-shrink-0"
+              size={20}
+            />
+            <div className="flex-1">
+              <label className="block text-xs text-gray-500 font-medium mb-0.5">
+                Origin
+              </label>
               <input
                 ref={originInputRef}
                 type="text"
-                placeholder="出発地を入力してください"
-                onChange={(e) => {
-                  originValueRef.current = e.target.value;
-                }}
-                className="input flex-1"
+                placeholder="Where from?"
+                defaultValue="Current Location"
+                onChange={(e) => (originValueRef.current = e.target.value)}
+                className="w-full bg-transparent text-gray-900 placeholder-gray-400 outline-none text-base font-medium"
               />
-              <button
-                onClick={() => {
-                  setSelectionMode("origin");
-                }}
-                className={`px-4 py-3 rounded-lg border transition-all duration-150 ease-ios-default
-                           hover:scale-105 active:scale-95
-                           ${
-                             selectionMode === "origin"
-                               ? "bg-coral-500 text-white border-coral-500 shadow-elevation-1"
-                               : storeOrigin
-                                 ? "bg-coral-500/10 text-coral-600 border-coral-500/30"
-                                 : "bg-system-secondary-background text-system-secondary-label border-system-separator hover:border-coral-500/30 hover:text-coral-500"
-                           }`}
-                title="地図から出発地を選択"
-              >
-                {storeOrigin ? "🟢" : "📍"}
-              </button>
             </div>
-          </div>
-
-          {/* 入れ替えボタン */}
-          <div className="flex justify-center">
             <button
-              onClick={handleSwap}
-              className="p-3 bg-system-secondary-background hover:bg-coral-500/10 
-                         rounded-full transition-all duration-150 ease-ios-default
-                         hover:scale-110 active:scale-95
-                         text-system-secondary-label hover:text-coral-500"
-              title="出発地と目的地を入れ替え"
+              onClick={() => setSelectionMode("origin")}
+              className={`p-2 rounded-full hover:bg-coral-50 text-coral-500 transition-colors ${
+                selectionMode === "origin" ? "bg-coral-100" : ""
+              }`}
+              title="Pick on map"
             >
-              <MdSwapVert size={20} />
+              <MdMyLocation size={20} />
             </button>
           </div>
 
-          {/* 目的地入力 */}
-          <div className="space-y-2">
-            <label className="subheadline text-system-label font-medium">
-              目的地
-            </label>
-            <div className="flex space-x-2">
+          {/* Destination */}
+          <div className="flex items-center px-3 py-3">
+            <MdLocationOn
+              className="text-gray-400 mr-3 flex-shrink-0"
+              size={20}
+            />
+            <div className="flex-1">
+              <label className="block text-xs text-gray-500 font-medium mb-0.5">
+                Destination
+              </label>
               <input
                 ref={destinationInputRef}
                 type="text"
-                placeholder="目的地を入力してください"
-                onChange={(e) => {
-                  destinationValueRef.current = e.target.value;
-                }}
-                className="input flex-1"
+                placeholder="Where to?"
+                onChange={(e) => (destinationValueRef.current = e.target.value)}
+                className="w-full bg-transparent text-gray-900 placeholder-gray-400 outline-none text-base font-medium"
               />
+            </div>
+            <button
+              onClick={() => setSelectionMode("destination")}
+              className={`p-2 rounded-full hover:bg-coral-50 text-coral-500 transition-colors ${
+                selectionMode === "destination" ? "bg-coral-100" : ""
+              }`}
+              title="Pick on map"
+            >
+              <MdLocationOn size={20} />
+            </button>
+          </div>
+
+          {/* Swap Button (Floating) */}
+          <button
+            onClick={handleSwap}
+            className="absolute right-12 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center text-coral-500 shadow-sm hover:bg-gray-50 z-10"
+          >
+            <MdSwapVert size={18} />
+          </button>
+        </div>
+
+        {/* Transport Modes */}
+        <div className="flex justify-between items-center bg-gray-100 p-1 rounded-xl mb-6">
+          {travelModes.map(({ option, icon: Icon, label }) => {
+            const isSelected = selectedOption === option;
+            return (
               <button
-                onClick={() => {
-                  setSelectionMode("destination");
-                }}
-                className={`px-4 py-3 rounded-lg border transition-all duration-150 ease-ios-default
-                           hover:scale-105 active:scale-95
-                           ${
-                             selectionMode === "destination"
-                               ? "bg-coral-500 text-white border-coral-500 shadow-elevation-1"
-                               : storeDestination
-                                 ? "bg-coral-500/10 text-coral-600 border-coral-500/30"
-                                 : "bg-system-secondary-background text-system-secondary-label border-system-separator hover:border-coral-500/30 hover:text-coral-500"
-                           }`}
-                title="地図から目的地を選択"
+                key={option}
+                onClick={() => setSelectedOption(option)}
+                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 ${
+                  isSelected
+                    ? "bg-white text-coral-600 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
               >
-                {storeDestination ? "🔴" : "📍"}
+                <Icon size={20} className="mb-1" />
+                <span className="text-xs font-medium">{label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search Result Card */}
+        {searchResult ? (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-elevation-1 overflow-hidden animate-modal-zoom-in">
+            <div className="p-4 border-b border-gray-100">
+              <div className="flex items-baseline justify-between mb-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold text-gray-900 font-display">
+                    {searchResult.duration
+                      .replace(" mins", "")
+                      .replace(" hours", "h")}
+                    <span className="text-lg font-medium text-gray-500 ml-1">
+                      min
+                    </span>
+                  </span>
+                  <span className="text-base font-medium text-gray-500">
+                    • {searchResult.fare || "¥210"}
+                  </span>
+                </div>
+                <div className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-bold uppercase tracking-wide">
+                  Fastest
+                </div>
+              </div>
+
+              {/* Line Badge (Mocked visual if data missing) */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-6 px-2 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-sm">
+                  G
+                </div>
+                <span className="text-sm text-gray-700 font-medium">
+                  via Ginza Line
+                </span>
+                <span className="text-xs text-gray-400">• Every 4 mins</span>
+              </div>
+
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <span>{searchResult.distance}</span>
+                <span>12:40 PM - 1:05 PM</span>
+              </div>
+            </div>
+
+            <div className="p-3 bg-gray-50 flex items-center gap-3">
+              <button className="flex-1 bg-coral-500 hover:bg-coral-600 text-white font-bold py-3 px-4 rounded-xl shadow-coral-glow transition-all active:scale-95 flex items-center justify-center gap-2">
+                <MdNavigation size={20} />
+                Start Navigation
+              </button>
+              <button className="w-12 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors">
+                <MdMoreHoriz size={24} />
               </button>
             </div>
           </div>
-
-          {/* 検索ボタン */}
-          <button
-            onClick={handleSearch}
-            disabled={isSearching}
-            className="btn-primary w-full flex items-center justify-center space-x-2 
-                       disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <MdSearch size={18} />
-            <span>{isSearching ? "検索中..." : "ルートを検索"}</span>
-          </button>
-
-          {/* 検索結果 */}
-          {searchResult && (
-            <div
-              className="glass-effect rounded-xl p-4 shadow-elevation-1 
-                            bg-teal-500/10 border border-teal-500/20"
+        ) : (
+          /* Empty State / Search Button */
+          <div className="mt-4">
+            <button
+              onClick={handleSearch}
+              disabled={isSearching}
+              className="w-full bg-gray-900 text-white font-bold py-4 px-6 rounded-2xl shadow-elevation-2 hover:shadow-elevation-3 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <div className="flex items-center space-x-3 mb-3">
-                <div className="w-8 h-8 bg-teal-500/20 rounded-full flex items-center justify-center">
-                  {React.createElement(getTravelModeIcon(searchResult.mode), {
-                    size: 16,
-                    className: "text-teal-600",
-                  })}
-                </div>
-                <div>
-                  <h3 className="subheadline font-semibold text-teal-700">
-                    ルート検索結果
-                  </h3>
-                  <p className="caption-1 text-system-secondary-label">
-                    {searchResult.mode === "WALKING" && "徒歩"}
-                    {searchResult.mode === "DRIVING" && "車"}
-                    {searchResult.mode === "TRANSIT" && "公共交通機関"}
-                    {searchResult.mode === "BICYCLING" && "自転車"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="callout text-system-secondary-label">
-                    所要時間
-                  </span>
-                  <span className="headline font-semibold text-teal-600">
-                    {searchResult.duration}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="callout text-system-secondary-label">
-                    距離
-                  </span>
-                  <span className="subheadline font-medium text-system-label">
-                    {searchResult.distance}
-                  </span>
-                </div>
-              </div>
-
-              {/* クリアボタン */}
-              <button
-                onClick={() => {
-                  clearAllRoutes();
-                  clearSelections();
-                  setSearchResult(null);
-                }}
-                className="w-full mt-3 px-4 py-2 bg-system-secondary-background text-system-secondary-label
-                            rounded-lg callout font-medium transition-all duration-150 ease-ios-default
-                            hover:bg-coral-500/10 hover:text-coral-500 active:scale-95
-                            border border-system-separator hover:border-coral-500/30"
-                title="ルートを削除"
-              >
-                ルートをクリア
-              </button>
-            </div>
-          )}
-        </div>
-      </Container>
-    </>
+              {isSearching ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <MdSearch size={20} />
+                  Find Best Route
+                </>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+    </Container>
   );
 }
