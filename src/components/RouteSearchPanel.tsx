@@ -328,29 +328,29 @@ export default function RouteSearchPanel({
   return (
     <>
       <div className="fixed inset-0 z-50 pointer-events-none">
-        <div className="pointer-events-auto absolute top-4 left-4 right-4 mx-auto max-w-[430px] rounded-2xl border border-white/40 bg-white/85 p-3 shadow-[0_8px_30px_rgb(0,0,0,0.16)] backdrop-blur-md">
-          <div className="mb-2 flex items-center justify-between">
+        <div className="pointer-events-auto absolute top-2 left-2 right-2 mx-auto max-w-[260px] rounded-2xl border border-white/40 bg-white/85 p-2 shadow-[0_8px_30px_rgb(0,0,0,0.16)] backdrop-blur-md">
+          <div className="mb-1.5 flex items-center justify-between">
             <button
               onClick={handleClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 hover:bg-slate-100"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-slate-700 hover:bg-slate-100"
               title="戻る"
             >
-              <MdArrowBack size={22} />
+              <MdArrowBack size={16} />
             </button>
             <button
               onClick={setCurrentLocationAsOrigin}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-sky-600 hover:bg-sky-50"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-sky-600 hover:bg-sky-50"
               title="現在地を出発地に設定"
             >
-              <MdMyLocation size={20} />
+              <MdMyLocation size={16} />
             </button>
           </div>
 
-          <div className="relative rounded-xl bg-white px-3 py-2">
-            <div className="absolute left-[19px] top-[39px] h-7 border-l-2 border-dotted border-slate-300" />
+          <div className="relative rounded-xl bg-white px-2 py-1.5">
+            <div className="absolute left-[15px] top-[26px] h-5 border-l-2 border-dotted border-slate-300" />
 
-            <div className="flex items-center gap-2 py-1">
-              <MdMyLocation size={18} className="text-sky-600" />
+            <div className="flex items-center gap-1.5 py-0.5">
+              <MdMyLocation size={14} className="text-sky-600" />
               <input
                 ref={originInputRef}
                 type="text"
@@ -358,23 +358,23 @@ export default function RouteSearchPanel({
                 onChange={(e) => {
                   originValueRef.current = e.target.value;
                 }}
-                className="w-full bg-transparent text-[15px] font-medium text-slate-900 outline-none"
+                className="w-full bg-transparent text-xs font-medium text-slate-900 outline-none"
               />
               <button
                 onClick={() => setSelectionMode("origin")}
-                className={`rounded-full p-1.5 ${
+                className={`rounded-full p-1 ${
                   selectionMode === "origin"
                     ? "bg-coral-500/15 text-coral-500"
                     : "text-slate-400"
                 }`}
                 title="地図から出発地を選択"
               >
-                <MdLocationOn size={18} />
+                <MdLocationOn size={14} />
               </button>
             </div>
 
-            <div className="flex items-center gap-2 py-1">
-              <MdLocationOn size={18} className="text-coral-500" />
+            <div className="flex items-center gap-1.5 py-0.5">
+              <MdLocationOn size={14} className="text-coral-500" />
               <input
                 ref={destinationInputRef}
                 type="text"
@@ -382,45 +382,45 @@ export default function RouteSearchPanel({
                 onChange={(e) => {
                   destinationValueRef.current = e.target.value;
                 }}
-                className="w-full bg-transparent text-[15px] font-medium text-slate-900 outline-none"
+                className="w-full bg-transparent text-xs font-medium text-slate-900 outline-none"
               />
               <button
                 onClick={() => setSelectionMode("destination")}
-                className={`rounded-full p-1.5 ${
+                className={`rounded-full p-1 ${
                   selectionMode === "destination"
                     ? "bg-coral-500/15 text-coral-500"
                     : "text-slate-400"
                 }`}
                 title="地図から目的地を選択"
               >
-                <MdLocationOn size={18} />
+                <MdLocationOn size={14} />
               </button>
             </div>
 
             <button
               onClick={handleSwap}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border border-slate-200 bg-white p-1.5 text-slate-600 shadow-sm"
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full border border-slate-200 bg-white p-1 text-slate-600 shadow-sm"
               title="入れ替え"
             >
-              <MdSwapVert size={18} />
+              <MdSwapVert size={14} />
             </button>
           </div>
         </div>
 
-        <div className="pointer-events-auto absolute right-4 top-1/2 flex -translate-y-1/2 flex-col gap-2">
+        <div className="pointer-events-auto absolute right-2 top-1/2 flex -translate-y-1/2 flex-col gap-1.5">
           <button
             onClick={zoomIn}
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/40 bg-white/90 text-slate-700 shadow-md backdrop-blur"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/40 bg-white/90 text-slate-700 shadow-md backdrop-blur"
             title="拡大"
           >
-            <MdAdd size={22} />
+            <MdAdd size={16} />
           </button>
           <button
             onClick={zoomOut}
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/40 bg-white/90 text-slate-700 shadow-md backdrop-blur"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/40 bg-white/90 text-slate-700 shadow-md backdrop-blur"
             title="縮小"
           >
-            <MdRemove size={22} />
+            <MdRemove size={16} />
           </button>
           <button
             onClick={() => {
@@ -433,28 +433,28 @@ export default function RouteSearchPanel({
                 );
               });
             }}
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/40 bg-white/90 text-coral-500 shadow-md backdrop-blur"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/40 bg-white/90 text-coral-500 shadow-md backdrop-blur"
             title="現在地に移動"
           >
-            <MdNavigation size={20} />
+            <MdNavigation size={16} />
           </button>
         </div>
 
-        <div className="pointer-events-auto absolute bottom-4 left-4 right-4 mx-auto max-w-[430px] rounded-2xl border border-white/40 bg-white/92 p-3 shadow-[0_12px_32px_rgb(0,0,0,0.18)] backdrop-blur-md">
-          <div className="mb-3 flex items-center justify-between gap-2 overflow-x-auto pb-1">
+        <div className="pointer-events-auto absolute bottom-2 left-2 right-2 mx-auto max-w-[260px] rounded-2xl border border-white/40 bg-white/92 p-2 shadow-[0_12px_32px_rgb(0,0,0,0.18)] backdrop-blur-md">
+          <div className="mb-2 flex items-center justify-between gap-1.5 overflow-x-auto pb-1">
             {travelModes.map(({ option, icon: Icon, label }) => {
               const active = selectedOption === option;
               return (
                 <button
                   key={option}
                   onClick={() => setSelectedOption(option)}
-                  className={`flex min-w-[78px] items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-semibold ${
+                  className={`flex min-w-[50px] items-center justify-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold ${
                     active
                       ? "bg-coral-500 text-white"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  <Icon size={16} />
+                  <Icon size={14} />
                   <span>{label}</span>
                 </button>
               );
@@ -463,39 +463,39 @@ export default function RouteSearchPanel({
 
           {searchResult ? (
             <>
-              <div className="mb-2 flex items-end gap-2">
-                <div className="text-3xl font-bold leading-none text-slate-900">
+              <div className="mb-1.5 flex items-end gap-1.5">
+                <div className="text-lg font-bold leading-none text-slate-900">
                   {searchResult.duration}
                 </div>
-                <div className="pb-0.5 text-base font-medium text-slate-500">
+                <div className="pb-0.5 text-xs font-medium text-slate-500">
                   • {searchResult.fare || "¥210"}
                 </div>
               </div>
 
-              <div className="mb-2 flex items-center gap-2">
-                <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs font-bold text-white">
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <span className="rounded-full bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                   G
                 </span>
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-xs font-medium text-slate-700">
                   via Ginza Line
                 </span>
-                <MdChevronRight size={16} className="text-slate-400" />
+                <MdChevronRight size={12} className="text-slate-400" />
               </div>
 
-              <div className="mb-3 flex items-center gap-2">
-                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+              <div className="mb-2 flex items-center gap-1.5">
+                <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
                   Fastest
                 </span>
-                <span className="text-xs text-slate-500">Every 4 mins</span>
+                <span className="text-[10px] text-slate-500">Every 4 mins</span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-coral-500 text-sm font-semibold text-white shadow-md shadow-coral-500/30 hover:bg-coral-600">
-                  <MdNearMe size={18} />
+              <div className="flex items-center gap-1.5">
+                <button className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-coral-500 text-xs font-semibold text-white shadow-md shadow-coral-500/30 hover:bg-coral-600">
+                  <MdNearMe size={14} />
                   <span>Start Navigation</span>
                 </button>
-                <button className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600">
-                  <MdMoreHoriz size={22} />
+                <button className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600">
+                  <MdMoreHoriz size={16} />
                 </button>
               </div>
             </>
@@ -503,13 +503,13 @@ export default function RouteSearchPanel({
             <button
               onClick={handleSearch}
               disabled={isSearching}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-slate-900 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSearching ? (
                 <span>検索中...</span>
               ) : (
                 <>
-                  <MdSearch size={18} />
+                  <MdSearch size={14} />
                   <span>ルートを検索</span>
                 </>
               )}
