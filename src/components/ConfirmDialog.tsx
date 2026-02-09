@@ -22,7 +22,7 @@ export default function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <div className="modal-backdrop flex items-center justify-center">
+    <div className="modal-backdrop z-[999] flex items-center justify-center">
       <div className="alert animate-spring">
         {title && <h3 className="alert-title">{title}</h3>}
         <p className="alert-message">{message}</p>
