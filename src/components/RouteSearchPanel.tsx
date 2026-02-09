@@ -391,43 +391,39 @@ export default function RouteSearchPanel({
   };
 
   const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    if (isDesktop) {
-      // デスクトップでは詳細情報パネルの右隣に配置
-      const leftPosition = placeOpen ? 540 : 0;
-      return (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            bottom: 0,
-            left: `${leftPosition}px`,
-            width: "480px",
-            zIndex: 40,
-            overflowY: "auto",
-            pointerEvents: "auto",
-          }}
-          className="glass-effect shadow-elevation-5 border-r border-system-separator"
-        >
-          {children}
-        </div>
-      );
-    }
-    if (isTablet) {
-      // タブレットでは画面下部に配置
-      return (
-        <div
-          className="fixed left-0 right-0 bottom-0 h-[60vh] 
-                        glass-effect rounded-t-2xl shadow-elevation-5 z-50 
-                        overflow-y-auto safe-area-inset"
-        >
-          {children}
-        </div>
-      );
-    }
-    // モバイルではフルスクリーン
+    const panelStyle: React.CSSProperties = isDesktop
+      ? {
+          width: "440px",
+          maxHeight: "calc(100vh - 32px)",
+          marginTop: "16px",
+          marginLeft: placeOpen ? "560px" : "16px",
+        }
+      : isTablet
+        ? {
+            width: "min(560px, calc(100vw - 24px))",
+            maxHeight: "64vh",
+            marginBottom: "16px",
+          }
+        : {
+            width: "calc(100vw - 16px)",
+            maxHeight: "68vh",
+            marginBottom: "calc(80px + env(safe-area-inset-bottom))",
+          };
+
     return (
-      <div className="fixed inset-0 glass-effect z-50 overflow-y-auto safe-area-inset">
-        {children}
+      <div
+        className="fixed inset-0 z-50 pointer-events-none flex"
+        style={{
+          justifyContent: isDesktop ? "flex-start" : "center",
+          alignItems: isDesktop ? "flex-start" : "flex-end",
+        }}
+      >
+        <div
+          style={panelStyle}
+          className="glass-effect pointer-events-auto overflow-y-auto shadow-elevation-5 border border-system-separator rounded-2xl"
+        >
+          {children}
+        </div>
       </div>
     );
   };
@@ -436,9 +432,6 @@ export default function RouteSearchPanel({
 
   return (
     <>
-      {/* 背景スクリーン (mobile/tablet) */}
-      {!isDesktop && <div className="modal-backdrop" onClick={onClose} />}
-
       <Container>
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-5 border-b border-system-separator">
