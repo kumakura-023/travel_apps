@@ -49,13 +49,15 @@ const NotificationListModal: React.FC<NotificationListModalProps> = ({
 
   const handleNotificationClick = async (notification: any) => {
     const mapService = getMapService();
-    if (mapService) {
-      await mapService.panTo(
-        notification.position.lat,
-        notification.position.lng,
-      );
-      await mapService.setZoom(17);
+    if (!mapService) {
+      return;
     }
+
+    await mapService.panTo(
+      notification.position.lat,
+      notification.position.lng,
+    );
+    await mapService.setZoom(17);
 
     setPlace({
       place_id: notification.placeId,
