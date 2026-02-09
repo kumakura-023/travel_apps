@@ -75,7 +75,7 @@ export default function MemoEditor({
     const memo = savedPlace?.memo || "";
     lastSavedValueRef.current = memo;
     setMemoValue(memo);
-  }, [savedPlace?.memo]);
+  }, [savedPlace?.id, savedPlace?.memo]);
 
   if (!saved) return null;
 
