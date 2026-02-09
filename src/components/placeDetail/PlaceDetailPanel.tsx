@@ -31,7 +31,6 @@ export default function PlaceDetailPanel() {
     handleImageClick,
     handleScheduledDayChange,
     handleClosePanel,
-    saveWithSyncManager,
   } = usePlaceDetail();
 
   const { deletePlace, updatePlace } = useSavedPlacesStore((s) => ({
@@ -295,11 +294,6 @@ export default function PlaceDetailPanel() {
               savedPlace={savedPlace}
               isMobile={isMobile}
               updatePlace={updatePlace}
-              onMemoChange={(id, memo, operationType, isEditing) => {
-                if (plan) {
-                  saveWithSyncManager(plan);
-                }
-              }}
             />
           )}
 
