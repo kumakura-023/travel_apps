@@ -45,7 +45,7 @@ interface MapOverlayManagerProps {
 
 export default function MapOverlayManager({
   zoom,
-  showLabelToggle = true,
+  showLabelToggle: _showLabelToggle = true,
   children,
 }: MapOverlayManagerProps) {
   const [editing, setEditing] = useState<MapLabel | null>(null);
@@ -158,16 +158,16 @@ export default function MapOverlayManager({
 
   const handleLabelMoveEnd = useCallback(
     (id: string, pos: { lat: number; lng: number }) => {
-      // 操作終了時もローカルのみ更新（プラン同期を避ける）
-      updateLabel(id, { position: pos }, true);
+      // 操作終了時は同期対象として確定
+      updateLabel(id, { position: pos }, false);
     },
     [updateLabel],
   );
 
   const handleLabelResizeEnd = useCallback(
     (id: string, size: { width: number; height: number }) => {
-      // 操作終了時もローカルのみ更新（プラン同期を避ける）
-      updateLabel(id, size, true);
+      // 操作終了時は同期対象として確定
+      updateLabel(id, size, false);
     },
     [updateLabel],
   );
@@ -277,7 +277,7 @@ export default function MapOverlayManager({
       {editing && (
         <LabelEditDialog
           label={editing}
-          onSave={(u) => updateLabel(editing.id, u, true)}
+          onSave={(u) => updateLabel(editing.id, u, false)}
           onClose={() => setEditing(null)}
         />
       )}
