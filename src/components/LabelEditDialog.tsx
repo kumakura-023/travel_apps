@@ -69,7 +69,7 @@ export default function LabelEditDialog({ label, onSave, onClose }: Props) {
 
   return (
     <div
-      className="modal-backdrop flex items-center justify-center"
+      className="modal-backdrop z-[999] flex items-center justify-center"
       onClick={onClose}
     >
       <div
