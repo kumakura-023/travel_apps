@@ -222,9 +222,11 @@ export const useLabelsStore = create<LabelsState>((set, get) => {
     },
 
     updateLabel: (id, update, localOnly = false) => {
-      console.warn(
-        "[labelsStore] updateLabel is deprecated. Use events instead.",
-      );
+      if (!localOnly) {
+        console.warn(
+          "[labelsStore] updateLabel is deprecated. Use events instead.",
+        );
+      }
       set((s) => {
         const updatedLabels = s.labels.map((l) => {
           if (l.id === id) {
@@ -238,7 +240,7 @@ export const useLabelsStore = create<LabelsState>((set, get) => {
           s.onLabelUpdated(updatedLabel, updatedLabels);
         }
 
-        if (updatedLabel?.position) {
+        if (!localOnly && updatedLabel?.position) {
           const { plan } = usePlanStore.getState();
           const { user } = useAuthStore.getState();
 
