@@ -55,18 +55,27 @@ export function usePlaceDetail() {
     const pos = getLatLng();
     if (!pos || !place) return;
 
+    setPlace(null);
     setSelectedOrigin({
       ...pos,
       name: place.name || "選択した地点",
     });
     setSelectionMode("destination");
     openRouteSearch();
-  }, [getLatLng, place, setSelectedOrigin, setSelectionMode, openRouteSearch]);
+  }, [
+    getLatLng,
+    place,
+    setPlace,
+    setSelectedOrigin,
+    setSelectionMode,
+    openRouteSearch,
+  ]);
 
   const handleRouteToHere = useCallback(() => {
     const pos = getLatLng();
     if (!pos || !place) return;
 
+    setPlace(null);
     setSelectedDestination({
       ...pos,
       name: place.name || "選択した地点",
@@ -76,6 +85,7 @@ export function usePlaceDetail() {
   }, [
     getLatLng,
     place,
+    setPlace,
     setSelectedDestination,
     setSelectionMode,
     openRouteSearch,
