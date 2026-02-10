@@ -10,11 +10,19 @@ import { PlaceEventBus } from "../events/PlaceEvents";
 interface PlacesState {
   places: Place[];
   onPlaceAdded?: (place: Place) => void;
+  onPlaceUpdated?: (updatedPlace: Place, updatedPlaces: Place[]) => void;
   onPlaceDeleted?: (updatedPlaces: Place[]) => void;
   setOnPlaceAdded: (callback: (place: Place) => void) => void;
+  setOnPlaceUpdated: (
+    callback: (updatedPlace: Place, updatedPlaces: Place[]) => void,
+  ) => void;
   setOnPlaceDeleted: (callback: (updatedPlaces: Place[]) => void) => void;
   addPlace: (partial: Partial<Place>) => void;
-  updatePlace: (id: string, update: Partial<Place>) => void;
+  updatePlace: (
+    id: string,
+    update: Partial<Place>,
+    localOnly?: boolean,
+  ) => void;
   deletePlace: (id: string) => void;
   clearPlaces: () => void;
   getFilteredPlaces: () => Place[];
@@ -26,8 +34,10 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
     return get().places.filter((p) => !p.deleted);
   },
   onPlaceAdded: undefined,
+  onPlaceUpdated: undefined,
   onPlaceDeleted: undefined,
   setOnPlaceAdded: (callback) => set({ onPlaceAdded: callback }),
+  setOnPlaceUpdated: (callback) => set({ onPlaceUpdated: callback }),
   setOnPlaceDeleted: (callback) => set({ onPlaceDeleted: callback }),
   addPlace: (partial) =>
     set((state) => {
@@ -133,7 +143,7 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
 
       return newState;
     }),
-  updatePlace: (id, update) =>
+  updatePlace: (id, update, localOnly = false) =>
     set((state) => {
       const previousPlace = state.places.find((p) => p.id === id);
       if (!previousPlace) {
@@ -149,12 +159,19 @@ export const useSavedPlacesStore = create<PlacesState>((set, get) => ({
         p.id === id ? updatedPlace : p,
       );
 
-      // イベントを発火
-      const eventBus = getEventBus();
-      const placeEventBus = new PlaceEventBus(eventBus);
-      placeEventBus.emitPlaceUpdated(id, updatedPlace, update, previousPlace);
+      if (!localOnly) {
+        // 即座同期コールバックを実行（互換性のため維持）
+        if (state.onPlaceUpdated) {
+          state.onPlaceUpdated(updatedPlace, newPlaces);
+        }
 
-      if (updatedPlace.coordinates) {
+        // イベントを発火
+        const eventBus = getEventBus();
+        const placeEventBus = new PlaceEventBus(eventBus);
+        placeEventBus.emitPlaceUpdated(id, updatedPlace, update, previousPlace);
+      }
+
+      if (!localOnly && updatedPlace.coordinates) {
         const { plan } = usePlanStore.getState();
         const { user } = useAuthStore.getState();
 

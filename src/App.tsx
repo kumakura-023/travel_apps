@@ -156,12 +156,7 @@ function App() {
     }
   }, [activeTab]);
 
-  usePlanSyncEvents(
-    plan,
-    saveImmediately,
-    saveImmediatelyCloud,
-    saveWithSyncManager,
-  );
+  usePlanSyncEvents(saveImmediately, saveImmediatelyCloud, saveWithSyncManager);
 
   // 新しいイベントベースのリスナーも設定
   usePlaceEventListeners(
