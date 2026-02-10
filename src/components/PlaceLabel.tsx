@@ -69,6 +69,10 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
     width: baseWidth,
     height: baseHeight,
   });
+  const currentResizeRef = useRef<{ width: number; height: number }>({
+    width: baseWidth,
+    height: baseHeight,
+  });
 
   useEffect(() => {
     if (!resizing) return;
@@ -78,16 +82,27 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
       const dyBase = (ev.clientY - resizeStart.current.clientY) / scale;
       const newWidth = Math.max(60, resizeStart.current.width + dxBase);
       const newHeight = Math.max(24, resizeStart.current.height + dyBase);
-      updatePlace(place.id, { labelWidth: newWidth, labelHeight: newHeight });
+      currentResizeRef.current = { width: newWidth, height: newHeight };
+      updatePlace(
+        place.id,
+        { labelWidth: newWidth, labelHeight: newHeight },
+        true,
+      );
     };
-    const stop = () => setResizing(false);
+    const stop = () => {
+      setResizing(false);
+      updatePlace(place.id, {
+        labelWidth: currentResizeRef.current.width,
+        labelHeight: currentResizeRef.current.height,
+      });
+    };
     window.addEventListener("mousemove", handleMove);
     window.addEventListener("mouseup", stop);
     return () => {
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("mouseup", stop);
     };
-  }, [resizing, scale]);
+  }, [resizing, scale, place.id, updatePlace]);
 
   useEffect(() => {
     const handleDocClick = (ev: MouseEvent) => {
@@ -111,6 +126,10 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
       width: baseWidth,
       height: baseHeight,
     };
+    currentResizeRef.current = {
+      width: baseWidth,
+      height: baseHeight,
+    };
   };
 
   // drag logic
@@ -123,6 +142,7 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
     clientY: 0,
     world: null,
   });
+  const currentDragPositionRef = useRef<{ lat: number; lng: number }>(labelPos);
 
   useEffect(() => {
     if (!dragging) return;
@@ -142,18 +162,26 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
       );
       const latLng = proj.fromPointToLatLng(newWorld);
       if (!latLng) return;
-      updatePlace(place.id, {
-        labelPosition: { lat: latLng.lat(), lng: latLng.lng() },
-      });
+      currentDragPositionRef.current = { lat: latLng.lat(), lng: latLng.lng() };
+      updatePlace(
+        place.id,
+        {
+          labelPosition: currentDragPositionRef.current,
+        },
+        true,
+      );
     };
-    const stopDrag = () => setDragging(false);
+    const stopDrag = () => {
+      setDragging(false);
+      updatePlace(place.id, { labelPosition: currentDragPositionRef.current });
+    };
     window.addEventListener("mousemove", handleMove);
     window.addEventListener("mouseup", stopDrag);
     return () => {
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("mouseup", stopDrag);
     };
-  }, [dragging, map]);
+  }, [dragging, map, place.id, updatePlace]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -168,7 +196,19 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
         // Drag start
         window.removeEventListener("mousemove", handleMouseMove);
         window.removeEventListener("mouseup", handleMouseUp);
-        handleMouseDown(e);
+        const proj = map?.getProjection();
+        if (!proj) return;
+        const world = proj.fromLatLngToPoint(
+          new google.maps.LatLng(labelPos.lat, labelPos.lng),
+        );
+        if (!world) return;
+        dragStart.current = {
+          clientX: startX,
+          clientY: startY,
+          world,
+        };
+        currentDragPositionRef.current = labelPos;
+        setDragging(true);
       }
     };
 
@@ -184,6 +224,20 @@ export default function PlaceLabel({ place, zoom, map }: Props) {
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
   };
+
+  if (
+    !labelPos ||
+    typeof labelPos.lat !== "number" ||
+    typeof labelPos.lng !== "number"
+  ) {
+    if (import.meta.env.DEV) {
+      console.warn("PlaceLabel: invalid label position", {
+        placeId: place.id,
+        labelPos,
+      });
+    }
+    return null;
+  }
 
   return (
     <>
