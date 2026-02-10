@@ -127,19 +127,14 @@ export class PlanService implements IPlanService {
       actionType,
     };
 
-    console.log("[PlanService] Updating last action position:", {
-      planId,
-      position,
-      userId,
-      actionType,
-    });
-
     try {
-      await this.planRepository.updatePlan(planId, {
-        lastActionPosition,
-      });
+      // NOTE:
+      // Firestoreの top-level フィールドのみ更新すると payload は更新されないため、
+      // listener 側で古い payload が再適用されて UI が巻き戻ることがある。
+      // lastActionPosition は UI 補助情報のため、ここではクラウド書き込みを行わず
+      // ローカル状態のみ更新して巻き戻りを防止する。
 
-      // ローカルキャッシュも更新
+      // ローカルキャッシュを更新
       const cachedPlan = await this.localCacheRepository.loadPlan(planId);
       if (cachedPlan) {
         cachedPlan.lastActionPosition = {
@@ -165,8 +160,6 @@ export class PlanService implements IPlanService {
           },
         });
       }
-
-      console.log("[PlanService] Last action position updated successfully");
     } catch (error) {
       console.error(
         "[PlanService] Failed to update last action position:",
